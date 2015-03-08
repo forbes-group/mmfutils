@@ -1,28 +1,4 @@
 
-Table of Contents
-=================
-
--  `1. MMF Utils <#1.-MMF-Utils>`__
--  `2. Installing <#2.-Installing>`__
--  `3. Usage <#3.-Usage>`__
-
-   -  `3.1 Containers <#3.1-Containers>`__
-
-      -  `3.1.1 Object <#3.1.1-Object>`__
-
-         -  `3.1.1.1 Object Example <#3.1.1.1-Object-Example>`__
-
-      -  `3.1.2 Container <#3.1.2-Container>`__
-
-         -  `3.1.2.1 Container Examples <#3.1.2.1-Container-Examples>`__
-
-   -  `3.2 Interfaces <#3.2-Interfaces>`__
-
-      -  `3.2.1 Interface
-         Documentation <#3.2.1-Interface-Documentation>`__
-
--  `4. Developer Instructions <#4.-Developer-Instructions>`__
-
 1. MMF Utils
 ============
 
@@ -35,44 +11,30 @@ Once the intreface and contents become stable, it will probably make
 sense to include these directly along with the original project so that
 an additional dependency is not introduced.
 
-2. Installing
-=============
+1.1 Installing
+--------------
 
-Presently you must manually install the ``mmfutils`` package or include
-it with your project. I currently recommend including it as a
-subrepository managed by `myrepos <http://myrepos.branchable.com>`__.
-For example, I typically use the following line in a top-level
-``.mrconfig`` file (use the second checkout if you access bitbucket with
-ssh keys):
-
-::
-
-    [_ext/mmfutils]
-    checkout = hg clone 'https://bitbucket.org/mforbes/mmfutils' 'mmfutils'
-    #checkout = hg clone 'ssh://hg@bitbucket.org/mforbes/mmfutils' 'mmfutils'
-
-Then running ``mr checkout`` from the toplevel will pull and update the
-latest version of ``pytimeode`` and put it in ``_ext/pytimeode``. I then
-create and add a symlink to this in the top level (and add ``_ext`` to
-my ``.hgignore`` file) so that I can use the ``pytimeode`` module
-directly:
+This package is `available on
+PyPI <https://pypi.python.org/pypi?name=mmfutils>`__:
 
 .. code:: bash
 
-    ln -s _ext/mmfutils/mmfutils mmfutils
-    hg add mmfutils .mrconfig .hgignore
+    pip install mmfutils
 
-At a later date, when the package is release, it will be able to be
-installed with ``pip install mmfutils`` or perhaps should simply be
-cloned into your project, then committed along with your source code.
+If you want the latests development version, you can install directly
+`from the bitbucket project <https://bitbucket.org/mforbes/mmfutils>`__:
 
-3. Usage
+.. code:: bash
+
+    pip install hg+https://bitbucket.org/mforbes/mmfutils
+
+2. Usage
 ========
 
-3.1 Containers
+2.1 Containers
 --------------
 
-3.1.1 Object
+2.1.1 Object
 ~~~~~~~~~~~~
 
 The ``Object`` object provides a base class to satisfy the following
@@ -112,7 +74,7 @@ after restoring a pickle. A further use-case is to allow one to change
 many parameters, then reinitialize the object once with an explicit call
 to ``init()``.
 
-3.1.1.1 Object Example
+2.1.1.1 Object Example
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
@@ -243,7 +205,7 @@ the ``persist`` package:
 
 
 
-3.1.2 Container
+2.1.2 Container
 ~~~~~~~~~~~~~~~
 
 The ``Container`` object is a slight extension of ``Object`` that
@@ -259,7 +221,7 @@ iterative access with the following use cases:
    (though might be faster). Also, named tuples are immutable - here we
    provide a mutable object that is picklable etc.
 
-3.1.2.1 Container Examples
+2.1.2.1 Container Examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
@@ -340,7 +302,7 @@ iterative access with the following use cases:
     AttributeError: 'Container' object has no attribute 'large_temporary_array'
 
 
-3.2 Interfaces
+2.2 Interfaces
 --------------
 
 The interfaces module provides some stubs so one can using the
@@ -440,7 +402,7 @@ Finally, a working instance:
 
 
 
-3.2.1 Interface Documentation
+2.2.1 Interface Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We also monkeypatch ``zope.interface.documentation.asStructuredText()``
@@ -516,7 +478,7 @@ Now we can show the interface in our documentation:
 
 
 
-4. Developer Instructions
+3. Developer Instructions
 =========================
 
 If you are a developer of this package, there are a few things to be

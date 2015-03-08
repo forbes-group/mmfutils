@@ -2,5 +2,6 @@ build
 mmfutils.egg-info
 .coverage
 .ipynb_checkpoints
+dist
 
 syntax: glob
