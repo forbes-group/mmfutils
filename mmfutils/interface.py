@@ -11,7 +11,27 @@ try:
     __all__ = zope.interface.__all__
     from zope.interface import (Interface, Attribute, implements)
     from zope.interface.verify import (verifyObject, verifyClass)
+except ImportError:             # pragma: nocover
+    zope = None
+    warnings.warn("Could not import zope.interface... using dummy stand-ins")
 
+    Interface = object
+
+    class Attribute(object):
+        """Dummy"""
+        def __init__(self, __name__, __doc__=''):
+            pass
+
+    def implements(*interfaces):
+        """Dummy"""
+
+    def verifyObject(iface, candidate):
+        """Dummy"""
+
+    def verifyClass(iface, candidate):
+        """Dummy"""
+
+if zope:
     # Provides a real "asStructuredText" replacement that produces
     # reStructuredText so I can use it in documentation like README.rst etc.
 
@@ -72,23 +92,3 @@ try:
     logging.info(
         "Patching zope.interface.document.asStructuredText to format code")
     zope.interface.document.asStructuredText = asStructuredText
-
-
-except ImportError:             # pragma: nocover
-    warnings.warn("Could not import zope.interface... using dummy stand-ins")
-
-    Interface = object
-
-    class Attribute(object):
-        """Dummy"""
-        def __init__(self, __name__, __doc__=''):
-            pass
-
-    def implements(*interfaces):
-        """Dummy"""
-
-    def verifyObject(iface, candidate):
-        """Dummy"""
-
-    def verifyClass(iface, candidate):
-        """Dummy"""

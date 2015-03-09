@@ -79,6 +79,10 @@ to ``init()``.
 
 .. code:: python
 
+    ROOTDIR = !hg root
+    ROOTDIR = ROOTDIR[0]
+    import sys;sys.path.insert(0, ROOTDIR)
+    
     import numpy as np
     
     from mmfutils.containers import Object
@@ -501,33 +505,46 @@ This runs the following code:
 
 .. code:: python
 
-    !ipython nbconvert --to=rst --output=README.rst README.ipynb
+    !cd $ROOTDIR; ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
 
 
 .. parsed-literal::
 
     [NbConvertApp] Using existing profile dir: u'/Users/mforbes/.ipython/profile_default'
-    [NbConvertApp] Converting notebook README.ipynb to rst
+    [NbConvertApp] Converting notebook doc/README.ipynb to rst
     [NbConvertApp] Support files will be in README_files/
     [NbConvertApp] Loaded template rst.tpl
-    [NbConvertApp] Writing 17764 bytes to README.rst
+    [NbConvertApp] Writing 21620 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
 fail if any of these do not pass, or if we don't have complete code
 coverage. This uses
 `nosetests <https://nose.readthedocs.org/en/latest/>`__ and
-`flake8 <http://flake8.readthedocs.org>`__. You can run the tests with:
+`flake8 <http://flake8.readthedocs.org>`__. To run individal tests do
+one of:
+
+.. code:: bash
+
+    python setup.py nosetests
+    python setup.py flake8
+    python setup.py check
+    python setup.py test   # This runs them all using a custom command defined in setup.py
+
+Here is an example:
 
 .. code:: python
 
-    !python setup.py nosetests
+    !cd $ROOTDIR; python setup.py test
 
 
 .. parsed-literal::
 
     /Users/mforbes/.anaconda/lib/python2.7/distutils/dist.py:267: UserWarning: Unknown distribution option: 'setup_requires'
       warnings.warn(msg)
+    running test
+    running flake8
+    running check
     running nosetests
     running egg_info
     writing requirements to mmfutils.egg-info/requires.txt
@@ -540,8 +557,8 @@ coverage. This uses
     nose.config: INFO: Ignoring files matching ['^\\.', '^_', '^setup\\.py$']
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
+    INFO:root:Patching zope.interface.document.asStructuredText to format code
     Doctest: mmfutils.containers.Container ... ok
-    test_codeing_format.TestCodeFormat.test_flake8_conformance ... ok
     Test persistent representation of object class ... ok
     test_containers.TestInterfaces.test_verifyBrokenClass ... ok
     test_containers.TestInterfaces.test_verifyBrokenObject ... ok
@@ -550,16 +567,19 @@ coverage. This uses
     Test persistent representation of object class ... ok
     test_containers.TestPersist.test_archive ... ok
     Doctest: test_containers.Doctests ... ok
+    test_coverage.TestCoverage.test_cover_flake8_monkeypatch ... INFO:root:Patching flake8 for issues 39 and 40
+    ok
     
-    Name                  Stmts   Miss  Cover   Missing
-    ---------------------------------------------------
-    mmfutils                  0      0   100%   
-    mmfutils.containers      38      0   100%   
-    mmfutils.interface       47      0   100%   
-    ---------------------------------------------------
-    TOTAL                    85      0   100%   
+    Name                        Stmts   Miss  Cover   Missing
+    ---------------------------------------------------------
+    mmfutils.py                     1      0   100%   
+    mmfutils/containers.py         38      0   100%   
+    mmfutils/interface.py          48      0   100%   
+    mmfutils/monkeypatches.py      11      0   100%   
+    ---------------------------------------------------------
+    TOTAL                          98      0   100%   
     ----------------------------------------------------------------------
-    Ran 10 tests in 0.359s
+    Ran 10 tests in 0.340s
     
     OK
 
@@ -570,13 +590,142 @@ Complete code coverage information is provided in
 .. code:: python
 
     from IPython.display import HTML
-    HTML('<iframe src=build/_coverage/index.html width=100%></iframe>')
+    with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
+        coverage = f.read()
+    HTML(coverage)
 
 
 
 
 .. raw:: html
 
-    <iframe src=build/_coverage/index.html width=100%></iframe>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+        <title>Coverage report</title>
+        <link rel='stylesheet' href='style.css' type='text/css'>
+        
+        <script type='text/javascript' src='jquery.min.js'></script>
+        <script type='text/javascript' src='jquery.debounce.min.js'></script>
+        <script type='text/javascript' src='jquery.tablesorter.min.js'></script>
+        <script type='text/javascript' src='jquery.hotkeys.js'></script>
+        <script type='text/javascript' src='coverage_html.js'></script>
+        <script type='text/javascript'>
+            jQuery(document).ready(coverage.index_ready);
+        </script>
+    </head>
+    <body class='indexfile'>
+    
+    <div id='header'>
+        <div class='content'>
+            <h1>Coverage report:
+                <span class='pc_cov'>100%</span>
+            </h1>
+    
+            <img id='keyboard_icon' src='keybd_closed.png' alt='Show keyboard shortcuts' />
+    
+            <form id="filter_container">
+                <input id="filter" type="text" value="" placeholder="filter..." />
+            </form>
+        </div>
+    </div>
+    
+    <div class='help_panel'>
+        <img id='panel_icon' src='keybd_open.png' alt='Hide keyboard shortcuts' />
+        <p class='legend'>Hot-keys on this page</p>
+        <div>
+        <p class='keyhelp'>
+            <span class='key'>n</span>
+            <span class='key'>s</span>
+            <span class='key'>m</span>
+            <span class='key'>x</span>
+            
+            <span class='key'>c</span> &nbsp; change column sorting
+        </p>
+        </div>
+    </div>
+    
+    <div id='index'>
+        <table class='index'>
+            <thead>
+                
+                <tr class='tablehead' title='Click to sort'>
+                    <th class='name left headerSortDown shortkey_n'>Module</th>
+                    <th class='shortkey_s'>statements</th>
+                    <th class='shortkey_m'>missing</th>
+                    <th class='shortkey_x'>excluded</th>
+                    
+                    <th class='right shortkey_c'>coverage</th>
+                </tr>
+            </thead>
+            
+            <tfoot>
+                <tr class='total'>
+                    <td class='name left'>Total</td>
+                    <td>98</td>
+                    <td>0</td>
+                    <td>20</td>
+                    
+                    <td class='right' data-ratio='98 98'>100%</td>
+                </tr>
+            </tfoot>
+            <tbody>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_py.html'>mmfutils.py</a></td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class='right' data-ratio='1 1'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_containers_py.html'>mmfutils/containers.py</a></td>
+                    <td>38</td>
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class='right' data-ratio='38 38'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_interface_py.html'>mmfutils/interface.py</a></td>
+                    <td>48</td>
+                    <td>0</td>
+                    <td>14</td>
+                    
+                    <td class='right' data-ratio='48 48'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_monkeypatches_py.html'>mmfutils/monkeypatches.py</a></td>
+                    <td>11</td>
+                    <td>0</td>
+                    <td>6</td>
+                    
+                    <td class='right' data-ratio='11 11'>100%</td>
+                </tr>
+                
+            </tbody>
+        </table>
+    
+        <p id="no_rows">
+            No items found using the specified filter.
+        </p>
+    </div>
+    
+    <div id='footer'>
+        <div class='content'>
+            <p>
+                <a class='nav' href='https://coverage.readthedocs.org/en/4.0a6'>coverage.py v4.0a6</a>
+            </p>
+        </div>
+    </div>
+    
+    </body>
+    </html>
+
 
 

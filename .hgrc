@@ -1,5 +1,3 @@
 [hooks]
 pre-commit = ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
-pre-commit.runtests = python setup.py nosetests
-pre-commit.check = python setup.py check --restructuredtext --strict
-pre-commit.check = python setup.py check --strict
+pre-commit.runtests = python setup.py test

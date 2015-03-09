@@ -19,14 +19,58 @@ introduced.
 
 dependencies = []
 
-if __name__ == "__main__":
-    from setuptools import setup, find_packages
+from setuptools import setup, find_packages
+from setuptools.command.test import test as original_test
 
-import mmfutils
+import mmfutils.monkeypatches
+VERSION = mmfutils.__version__
+
+
+class test(original_test):
+    description = "Run all tests and checks (customized for this project)"
+    user_options = [
+        ('flake8', None, "Run flake8 tests"),
+        ('no-flake8', None, "Don't run flake8 tests"),
+        ('check', None, "Run check tests for uploading to PyPI"),
+        ('no-check', None, "Don't run check tests"),
+        ('nosetests', None, "Run nosetests"),
+        ('no-nosetests', None, "Don't run nosetests"),
+    ]
+
+    boolean_options = ['flake8', 'check', 'nosetests']
+    negative_opt = {'no-flake8': 'flake8',
+                    'no-check': 'check',
+                    'no-nosetests': 'nosetests'}
+
+    def initialize_options(self):
+        original_test.initialize_options(self)
+        self.flake8 = True
+        self.check = True
+        self.nosetests = True
+
+    def finalize_options(self):
+        # Don't actually run any "test" tests (we will use nosetest)
+        self.test_suit = None
+
+    def run(self):
+        # Call this to do complicated distribute stuff.
+        original_test.run(self)
+
+        if self.flake8:
+            self.run_command('flake8')
+
+        if self.check:
+            self.run_command('check')
+
+        # For now this must be last because coverage will kill the process
+        if self.nosetests:
+            self.run_command('nosetests')
+
 
 setup(name='mmfutils',
-      version=mmfutils.__version__,
+      version=VERSION,
       packages=find_packages(exclude=['tests']),
+      cmdclass=dict(test=test),
 
       # install_requires=["zope.interface>=3.8.0"],
       extras_require={
