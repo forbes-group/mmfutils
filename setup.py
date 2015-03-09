@@ -1,11 +1,9 @@
-"""Small set of utilities that I commonly use.
+"""Small set of utilities: containers and interfaces.
 
-This package provides some utilities that I tend to rely on during development.
-Since I use these in many different projects, I turned this into a repository
-so that I can easily sync and keep track of updates.  Once the intreface and
-contents become stable, it will probably make sense to include these directly
-along with the original project so that an additional dependency is not
-introduced.
+This package provides some utilities that I tend to rely on during
+development. Presently in includes some convenience containers and some stubs
+for working with `zope.interface <http://docs.zope.org/zope.interface/>`__
+without having to introduce an additional dependence.
 
 **Documentation:**
   http://mmfutils.readthedocs.org
@@ -13,6 +11,7 @@ introduced.
   https://bitbucket.org/mforbes/mmfutils
 **Issues:**
   https://bitbucket.org/mforbes/mmfutils/issues
+
 """
 
 # Author: Michael McNeil Forbes <mforbes@physics.ubc.ca>
