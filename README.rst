@@ -19,15 +19,8 @@ to introduce an additional dependence.
 1.1 Installing
 --------------
 
-This package is `available on
-PyPI <https://pypi.python.org/pypi?name=mmfutils>`__:
-
-.. code:: bash
-
-    pip install mmfutils
-
-If you want the latests development version, you can install directly
-`from the bitbucket project <https://bitbucket.org/mforbes/mmfutils>`__:
+This package can be installed from `from the bitbucket
+project <https://bitbucket.org/mforbes/mmfutils>`__:
 
 .. code:: bash
 
