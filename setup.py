@@ -55,15 +55,14 @@ class test(original_test):
         # Call this to do complicated distribute stuff.
         original_test.run(self)
 
+        if self.nosetests:
+            self.run_command('nosetests')
+
         if self.flake8:
             self.run_command('flake8')
 
         if self.check:
             self.run_command('check')
-
-        # For now this must be last because coverage will kill the process
-        if self.nosetests:
-            self.run_command('nosetests')
 
 
 setup(name='mmfutils',

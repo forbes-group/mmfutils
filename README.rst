@@ -512,7 +512,7 @@ This runs the following code:
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
     [NbConvertApp] Support files will be in README_files/
     [NbConvertApp] Loaded template rst.tpl
-    [NbConvertApp] Writing 21620 bytes to README.rst
+    [NbConvertApp] Writing 21506 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -541,8 +541,6 @@ Here is an example:
     /Users/mforbes/.anaconda/lib/python2.7/distutils/dist.py:267: UserWarning: Unknown distribution option: 'setup_requires'
       warnings.warn(msg)
     running test
-    running flake8
-    running check
     running nosetests
     running egg_info
     writing requirements to mmfutils.egg-info/requires.txt
@@ -565,7 +563,14 @@ Here is an example:
     Test persistent representation of object class ... ok
     test_containers.TestPersist.test_archive ... ok
     Doctest: test_containers.Doctests ... ok
-    test_coverage.TestCoverage.test_cover_flake8_monkeypatch ... INFO:root:Patching flake8 for issues 39 and 40
+    test_monkeypatchs.TestCoverage.test_cover_monkeypatchs ... INFO:root:Patching flake8 for issues 39 and 40
+    INFO:root:Patching nosetests for issues 813
+    ok
+    test_monkeypatchs.TestCoverage.test_flake8_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
+    INFO:root:Patching nosetests for issues 813
+    ok
+    test_monkeypatchs.TestCoverage.test_nose_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
+    INFO:root:Patching nosetests for issues 813
     ok
     
     Name                        Stmts   Miss  Cover   Missing
@@ -573,13 +578,15 @@ Here is an example:
     mmfutils.py                     1      0   100%   
     mmfutils/containers.py         38      0   100%   
     mmfutils/interface.py          48      0   100%   
-    mmfutils/monkeypatches.py      11      0   100%   
+    mmfutils/monkeypatches.py      24      0   100%   
     ---------------------------------------------------------
-    TOTAL                          98      0   100%   
+    TOTAL                         111      0   100%   
     ----------------------------------------------------------------------
-    Ran 10 tests in 0.340s
+    Ran 12 tests in 0.291s
     
     OK
+    running flake8
+    running check
 
 
 Complete code coverage information is provided in
@@ -661,11 +668,11 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class='total'>
                     <td class='name left'>Total</td>
-                    <td>98</td>
+                    <td>111</td>
                     <td>0</td>
-                    <td>20</td>
+                    <td>22</td>
                     
-                    <td class='right' data-ratio='98 98'>100%</td>
+                    <td class='right' data-ratio='111 111'>100%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -699,11 +706,11 @@ Complete code coverage information is provided in
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_monkeypatches_py.html'>mmfutils/monkeypatches.py</a></td>
-                    <td>11</td>
+                    <td>24</td>
                     <td>0</td>
-                    <td>6</td>
+                    <td>8</td>
                     
-                    <td class='right' data-ratio='11 11'>100%</td>
+                    <td class='right' data-ratio='24 24'>100%</td>
                 </tr>
                 
             </tbody>
