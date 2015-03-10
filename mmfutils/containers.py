@@ -47,11 +47,11 @@ class Object(object):
         return state
 
     def __setstate__(self, state):
-        if 'picklable_attributes' not in state:
-            state['picklable_attributes'] = sorted(state)
-
         if '_empty_state' in state:
             state.pop('_empty_state')
+
+        if 'picklable_attributes' not in state:
+            state['picklable_attributes'] = sorted(state)
 
         self.__dict__.update(state)
 

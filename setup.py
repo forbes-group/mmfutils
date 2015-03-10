@@ -13,10 +13,7 @@ without having to introduce an additional dependence.
   https://bitbucket.org/mforbes/mmfutils/issues
 
 """
-
-# Author: Michael McNeil Forbes <mforbes@physics.ubc.ca>
-
-dependencies = []
+import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as original_test
@@ -24,28 +21,16 @@ from setuptools.command.test import test as original_test
 import mmfutils.monkeypatches
 VERSION = mmfutils.__version__
 
+# Remove mmfutils so that it gets properly covered in tests. See
+# http://stackoverflow.com/questions/11279096
+for mod in sys.modules.keys():
+    if mod.startswith('mmfutils'):
+        del sys.modules[mod]
+del mod
+
 
 class test(original_test):
     description = "Run all tests and checks (customized for this project)"
-    user_options = [
-        ('flake8', None, "Run flake8 tests"),
-        ('no-flake8', None, "Don't run flake8 tests"),
-        ('check', None, "Run check tests for uploading to PyPI"),
-        ('no-check', None, "Don't run check tests"),
-        ('nosetests', None, "Run nosetests"),
-        ('no-nosetests', None, "Don't run nosetests"),
-    ]
-
-    boolean_options = ['flake8', 'check', 'nosetests']
-    negative_opt = {'no-flake8': 'flake8',
-                    'no-check': 'check',
-                    'no-nosetests': 'nosetests'}
-
-    def initialize_options(self):
-        original_test.initialize_options(self)
-        self.flake8 = True
-        self.check = True
-        self.nosetests = True
 
     def finalize_options(self):
         # Don't actually run any "test" tests (we will use nosetest)
@@ -55,33 +40,33 @@ class test(original_test):
         # Call this to do complicated distribute stuff.
         original_test.run(self)
 
-        if self.nosetests:
-            self.run_command('nosetests')
-
-        if self.flake8:
-            self.run_command('flake8')
-
-        if self.check:
-            self.run_command('check')
-
+        for cmd in ['nosetests', 'flake8', 'check']:
+            try:
+                self.run_command(cmd)
+            except SystemExit, e:
+                if e.code:
+                    raise
 
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
       cmdclass=dict(test=test),
 
-      # install_requires=["zope.interface>=3.8.0"],
-      extras_require={
-          'testing': [
-              "zope.interface>=3.8.0",
-              "persist>=1.0",
-          ],
-      },
+      install_requires=[
+          "zope.interface>=3.8.0",
+          "persist>=0.9",
+      ],
+
+      extras_require={},
 
       setup_requires=[
           'nose>=1.3',
           'coverage',
           'flake8'],
+
+      dependency_links=[
+          'hg+https://bitbucket.org/mforbes/persist@0.9#egg=persist-0.9'
+      ],
 
       # Metadata
       author='Michael McNeil Forbes',
@@ -109,6 +94,7 @@ setup(name='mmfutils',
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
           'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
       ],
       )

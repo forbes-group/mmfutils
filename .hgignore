@@ -1,7 +1,9 @@
-build
-mmfutils.egg-info
 \.coverage
+\.eggs
 \.ipynb_checkpoints
+\.tox
+build
 dist
+mmfutils.egg-info
 
 syntax: glob

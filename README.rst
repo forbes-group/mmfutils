@@ -5,10 +5,10 @@
 Small set of utilities: containers and interfaces.
 
 This package provides some utilities that I tend to rely on during
-development. Presently in includes some convenience containers and some
-stubs for working with
-`zope.interface <http://docs.zope.org/zope.interface/>`__ without having
-to introduce an additional dependence.
+development. Presently in includes some convenience containers and a
+patch for including
+`zope.interface <http://docs.zope.org/zope.interface/>`__ documentation
+in a notebook.
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -307,10 +307,9 @@ iterative access with the following use cases:
 2.2 Interfaces
 --------------
 
-The interfaces module provides some stubs so one can using the
-`zope.interface <http://docs.zope.org/zope.interface/>`__ package for
-checking interface requirements, but that do nothing so code does not
-break if this can't be installed. Interfaces provide a convenient way of
+The interfaces module collects some useful
+`zope.interface <http://docs.zope.org/zope.interface/>`__ tools for
+checking interface requirements. Interfaces provide a convenient way of
 communicating to a programmer what needs to be done to used your code.
 This can then be checked in tests.
 
@@ -512,7 +511,7 @@ This runs the following code:
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
     [NbConvertApp] Support files will be in README_files/
     [NbConvertApp] Loaded template rst.tpl
-    [NbConvertApp] Writing 21506 bytes to README.rst
+    [NbConvertApp] Writing 22027 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -554,15 +553,19 @@ Here is an example:
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     INFO:root:Patching zope.interface.document.asStructuredText to format code
+    INFO:root:Patching flake8 for issues 39 and 40
+    INFO:root:Patching nosetests for issues 813
     Doctest: mmfutils.containers.Container ... ok
     Test persistent representation of object class ... ok
-    test_containers.TestInterfaces.test_verifyBrokenClass ... ok
-    test_containers.TestInterfaces.test_verifyBrokenObject ... ok
-    test_containers.TestInterfaces.test_verifyClass ... ok
-    test_containers.TestInterfaces.test_verifyObject ... ok
+    test_containers.TestObject.test_empty_object ... ok
     Test persistent representation of object class ... ok
     test_containers.TestPersist.test_archive ... ok
-    Doctest: test_containers.Doctests ... ok
+    test_interface.TestInterfaces.test_verifyBrokenClass ... ok
+    test_interface.TestInterfaces.test_verifyBrokenObject1 ... ok
+    test_interface.TestInterfaces.test_verifyBrokenObject2 ... ok
+    test_interface.TestInterfaces.test_verifyClass ... ok
+    test_interface.TestInterfaces.test_verifyObject ... ok
+    Doctest: test_interface.Doctests ... ok
     test_monkeypatchs.TestCoverage.test_cover_monkeypatchs ... INFO:root:Patching flake8 for issues 39 and 40
     INFO:root:Patching nosetests for issues 813
     ok
@@ -577,12 +580,12 @@ Here is an example:
     ---------------------------------------------------------
     mmfutils.py                     1      0   100%   
     mmfutils/containers.py         38      0   100%   
-    mmfutils/interface.py          48      0   100%   
-    mmfutils/monkeypatches.py      24      0   100%   
+    mmfutils/interface.py          47      0   100%   
+    mmfutils/monkeypatches.py      22      0   100%   
     ---------------------------------------------------------
-    TOTAL                         111      0   100%   
+    TOTAL                         108      0   100%   
     ----------------------------------------------------------------------
-    Ran 12 tests in 0.291s
+    Ran 14 tests in 0.297s
     
     OK
     running flake8
@@ -668,11 +671,11 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class='total'>
                     <td class='name left'>Total</td>
-                    <td>111</td>
+                    <td>108</td>
                     <td>0</td>
                     <td>22</td>
                     
-                    <td class='right' data-ratio='111 111'>100%</td>
+                    <td class='right' data-ratio='108 108'>100%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -697,20 +700,20 @@ Complete code coverage information is provided in
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_interface_py.html'>mmfutils/interface.py</a></td>
-                    <td>48</td>
+                    <td>47</td>
                     <td>0</td>
                     <td>14</td>
                     
-                    <td class='right' data-ratio='48 48'>100%</td>
+                    <td class='right' data-ratio='47 47'>100%</td>
                 </tr>
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_monkeypatches_py.html'>mmfutils/monkeypatches.py</a></td>
-                    <td>24</td>
+                    <td>22</td>
                     <td>0</td>
                     <td>8</td>
                     
-                    <td class='right' data-ratio='24 24'>100%</td>
+                    <td class='right' data-ratio='22 22'>100%</td>
                 </tr>
                 
             </tbody>

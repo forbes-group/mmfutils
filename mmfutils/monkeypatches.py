@@ -25,9 +25,8 @@ try:
                 if e.code:
                     raise
 
-        if flake8.main.Flake8Command.run is not run:
-            logging.info("Patching flake8 for issues 39 and 40")
-            flake8.main.Flake8Command.run = run
+        logging.info("Patching flake8 for issues 39 and 40")
+        flake8.main.Flake8Command.run = run
 
 except ImportError:             # pragma: nocover
     pass
@@ -50,9 +49,8 @@ try:
                 if e.code:
                     raise
 
-        if nose.commands.nosetests.run is not run:
-            logging.info("Patching nosetests for issues 813")
-            nose.commands.nosetests.run = run
+        logging.info("Patching nosetests for issues 813")
+        nose.commands.nosetests.run = run
 
 except ImportError:             # pragma: nocover
     pass
