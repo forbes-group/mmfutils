@@ -30,27 +30,3 @@ try:
 
 except ImportError:             # pragma: nocover
     pass
-
-try:
-    import nose.commands
-
-    if nose.__version__ > 'inf':  # pragma: nocover
-        pass
-    else:
-
-        # Monkeypatch nose until the following issues is resolved
-        # https://github.com/nose-devs/nose/issues/813
-        def run(self, _run=nose.commands.nosetests.run):
-            try:
-                _run(self)
-            except SystemExit, e:
-                # nose raises an exception even on success.  See
-                # https://github.com/nose-devs/nose/issues/813
-                if e.code:
-                    raise
-
-        logging.info("Patching nosetests for issues 813")
-        nose.commands.nosetests.run = run
-
-except ImportError:             # pragma: nocover
-    pass

@@ -5,7 +5,7 @@ Archiving is supported through the interface defined by the ``persist``
 package (though use of that package is optional and it is not a dependency).
 """
 
-__all__ = ['Object']
+__all__ = ['Object', 'Container']
 
 
 ######################################################################
