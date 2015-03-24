@@ -5,7 +5,7 @@ Archiving is supported through the interface defined by the ``persist``
 package (though use of that package is optional and it is not a dependency).
 """
 
-__all__ = ['Object', 'Container']
+__all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 
 import collections
 
@@ -138,6 +138,10 @@ class Container(Object, collections.Sized, collections.Iterable,
             else:
                 # assume dict-like
                 self.__dict__.update(obj)
+                if isinstance(obj, collections.Sequence):
+                    self.picklable_attributes = list(zip(*obj)[0])
+                    self.picklable_attributes.extend(
+                        _k for _k in kw if _k not in self.__dict__)
 
         self.__dict__.update(kw)
         Object.__init__(self)

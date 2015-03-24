@@ -54,7 +54,7 @@ setup(name='mmfutils',
 
       install_requires=[
           "zope.interface>=3.8.0",
-          "persist>=0.9",
+          "persist>=0.8b1",
       ],
 
       extras_require={},
