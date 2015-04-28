@@ -59,7 +59,7 @@ setup(name='mmfutils',
 
       extras_require={},
 
-      setup_requires=[
+      tests_require=[
           'nose>=1.3',
           'coverage',
           'flake8'],
