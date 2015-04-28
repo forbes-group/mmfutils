@@ -11,6 +11,7 @@ import time
 
 from IPython import parallel
 
+__all__ = ['Cluster', 'parallel', 'get_client']
 
 # Global list of clusters we start - this keeps them alive
 CLUSTERS = []
