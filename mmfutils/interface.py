@@ -8,7 +8,6 @@ import warnings
 
 try:
     import zope.interface
-    __all__ = zope.interface.__all__
     from zope.interface import (Interface, Attribute, implements)
     from zope.interface.verify import (verifyObject, verifyClass)
 except ImportError:             # pragma: nocover

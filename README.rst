@@ -5,10 +5,10 @@
 Small set of utilities: containers and interfaces.
 
 This package provides some utilities that I tend to rely on during
-development. Presently in includes some convenience containers and some
-stubs for working with
-`zope.interface <http://docs.zope.org/zope.interface/>`__ without having
-to introduce an additional dependence.
+development. Presently in includes some convenience containers and a
+patch for including
+`zope.interface <http://docs.zope.org/zope.interface/>`__ documentation
+in a notebook.
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -212,16 +212,34 @@ the ``persist`` package:
 
 The ``Container`` object is a slight extension of ``Object`` that
 provides a simple container for storing data with attribute and
-iterative access with the following use cases:
+iterative access. These implement some of the `Collections Abstract Base
+Classes from the python standard
+library <https://docs.python.org/2/library/collections.html#collections-abstract-base-classes>`__.
+The following containers are provided:
+
+-  ``Container``: Bare-bones container extending the ``Sized``,
+   ``Iterable``, and ``Container`` abstract ase classes (ABCs) from the
+   standard ``containers`` library.
+-  ``ContainerList``: Extension that acts like a tuple/list satisfying
+   the ``Sequence`` ABC from the ``containers`` library (but not the
+   ``MutableSequence`` ABC. Although we allow setting and deleting
+   items, we do not provide a way for insertion, which breaks this
+   interface.)
+-  ``ContainerDict``: Extension that acts like a dict satisfying the
+   ``MutableMapping`` ABC from the ``containers`` library.
+
+These were designed with the following use cases in mind:
 
 -  Returning data from a function associating names with each data. The
-   resulting ``Container()`` will act like a tuple, but will support
+   resulting ``ContainerList`` will act like a tuple, but will support
    attribute access. Note that the order will be lexicographic. One
    could use a dictionary, but attribute access with tab completion is
    much nicer in an interactive session. The ``containers.nametuple``
    generator could also be used, but this is somewhat more complicated
    (though might be faster). Also, named tuples are immutable - here we
-   provide a mutable object that is picklable etc.
+   provide a mutable object that is picklable etc. The choice between
+   ``ContainerList`` and ``ContainerDict`` will depend on subsequent
+   usage. Containers can be converted from one type to another.
 
 2.1.2.1 Container Examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -295,7 +313,7 @@ iterative access with the following use cases:
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-9-cbfd03ed340e> in <module>()
+    <ipython-input-14-cbfd03ed340e> in <module>()
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print c1
     ----> 4 c1.large_temporary_array
@@ -307,10 +325,9 @@ iterative access with the following use cases:
 2.2 Interfaces
 --------------
 
-The interfaces module provides some stubs so one can using the
-`zope.interface <http://docs.zope.org/zope.interface/>`__ package for
-checking interface requirements, but that do nothing so code does not
-break if this can't be installed. Interfaces provide a convenient way of
+The interfaces module collects some useful
+`zope.interface <http://docs.zope.org/zope.interface/>`__ tools for
+checking interface requirements. Interfaces provide a convenient way of
 communicating to a programmer what needs to be done to used your code.
 This can then be checked in tests.
 
@@ -326,6 +343,12 @@ This can then be checked in tests.
         # No self here since this is the "user" interface
         def add(other):
             """Return self + other."""
+
+
+.. parsed-literal::
+
+    INFO:root:Patching zope.interface.document.asStructuredText to format code
+
 
 Here is a broken implementation. We muck up the arguments to ``add``:
 
@@ -480,6 +503,77 @@ Now we can show the interface in our documentation:
 
 
 
+2.3 Parallel
+------------
+
+The ``mmfutils.parallel`` module provides some tools for launching and
+connecting to IPython clusters. The ``parallel.Cluster`` class
+represents and controls a cluster. The cluster is specified by the
+profile name, and can be started or stopped from this class:
+
+.. code:: python
+
+    import logging
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    import numpy as np
+    from mmfutils import parallel
+    cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
+    cluster.start()
+    client = cluster.wait()  # Instance of IPython.parallel.Client
+    view = client.load_balanced_view()
+    x = np.linspace(-6,6, 100)
+    y = view.map(lambda x:x**2, x)
+    print np.allclose(y, x**2)
+    cluster.stop()
+
+
+.. parsed-literal::
+
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
+    WARNING:root:No ipcontroller-client.json, waiting...
+    INFO:root:waiting for 3 engines
+    INFO:root:0 of 3 running
+    INFO:root:3 of 3 running
+    INFO:root:Stopping cluster: ipcluster stop --profile=default
+
+
+.. parsed-literal::
+
+    True
+
+
+If you only need a cluster for a single task, it can be managed with a
+context. Be sure to wait for the result to be computed before exiting
+the context and shutting down the cluster!
+
+.. code:: python
+
+    with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
+        view = client.load_balanced_view()
+        x = np.linspace(-6,6, 100)
+        y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
+    print np.allclose(y, x**2)
+
+
+.. parsed-literal::
+
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
+    WARNING:root:No ipcontroller-client.json, waiting...
+    INFO:root:waiting for 3 engines
+    INFO:root:0 of 3 running
+    INFO:root:3 of 3 running
+    INFO:root:Stopping cluster: ipcluster stop --profile=default
+
+
+.. parsed-literal::
+
+    True
+
+
+If you just need to connect to a running cluster, you can use
+``parallel.get_client()``.
+
 3. Developer Instructions
 =========================
 
@@ -508,11 +602,8 @@ This runs the following code:
 
 .. parsed-literal::
 
-    [NbConvertApp] Using existing profile dir: u'/Users/mforbes/.ipython/profile_default'
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Support files will be in README_files/
-    [NbConvertApp] Loaded template rst.tpl
-    [NbConvertApp] Writing 21620 bytes to README.rst
+    [NbConvertApp] Writing 17392 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -538,13 +629,15 @@ Here is an example:
 
 .. parsed-literal::
 
-    /Users/mforbes/.anaconda/lib/python2.7/distutils/dist.py:267: UserWarning: Unknown distribution option: 'setup_requires'
-      warnings.warn(msg)
     running test
-    running flake8
-    running check
+    /Users/mforbes/.anaconda/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module flake8 was already imported from /Users/mforbes/.anaconda/lib/python2.7/site-packages/flake8/__init__.pyc, but /Users/mforbes/work/mmfbb/pytimeode/flake8-2.4.0-py2.7.egg is being added to sys.path
+    /Users/mforbes/.anaconda/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module pep8 was already imported from /Users/mforbes/.anaconda/lib/python2.7/site-packages/pep8.pyc, but /Users/mforbes/work/mmfbb/pytimeode/pep8-1.5.7-py2.7.egg is being added to sys.path
     running nosetests
     running egg_info
+    writing requirements to mmfutils.egg-info/requires.txt
+    writing mmfutils.egg-info/PKG-INFO
+    writing top-level names to mmfutils.egg-info/top_level.txt
+    writing dependency_links to mmfutils.egg-info/dependency_links.txt
     writing requirements to mmfutils.egg-info/requires.txt
     writing mmfutils.egg-info/PKG-INFO
     writing top-level names to mmfutils.egg-info/top_level.txt
@@ -556,30 +649,78 @@ Here is an example:
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     INFO:root:Patching zope.interface.document.asStructuredText to format code
+    INFO:root:Patching flake8 for issues 39 and 40
     Doctest: mmfutils.containers.Container ... ok
+    Doctest: mmfutils.containers.ContainerDict ... ok
+    Doctest: mmfutils.containers.ContainerList ... ok
+    mmfutils.tests.test_containers.TestContainer.test_container_delattr ... ok
     Test persistent representation of object class ... ok
-    test_containers.TestInterfaces.test_verifyBrokenClass ... ok
-    test_containers.TestInterfaces.test_verifyBrokenObject ... ok
-    test_containers.TestInterfaces.test_verifyClass ... ok
-    test_containers.TestInterfaces.test_verifyObject ... ok
+    mmfutils.tests.test_containers.TestContainerConversion.test_conversions ... ok
+    mmfutils.tests.test_containers.TestContainerDict.test_container_del ... ok
+    mmfutils.tests.test_containers.TestContainerDict.test_container_setitem ... ok
+    mmfutils.tests.test_containers.TestContainerList.test_container_delitem ... ok
+    mmfutils.tests.test_containers.TestObject.test_empty_object ... ok
     Test persistent representation of object class ... ok
-    test_containers.TestPersist.test_archive ... ok
-    Doctest: test_containers.Doctests ... ok
-    test_coverage.TestCoverage.test_cover_flake8_monkeypatch ... INFO:root:Patching flake8 for issues 39 and 40
+    mmfutils.tests.test_containers.TestPersist.test_archive ... ok
+    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenClass ... ok
+    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject1 ... ok
+    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject2 ... ok
+    mmfutils.tests.test_interface.TestInterfaces.test_verifyClass ... ok
+    mmfutils.tests.test_interface.TestInterfaces.test_verifyObject ... ok
+    Doctest: mmfutils.tests.test_interface.Doctests ... ok
+    mmfutils.tests.test_monkeypatchs.TestCoverage.test_cover_monkeypatchs ... INFO:root:Patching flake8 for issues 39 and 40
     ok
+    mmfutils.tests.test_monkeypatchs.TestCoverage.test_flake8_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
+    ok
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_kernel_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_console_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_qtconsole_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_notebook_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_nbconvert_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipcontroller_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipengine_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipcluster_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/iplogger_config.py'
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing2 --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    INFO:root:waiting for 3 engines
+    INFO:root:0 of 3 running
+    INFO:root:3 of 3 running
+    INFO:root:waiting for 7 engines
+    INFO:root:7 of 7 running
+    Simple test connecting to a cluster. ... ok
+    Test that starting a running cluster does nothing. ... ok
+    Test that the PBS_NODEFILE is used if defined ... ok
+    Test timeout (coverage) ... ok
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing2 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
+    2015-04-28 10:22:59.830 [IPClusterStop] Stopping cluster [pid=42033] with [signal=2]
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
+    2015-04-28 10:23:00.136 [IPClusterStop] Stopping cluster [pid=42025] with [signal=2]
     
     Name                        Stmts   Miss  Cover   Missing
     ---------------------------------------------------------
     mmfutils.py                     1      0   100%   
-    mmfutils/containers.py         38      0   100%   
-    mmfutils/interface.py          48      0   100%   
-    mmfutils/monkeypatches.py      11      0   100%   
+    mmfutils/containers.py         73      0   100%   
+    mmfutils/interface.py          47      0   100%   
+    mmfutils/monkeypatches.py      12      0   100%   
+    mmfutils/parallel.py           89      0   100%   
     ---------------------------------------------------------
-    TOTAL                          98      0   100%   
+    TOTAL                         222      0   100%   
     ----------------------------------------------------------------------
-    Ran 10 tests in 0.340s
+    Ran 24 tests in 10.458s
     
     OK
+    running flake8
+    running check
 
 
 Complete code coverage information is provided in
@@ -661,11 +802,11 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class='total'>
                     <td class='name left'>Total</td>
-                    <td>98</td>
+                    <td>222</td>
                     <td>0</td>
-                    <td>20</td>
+                    <td>26</td>
                     
-                    <td class='right' data-ratio='98 98'>100%</td>
+                    <td class='right' data-ratio='222 222'>100%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -681,29 +822,38 @@ Complete code coverage information is provided in
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_containers_py.html'>mmfutils/containers.py</a></td>
-                    <td>38</td>
+                    <td>73</td>
                     <td>0</td>
                     <td>0</td>
                     
-                    <td class='right' data-ratio='38 38'>100%</td>
+                    <td class='right' data-ratio='73 73'>100%</td>
                 </tr>
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_interface_py.html'>mmfutils/interface.py</a></td>
-                    <td>48</td>
+                    <td>47</td>
                     <td>0</td>
                     <td>14</td>
                     
-                    <td class='right' data-ratio='48 48'>100%</td>
+                    <td class='right' data-ratio='47 47'>100%</td>
                 </tr>
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_monkeypatches_py.html'>mmfutils/monkeypatches.py</a></td>
-                    <td>11</td>
+                    <td>12</td>
                     <td>0</td>
-                    <td>6</td>
+                    <td>4</td>
                     
-                    <td class='right' data-ratio='11 11'>100%</td>
+                    <td class='right' data-ratio='12 12'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_parallel_py.html'>mmfutils/parallel.py</a></td>
+                    <td>89</td>
+                    <td>0</td>
+                    <td>8</td>
+                    
+                    <td class='right' data-ratio='89 89'>100%</td>
                 </tr>
                 
             </tbody>

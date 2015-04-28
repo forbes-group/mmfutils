@@ -5,7 +5,9 @@ Archiving is supported through the interface defined by the ``persist``
 package (though use of that package is optional and it is not a dependency).
 """
 
-__all__ = ['Object']
+__all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
+
+import collections
 
 
 ######################################################################
@@ -47,11 +49,11 @@ class Object(object):
         return state
 
     def __setstate__(self, state):
-        if 'picklable_attributes' not in state:
-            state['picklable_attributes'] = sorted(state)
-
         if '_empty_state' in state:
             state.pop('_empty_state')
+
+        if 'picklable_attributes' not in state:
+            state['picklable_attributes'] = sorted(state)
 
         self.__dict__.update(state)
 
@@ -91,7 +93,8 @@ class Object(object):
         return "{0}({1})".format(self.__class__.__name__, args)
 
 
-class Container(Object):
+class Container(Object, collections.Sized, collections.Iterable,
+                collections.Container):
     """Simple container object.
 
     Attributes can be specified in the constructor.  These will form the
@@ -101,7 +104,7 @@ class Container(Object):
     Examples
     --------
     >>> c = Container(b='Hi', a=1)
-    >>> c                       # Note: items sorted for consistent reprs
+    >>> c                       # Note: items sorted for consistent repr
     Container(a=1, b='Hi')
     >>> c.a
     1
@@ -110,9 +113,13 @@ class Container(Object):
     2
     >>> tuple(c)                # Order is lexicographic
     (2, 'Hi')
-    >>> c.x = 6                 # Will not be pickled
+    >>> c.x = 6                 # Will not be pickled: only for temp usage
     >>> c.x
     6
+    >>> 'a' in c
+    True
+    >>> 'x' in c
+    False
     >>> import pickle
     >>> c1 = pickle.loads(pickle.dumps(c))
     >>> c1
@@ -122,10 +129,104 @@ class Container(Object):
     ...
     AttributeError: 'Container' object has no attribute 'x'
     """
-    def __init__(self, **kw):
+    def __init__(self, *argv, **kw):
+        if 1 == len(argv):
+            # Copy construct
+            obj = argv[0]
+            if isinstance(obj, Container):
+                self.__setstate__(obj.__getstate__())
+            else:
+                # assume dict-like
+                self.__dict__.update(obj)
+                if isinstance(obj, collections.Sequence):
+                    self.picklable_attributes = list(zip(*obj)[0])
+                    self.picklable_attributes.extend(
+                        _k for _k in kw if _k not in self.__dict__)
+
         self.__dict__.update(kw)
         Object.__init__(self)
 
+    # Methods required by collections.Container
+    def __contains__(self, key):
+        return key in self.picklable_attributes
+
+    # Methods required by collections.Sized
+    def __len__(self):
+        return len(self.picklable_attributes)
+
+    # Methods required by collections.Iterable
     def __iter__(self):
         for _k in self.picklable_attributes:
             yield getattr(self, _k)
+
+    def __delattr__(self, key):
+        object.__delattr__(self, key)
+        self.picklable_attributes.remove(key)
+
+
+class ContainerList(Container, collections.Sequence):
+    """Simple container object that behaves like a list.
+
+    Examples
+    --------
+    >>> c = ContainerList(b='Hi', a=1)
+    >>> c                       # Note: items sorted for consistent repr
+    ContainerList(a=1, b='Hi')
+    >>> c[0]
+    1
+    >>> c[0] = 2
+    >>> c.a
+    2
+    >>> tuple(c)                # Order is lexicographic
+    (2, 'Hi')
+    """
+    # Methods required by collections.Sequence
+    def __getitem__(self, i):
+        key = self.picklable_attributes[i]
+        return getattr(self, key)
+
+    # Methods required by collections.MutableSequence
+    # We only provide a few
+    def __setitem__(self, i, value):
+        key = self.picklable_attributes[i]
+        setattr(self, key, value)
+
+    def __delitem__(self, i):
+        key = self.picklable_attributes[i]
+        self.__delattr__(key)
+
+
+class ContainerDict(Container, collections.MutableMapping):
+    """Simple container object that behaves like a dict.
+
+    Attributes can be specified in the constructor.  These will form the
+    representation of the object as well as picking.  Additional attributes can
+    be assigned, but will not be pickled.
+
+    Examples
+    --------
+    >>> c = ContainerDict(b='Hi', a=1)
+    >>> c                       # Note: items sorted for consistent repr
+    ContainerDict(a=1, b='Hi')
+    >>> c['a']
+    1
+    >>> c['a'] = 2
+    >>> c.a
+    2
+    >>> dict(c)
+    {'a': 2, 'b': 'Hi'}
+    """
+    # Methods required by collections.Iterable
+    def __iter__(self):
+        return self.picklable_attributes.__iter__()
+
+    # Methods required by collections.Mapping
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    # Methods required by collections.MutableMapping
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __delitem__(self, key):
+        self.__delattr__(key)
