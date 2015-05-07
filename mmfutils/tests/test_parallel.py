@@ -11,6 +11,8 @@ from mmfutils.parallel import Cluster, get_client, parallel
 
 
 class TestContainer(object):
+    slow = 1
+
     @classmethod
     def setup_class(cls):
         """We start all the clusters here in parallel so we don't have to wait

@@ -2,6 +2,6 @@
 # These are included here simply as a convenience.
 
 test:
-	python setup.py nosetests
+	python -O setup.py nosetests
 
 .PHONY: test
