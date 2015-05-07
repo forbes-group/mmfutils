@@ -574,6 +574,35 @@ the context and shutting down the cluster!
 If you just need to connect to a running cluster, you can use
 ``parallel.get_client()``.
 
+2.4 Performance
+---------------
+
+The ``mmfutils.performance`` module provides some tools for high
+performance computing. Note: this module requires some additional
+packages including
+`numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
+`pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
+package installed by anaconda. Some of these require building system
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+various components will not be imported by default.
+
+Here is a brief description of the components:
+
+-  ``mmfutils.performance.blas``: Provides an interface to a few of the
+   scipy BLAS wrappers. Very incomplete (only things I currently need).
+-  ``mmfutils.performance.fft``: Provides an interface to the
+   `FFTW <http://www.fftw.org>`__ using ``pyfftw`` if it is available.
+   Also enables the planning cache and setting threads so you can better
+   control your performance.
+-  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
+   disabling the VML. (If you don't do this carefully, it will crash
+   your program so fast you won't even get a traceback.)
+-  ``mmfutils.performance.threads``: Provides some hooks for setting the
+   maximum number of threads in a bunch of places including the MKL,
+   numexpr, and fftw.
+
+
+
 3. Developer Instructions
 =========================
 

@@ -23,7 +23,7 @@ VERSION = mmfutils.__version__
 
 # Remove mmfutils so that it gets properly covered in tests. See
 # http://stackoverflow.com/questions/11279096
-for mod in sys.modules.keys():
+for mod in list(sys.modules.keys()):
     if mod.startswith('mmfutils'):
         del sys.modules[mod]
 del mod
@@ -43,7 +43,7 @@ class test(original_test):
         for cmd in ['nosetests', 'flake8', 'check']:
             try:
                 self.run_command(cmd)
-            except SystemExit, e:
+            except SystemExit as e:
                 if e.code:
                     raise
 
@@ -61,7 +61,7 @@ setup(name='mmfutils',
 
       tests_require=[
           'nose>=1.3',
-          'coverage',
+          'coverage<=3.7.1',
           'flake8'],
 
       dependency_links=[
