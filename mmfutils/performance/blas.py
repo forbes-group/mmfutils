@@ -8,15 +8,56 @@ from __future__ import absolute_import, division, print_function
 
 __all__ = ['daxpy', 'zaxpy']
 
-import numpy as np
+import numpy.linalg
+np = numpy
 from scipy.linalg import get_blas_funcs
 
-_BLAS_ZDOTC = False
+_BLAS = True
+
+
+def _norm_no_blas(x):
+    r"""Return `norm(x)` using numpy."""
+    return np.linalg.norm(x.ravel(order='K'))
 
 
 def _zdotc_no_blas(a, b):
     r"""Non-BLAS version of zdotc for use when BLAS breaks."""
     return np.dot(a.conj().ravel(), b.ravel())
+
+
+def _zaxpy_no_blas(y, x, a=1.0):
+    r"""Non-BLAS version of zaxpy for use when BLAS breaks."""
+    y += a * x
+    return y
+
+
+def _ddot_no_blas(a, b):
+    r"""Non-BLAS version for use when BLAS breaks."""
+    return np.dot(a.ravel(), b.ravel())
+
+
+def _znorm(x, _znrm2=get_blas_funcs(['nrm2'],
+                                    [np.zeros(1, dtype=complex)])[0]):
+    r"""Return `norm(x)` using BLAS for complex arrays.
+
+    Warning: This can be substantially slower than `np.linalg.norm` on account
+    of it doing scaling to ensure accuracy.
+    """
+    assert x.flags.c_contiguous
+    assert _znrm2 is get_blas_funcs(['nrm2'], [x.ravel()])[0]
+    return _znrm2(x.ravel(order='K'))
+
+
+def _dnorm(x, _dnrm2=get_blas_funcs(['nrm2'],
+                                    [np.zeros(1, dtype=float)])[0]):
+    r"""Return `norm(x)` using BLAS for real arrays.
+
+    Warning: This can be substantially slower than `np.linalg.norm` on account
+    of it doing scaling to ensure accuracy.
+    """
+    assert x.flags.c_contiguous
+    assert _dnrm2 is get_blas_funcs(['nrm2'], [x.ravel()])[0]
+    return _dnrm2(x.ravel(order='K'))
 
 
 def _zdotc(a, b, _zdotc=get_blas_funcs(['dotc'],
@@ -29,12 +70,6 @@ def _zdotc(a, b, _zdotc=get_blas_funcs(['dotc'],
     return _zdotc(a, b)
 
 
-def _zaxpy_no_blas(y, x, a=1.0):
-    r"""Non-BLAS version of zaxpy for use when BLAS breaks."""
-    y += a * x
-    return y
-
-
 def _ddot(a, b, _ddot=get_blas_funcs(['dot'],
                                      [np.zeros(1, dtype=float), ] * 2)[0]):
     a = a.ravel()
@@ -43,11 +78,6 @@ def _ddot(a, b, _ddot=get_blas_funcs(['dot'],
     assert a.flags.c_contiguous
     assert _ddot is get_blas_funcs(['dot'], [a, b])[0]
     return _ddot(a, b)
-
-
-def _ddot_no_blas(a, b):
-    r"""Non-BLAS version for use when BLAS breaks."""
-    return np.dot(a.ravel(), b.ravel())
 
 
 def _zaxpy(y, x, a=1.0,
@@ -86,12 +116,15 @@ def _daxpy(y, x, a=1.0,
     return _axpy(x=x.ravel(), y=y.ravel(), n=x.size, a=a).reshape(y.shape)
 
 
-if _BLAS_ZDOTC:                 # pragma: nocover
+if _BLAS:
+    znorm = _znorm
+    dnorm = _dnorm
     zdotc = _zdotc
     ddot = _ddot
     zaxpy = _zaxpy
     daxpy = _daxpy
-else:
+else:                 # pragma: nocover
+    znorm = dnorm = _norm_no_blas
     ddot = _ddot_no_blas
     zdotc = _zdotc_no_blas
     zaxpy = _zaxpy_no_blas

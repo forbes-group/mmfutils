@@ -66,8 +66,9 @@ try:
 
     # By default, pyfftw does not cache the plans.  Here we enable the cache
     # and set the keepalive time to an hour.
-    pyfftw.interfaces.cache.enable()   # pragma: no cover
-    pyfftw.interfaces.cache.set_keepalive_time(60*60)
+    if pyfftw.version >= '0.9.2':
+        pyfftw.interfaces.cache.enable()
+        pyfftw.interfaces.cache.set_keepalive_time(60*60)
 
     # Also, the number of threads is set by default to 1.  Here we set the
     # default value to 8 and use FFT_MEASURE to actually check.
