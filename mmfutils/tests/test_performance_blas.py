@@ -1,6 +1,6 @@
 import nose.tools as nt
 from nose.plugins.attrib import attr
-
+from nose import SkipTest
 from mmfutils.performance import blas
 import numpy as np
 import timeit
@@ -106,3 +106,41 @@ class Test_BLAS(object):
         t1 = timeit.repeat(lambda: blas._daxpy(y1, x1, a1), number=100)
         t2 = timeit.repeat(lambda: blas._zaxpy(y2, x2, a2), number=100)
         nt.assert_less(min(t1), min(t2)/2)
+
+    def test_znorm(self):
+        shape = (100, 10)
+        x = self.rand(shape)
+
+        exact = np.sqrt((abs(x.ravel())**2).sum())
+        nt.assert_almost_equal(blas._znorm(x), exact)
+        nt.assert_almost_equal(blas._norm_no_blas(x), exact)
+
+    def test_dnorm(self):
+        shape = (100, 10)
+        x = self.rand(shape, complex=False)
+
+        exact = np.sqrt((abs(x.ravel())**2).sum())
+        nt.assert_almost_equal(blas._dnorm(x), exact)
+        nt.assert_almost_equal(blas._norm_no_blas(x), exact)
+
+    # http://lists.mcs.anl.gov/pipermail/petsc-dev/2012-January/006934.html
+    @attr('bench')
+    def test_znorm_bench(self):
+        raise SkipTest("BLAS is more accurate, not faster!")
+        shape = (500, 500)
+        x = self.rand(shape)
+
+        t1 = timeit.repeat(lambda: blas._znorm(x), number=100)
+        t2 = timeit.repeat(lambda: np.linalg.norm(x.ravel()),
+                           number=100)
+        nt.assert_less(min(t1), min(t2))
+
+    @attr('bench')
+    def test_dnorm_bench(self):
+        shape = (500, 500)
+        x = self.rand(shape, complex=False)
+        y = x + 0j
+
+        t1 = timeit.repeat(lambda: blas._dnorm(x), number=100)
+        t2 = timeit.repeat(lambda: blas._znorm(y), number=100)
+        nt.assert_less(min(t1), min(t2))
