@@ -36,6 +36,25 @@ class Test_BLAS(object):
                            number=100)
         nt.assert_less(min(t1), min(t2)/2)
 
+    def test_ddot(self):
+        shape = (100, 10)
+        x = self.rand(shape, complex=False)
+        y = self.rand(shape, complex=False)
+
+        exact = (x * y).sum()
+        nt.assert_almost_equal(blas._ddot(x, y), exact)
+        nt.assert_almost_equal(blas._ddot_no_blas(x, y), exact)
+
+    @attr('bench')
+    def test_ddot_bench(self):
+        shape = (50, 50)
+        x = self.rand(shape, complex=False)
+        y = self.rand(shape, complex=False)
+
+        t1 = timeit.repeat(lambda: blas._ddot(x, y), number=100)
+        t2 = timeit.repeat(lambda: blas._zdotc(x, y), number=100)
+        nt.assert_less(min(t1), min(t2)/2)
+
     def test_zaxpy(self):
         shape = (10, 10, 10)
         x = self.rand(shape)
