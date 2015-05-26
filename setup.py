@@ -47,26 +47,25 @@ class test(original_test):
                 if e.code:
                     raise
 
+install_requires = [
+    "zope.interface>=3.8.0",
+]
+
+test_requires = [
+    'nose>=1.3',
+    'coverage<=3.7.1',
+    'flake8',
+    "persist>=0.8b1",
+]
+
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
       cmdclass=dict(test=test),
 
-      install_requires=[
-          "zope.interface>=3.8.0",
-          "persist>=0.8b1",
-      ],
-
+      install_requires=install_requires,
       extras_require={},
-
-      tests_require=[
-          'nose>=1.3',
-          'coverage<=3.7.1',
-          'flake8'],
-
-      dependency_links=[
-          'hg+https://bitbucket.org/mforbes/persist@0.9#egg=persist-0.9'
-      ],
+      tests_require=test_requires,
 
       # Metadata
       author='Michael McNeil Forbes',
