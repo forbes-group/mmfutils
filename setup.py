@@ -21,6 +21,17 @@ from setuptools.command.test import test as original_test
 import mmfutils.monkeypatches
 VERSION = mmfutils.__version__
 
+install_requires = [
+    "zope.interface>=3.8.0",
+]
+
+test_requires = [
+    'nose>=1.3',
+    'coverage<=3.7.1',
+    'flake8',
+    "persist>=0.8b1",
+]
+
 # Remove mmfutils so that it gets properly covered in tests. See
 # http://stackoverflow.com/questions/11279096
 for mod in list(sys.modules.keys()):
@@ -46,17 +57,6 @@ class test(original_test):
             except SystemExit as e:
                 if e.code:
                     raise
-
-install_requires = [
-    "zope.interface>=3.8.0",
-]
-
-test_requires = [
-    'nose>=1.3',
-    'coverage<=3.7.1',
-    'flake8',
-    "persist>=0.8b1",
-]
 
 setup(name='mmfutils',
       version=VERSION,

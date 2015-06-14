@@ -8,13 +8,11 @@ import multiprocessing
 import os
 import subprocess
 import time
+import weakref
 
 from IPython import parallel
 
-__all__ = ['Cluster', 'parallel', 'get_client']
-
-# Global list of clusters we start - this keeps them alive
-CLUSTERS = []
+__all__ = ['get_cluster']
 
 
 class Cluster(object):
@@ -28,6 +26,11 @@ class Cluster(object):
     This can also be used in a context to ensure the cluster is cleaned up when
     the context finishes.
     """
+
+    # Global list of clusters and clusters we start - this keeps them alive
+    _clusters = weakref.WeakValueDictionary()
+    _started_clusters = []
+
     def __init__(self, profile='default', n=None,
                  ipython_dir=None, sleep_time=0.1):
         """
@@ -50,6 +53,31 @@ class Cluster(object):
         self.n = n
         self.client = None
         self.sleep_time = sleep_time
+        self._direct_view = None
+        self._load_balanced_view = None
+
+        self.key = self.get_key(profile=profile, n=n, ipython_dir=ipython_dir)
+        Cluster._clusters[self.key] = self
+
+    def __len__(self):
+        """Return the number of engines in the current client."""
+        return len(self.client)
+
+    @classmethod
+    def get_key(cls, profile, n, ipython_dir):
+        return (profile, n, ipython_dir)
+
+    @property
+    def direct_view(self):
+        if self._direct_view is None and self.client is not None:
+            self._direct_view = self.client.direct_view()
+        return self._direct_view
+
+    @property
+    def load_balanced_view(self):
+        if self._load_balanced_view is None and self.client is not None:
+            self._load_balanced_view = self.client.load_balanced_view()
+        return self._load_balanced_view
 
     @property
     def running(self):
@@ -109,8 +137,7 @@ class Cluster(object):
             return
 
         # Register it
-        global CLUSTERS
-        CLUSTERS.append(self)
+        Cluster._started_clusters.append(self)
 
     def stop(self):
         """Stop the current cluster.
@@ -118,8 +145,7 @@ class Cluster(object):
         Only affects clusters that are started here with the `start()` method
         and are not
         """
-        global CLUSTERS
-        if self in CLUSTERS:
+        if self in Cluster._started_clusters:
             if self.client is not None:
                 self.client.close()
             self.client = None
@@ -134,10 +160,12 @@ class Cluster(object):
             while self.running:               # pragma: nocover
                 # Wait until cluster stops
                 time.sleep(self.sleep_time)
-            CLUSTERS.remove(self)
+            Cluster._started_clusters.remove(self)
+        self._load_balanced_view = None
+        self._direct_view = None
 
     def wait(self, n_min=None, timeout=5*60):
-        """Wait for n engines of the cluster to start and return the client."""
+        """Wait for n_min engines of the cluster to start."""
         tic = time.time()
         if n_min is None:
             n_min = self.n
@@ -174,11 +202,11 @@ class Cluster(object):
             if running < len(self.client):
                 running = len(self.client)
                 logging.info("{} of {} running".format(running, n_min))
-        return self.client
 
     def __enter__(self):
         self.start(context=True)
-        return self.wait()
+        self.wait()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
@@ -187,32 +215,41 @@ class Cluster(object):
     def __del__(self):
         self.stop()
 
-    @staticmethod
-    def stop_all():
+    @classmethod
+    def stop_all(cls):
         """Stop all registered clusters"""
-        global CLUSTERS
-        for c in reversed(CLUSTERS):
+        for c in reversed(cls._started_clusters):
             c.stop()
+
+    @classmethod
+    def get_cluster(cls, profile='default', n=None, ipython_dir=None,
+                    launch=True, n_min=1):
+        """Return a Custer instance for the specified cluster.
+
+        This will return a cluster connected to at least `N` engines,
+        launching the appropriate cluster if needed.
+
+        Arguments
+        ---------
+        launch : bool
+           If `True`, then launch the cluster if it is not already running.
+        n : int
+           Number of engines to launch.
+        n_min : int
+          The minimum number of engines to wait for.
+        """
+        kw = dict(profile=profile, n=n, ipython_dir=ipython_dir)
+        key = cls.get_key(**kw)
+        if key in cls._clusters:
+            cluster = cls._clusters[key]
+        else:
+            cluster = Cluster(**kw)
+
+        if launch and not cluster.running:
+            cluster.start()
+        cluster.wait(n_min=n_min)
+        return cluster
 
 atexit.register(Cluster.stop_all)
 
-
-def get_client(profile='default', ipython_dir=None,
-               launch=True, n=None):
-    """Return an IPython.parallel.Client instance for the specified cluster.
-
-    This will return a client connected to at least `N` engines, launching the
-    appropriate cluster if needed.
-
-    Arguments
-    ---------
-    launch : bool
-       If `True`, then launch the cluster if it is not already running.
-    n : int
-       Number of engines to launch or minimum number of engines to wait for.
-    """
-    cluster = Cluster(profile=profile, n=n, ipython_dir=ipython_dir)
-    if launch and not cluster.running:
-        cluster.start()
-    client = cluster.wait()
-    return client
+get_cluster = Cluster.get_cluster
