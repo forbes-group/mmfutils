@@ -10,7 +10,7 @@ import nose.tools as nt
 from mmfutils.parallel import Cluster, get_client, parallel
 
 
-class TestContainer(object):
+class TestCluster(object):
     slow = 1
 
     @classmethod

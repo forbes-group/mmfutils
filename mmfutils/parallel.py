@@ -136,14 +136,19 @@ class Cluster(object):
                 time.sleep(self.sleep_time)
             CLUSTERS.remove(self)
 
-    def wait(self, timeout=5*60):
-        """Wait for cluster to start and return the client."""
+    def wait(self, n_min=None, timeout=5*60):
+        """Wait for n engines of the cluster to start and return the client."""
         tic = time.time()
+        if n_min is None:
+            n_min = self.n
+        else:
+            assert n_min <= self.n
+
         while True:
             if timeout < time.time() - tic:
                 raise parallel.TimeoutError(
                     "{} engines did not start in timeout={}s".format(
-                        self.n, timeout))
+                        n_min, timeout))
             try:
                 self.client = parallel.Client(
                     profile=self.profile, ipython_dir=self.ipython_dir)
@@ -154,21 +159,21 @@ class Cluster(object):
                 logging.warning("No controller, waiting...")
             time.sleep(self.sleep_time)
 
-        if not self.n:
+        if not n_min:
             return self.client
 
-        logging.info("waiting for {} engines".format(self.n))
+        logging.info("waiting for {} engines".format(n_min))
         running = len(self.client)
-        logging.info("{} of {} running".format(running, self.n))
-        while len(self.client) < self.n:
+        logging.info("{} of {} running".format(running, n_min))
+        while len(self.client) < n_min:
             if timeout < time.time() - tic:   # pragma: nocover
                 raise parallel.TimeoutError(
                     "{} engines did not start in timeout={}s".format(
-                        self.n, timeout))
+                        n_min, timeout))
             time.sleep(self.sleep_time)
             if running < len(self.client):
                 running = len(self.client)
-                logging.info("{} of {} running".format(running, self.n))
+                logging.info("{} of {} running".format(running, n_min))
         return self.client
 
     def __enter__(self):
