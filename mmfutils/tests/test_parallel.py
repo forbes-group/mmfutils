@@ -9,6 +9,8 @@ import nose.tools as nt
 
 from mmfutils.parallel import Cluster, get_cluster, parallel
 
+import parallel_module
+
 
 class TestCluster(object):
     slow = 1
@@ -83,7 +85,7 @@ class TestCluster(object):
 
         p = range(20)
         res = self.cluster1.load_balanced_view.map(
-            lambda p: 2**p, p, block=True)
+            parallel_module.exp2, p, block=True)
         nt.eq_(res, [2**_p for _p in p])
 
     def test_del(self):
