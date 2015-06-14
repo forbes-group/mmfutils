@@ -30,6 +30,7 @@ test_requires = [
     'coverage<=3.7.1',
     'flake8',
     "persist>=0.8b1",
+    "IPython>=3.0",
 ]
 
 # Remove mmfutils so that it gets properly covered in tests. See
