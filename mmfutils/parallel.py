@@ -223,7 +223,7 @@ class Cluster(object):
 
     @classmethod
     def get_cluster(cls, profile='default', n=None, ipython_dir=None,
-                    launch=True, n_min=1):
+                    launch=True, block=True, n_min=1):
         """Return a Custer instance for the specified cluster.
 
         This will return a cluster connected to at least `N` engines,
@@ -231,10 +231,12 @@ class Cluster(object):
 
         Arguments
         ---------
-        launch : bool
-           If `True`, then launch the cluster if it is not already running.
         n : int
            Number of engines to launch.
+        launch : bool
+           If `True`, then launch the cluster if it is not already running.
+        block : bool
+           If `True`, then wait for cluster to start before returning.
         n_min : int
           The minimum number of engines to wait for.
         """
@@ -247,7 +249,8 @@ class Cluster(object):
 
         if launch and not cluster.running:
             cluster.start()
-        cluster.wait(n_min=n_min)
+        if block:
+            cluster.wait(n_min=n_min)
         return cluster
 
 atexit.register(Cluster.stop_all)
