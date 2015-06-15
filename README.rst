@@ -16,6 +16,42 @@ in a notebook.
 
 **Issues:** https://bitbucket.org/mforbes/mmfutils/issues
 
+**Build Status:**
+
+.. raw:: html
+
+   <table>
+
+.. raw:: html
+
+   <tr>
+
+::
+
+    <td>[Main](https://bitbucket.org/mforbes/mmfutils)</td>
+    <td>[Fork](https://bitbucket.org/mforbes/mmfutils-fork)</td>
+
+.. raw:: html
+
+   </tr>
+
+.. raw:: html
+
+   <tr>
+
+::
+
+    <td>[![mmfutils Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils/latest)</td>
+    <td>[![mmfutils-fork Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest)</td>
+
+.. raw:: html
+
+   </tr>
+
+.. raw:: html
+
+   </table>
+
 1.1 Installing
 --------------
 
