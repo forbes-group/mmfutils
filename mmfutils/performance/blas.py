@@ -37,7 +37,7 @@ def _ddot_no_blas(a, b):
 
 
 def _znorm(x, _znrm2=get_blas_funcs(['nrm2'],
-                                    [np.zeros(1, dtype=complex)])[0]):
+                                    [np.zeros(2, dtype=complex)])[0]):
     r"""Return `norm(x)` using BLAS for complex arrays.
 
     Warning: This can be substantially slower than `np.linalg.norm` on account
@@ -49,7 +49,7 @@ def _znorm(x, _znrm2=get_blas_funcs(['nrm2'],
 
 
 def _dnorm(x, _dnrm2=get_blas_funcs(['nrm2'],
-                                    [np.zeros(1, dtype=float)])[0]):
+                                    [np.zeros(2, dtype=float)])[0]):
     r"""Return `norm(x)` using BLAS for real arrays.
 
     Warning: This can be substantially slower than `np.linalg.norm` on account
@@ -61,7 +61,7 @@ def _dnorm(x, _dnrm2=get_blas_funcs(['nrm2'],
 
 
 def _zdotc(a, b, _zdotc=get_blas_funcs(['dotc'],
-                                       [np.zeros(1, dtype=complex), ] * 2)[0]):
+                                       [np.zeros(2, dtype=complex), ] * 2)[0]):
     a = a.ravel()
     b = b.ravel()
     assert a.flags.f_contiguous
@@ -71,7 +71,7 @@ def _zdotc(a, b, _zdotc=get_blas_funcs(['dotc'],
 
 
 def _ddot(a, b, _ddot=get_blas_funcs(['dot'],
-                                     [np.zeros(1, dtype=float), ] * 2)[0]):
+                                     [np.zeros(2, dtype=float), ] * 2)[0]):
     a = a.ravel()
     b = b.ravel()
     assert a.flags.f_contiguous
@@ -82,7 +82,7 @@ def _ddot(a, b, _ddot=get_blas_funcs(['dot'],
 
 def _zaxpy(y, x, a=1.0,
            _axpy=get_blas_funcs(['axpy'],
-                                [np.zeros(1, dtype=complex), ] * 2)[0]):
+                                [np.zeros(2, dtype=complex), ] * 2)[0]):
     r"""Performs ``y += a*x`` inplace using the BLAS axpy command.  This is
     significantly faster than using generic expressions that make temporary
     copies etc.
@@ -93,14 +93,17 @@ def _zaxpy(y, x, a=1.0,
 
        * http://projects.scipy.org/numpy/ticket/2148
     """
+    shape = y.shape
+    x = x.ravel()
+    y = y.ravel()
     assert y.flags.c_contiguous
     assert _axpy is get_blas_funcs(['axpy'], [x, y])[0]
-    return _axpy(x=x.ravel(), y=y.ravel(), n=x.size, a=a).reshape(y.shape)
+    return _axpy(x=x, y=y, n=x.size, a=a).reshape(shape)
 
 
 def _daxpy(y, x, a=1.0,
            _axpy=get_blas_funcs(['axpy'],
-                                [np.zeros(1, dtype=float), ] * 2)[0]):
+                                [np.zeros(2, dtype=float), ] * 2)[0]):
     r"""Performs ``y += a*x`` inplace using the BLAS axpy command.  This is
     significantly faster than using generic expressions that make temporary
     copies etc.
@@ -111,9 +114,12 @@ def _daxpy(y, x, a=1.0,
 
        * http://projects.scipy.org/numpy/ticket/2148
     """
+    shape = y.shape
+    x = x.ravel()
+    y = y.ravel()
     assert y.flags.c_contiguous
     assert _axpy is get_blas_funcs(['axpy'], [x, y])[0]
-    return _axpy(x=x.ravel(), y=y.ravel(), n=x.size, a=a).reshape(y.shape)
+    return _axpy(x=x, y=y, n=x.size, a=a).reshape(shape)
 
 
 if _BLAS:

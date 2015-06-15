@@ -69,7 +69,7 @@ class TestCluster(object):
         """Test that starting a running cluster does nothing."""
         tic = time.time()
         self.cluster1.start()
-        nt.ok_(time.time() - tic < 0.01)
+        nt.ok_(time.time() - tic < 0.1)
 
     @nt.raises(parallel.TimeoutError)
     def test_timeout1(self):
