@@ -169,7 +169,7 @@ class Cluster(object):
         tic = time.time()
         if n_min is None:
             n_min = self.n
-        else:
+        elif self.n is not None:
             assert n_min <= self.n
 
         while True:
