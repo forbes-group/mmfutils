@@ -132,3 +132,54 @@ class TestPersist(object):
         nt.eq_(repr(o), repr(o1))
         nt.ok_(hasattr(o, 'dont_store_this'))
         nt.ok_(not hasattr(o1, 'dont_store_this'))
+
+
+class Issue4(ContainerDict):
+    """Class where ``a = 2*b`` is enforced (unless independently set).
+
+    Examples
+    --------
+    >>> i = Issue4(a=6)
+    >>> i.a, i.b
+    (6, 3)
+    >>> i
+    Issue4(a=6, b=None)
+
+    >>> i = Issue4(a=None, b=4)
+    >>> i.a, i.b
+    (8, 4)
+    >>> i
+    Issue4(a=None, b=4)
+
+    >>> i.a = 10
+    >>> i.a, i.b
+    (10, 4)
+    >>> i
+    Issue4(a=10, b=4)
+    """
+    def __init__(self, **kw):
+        self.a = 1.0
+        self.b = None  # By default, compute b.
+        ContainerDict.__init__(self)
+        self.update(kw)
+
+    def __getstate__(self):
+        # Return the real state as in __dict__.
+        state = ContainerDict.__getstate__(self)
+        for key in state:
+            state[key] = self.__dict__[key]
+        return state
+
+    def __getattribute__(self, key):
+        if key not in set(['a', 'b']):
+            return ContainerDict.__getattribute__(self, key)
+
+        # Specialized access for these to enforce computation
+        res = {}
+        a = res['a'] = ContainerDict.__getattribute__(self, 'a')
+        b = res['b'] = ContainerDict.__getattribute__(self, 'b')
+        if a is None:
+            res['a'] = 2*b
+        if b is None:
+            res['b'] = a/2
+        return res[key]
