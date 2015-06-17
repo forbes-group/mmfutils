@@ -87,9 +87,8 @@ class Object(object):
         return (rep, args, imports)
 
     def __repr__(self):
-        args = ", ".join(
-            "=".join((_k, repr(getattr(self, _k))))
-            for _k in self.picklable_attributes)
+        state = self.__getstate__()
+        args = ", ".join("=".join((_k, repr(state[_k]))) for _k in state)
         return "{0}({1})".format(self.__class__.__name__, args)
 
 
