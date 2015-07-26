@@ -13,6 +13,7 @@ without having to introduce an additional dependence.
   https://bitbucket.org/mforbes/mmfutils/issues
 
 """
+import os
 import sys
 
 from setuptools import setup, find_packages
@@ -20,6 +21,21 @@ from setuptools.command.test import test as original_test
 
 import mmfutils.monkeypatches
 VERSION = mmfutils.__version__
+
+install_requires = [
+    "zope.interface>=3.8.0",
+    'ipython>=3.0',
+]
+
+test_requires = [
+    'nose>=1.3',
+    'ipython>=3.0',
+    'coverage<=3.7.1',
+    'flake8',
+    "persist",
+    "numpy",
+    "numexpr"
+]
 
 # Remove mmfutils so that it gets properly covered in tests. See
 # http://stackoverflow.com/questions/11279096
@@ -40,23 +56,14 @@ class test(original_test):
         # Call this to do complicated distribute stuff.
         original_test.run(self)
 
+        # This is used to see if we are running tests.
+        os.environ['CI'] = 'true'
         for cmd in ['nosetests', 'flake8', 'check']:
             try:
                 self.run_command(cmd)
             except SystemExit as e:
                 if e.code:
                     raise
-
-install_requires = [
-    "zope.interface>=3.8.0",
-]
-
-test_requires = [
-    'nose>=1.3',
-    'coverage<=3.7.1',
-    'flake8',
-    "persist>=0.8b1",
-]
 
 setup(name='mmfutils',
       version=VERSION,

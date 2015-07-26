@@ -37,8 +37,8 @@ class Object(object):
         r"""Define any computed attributes here."""
 
     def __getstate__(self):
-        state = dict((_k, getattr(self, _k))
-                     for _k in self.picklable_attributes)
+        state = collections.OrderedDict((_k, getattr(self, _k))
+                                        for _k in self.picklable_attributes)
 
         # From the docs:
         # "For new-style classes, if __getstate__() returns a false value,

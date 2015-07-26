@@ -3,6 +3,8 @@ import nose.tools as nt
 
 from mmfutils.performance import fft
 import numpy as np
+from nose import SkipTest
+
 # import timeit
 
 
@@ -28,11 +30,7 @@ class Test_FFT(object):
                     kw = dict(axis=axis)
                 nt.ok_(np.allclose(fft.fft_numpy(x, **kw),
                                    np.fft.fft(x, **kw)))
-                nt.ok_(np.allclose(fft.fft_pyfftw(x, **kw),
-                                   np.fft.fft(x, **kw)))
                 nt.ok_(np.allclose(fft.ifft_numpy(x, **kw),
-                                   np.fft.ifft(x, **kw)))
-                nt.ok_(np.allclose(fft.ifft_pyfftw(x, **kw),
                                    np.fft.ifft(x, **kw)))
 
     def test_fftn(self):
@@ -47,14 +45,18 @@ class Test_FFT(object):
                     kw = dict(axes=axes)
                 nt.ok_(np.allclose(fft.fftn_numpy(x, **kw),
                                    np.fft.fftn(x, **kw)))
-                nt.ok_(np.allclose(fft.fftn_pyfftw(x, **kw),
-                                   np.fft.fftn(x, **kw)))
                 nt.ok_(np.allclose(fft.ifftn_numpy(x, **kw),
                                    np.fft.ifftn(x, **kw)))
-                nt.ok_(np.allclose(fft.ifftn_pyfftw(x, **kw),
-                                   np.fft.ifftn(x, **kw)))
 
-    def test_get_fft(self):
+
+class Test_FFT_pyfftw(Test_FFT):
+    def setUp(self):
+        if not hasattr(fft, 'pyfftw'):
+            raise SkipTest("No pyfftw")
+
+        np.random.seed(1)
+
+    def test_fft_pyfftw(self):
         shape = (256, 256)
         x = self.rand(shape)
 
@@ -64,12 +66,12 @@ class Test_FFT(object):
                 kw = {}
                 if axis is not None:
                     kw = dict(axis=axis)
-                nt.ok_(np.allclose(fft.get_fft(x, **kw)(x),
+                nt.ok_(np.allclose(fft.fft_pyfftw(x, **kw),
                                    np.fft.fft(x, **kw)))
-                nt.ok_(np.allclose(fft.get_ifft(x, **kw)(x),
+                nt.ok_(np.allclose(fft.ifft_pyfftw(x, **kw),
                                    np.fft.ifft(x, **kw)))
 
-    def test_get_fftn(self):
+    def test_fftn_pyfftw(self):
         shape = (256, 256)
         x = self.rand(shape)
 
@@ -79,7 +81,37 @@ class Test_FFT(object):
                 kw = {}
                 if axes is not None:
                     kw = dict(axes=axes)
-                nt.ok_(np.allclose(fft.get_fftn(x, **kw)(x),
+                nt.ok_(np.allclose(fft.fftn_pyfftw(x, **kw),
                                    np.fft.fftn(x, **kw)))
-                nt.ok_(np.allclose(fft.get_ifftn(x, **kw)(x),
+                nt.ok_(np.allclose(fft.ifftn_pyfftw(x, **kw),
+                                   np.fft.ifftn(x, **kw)))
+
+    def test_get_fft_pyfftw(self):
+        shape = (256, 256)
+        x = self.rand(shape)
+
+        for threads in [1, 2]:
+            fft.set_num_threads(threads)
+            for axis in [None, 0, 1, -1]:
+                kw = {}
+                if axis is not None:
+                    kw = dict(axis=axis)
+                nt.ok_(np.allclose(fft.get_fft_pyfftw(x, **kw)(x),
+                                   np.fft.fft(x, **kw)))
+                nt.ok_(np.allclose(fft.get_ifft_pyfftw(x, **kw)(x),
+                                   np.fft.ifft(x, **kw)))
+
+    def test_get_fftn_pyfftw(self):
+        shape = (256, 256)
+        x = self.rand(shape)
+
+        for threads in [1, 2]:
+            fft.set_num_threads(threads)
+            for axes in [None, [0], [1], [1, 0]]:
+                kw = {}
+                if axes is not None:
+                    kw = dict(axes=axes)
+                nt.ok_(np.allclose(fft.get_fftn_pyfftw(x, **kw)(x),
+                                   np.fft.fftn(x, **kw)))
+                nt.ok_(np.allclose(fft.get_ifftn_pyfftw(x, **kw)(x),
                                    np.fft.ifftn(x, **kw)))

@@ -1,2 +1,2 @@
---extra-index-url https://mforbes.bitbucket.org/mypi/index/
+--find-links https://bitbucket.org/mforbes/mypi/
 -e .

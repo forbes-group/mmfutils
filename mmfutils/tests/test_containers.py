@@ -24,6 +24,14 @@ class TestContainer(object):
         nt.ok_('b' not in c)
         nt.ok_('c' in c)
 
+    def test_preserve_order_of_picklable_attributes(self):
+        """Check that the order of attributes defined by
+        picklable_attributes is preserved"""
+        c = Container(a=1, b=2, picklable_attributes=['b', 'a'])
+        nt.eq_(repr(c), "Container(b=2, a=1)")
+        c.picklable_attributes = ['a', 'b']
+        nt.eq_(repr(c), "Container(a=1, b=2)")
+
 
 class TestContainerList(object):
     def test_container_delitem(self):

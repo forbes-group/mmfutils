@@ -1,3 +1,7 @@
+[paths]
+default = ssh://hg@bitbucket.org/mforbes/mmfutils-fork
+pristine = ssh://hg@bitbucket.org/mforbes/mmfutils
+
 [hooks]
 pre-commit = ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
 pre-commit.runtests = python -O setup.py test
