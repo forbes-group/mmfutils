@@ -16,7 +16,7 @@ that you must build the fftw with all precisions using something like::
 """
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq']
+__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq', 'resample']
 
 import functools
 import itertools
@@ -195,12 +195,13 @@ def resample(f, N):
     True
     """
     newshape = np.array(f.shape)
-    newshape[:] = N
-    fk = fftn(f)
+    newshape[...] = N
+    axes = np.where(np.not_equal(f.shape, newshape))[0]
+    fk = fftn(f, axes=axes)
     fk1 = np.zeros(newshape, dtype=complex)
     for _s in itertools.product(
             *((slice(0, (_N + 1) // 2), slice(-(_N - 1) // 2, None))
               for _N in np.minimum(f.shape, newshape))):
         fk1[_s] = fk[_s]
 
-    return ifftn(fk1) * np.prod(newshape.astype(float)/f.shape)
+    return ifftn(fk1, axes=axes) * np.prod(newshape.astype(float)/f.shape)
