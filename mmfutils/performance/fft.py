@@ -16,7 +16,7 @@ that you must build the fftw with all precisions using something like::
 """
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq']
+__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq', 'resample']
 
 import functools
 import itertools
@@ -96,8 +96,9 @@ try:
         kw.update(threads=_THREADS, planner_effort=_PLANNER_EFFORT)
         return _ifftn(*v, **kw)
 
-    def get_fft(a, n=None, axis=-1, overwrite_input=False,
-                auto_align_input=True, auto_contiguous=True, avoid_copy=False):
+    def get_fft_pyfftw(a, n=None, axis=-1, overwrite_input=False,
+                       auto_align_input=True, auto_contiguous=True,
+                       avoid_copy=False):
         """Return a function to compute the fft."""
         global _THREADS, _PLANNER_EFFORT
         return pyfftw.builders.fft(a=a, n=n, axis=axis,
@@ -108,9 +109,9 @@ try:
                                    auto_contiguous=auto_contiguous,
                                    avoid_copy=avoid_copy)
 
-    def get_ifft(a, n=None, axis=-1, overwrite_input=False,
-                 auto_align_input=True, auto_contiguous=True,
-                 avoid_copy=False):
+    def get_ifft_pyfftw(a, n=None, axis=-1, overwrite_input=False,
+                        auto_align_input=True, auto_contiguous=True,
+                        avoid_copy=False):
         """Return a function to compute the ifft."""
         global _THREADS, _PLANNER_EFFORT
         return pyfftw.builders.ifft(a=a, n=n, axis=axis,
@@ -121,9 +122,9 @@ try:
                                     auto_contiguous=auto_contiguous,
                                     avoid_copy=avoid_copy)
 
-    def get_fftn(a, s=None, axes=None, overwrite_input=False,
-                 auto_align_input=True, auto_contiguous=True,
-                 avoid_copy=False):
+    def get_fftn_pyfftw(a, s=None, axes=None, overwrite_input=False,
+                        auto_align_input=True, auto_contiguous=True,
+                        avoid_copy=False):
         """Return a function to compute the fftn."""
         global _THREADS, _PLANNER_EFFORT
         return pyfftw.builders.fftn(a=a, s=s, axes=axes,
@@ -134,9 +135,9 @@ try:
                                     auto_contiguous=auto_contiguous,
                                     avoid_copy=avoid_copy)
 
-    def get_ifftn(a, s=None, axes=None, overwrite_input=False,
-                  auto_align_input=True, auto_contiguous=True,
-                  avoid_copy=False):
+    def get_ifftn_pyfftw(a, s=None, axes=None, overwrite_input=False,
+                         auto_align_input=True, auto_contiguous=True,
+                         avoid_copy=False):
         """Return a function to compute the ifftn."""
         global _THREADS, _PLANNER_EFFORT
         return pyfftw.builders.ifftn(a=a, s=s, axes=axes,
@@ -194,12 +195,13 @@ def resample(f, N):
     True
     """
     newshape = np.array(f.shape)
-    newshape[:] = N
-    fk = fftn(f)
+    newshape[...] = N
+    axes = np.where(np.not_equal(f.shape, newshape))[0]
+    fk = fftn(f, axes=axes)
     fk1 = np.zeros(newshape, dtype=complex)
     for _s in itertools.product(
             *((slice(0, (_N + 1) // 2), slice(-(_N - 1) // 2, None))
               for _N in np.minimum(f.shape, newshape))):
         fk1[_s] = fk[_s]
 
-    return ifftn(fk1) * np.prod(newshape.astype(float)/f.shape)
+    return ifftn(fk1, axes=axes) * np.prod(newshape.astype(float)/f.shape)
