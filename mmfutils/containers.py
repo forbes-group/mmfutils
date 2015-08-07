@@ -24,17 +24,64 @@ class Object(object):
     thereby allowing unpicklable objects to be used (in particular function
     instances).
 
-    .. note:: Do not use a variable named `_empty_state`... this is reserved
-       for objects without any state.
+    .. note:: Do not use any of the following variables:
 
+          * `_empty_state`: reserved for objects without any state
+          * `_independent_attributes`, `_dependent_attributes`,
+            `initialized`: Used to flag if attributes have been
+            changed but without `init()` being called.  (See below.)
+
+    By default setting any attribute in `picklable_attributes` will
+    set the `initialized` flag to `False`.  This will be set to `True`
+    when `init()` is called. Objects can then include an `assert
+    self.initialized` in the appropriate places.
+
+    To allow for some variables to be set without invalidating the
+    object we also check the set of names `_independent_attributes`.
+
+    .. note:: This redefines __setattr__ to provide the behaviour.
+
+    Examples
+    --------
+    >>> class A(Object):
+    ...     def __init__(self, x=0):
+    ...         self.x = x
+    ...         Object.__init__(self)
+    ...     def init(self):
+    ...         self.x1 = self.x + 1   # A dependent variable
+    ...         Object.init(self)
+    ...     def check(self):
+    ...         assert self.initialized, "Please call init()!"
+    ...         return self.x1 == self.x + 1
+    >>> a = A(x=0)
+    >>> a.check()
+    True
+    >>> a.x = 2.0
+    >>> a.check()
+    Traceback (most recent call last):
+    ...
+    AssertionError: Please call init()!
+    >>> a.init()
+    >>> a.check()
+    True
     """
+    # Assure that this is always defined.
+    initialized = False
+    picklable_attributes = ()  # Tuple so it is immutable
+    _independent_attributes = ()
+    _dependent_attributes = ()
+
     def __init__(self):
         if 'picklable_attributes' not in self.__dict__:
             self.picklable_attributes = sorted(_k for _k in self.__dict__)
         self.init()
 
     def init(self):
-        r"""Define any computed attributes here."""
+        r"""Define any computed attributes here.
+
+        Don't forget to call `Object.init()`
+        """
+        self.initialized = True
 
     def __getstate__(self):
         state = collections.OrderedDict((_k, getattr(self, _k))
@@ -90,6 +137,19 @@ class Object(object):
         state = self.__getstate__()
         args = ", ".join("=".join((_k, repr(state[_k]))) for _k in state)
         return "{0}({1})".format(self.__class__.__name__, args)
+
+    def _is_dependent_attribute(self, key):
+        return (key not in self._independent_attributes
+                and (key in self._dependent_attributes
+                     or key in self.picklable_attributes))
+
+    def __setattr__(self, key, value):
+        """Sets the `initialized` flag to `False` if any picklable
+        attribute is changed.
+        """
+        if self._is_dependent_attribute(key):
+            self.__dict__['initialized'] = False
+        object.__setattr__(self, key, value)
 
 
 class Container(Object, collections.Sized, collections.Iterable,
