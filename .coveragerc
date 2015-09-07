@@ -1,0 +1,3 @@
+[run]
+# Plots are not yet a part of this package
+omit=mmfutils/plot/*

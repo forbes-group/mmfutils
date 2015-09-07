@@ -25,6 +25,7 @@ VERSION = mmfutils.__version__
 install_requires = [
     "zope.interface>=3.8.0",
     'ipython>=3.0',
+    'husl',
 ]
 
 test_requires = [
