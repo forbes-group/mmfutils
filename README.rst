@@ -5,10 +5,13 @@
 Small set of utilities: containers and interfaces.
 
 This package provides some utilities that I tend to rely on during
-development. Presently in includes some convenience containers and a
-patch for including
+development. Presently it includes some convenience containers, plotting
+tools, and a patch for including
 `zope.interface <http://docs.zope.org/zope.interface/>`__ documentation
 in a notebook.
+
+(Note: If this file does not render properly, try viewing it through
+`nbviewer.org <http://nbviewer.ipython.org/urls/bitbucket.org/mforbes/mmfutils-fork/raw/tip/doc/README.ipynb>`__)
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -83,6 +86,8 @@ Table of Contents
       -  `2.5.1 Fast Filled Contour
          Plots <#2.5.1-Fast-Filled-Contour-Plots>`__
       -  `2.5.2 Angular Variables <#2.5.2-Angular-Variables>`__
+
+   -  `2.6 Debugging <#2.6-Debugging>`__
 
 -  `3. Developer Instructions <#3.-Developer-Instructions>`__
 
@@ -705,17 +710,17 @@ then it will match these to the shape of ``z``).
 
 .. parsed-literal::
 
-    CPU times: user 1.08 ms, sys: 57 µs, total: 1.14 ms
-    Wall time: 1.14 ms
-    CPU times: user 36.8 ms, sys: 1.42 ms, total: 38.2 ms
-    Wall time: 38.2 ms
+    CPU times: user 1.07 ms, sys: 50 µs, total: 1.12 ms
+    Wall time: 1.12 ms
+    CPU times: user 37.2 ms, sys: 1.37 ms, total: 38.6 ms
+    Wall time: 38.6 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.contour.QuadContourSet instance at 0x115efa1b8>
+    <matplotlib.contour.QuadContourSet instance at 0x115dee170>
 
 
 
@@ -751,13 +756,38 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet instance at 0x116de4758>,
-     <matplotlib.contour.QuadContourSet instance at 0x114293050>)
+    (<matplotlib.contour.QuadContourSet instance at 0x1164ce710>,
+     <matplotlib.contour.QuadContourSet instance at 0x11442fef0>)
 
 
 
 
 .. image:: README_files/README_55_1.png
+
+
+2.6 Debugging
+-------------
+
+A couple of debugging tools are provided. The most useful is the
+``debug`` decorator which will store the local variables of a function
+in a dictionary or in your global scope.
+
+.. code:: python
+
+    from mmfutils.debugging import debug
+    
+    @debug(locals())
+    def f(x):
+        y = x**1.5
+        z = 2/x
+        return z
+    
+    print(f(2.0), x, y, z)
+
+
+.. parsed-literal::
+
+    (1.0, 2.0, 2.8284271247461903, 1.0)
 
 
 3. Developer Instructions
@@ -791,10 +821,7 @@ This runs the following code:
     /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
       import pkg_resources
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Support files will be in README_files/
-    [NbConvertApp] Making directory README_files
-    [NbConvertApp] Making directory README_files
-    [NbConvertApp] Writing 100795 bytes to README.rst
+    [NbConvertApp] Writing 22663 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -817,169 +844,6 @@ Here is an example:
 
     !cd $ROOTDIR; python setup.py test
 
-
-.. parsed-literal::
-
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/command/install_scripts.py:3: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
-    running test
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module flake8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/flake8/__init__.pyc, but /Users/mforbes/work/mmfbb/mmfutils/flake8-2.4.1-py2.7.egg is being added to sys.path
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module pep8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pep8.pyc, but /Users/mforbes/work/mmfbb/mmfutils/pep8-1.5.7-py2.7.egg is being added to sys.path
-    running nosetests
-    running egg_info
-    writing requirements to mmfutils.egg-info/requires.txt
-    writing mmfutils.egg-info/PKG-INFO
-    writing top-level names to mmfutils.egg-info/top_level.txt
-    writing dependency_links to mmfutils.egg-info/dependency_links.txt
-    writing requirements to mmfutils.egg-info/requires.txt
-    writing mmfutils.egg-info/PKG-INFO
-    writing top-level names to mmfutils.egg-info/top_level.txt
-    writing dependency_links to mmfutils.egg-info/dependency_links.txt
-    reading manifest file 'mmfutils.egg-info/SOURCES.txt'
-    writing manifest file 'mmfutils.egg-info/SOURCES.txt'
-    nose.config: INFO: Set working dir to /Users/mforbes/work/mmfbb/mmfutils
-    nose.config: INFO: Ignoring files matching ['^\\.', '^_', '^setup\\.py$']
-    nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
-    INFO:root:Patching zope.interface.document.asStructuredText to format code
-    INFO:root:Patching flake8 for issues 39 and 40
-    Doctest: mmfutils.containers.Container ... ok
-    Doctest: mmfutils.containers.ContainerDict ... ok
-    Doctest: mmfutils.containers.ContainerList ... ok
-    Doctest: mmfutils.containers.Object ... ok
-    Doctest: mmfutils.math.differentiate.differentiate ... ok
-    Doctest: mmfutils.math.differentiate.hessian ... ok
-    Test the Richardson extrapolation for the correct scaling behaviour. ... ok
-    Doctest: mmfutils.math.integrate.Richardson ... ok
-    Doctest: mmfutils.math.integrate.exact_add ... ok
-    Doctest: mmfutils.math.integrate.exact_sum ... ok
-    Doctest: mmfutils.math.integrate.mquad ... /Users/mforbes/work/mmfbb/mmfutils/mmfutils/math/integrate/__init__.py:1: RuntimeWarning: divide by zero encountered in double_scalars
-      """Integration Utilities.
-    WARNING:root:mquad:MinStepSize: Minimum step size reached. (5.94368304574e-19 < 6.50521303491e-19) Singularity possible (err = 0.0).
-    WARNING:root:mquad:MinStepSize: Minimum step size reached. (5.94368304574e-19 < 6.50521303491e-19) Singularity possible (err = 1.98122768191e-19).
-    ok
-    Doctest: mmfutils.math.integrate.quad ... ok
-    Doctest: mmfutils.math.integrate.rsum ... ok
-    Doctest: mmfutils.math.integrate.ssum_inline ... ok
-    Doctest: mmfutils.math.integrate.ssum_python ... ok
-    Test directional first derivatives ... ok
-    Test directional second derivatives ... ok
-    Doctest: mmfutils.performance.fft.resample ... ok
-    mmfutils.tests.test_containers.TestContainer.test_container_delattr ... ok
-    Test persistent representation of object class ... ok
-    Check that the order of attributes defined by ... ok
-    mmfutils.tests.test_containers.TestContainerConversion.test_conversions ... ok
-    mmfutils.tests.test_containers.TestContainerDict.test_container_del ... ok
-    mmfutils.tests.test_containers.TestContainerDict.test_container_setitem ... ok
-    mmfutils.tests.test_containers.TestContainerList.test_container_delitem ... ok
-    mmfutils.tests.test_containers.TestObject.test_empty_object ... ok
-    Test persistent representation of object class ... ok
-    mmfutils.tests.test_containers.TestPersist.test_archive ... ok
-    Doctest: mmfutils.tests.test_containers.Issue4 ... ok
-    Test 3rd order differentiation ... ok
-    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenClass ... ok
-    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject1 ... ok
-    mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject2 ... ok
-    mmfutils.tests.test_interface.TestInterfaces.test_verifyClass ... ok
-    mmfutils.tests.test_interface.TestInterfaces.test_verifyObject ... ok
-    Doctest: mmfutils.tests.test_interface.Doctests ... ok
-    mmfutils.tests.test_monkeypatchs.TestCoverage.test_cover_monkeypatchs ... INFO:root:Patching flake8 for issues 39 and 40
-    ok
-    mmfutils.tests.test_monkeypatchs.TestCoverage.test_flake8_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
-    ok
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
-      import pkg_resources
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_kernel_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_console_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_qtconsole_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_notebook_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipython_nbconvert_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipcontroller_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipengine_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/ipcluster_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7/profile_testing/iplogger_config.py'
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7"
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    INFO:root:waiting for 1 engines
-    INFO:root:0 of 1 running
-    INFO:root:7 of 1 running
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing_pbs --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7"
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    WARNING:root:No ipcontroller-client.json, waiting...
-    INFO:root:waiting for 1 engines
-    INFO:root:0 of 1 running
-    INFO:root:3 of 1 running
-    Simple test connecting to a cluster. ... INFO:root:waiting for 1 engines
-    INFO:root:7 of 1 running
-    ok
-    Test deleting of cluster objects ... ok
-    Test that starting a running cluster does nothing. ... ok
-    Test that the PBS_NODEFILE is used if defined ... INFO:root:waiting for 1 engines
-    INFO:root:3 of 1 running
-    INFO:root:waiting for 3 engines
-    INFO:root:3 of 3 running
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing_pbs --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7"
-    2015-09-06 19:17:43.646 [IPClusterStop] Stopping cluster [pid=20795] with [signal=2]
-    ok
-    Test timeout (coverage) ... ok
-    mmfutils.tests.test_parallel.TestCluster.test_views ... DEBUG:root:Importing canning map
-    ok
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpTBJIC7"
-    2015-09-06 19:17:44.238 [IPClusterStop] Stopping cluster [pid=20767] with [signal=2]
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_daxpy ... ok
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_ddot ... ok
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_dnorm ... ok
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_zaxpy ... ok
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_zdotc ... ok
-    mmfutils.tests.test_performance_blas.Test_BLAS.test_znorm ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT.test_fft ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT.test_fftn ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fft ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fft_pyfftw ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fftn ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fftn_pyfftw ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_get_fft_pyfftw ... ok
-    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_get_fftn_pyfftw ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_hook_mkl ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_hooks_fft ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_hooks_numexpr ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_fft ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_mkl ... ok
-    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_numexpr ... ok
-    
-    Name                           Stmts   Miss  Cover   Missing
-    ------------------------------------------------------------
-    mmfutils                           1      0   100%   
-    mmfutils.containers               85      0   100%   
-    mmfutils.interface                47      0   100%   
-    mmfutils.math                      0      0   100%   
-    mmfutils.math.differentiate       61      0   100%   
-    mmfutils.math.integrate          193      0   100%   
-    mmfutils.monkeypatches            14      0   100%   
-    mmfutils.parallel                121      0   100%   
-    mmfutils.performance               0      0   100%   
-    mmfutils.performance.blas         58      0   100%   
-    mmfutils.performance.fft          61      0   100%   
-    mmfutils.performance.numexpr      10      0   100%   
-    mmfutils.performance.threads      10      0   100%   
-    ------------------------------------------------------------
-    TOTAL                            661      0   100%   
-    ----------------------------------------------------------------------
-    Ran 64 tests in 19.080s
-    
-    OK
-
-
 Complete code coverage information is provided in
 ``build/_coverage/index.html``.
 
@@ -989,210 +853,3 @@ Complete code coverage information is provided in
     with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
         coverage = f.read()
     HTML(coverage)
-
-
-
-
-.. raw:: html
-
-    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-    <html>
-    <head>
-        <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
-        <title>Coverage report</title>
-        <link rel='stylesheet' href='style.css' type='text/css'>
-        
-        <script type='text/javascript' src='jquery.min.js'></script>
-        <script type='text/javascript' src='jquery.tablesorter.min.js'></script>
-        <script type='text/javascript' src='jquery.hotkeys.js'></script>
-        <script type='text/javascript' src='coverage_html.js'></script>
-        <script type='text/javascript' charset='utf-8'>
-            jQuery(document).ready(coverage.index_ready);
-        </script>
-    </head>
-    <body id='indexfile'>
-    
-    <div id='header'>
-        <div class='content'>
-            <h1>Coverage report:
-                <span class='pc_cov'>100%</span>
-            </h1>
-            <img id='keyboard_icon' src='keybd_closed.png'>
-        </div>
-    </div>
-    
-    <div class='help_panel'>
-        <img id='panel_icon' src='keybd_open.png'>
-        <p class='legend'>Hot-keys on this page</p>
-        <div>
-        <p class='keyhelp'>
-            <span class='key'>n</span>
-            <span class='key'>s</span>
-            <span class='key'>m</span>
-            <span class='key'>x</span>
-            
-            <span class='key'>c</span> &nbsp; change column sorting
-        </p>
-        </div>
-    </div>
-    
-    <div id='index'>
-        <table class='index'>
-            <thead>
-                
-                <tr class='tablehead' title='Click to sort'>
-                    <th class='name left headerSortDown shortkey_n'>Module</th>
-                    <th class='shortkey_s'>statements</th>
-                    <th class='shortkey_m'>missing</th>
-                    <th class='shortkey_x'>excluded</th>
-                    
-                    <th class='right shortkey_c'>coverage</th>
-                </tr>
-            </thead>
-            
-            <tfoot>
-                <tr class='total'>
-                    <td class='name left'>Total</td>
-                    <td>661</td>
-                    <td>0</td>
-                    <td>68</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-            </tfoot>
-            <tbody>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils.html'>mmfutils</a></td>
-                    <td>1</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_containers.html'>mmfutils.containers</a></td>
-                    <td>85</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_interface.html'>mmfutils.interface</a></td>
-                    <td>47</td>
-                    <td>0</td>
-                    <td>14</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_math.html'>mmfutils.math</a></td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_math_differentiate.html'>mmfutils.math.differentiate</a></td>
-                    <td>61</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_math_integrate.html'>mmfutils.math.integrate</a></td>
-                    <td>193</td>
-                    <td>0</td>
-                    <td>16</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_monkeypatches.html'>mmfutils.monkeypatches</a></td>
-                    <td>14</td>
-                    <td>0</td>
-                    <td>4</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_parallel.html'>mmfutils.parallel</a></td>
-                    <td>121</td>
-                    <td>0</td>
-                    <td>8</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_performance.html'>mmfutils.performance</a></td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_performance_blas.html'>mmfutils.performance.blas</a></td>
-                    <td>58</td>
-                    <td>0</td>
-                    <td>6</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_performance_fft.html'>mmfutils.performance.fft</a></td>
-                    <td>61</td>
-                    <td>0</td>
-                    <td>5</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_performance_numexpr.html'>mmfutils.performance.numexpr</a></td>
-                    <td>10</td>
-                    <td>0</td>
-                    <td>7</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-                <tr class='file'>
-                    <td class='name left'><a href='mmfutils_performance_threads.html'>mmfutils.performance.threads</a></td>
-                    <td>10</td>
-                    <td>0</td>
-                    <td>8</td>
-                    
-                    <td class='right'>100%</td>
-                </tr>
-                
-            </tbody>
-        </table>
-    </div>
-    
-    <div id='footer'>
-        <div class='content'>
-            <p>
-                <a class='nav' href='http://nedbatchelder.com/code/coverage'>coverage.py v3.7.1</a>
-            </p>
-        </div>
-    </div>
-    
-    </body>
-    </html>
-
-
-
