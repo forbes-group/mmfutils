@@ -710,17 +710,17 @@ then it will match these to the shape of ``z``).
 
 .. parsed-literal::
 
-    CPU times: user 1.07 ms, sys: 50 µs, total: 1.12 ms
+    CPU times: user 1.02 ms, sys: 90 µs, total: 1.11 ms
     Wall time: 1.12 ms
-    CPU times: user 37.2 ms, sys: 1.37 ms, total: 38.6 ms
-    Wall time: 38.6 ms
+    CPU times: user 37.7 ms, sys: 1.2 ms, total: 38.9 ms
+    Wall time: 38.9 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.contour.QuadContourSet instance at 0x115dee170>
+    <matplotlib.contour.QuadContourSet instance at 0x115e09b48>
 
 
 
@@ -740,15 +740,25 @@ phase of a complex wavefunction.
     from matplotlib import pyplot as plt
     import time
     import numpy as np
-    from mmfutils import plot as mmfplt
+    from mmfutils import plot as mmfplt;reload(mmfplt)
     x = np.linspace(-1, 1, 100)[:, None]
     y = np.linspace(-1, 1, 200)[None, :]
     z = x + 1j*y
     
-    plt.subplot(121).set_aspect(1)
+    plt.figure(figsize=(9,2))
+    plt.subplot(131).set_aspect(1)
     mmfplt.phase_contour(x, y, z, aspect=1, colors='k', linewidths=0.5)
-    plt.subplot(122).set_aspect(1)
+    
+    # This is a little slow but allows you to vary the luminosity.
+    plt.subplot(132).set_aspect(1)
     mmfplt.imcontourf(x, y, mmfplt.color_complex(z), aspect=1)
+    mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
+    
+    # This is faster if you just want to show the phase and allows
+    # for a colorbar via a registered colormap
+    plt.subplot(133).set_aspect(1)
+    mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp', aspect=1)
+    plt.colorbar()
     mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
 
 
@@ -756,8 +766,8 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet instance at 0x1164ce710>,
-     <matplotlib.contour.QuadContourSet instance at 0x11442fef0>)
+    (<matplotlib.contour.QuadContourSet instance at 0x116b247e8>,
+     <matplotlib.contour.QuadContourSet instance at 0x116b4a3b0>)
 
 
 
@@ -821,7 +831,7 @@ This runs the following code:
     /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
       import pkg_resources
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Writing 22663 bytes to README.rst
+    [NbConvertApp] Writing 20864 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will

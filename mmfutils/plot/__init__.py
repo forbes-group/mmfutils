@@ -126,6 +126,9 @@ def color_angle(theta, map='huslp', gamma=1,
           appear to change uniformly though.
        other: a custom but poor cycling through hue.
     """
+    # Convert to same form used by color map which linear maps the
+    # range -pi/2, pi/2 to 0, 360
+    theta = theta + np.pi
     if map in ('husl', 'huslp'):
         import husl
 
@@ -183,3 +186,29 @@ def color_complex(psi, vmin=None, vmax=None, reversed=False,
     if reversed:
         lightness = 100.0 - lightness
     return color_angle(theta, lightness=lightness, **kw)
+
+
+def make_angle_colormap(map='huslp', gamma=1,
+                        saturation=100.0, lightness=75.6):
+    import husl
+    from matplotlib.colors import LinearSegmentedColormap
+    N = 100
+    rs = []
+    gs = []
+    bs = []
+    for theta in np.linspace(0, 360, N):
+        r, g, b = getattr(husl, map + '_to_rgb')(theta, saturation, lightness)
+        rs.append((theta/360.0, r, r))
+        gs.append((theta/360.0, g, g))
+        bs.append((theta/360.0, b, b))
+    cdict = dict(red=tuple(rs),
+                 green=tuple(gs),
+                 blue=tuple(bs))
+    return LinearSegmentedColormap('huslp', cdict)
+
+
+cm_husl = make_angle_colormap(map='husl')
+cm_huslp = make_angle_colormap(map='huslp')
+
+plt.register_cmap(name='husl', cmap=cm_husl)
+plt.register_cmap(name='huslp', cmap=cm_huslp)
