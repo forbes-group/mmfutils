@@ -1,4 +1,11 @@
 """Tools for working with Numexp.
+
+At present all this module provides is a safe way of importing
+``numexpr``.  This prevents a hard crash (i.e. segfault) when the MKL
+is enabled but cannot be found.  Just go:
+
+>>> from mmfutils.performance.numexpr import numexpr
+
 """
 from __future__ import absolute_import
 

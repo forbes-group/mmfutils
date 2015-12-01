@@ -1,7 +1,8 @@
 """FFTW wrappers for high-performance computing.
 
-This module requires you to have installed the fftw libraries and pyfftw.  Note
-that you must build the fftw with all precisions using something like::
+This module requires you to have installed the fftw libraries and
+:mod:`pyfftw`.  Note that you must build the fftw with all precisions
+using something like::
 
     PREFIX=/data/apps/fftw
     VER=3.3.4
@@ -13,6 +14,7 @@ that you must build the fftw with all precisions using something like::
                   $opt
       make -j8 install
     done
+
 """
 from __future__ import absolute_import, division, print_function
 

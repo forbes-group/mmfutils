@@ -149,9 +149,14 @@ def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
     >>> abs(y - f(x)).max()
     0.0
 
+    # This works, but triggers a warning because of the singular
+    # endpoints.
+    >>> logger = logging.getLogger()
+    >>> logger.disabled = True
     >>> def f(x): return 1.0/np.sqrt(x) + 1.0/np.sqrt(1.0-x)
-    >>> abs(mquad(f, 0, 1, abs_tol=1e-8) - 4.0) < 2e-7
+    >>> abs(mquad(f, 0, 1, abs_tol=1e-8) - 4.0) < 1e-8
     True
+    >>> logger.disabled = False
 
     >>> def f(x):
     ...     if x < 0:

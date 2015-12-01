@@ -15,7 +15,7 @@ SET_THREAD_HOOKS = set()
 def set_num_threads(nthreads):
     """Set the maximum number of threads to use.
 
-    Calls all the hooks in `mmfutils.performance.threads.SET_THREAD_HOOKS
+    Calls all the hooks in `mmfutils.performance.threads.SET_THREAD_HOOKS`
     """
     global SET_THREAD_HOOKS
     for set_num_threads in SET_THREAD_HOOKS:

@@ -5,10 +5,13 @@
 Small set of utilities: containers and interfaces.
 
 This package provides some utilities that I tend to rely on during
-development. Presently in includes some convenience containers and a
-patch for including
+development. Presently it includes some convenience containers, plotting
+tools, and a patch for including
 `zope.interface <http://docs.zope.org/zope.interface/>`__ documentation
 in a notebook.
+
+(Note: If this file does not render properly, try viewing it through
+`nbviewer.org <http://nbviewer.ipython.org/urls/bitbucket.org/mforbes/mmfutils-fork/raw/tip/doc/README.ipynb>`__)
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -51,6 +54,42 @@ in a notebook.
 .. raw:: html
 
    </table>
+
+Table of Contents
+=================
+
+-  `1. MMF Utils <#1.-MMF-Utils>`__
+
+   -  `1.1 Installing <#1.1-Installing>`__
+
+-  `2. Usage <#2.-Usage>`__
+
+   -  `2.1 Containers <#2.1-Containers>`__
+
+      -  `2.1.1 Object <#2.1.1-Object>`__
+
+         -  `2.1.1.1 Object Example <#2.1.1.1-Object-Example>`__
+
+      -  `2.1.2 Container <#2.1.2-Container>`__
+
+         -  `2.1.2.1 Container Examples <#2.1.2.1-Container-Examples>`__
+
+   -  `2.2 Interfaces <#2.2-Interfaces>`__
+
+      -  `2.2.1 Interface
+         Documentation <#2.2.1-Interface-Documentation>`__
+
+   -  `2.3 Parallel <#2.3-Parallel>`__
+   -  `2.4 Performance <#2.4-Performance>`__
+   -  `2.5 Plotting <#2.5-Plotting>`__
+
+      -  `2.5.1 Fast Filled Contour
+         Plots <#2.5.1-Fast-Filled-Contour-Plots>`__
+      -  `2.5.2 Angular Variables <#2.5.2-Angular-Variables>`__
+
+   -  `2.6 Debugging <#2.6-Debugging>`__
+
+-  `3. Developer Instructions <#3.-Developer-Instructions>`__
 
 1.1 Installing
 --------------
@@ -191,7 +230,7 @@ when unpickled, ``init()`` is called to re-establish ``s.x`` and
 
 .. parsed-literal::
 
-    115
+    169
     init() called
 
 
@@ -349,7 +388,7 @@ These were designed with the following use cases in mind:
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-14-cbfd03ed340e> in <module>()
+    <ipython-input-9-cbfd03ed340e> in <module>()
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print c1
     ----> 4 c1.large_temporary_array
@@ -379,12 +418,6 @@ This can then be checked in tests.
         # No self here since this is the "user" interface
         def add(other):
             """Return self + other."""
-
-
-.. parsed-literal::
-
-    INFO:root:Patching zope.interface.document.asStructuredText to format code
-
 
 Here is a broken implementation. We muck up the arguments to ``add``:
 
@@ -512,6 +545,12 @@ Now we can show the interface in our documentation:
     describe_interface(IAdder)
 
 
+.. parsed-literal::
+
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
+      import pkg_resources
+
+
 
 .. raw:: html
 
@@ -556,8 +595,8 @@ profile name, and can be started or stopped from this class:
     from mmfutils import parallel
     cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
     cluster.start()
-    client = cluster.wait()  # Instance of IPython.parallel.Client
-    view = client.load_balanced_view()
+    cluster.wait()  # Instance of IPython.parallel.Client
+    view = cluster.load_balanced_view
     x = np.linspace(-6,6, 100)
     y = view.map(lambda x:x**2, x)
     print np.allclose(y, x**2)
@@ -586,7 +625,7 @@ the context and shutting down the cluster!
 .. code:: python
 
     with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
-        view = client.load_balanced_view()
+        view = client.load_balanced_view
         x = np.linspace(-6,6, 100)
         y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
     print np.allclose(y, x**2)
@@ -637,7 +676,148 @@ Here is a brief description of the components:
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
 
+2.5 Plotting
+------------
 
+Several tools are provided in ``mmfutils.plot``:
+
+2.5.1 Fast Filled Contour Plots
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
+function, but uses ``plt.imshow`` which is much faster. This has
+limitations – the data must be equally spaced for example, and it
+effectively has as many contours as colours – but is useful for
+animations and interactive work. It also supports my idea of saner
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+then it will match these to the shape of ``z``).
+
+.. code:: python
+
+    %matplotlib inline
+    from matplotlib import pyplot as plt
+    import time
+    import numpy as np
+    from mmfutils import plot as mmfplt
+    x = np.linspace(-1, 1, 100)[:, None]
+    y = np.linspace(-0.1, 0.1, 200)[None, :]
+    z = np.sin(10*x)*y**2
+    plt.subplot(121)
+    %time mmfplt.imcontourf(x, y, z)
+    plt.subplot(122)
+    %time plt.contourf(x.ravel(), y.ravel(), z.T, 50, cmap='gist_heat')
+
+
+.. parsed-literal::
+
+    CPU times: user 1.12 ms, sys: 82 µs, total: 1.2 ms
+    Wall time: 1.2 ms
+    CPU times: user 37 ms, sys: 1.17 ms, total: 38.2 ms
+    Wall time: 38.2 ms
+
+
+
+
+.. parsed-literal::
+
+    <matplotlib.contour.QuadContourSet instance at 0x114e54368>
+
+
+
+.. parsed-literal::
+
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/matplotlib/collections.py:590: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+      if self._edgecolors == str('face'):
+
+
+
+.. image:: README_files/README_52_3.png
+
+
+2.5.2 Angular Variables
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A couple of tools are provided to visualize angular fields, such as the
+phase of a complex wavefunction.
+
+.. code:: python
+
+    %matplotlib inline
+    from matplotlib import pyplot as plt
+    import time
+    import numpy as np
+    from mmfutils import plot as mmfplt;reload(mmfplt)
+    x = np.linspace(-1, 1, 100)[:, None]
+    y = np.linspace(-1, 1, 200)[None, :]
+    z = x + 1j*y
+    
+    plt.figure(figsize=(9,2))
+    plt.subplot(131).set_aspect(1)
+    mmfplt.phase_contour(x, y, z, aspect=1, colors='k', linewidths=0.5)
+    
+    # This is a little slow but allows you to vary the luminosity.
+    plt.subplot(132).set_aspect(1)
+    mmfplt.imcontourf(x, y, mmfplt.color_complex(z), aspect=1)
+    mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
+    
+    # This is faster if you just want to show the phase and allows
+    # for a colorbar via a registered colormap
+    plt.subplot(133).set_aspect(1)
+    mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp', aspect=1)
+    plt.colorbar()
+    mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
+
+
+.. parsed-literal::
+
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/matplotlib/collections.py:650: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+      if self._edgecolors_original != str('face'):
+
+
+
+
+.. parsed-literal::
+
+    (<matplotlib.contour.QuadContourSet instance at 0x115bc5248>,
+     <matplotlib.contour.QuadContourSet instance at 0x115be2dd0>)
+
+
+
+
+.. image:: README_files/README_55_2.png
+
+
+2.6 Debugging
+-------------
+
+A couple of debugging tools are provided. The most useful is the
+``debug`` decorator which will store the local variables of a function
+in a dictionary or in your global scope.
+
+.. code:: python
+
+    from mmfutils.debugging import debug
+    
+    @debug(locals())
+    def f(x):
+        y = x**1.5
+        z = 2/x
+        return z
+    
+    print(f(2.0), x, y, z)
+
+
+.. parsed-literal::
+
+    (1.0, 2.0, 2.8284271247461903, 1.0)
+
+
+Mathematics
+-----------
+
+We include a few mathematical tools here too. In particular, numerical
+integration and differentiation. Check the API documentation for
+details.
 
 3. Developer Instructions
 =========================
@@ -667,8 +847,13 @@ This runs the following code:
 
 .. parsed-literal::
 
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
+      import pkg_resources
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Writing 17392 bytes to README.rst
+    [NbConvertApp] Support files will be in README_files/
+    [NbConvertApp] Making directory README_files
+    [NbConvertApp] Making directory README_files
+    [NbConvertApp] Writing 44609 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -694,9 +879,10 @@ Here is an example:
 
 .. parsed-literal::
 
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/command/install_scripts.py:3: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
     running test
-    /Users/mforbes/.anaconda/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module flake8 was already imported from /Users/mforbes/.anaconda/lib/python2.7/site-packages/flake8/__init__.pyc, but /Users/mforbes/work/mmfbb/pytimeode/flake8-2.4.0-py2.7.egg is being added to sys.path
-    /Users/mforbes/.anaconda/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module pep8 was already imported from /Users/mforbes/.anaconda/lib/python2.7/site-packages/pep8.pyc, but /Users/mforbes/work/mmfbb/pytimeode/pep8-1.5.7-py2.7.egg is being added to sys.path
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module flake8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/flake8/__init__.pyc, but /Users/mforbes/work/mmfbb/mmfutils/flake8-2.4.1-py2.7.egg is being added to sys.path
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module pep8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pep8.pyc, but /Users/mforbes/work/mmfbb/mmfutils/pep8-1.5.7-py2.7.egg is being added to sys.path
     running nosetests
     running egg_info
     writing requirements to mmfutils.egg-info/requires.txt
@@ -712,14 +898,36 @@ Here is an example:
     nose.config: INFO: Set working dir to /Users/mforbes/work/mmfbb/mmfutils
     nose.config: INFO: Ignoring files matching ['^\\.', '^_', '^setup\\.py$']
     nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
-    nose.plugins.cover: INFO: Coverage report will include only packages: ['mmfutils']
     INFO:root:Patching zope.interface.document.asStructuredText to format code
     INFO:root:Patching flake8 for issues 39 and 40
     Doctest: mmfutils.containers.Container ... ok
     Doctest: mmfutils.containers.ContainerDict ... ok
     Doctest: mmfutils.containers.ContainerList ... ok
+    Doctest: mmfutils.containers.Object ... ok
+    Doctest: mmfutils.debugging.debug ... ok
+    Doctest: mmfutils.debugging.persistent_locals ... ok
+    Doctest: mmfutils.math.differentiate.differentiate ... ok
+    Doctest: mmfutils.math.differentiate.hessian ... ok
+    Test the Richardson extrapolation for the correct scaling behaviour. ... ok
+    Doctest: mmfutils.math.integrate.Richardson ... ok
+    Doctest: mmfutils.math.integrate.exact_add ... ok
+    Doctest: mmfutils.math.integrate.exact_sum ... ok
+    Doctest: mmfutils.math.integrate.mquad ... /Users/mforbes/work/mmfbb/mmfutils/mmfutils/math/integrate/__init__.py:1: RuntimeWarning: divide by zero encountered in double_scalars
+      """Integration Utilities.
+    WARNING:root:mquad:MinStepSize: Minimum step size reached. (5.94368304574e-19 < 6.50521303491e-19) Singularity possible (err = 0.0).
+    WARNING:root:mquad:MinStepSize: Minimum step size reached. (5.94368304574e-19 < 6.50521303491e-19) Singularity possible (err = 1.98122768191e-19).
+    ok
+    Doctest: mmfutils.math.integrate.quad ... ok
+    Doctest: mmfutils.math.integrate.rsum ... ok
+    Doctest: mmfutils.math.integrate.ssum_inline ... ok
+    Doctest: mmfutils.math.integrate.ssum_python ... ok
+    Test directional first derivatives ... ok
+    Test directional second derivatives ... ok
+    Doctest: mmfutils.performance.fft.resample ... ok
+    Doctest: mmfutils.performance.numexpr ... ok
     mmfutils.tests.test_containers.TestContainer.test_container_delattr ... ok
     Test persistent representation of object class ... ok
+    Check that the order of attributes defined by ... ok
     mmfutils.tests.test_containers.TestContainerConversion.test_conversions ... ok
     mmfutils.tests.test_containers.TestContainerDict.test_container_del ... ok
     mmfutils.tests.test_containers.TestContainerDict.test_container_setitem ... ok
@@ -727,6 +935,12 @@ Here is an example:
     mmfutils.tests.test_containers.TestObject.test_empty_object ... ok
     Test persistent representation of object class ... ok
     mmfutils.tests.test_containers.TestPersist.test_archive ... ok
+    Doctest: mmfutils.tests.test_containers.Issue4 ... ok
+    mmfutils.tests.test_debugging.TestCoverage.test_coverage_1 ... ok
+    mmfutils.tests.test_debugging.TestCoverage.test_coverage_2 ... ok
+    mmfutils.tests.test_debugging.TestCoverage.test_coverage_3 ... ok
+    mmfutils.tests.test_debugging.TestCoverage.test_coverage_exception ... ok
+    Test 3rd order differentiation ... ok
     mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenClass ... ok
     mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject1 ... ok
     mmfutils.tests.test_interface.TestInterfaces.test_verifyBrokenObject2 ... ok
@@ -737,18 +951,19 @@ Here is an example:
     ok
     mmfutils.tests.test_monkeypatchs.TestCoverage.test_flake8_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
     ok
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_kernel_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_console_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_qtconsole_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_notebook_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipython_nbconvert_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipcontroller_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipengine_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/ipcluster_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml/profile_testing/iplogger_config.py'
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing2 --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
+      import pkg_resources
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_kernel_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_console_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_qtconsole_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_notebook_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_nbconvert_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipcontroller_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipengine_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipcluster_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/iplogger_config.py'
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
@@ -756,36 +971,80 @@ Here is an example:
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
+    INFO:root:waiting for 1 engines
+    INFO:root:0 of 1 running
+    INFO:root:7 of 1 running
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing_pbs --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
     WARNING:root:No ipcontroller-client.json, waiting...
-    INFO:root:waiting for 3 engines
-    INFO:root:0 of 3 running
-    INFO:root:3 of 3 running
-    INFO:root:waiting for 7 engines
-    INFO:root:7 of 7 running
-    Simple test connecting to a cluster. ... ok
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    WARNING:root:No ipcontroller-client.json, waiting...
+    INFO:root:waiting for 1 engines
+    INFO:root:0 of 1 running
+    INFO:root:3 of 1 running
+    Simple test connecting to a cluster. ... INFO:root:waiting for 1 engines
+    INFO:root:7 of 1 running
+    ok
+    Test deleting of cluster objects ... ok
     Test that starting a running cluster does nothing. ... ok
-    Test that the PBS_NODEFILE is used if defined ... ok
+    Test that the PBS_NODEFILE is used if defined ... INFO:root:waiting for 1 engines
+    INFO:root:3 of 1 running
+    INFO:root:waiting for 3 engines
+    INFO:root:3 of 3 running
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing_pbs --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
+    2015-12-01 12:02:29.961 [IPClusterStop] Stopping cluster [pid=13563] with [signal=2]
+    ok
     Test timeout (coverage) ... ok
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing2 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
-    2015-04-28 10:22:59.830 [IPClusterStop] Stopping cluster [pid=42033] with [signal=2]
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpdrrGml"
-    2015-04-28 10:23:00.136 [IPClusterStop] Stopping cluster [pid=42025] with [signal=2]
+    mmfutils.tests.test_parallel.TestCluster.test_views ... DEBUG:root:Importing canning map
+    ok
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
+    2015-12-01 12:02:30.535 [IPClusterStop] Stopping cluster [pid=13535] with [signal=2]
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_daxpy ... ok
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_ddot ... ok
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_dnorm ... ok
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_zaxpy ... ok
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_zdotc ... ok
+    mmfutils.tests.test_performance_blas.Test_BLAS.test_znorm ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT.test_fft ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT.test_fftn ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fft ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fft_pyfftw ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fftn ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_fftn_pyfftw ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_get_fft_pyfftw ... ok
+    mmfutils.tests.test_performance_fft.Test_FFT_pyfftw.test_get_fftn_pyfftw ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_hook_mkl ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_hooks_fft ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_hooks_numexpr ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_fft ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_mkl ... ok
+    mmfutils.tests.test_performance_threads.TestThreads.test_set_threads_numexpr ... ok
     
-    Name                        Stmts   Miss  Cover   Missing
-    ---------------------------------------------------------
-    mmfutils.py                     1      0   100%   
-    mmfutils/containers.py         73      0   100%   
-    mmfutils/interface.py          47      0   100%   
-    mmfutils/monkeypatches.py      12      0   100%   
-    mmfutils/parallel.py           89      0   100%   
-    ---------------------------------------------------------
-    TOTAL                         222      0   100%   
+    Name                           Stmts   Miss  Cover   Missing
+    ------------------------------------------------------------
+    mmfutils                           1      0   100%   
+    mmfutils.containers               85      0   100%   
+    mmfutils.debugging                47      0   100%   
+    mmfutils.interface                47      0   100%   
+    mmfutils.math                      0      0   100%   
+    mmfutils.math.differentiate       61      0   100%   
+    mmfutils.math.integrate          193      0   100%   
+    mmfutils.monkeypatches            14      0   100%   
+    mmfutils.parallel                121      0   100%   
+    mmfutils.performance               0      0   100%   
+    mmfutils.performance.blas         58      0   100%   
+    mmfutils.performance.fft          61      0   100%   
+    mmfutils.performance.numexpr      10      0   100%   
+    mmfutils.performance.threads      10      0   100%   
+    ------------------------------------------------------------
+    TOTAL                            708      0   100%   
     ----------------------------------------------------------------------
-    Ran 24 tests in 10.458s
+    Ran 71 tests in 18.769s
     
     OK
-    running flake8
-    running check
 
 
 Complete code coverage information is provided in
@@ -803,7 +1062,7 @@ Complete code coverage information is provided in
 
 .. raw:: html
 
-    <!DOCTYPE html>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
     <html>
     <head>
         <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
@@ -811,32 +1070,26 @@ Complete code coverage information is provided in
         <link rel='stylesheet' href='style.css' type='text/css'>
         
         <script type='text/javascript' src='jquery.min.js'></script>
-        <script type='text/javascript' src='jquery.debounce.min.js'></script>
         <script type='text/javascript' src='jquery.tablesorter.min.js'></script>
         <script type='text/javascript' src='jquery.hotkeys.js'></script>
         <script type='text/javascript' src='coverage_html.js'></script>
-        <script type='text/javascript'>
+        <script type='text/javascript' charset='utf-8'>
             jQuery(document).ready(coverage.index_ready);
         </script>
     </head>
-    <body class='indexfile'>
+    <body id='indexfile'>
     
     <div id='header'>
         <div class='content'>
             <h1>Coverage report:
                 <span class='pc_cov'>100%</span>
             </h1>
-    
-            <img id='keyboard_icon' src='keybd_closed.png' alt='Show keyboard shortcuts' />
-    
-            <form id="filter_container">
-                <input id="filter" type="text" value="" placeholder="filter..." />
-            </form>
+            <img id='keyboard_icon' src='keybd_closed.png'>
         </div>
     </div>
     
     <div class='help_panel'>
-        <img id='panel_icon' src='keybd_open.png' alt='Hide keyboard shortcuts' />
+        <img id='panel_icon' src='keybd_open.png'>
         <p class='legend'>Hot-keys on this page</p>
         <div>
         <p class='keyhelp'>
@@ -867,72 +1120,149 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class='total'>
                     <td class='name left'>Total</td>
-                    <td>222</td>
+                    <td>708</td>
                     <td>0</td>
-                    <td>26</td>
+                    <td>71</td>
                     
-                    <td class='right' data-ratio='222 222'>100%</td>
+                    <td class='right'>100%</td>
                 </tr>
             </tfoot>
             <tbody>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_py.html'>mmfutils.py</a></td>
+                    <td class='name left'><a href='mmfutils.html'>mmfutils</a></td>
                     <td>1</td>
                     <td>0</td>
                     <td>0</td>
                     
-                    <td class='right' data-ratio='1 1'>100%</td>
+                    <td class='right'>100%</td>
                 </tr>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_containers_py.html'>mmfutils/containers.py</a></td>
-                    <td>73</td>
+                    <td class='name left'><a href='mmfutils_containers.html'>mmfutils.containers</a></td>
+                    <td>85</td>
                     <td>0</td>
                     <td>0</td>
                     
-                    <td class='right' data-ratio='73 73'>100%</td>
+                    <td class='right'>100%</td>
                 </tr>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_interface_py.html'>mmfutils/interface.py</a></td>
+                    <td class='name left'><a href='mmfutils_debugging.html'>mmfutils.debugging</a></td>
+                    <td>47</td>
+                    <td>0</td>
+                    <td>3</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_interface.html'>mmfutils.interface</a></td>
                     <td>47</td>
                     <td>0</td>
                     <td>14</td>
                     
-                    <td class='right' data-ratio='47 47'>100%</td>
+                    <td class='right'>100%</td>
                 </tr>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_monkeypatches_py.html'>mmfutils/monkeypatches.py</a></td>
-                    <td>12</td>
+                    <td class='name left'><a href='mmfutils_math.html'>mmfutils.math</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_math_differentiate.html'>mmfutils.math.differentiate</a></td>
+                    <td>61</td>
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_math_integrate.html'>mmfutils.math.integrate</a></td>
+                    <td>193</td>
+                    <td>0</td>
+                    <td>16</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_monkeypatches.html'>mmfutils.monkeypatches</a></td>
+                    <td>14</td>
                     <td>0</td>
                     <td>4</td>
                     
-                    <td class='right' data-ratio='12 12'>100%</td>
+                    <td class='right'>100%</td>
                 </tr>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_parallel_py.html'>mmfutils/parallel.py</a></td>
-                    <td>89</td>
+                    <td class='name left'><a href='mmfutils_parallel.html'>mmfutils.parallel</a></td>
+                    <td>121</td>
                     <td>0</td>
                     <td>8</td>
                     
-                    <td class='right' data-ratio='89 89'>100%</td>
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_performance.html'>mmfutils.performance</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_performance_blas.html'>mmfutils.performance.blas</a></td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td>6</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_performance_fft.html'>mmfutils.performance.fft</a></td>
+                    <td>61</td>
+                    <td>0</td>
+                    <td>5</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_performance_numexpr.html'>mmfutils.performance.numexpr</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>7</td>
+                    
+                    <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_performance_threads.html'>mmfutils.performance.threads</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>8</td>
+                    
+                    <td class='right'>100%</td>
                 </tr>
                 
             </tbody>
         </table>
-    
-        <p id="no_rows">
-            No items found using the specified filter.
-        </p>
     </div>
     
     <div id='footer'>
         <div class='content'>
             <p>
-                <a class='nav' href='https://coverage.readthedocs.org/en/4.0a6'>coverage.py v4.0a6</a>
+                <a class='nav' href='http://nedbatchelder.com/code/coverage'>coverage.py v3.7.1</a>
             </p>
         </div>
     </div>

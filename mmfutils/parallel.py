@@ -202,6 +202,7 @@ class Cluster(object):
             if running < len(self.client):
                 running = len(self.client)
                 logging.info("{} of {} running".format(running, n_min))
+        return self.client
 
     def __enter__(self):
         self.start(context=True)

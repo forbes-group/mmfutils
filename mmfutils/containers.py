@@ -51,7 +51,8 @@ class Object(object):
     ...         self.x1 = self.x + 1   # A dependent variable
     ...         Object.init(self)
     ...     def check(self):
-    ...         assert self.initialized, "Please call init()!"
+    ...         if not self.initialized:
+    ...             raise AssertionError("Please call init()!")
     ...         return self.x1 == self.x + 1
     >>> a = A(x=0)
     >>> a.check()
