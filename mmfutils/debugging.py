@@ -95,6 +95,7 @@ def debug(*v, **kw):
     (2, 4, 8)
 
     If an exception is raised, you still have access to the results:
+
     >>> env = {}
     >>> @debug(env)
     ... def f(x):

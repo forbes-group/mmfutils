@@ -85,8 +85,7 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
 
     See Also
     --------
-    :func:`mmf.math.integrate.Richardson` : Richardson extrapolation
-    :func:`Richardson` : Richardson extrapolation
+    :func:`mmfutils.math.integrate.Richardson` : Richardson extrapolation
 
 
     Examples
@@ -178,7 +177,7 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
 
 def hessian(f, x, **kw):
     r"""Return the gradient Hessian matrix of `f(x)` at `x` using
-    :func:`differentiate.  This is not efficient.
+    :func:`differentiate`.  This is not efficient.
 
     Parameters
     ----------

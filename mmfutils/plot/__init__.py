@@ -118,13 +118,16 @@ def color_angle(theta, map='huslp', gamma=1,
     map : 'husl' or 'hue'
        Colour map to use.
 
-       'huslp' : a luminosity corrected coloring.  All angles here
+       'huslp' :
+          a luminosity corrected coloring.  All angles here
           have the same perceptual brightness, however only pastel
           colors are used.
-       'husl': a luminosity corrected coloring similar to huslp but
+       'husl' :
+          a luminosity corrected coloring similar to huslp but
           allowing for full saturation. Highly saturated colors do not
           appear to change uniformly though.
-       other: a custom but poor cycling through hue.
+       other :
+         a custom but poor cycling through hue.
     """
     # Convert to same form used by color map which linear maps the
     # range -pi/2, pi/2 to 0, 360
