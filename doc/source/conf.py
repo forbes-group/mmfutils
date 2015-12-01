@@ -16,6 +16,34 @@ import sys
 import os
 import shlex
 
+from mock import Mock as MagicMock
+
+# These modules are mocked up so they can be imported, allowing the
+# docs to be built, but not requiring them to be fully installed.  We
+# need to be able to import our modules because we use autodoc, but
+# since only some parts of the package use these, we do not make them
+# requirements.
+# http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+
+
+class Mock(MagicMock):
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+
+    def __getattr__(self, name):
+        return Mock()
+
+MOCK_MODULES = ['scipy', 'matplotlib',
+                'scipy.fftpack', 'scipy.integrate', 'scipy.interpolate',
+                'scipy.linalg', 'scipy.weave',
+                'matplotlib.cm', 'matplotlib.colors']
+sys.modules.update((_name, Mock()) for _name in MOCK_MODULES)
+
+# Unfortunately, the following fails... not sure how to fix
+import scipy.linalg
+scipy.linalg.get_blas_funcs = Mock(return_value=[Mock(), Mock()])
+
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
