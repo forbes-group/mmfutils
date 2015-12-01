@@ -7,6 +7,9 @@ import sys
 
 __all__ = ['persistent_locals', 'debug']
 
+# Default location
+_LOCALS = {}
+
 
 class persistent_locals(object):
     """Decorator that stores the function's local variables.
@@ -110,7 +113,7 @@ def debug(*v, **kw):
     {'y': 0, 'x': 0}
     """
     func = None
-    env = kw.get('locals', kw.get('env', None))
+    env = kw.get('locals', kw.get('env', _LOCALS))
 
     if len(v) == 0:
         pass
@@ -123,10 +126,6 @@ def debug(*v, **kw):
         func, env = v
     else:
         raise ValueError("Must pass in either function or locals or both")
-
-    # Would like to use globals() here but have no idea how to get it.
-    if env is None:
-        env = {}
 
     class Decorator(object):
         def __init__(self, f):
