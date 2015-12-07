@@ -1372,4 +1372,4 @@ Then create this branch and commit this:
 ::
 
        hg branch "0.4.7"
-       hg com -m "BRN: 0.4.7"
+       hg com -m "BRN: Started branch 0.4.7"
