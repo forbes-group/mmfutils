@@ -6,6 +6,7 @@ mmfutils
     mmfutils.interface
     mmfutils.containers
     mmfutils.math
+    mmfutils.optimize
     mmfutils.performance
     mmfutils.plot
     mmfutils.debugging
