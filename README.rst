@@ -88,8 +88,11 @@ Table of Contents
       -  `2.5.2 Angular Variables <#2.5.2-Angular-Variables>`__
 
    -  `2.6 Debugging <#2.6-Debugging>`__
+   -  `2.7 Mathematics <#2.7-Mathematics>`__
 
 -  `3. Developer Instructions <#3.-Developer-Instructions>`__
+
+   -  `3.1 Releases <#3.1-Releases>`__
 
 1.1 Installing
 --------------
@@ -812,8 +815,8 @@ in a dictionary or in your global scope.
     (1.0, 2.0, 2.8284271247461903, 1.0)
 
 
-Mathematics
------------
+2.7 Mathematics
+---------------
 
 We include a few mathematical tools here too. In particular, numerical
 integration and differentiation. Check the API documentation for
@@ -1272,3 +1275,101 @@ Complete code coverage information is provided in
 
 
 
+
+3.1 Releases
+------------
+
+We try to keep the repository clean with the following properties:
+
+1. The default branch is stable: i.e. if someone runs ``hg clone``, this
+   will pull the latest stable release.
+2. Each release has its own named branch so that e.g. ``hg up 0.4.6``
+   will get the right thing. Note: this should update to the development
+   branch, *not* the default branch so that any work committed will not
+   pollute the development branch (which would violate the previous
+   point).
+
+To do this, we advocate the following proceedure.
+
+1. **``hg up <version>``**: Make sure this is the correct development
+   branch, not the default branch. (Check by ``hg up default`` which
+   should take you to the default branch.)
+2. **Work**: Do your work, committing as required with messages as shown
+   in the repository with the following keys:
+
+-  ``DOC``: Documentation changes.
+-  ``API``: Changes to the exising API. This could break old code.
+-  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
+   these should not break existing codes.
+-  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
+   etc.)
+-  ``TST``: Update tests, code coverage, etc.
+-  ``BUG``: Address an issue as filed on the issue tracker.
+-  ``BRN``: Start a new branch (see below).
+-  ``REL``: Release (see below).
+-  ``WIP``: Work in progress. Do not depend on these! They will be
+   stripped. This is useful when testing things like the rendering of
+   documentation on bitbucket etc. where you need to push an incomplete
+   set of files. Please collapse and strip these eventually when you get
+   things working.
+-  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
+
+3. **``python setup.py test``**: Make sure the tests pass. (``hg com``
+   will do this automatically if you have linked the ``.hgrc`` file as
+   discussed above.
+4. **Update Docs**: Update the documentation if needed. To generate new
+   documentation run:
+
+   cd doc sphinx-apidoc -eTE ../mmfutils -o source rm
+   source/mmfutis.tests.\*
+
+Edit any new files created (titles often need to be added) and check
+that this looks good with
+
+::
+
+     make html
+     open build/html/index.html
+     
+
+Look especially for errors of the type
+``WARNING: document isn't included in any toctree``. This indicates that
+you probably need to add the module to an upper level ``.. toctree::``.
+Also look for
+``WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated``.
+This indicates you need to add a title to a new file. For example, when
+I added the ``mmf.math.optimize`` module, I needed to update the
+following:
+
+\`\`\`rst .. doc/source/mmfutils.rst mmfutils ========
+
+.. toctree:: ... mmfutils.optimize ... ````\ rst ..
+doc/source/mmfutils.optimize.rst mmfutils.optimize =================
+
+.. automodule:: mmfutils.optimize :members: :undoc-members:
+:show-inheritance: \`\`\`
+
+5. **``hg histedit``**: (or ``hg rebase``, or ``hg strip`` as needed)
+   Clean up the repo before you push. Branches should generally be
+   linear unless there is an exceptional reason to split development.
+6. **Release**: First edit ``mmfutils/__init__.py`` and update the
+   version number by removing the ``dev`` part of the version number.
+   Commit only this change and then push only the branch you are working
+   on:
+
+   hg com -m "REL: " hg push -b .
+7. Create a pull request on the development fork from your branch to
+   ``default`` on bitbucket. Review it, fix anything, then accept the PR
+   and close the branch.
+8. **Start new branch**: On the same development branch (not
+   ``default``), increase the version number in ``mmfutils/__init__.py``
+   and add ``dev``: i.e.:
+
+   **version** = '0.4.7dev'
+
+Then create this branch and commit this:
+
+::
+
+       hg branch "0.4.7"
+       hg com -m "BRN: 0.4.7"

@@ -1,0 +1,6 @@
+# Requirements file for readthedocs.org
+# This also need numpy (which is only require for some parts of the package)
+--find-links https://bitbucket.org/mforbes/mypi/
+mock
+numpy
+-e .
