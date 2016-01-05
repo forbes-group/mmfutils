@@ -1,7 +1,8 @@
 """Stand-in for zope.interface if it is not available."""
 
 __all__ = ['Interface', 'Attribute', 'implements',
-           'verifyObject', 'verifyClass']
+           'verifyObject', 'verifyClass',
+           'describe_interface']
 
 import logging
 import warnings
@@ -91,3 +92,94 @@ if zope:
     logging.info(
         "Patching zope.interface.document.asStructuredText to format code")
     zope.interface.document.asStructuredText = asStructuredText
+
+
+def describe_interface(interface, format='ipython'):
+    """Return an HTML object for Jupyter notebooks that describes the
+    interface.
+
+    Arguments
+    ---------
+    interface : Interface
+       Interface to extract documentation from.
+    format : 'rst', 'html', 'ipython'
+       Return format.  'rst' is raw RestructuredText, 'html' is
+       packaged as HTML, and 'ipython' is packaged as an
+       IPython.display.HTML() object suitable for Jupyter notebooks.
+
+    Example
+    -------
+    >>> class IExample(Interface):
+    ...     x = Attribute("Floating point number")
+    ...     def two():
+    ...         "Return two"
+    >>> print(describe_interface(IExample, format='rst').strip())
+    ``IExample``
+    <BLANKLINE>
+     Attributes:
+    <BLANKLINE>
+      ``x`` -- Floating point number
+    <BLANKLINE>
+    Methods:
+    <BLANKLINE>
+      ``two()`` -- Return two
+
+    You can also get this wrapped as HTML:
+
+    >>> print(describe_interface(IExample, format='html').strip())
+    <!DOCTYPE html ...
+    <p><tt class="docutils literal">IExample</tt></p>
+    <blockquote>
+    <p>Attributes:</p>
+    <blockquote>
+    <tt class="docutils literal">x</tt> -- Floating point number</blockquote>
+    <p>Methods:</p>
+    <blockquote>
+    <tt class="docutils literal">two()</tt> -- Return two</blockquote>
+    </blockquote>
+    </div>
+
+    In a Jupyter notebook, this will properly display:
+
+    >>> describe_interface(IExample)
+    <IPython.core.display.HTML object>
+
+    Other formats are not yet supported:
+
+    >>> describe_interface(IExample, format='WYSIWYG')
+    Traceback (most recent call last):
+       ...
+    NotImplementedError: format WYSIWYG not supported
+    """
+    # Chunk of code to display interfaces.
+    # See: http://code.activestate.com/recipes/
+    #            193890-using-rest-restructuredtext-to-create-html-snippet/
+
+    # Local imports since we do not depend on IPython
+    from docutils import core
+    from docutils.writers.html4css1 import Writer, HTMLTranslator
+    import zope.interface.document
+
+    class NoHeaderHTMLTranslator(HTMLTranslator):
+        def __init__(self, document):
+            HTMLTranslator.__init__(self, document)
+            self.head_prefix = ['']*5
+            self.body_prefix = []
+            self.body_suffix = []
+            self.stylesheet = []
+
+    writer = Writer()
+    writer.translator_class = NoHeaderHTMLTranslator
+    rst = zope.interface.document.asStructuredText(interface)
+    if format.lower() == 'rst':
+        return rst
+
+    html = core.publish_string(rst, writer=writer)
+    if format.lower() == 'html':
+        return html
+
+    if format.lower() in ['ipython', 'jupyter']:
+        import IPython.display
+        return IPython.display.HTML(html)
+
+    raise NotImplementedError('format {} not supported'.format(format))
