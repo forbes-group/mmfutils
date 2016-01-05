@@ -7,7 +7,7 @@ import time
 
 import nose.tools as nt
 
-from mmfutils.parallel import Cluster, get_cluster, parallel
+from mmfutils.parallel import Cluster, get_cluster, ipyparallel
 
 import parallel_module
 
@@ -71,7 +71,7 @@ class TestCluster(object):
         self.cluster1.start()
         nt.ok_(time.time() - tic < 0.1)
 
-    @nt.raises(parallel.TimeoutError)
+    @nt.raises(ipyparallel.TimeoutError)
     def test_timeout1(self):
         """Test timeout (coverage)"""
         self.cluster1.wait(timeout=0)
