@@ -5,12 +5,17 @@ import logging
 
 import numpy as np
 
+sp = None
+weave = None
 try:
     import scipy.integrate
-    import scipy.weave
     sp = scipy
-except ImportError:             # pragma: no cover
-    sp = None
+    try:
+        from scipy import weave
+    except ImportError:         # pragma: no cover
+        import weave
+except ImportError:         # pragma: no cover
+    pass
 
 __all__ = ['quad', 'mquad', 'Richardson', 'rsum']
 
@@ -620,7 +625,7 @@ def ssum_inline(xs):
     return_val = sum;
     '''
     xs = np.asarray(xs).astype(np.double)
-    sum = sp.weave.inline(code, ['xs'])
+    sum = weave.inline(code, ['xs'])
 
     eps = np.finfo(np.double).eps
     err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
@@ -628,7 +633,7 @@ def ssum_inline(xs):
     return (sum, err)
 
 
-ssum = ssum_python if sp is None else ssum_inline
+ssum = ssum_python if weave is None else ssum_inline
 
 
 def rsum(f, N0=0, ps=None, l=2,

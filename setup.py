@@ -24,7 +24,6 @@ VERSION = mmfutils.__version__
 
 install_requires = [
     "zope.interface>=3.8.0",
-    'ipython>=3.0',
     'husl',
 ]
 
@@ -33,9 +32,12 @@ test_requires = [
     'ipython>=3.0',
     'coverage<=3.7.1',
     'flake8',
+    "ipython>=4.0",
+    "ipyparallel",
     "persist",
     "numpy",
-    "numexpr"
+    "numexpr",
+    "weave",
 ]
 
 # Remove mmfutils so that it gets properly covered in tests. See
@@ -49,12 +51,10 @@ del mod
 class test(original_test):
     description = "Run all tests and checks (customized for this project)"
 
-    def finalize_options(self):
-        # Don't actually run any "test" tests (we will use nosetest)
-        self.test_suit = None
-
     def run(self):
-        # Call this to do complicated distribute stuff.
+        # Call this to do complicated distribute stuff but don't run
+        # any tests here.
+        self.dry_run = True
         original_test.run(self)
 
         # This is used to see if we are running tests.
