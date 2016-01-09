@@ -15,6 +15,7 @@ using something like::
       make -j8 install
     done
 
+Note: The FFTW library does not work with negative indices for axis.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -78,24 +79,40 @@ try:
     def fft_pyfftw(*v, **kw):
         global _THREADS, _PLANNER_EFFORT
         kw.update(threads=_THREADS, planner_effort=_PLANNER_EFFORT)
+        if 'axis' in kw:
+            # Support negative arguments for the axis keyword
+            dim = len(np.shape(v[0]))
+            kw['axis'] = (kw['axis'] + dim) % dim
         return _fft(*v, **kw)
 
     @functools.wraps(_ifft)
     def ifft_pyfftw(*v, **kw):
         global _THREADS, _PLANNER_EFFORT
         kw.update(threads=_THREADS, planner_effort=_PLANNER_EFFORT)
+        if 'axis' in kw:
+            # Support negative arguments for the axis keyword
+            dim = len(np.shape(v[0]))
+            kw['axis'] = (kw['axis'] + dim) % dim
         return _ifft(*v, **kw)
 
     @functools.wraps(_fftn)
     def fftn_pyfftw(*v, **kw):
         global _THREADS, _PLANNER_EFFORT
         kw.update(threads=_THREADS, planner_effort=_PLANNER_EFFORT)
+        if 'axes' in kw:
+            # Support negative arguments for the axis keyword
+            dim = len(np.shape(v[0]))
+            kw['axes'] = (np.asarray(kw['axes']) + dim) % dim
         return _fftn(*v, **kw)
 
     @functools.wraps(_ifftn)
     def ifftn_pyfftw(*v, **kw):
         global _THREADS, _PLANNER_EFFORT
         kw.update(threads=_THREADS, planner_effort=_PLANNER_EFFORT)
+        if 'axes' in kw:
+            # Support negative arguments for the axis keyword
+            dim = len(np.shape(v[0]))
+            kw['axes'] = (np.asarray(kw['axes']) + dim) % dim
         return _ifftn(*v, **kw)
 
     def get_fft_pyfftw(a, n=None, axis=-1, overwrite_input=False,
@@ -103,6 +120,9 @@ try:
                        avoid_copy=False):
         """Return a function to compute the fft."""
         global _THREADS, _PLANNER_EFFORT
+        # Support negative arguments for the axis keyword
+        dim = len(np.shape(a))
+        axis = (axis + dim) % dim
         return pyfftw.builders.fft(a=a, n=n, axis=axis,
                                    threads=_THREADS,
                                    planner_effort=_PLANNER_EFFORT,
@@ -116,6 +136,8 @@ try:
                         avoid_copy=False):
         """Return a function to compute the ifft."""
         global _THREADS, _PLANNER_EFFORT
+        dim = len(np.shape(a))
+        axis = (axis + dim) % dim
         return pyfftw.builders.ifft(a=a, n=n, axis=axis,
                                     threads=_THREADS,
                                     planner_effort=_PLANNER_EFFORT,
@@ -129,6 +151,9 @@ try:
                         avoid_copy=False):
         """Return a function to compute the fftn."""
         global _THREADS, _PLANNER_EFFORT
+        if axes is not None:
+            dim = len(np.shape(a))
+            axes = (np.asarray(axes) + dim) % dim
         return pyfftw.builders.fftn(a=a, s=s, axes=axes,
                                     threads=_THREADS,
                                     planner_effort=_PLANNER_EFFORT,
@@ -142,6 +167,9 @@ try:
                          avoid_copy=False):
         """Return a function to compute the ifftn."""
         global _THREADS, _PLANNER_EFFORT
+        if axes is not None:
+            dim = len(np.shape(a))
+            axes = (np.asarray(axes) + dim) % dim
         return pyfftw.builders.ifftn(a=a, s=s, axes=axes,
                                      threads=_THREADS,
                                      planner_effort=_PLANNER_EFFORT,
