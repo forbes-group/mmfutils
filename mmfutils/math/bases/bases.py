@@ -423,17 +423,19 @@ class CylindricalBasis(Object, BasisMixin):
     implements(IBasis)
 
     def __init__(self, Nxr, Lxr, twist=0, px=0,
-                 axes=(-2, -1)):
+                 axes=(-2, -1), symmetric_x=True):
         self.twist = twist
         self.px = px
         self.Nxr = np.asarray(Nxr)
         self.Lxr = np.asarray(Lxr)
+        self.symmetric_x = symmetric_x
         self.axes = axes
         Object.__init__(self)
 
     def init(self):
         Lx, R = self.Lxr
-        x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
+        x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr,
+                    symmetric_lattice=self.symmetric_x)[0]
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
         kx = (kx0 + float(self.twist) / Lx - self.px)
         self._kx0 = kx0
@@ -483,7 +485,7 @@ class CylindricalBasis(Object, BasisMixin):
         self._Kx = self._kx2
 
         # Cache for K_data from apply_exp_K.
-        self._K_data = dict()
+        self._K_data = []
 
     def laplacian(self, y, factor=1.0, exp=False):
         r"""Return the laplacian of y."""
@@ -546,25 +548,32 @@ class CylindricalBasis(Object, BasisMixin):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
-        if factor not in self._K_data:
+        _K_data_max_len = 3
+        ind = None
+        for _i, (_f, _d) in enumerate(self._K_data):
+            if np.allclose(factor, _f):
+                ind = _i
+        if ind is None:
             _r1, _r2, V, d = self._Kr_diag
             exp_K_r = _r1 * np.dot(V*np.exp(factor * d), V.T) * _r2
             exp_K_x = np.exp(factor * self._Kx)
             K_data = (exp_K_r, exp_K_x)
-            self._K_data[factor] = K_data
-        K_data = self._K_data[factor]
+            self._K_data.append((factor, K_data))
+            ind = -1
+            while len(self._K_data) > _K_data_max_len:
+                # Reduce storage
+                self._K_data.pop(0)
+
+        K_data = self._K_data[ind][1]
         exp_K_r, exp_K_x = K_data
         axis = self.axes[0]
         if self.twist == 0:
-            return np.dot(ifft(exp_K_x * fft(y, axis=axis),
-                               axis=axis),
-                          exp_K_r.T)
+            tmp = ifft(exp_K_x * fft(y, axis=axis), axis=axis)
         else:
-            return np.dot(
-                self.y_twist*ifft(exp_K_x * fft(y/self.y_twist,
-                                                axis=axis),
-                                  axis=axis),
-                exp_K_r.T)
+            tmp = self.y_twist*ifft(exp_K_x * fft(y/self.y_twist,
+                                                  axis=axis),
+                                    axis=axis),
+        return np.einsum('...ij,...yj->...yi', exp_K_r, tmp)
 
     def apply_K(self, y):
         r"""Return `K*y` where `K = k**2/2`"""
