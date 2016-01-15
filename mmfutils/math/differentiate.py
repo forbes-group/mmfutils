@@ -93,10 +93,10 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
     >>> from math import sin, cos
     >>> x = 100.0
     >>> assert(abs(differentiate(sin, x, d=0)-sin(x))<1e-15)
-    >>> assert(abs(differentiate(sin, x, d=1)-cos(x))<3e-15)
-    >>> assert(abs(differentiate(sin, x, d=2)+sin(x))<4e-14)
-    >>> assert(abs(differentiate(sin, x, d=3)+cos(x))<4e-12)
-    >>> assert(abs(differentiate(sin, x, d=4)-sin(x))<2e-10)
+    >>> assert(abs(differentiate(sin, x, d=1)-cos(x))<1e-14)
+    >>> assert(abs(differentiate(sin, x, d=2)+sin(x))<1e-13)
+    >>> assert(abs(differentiate(sin, x, d=3)+cos(x))<1e-11)
+    >>> assert(abs(differentiate(sin, x, d=4)-sin(x))<1e-9)
     >>> differentiate(abs, 0.0, d=1, dir=1)
     1.0
     >>> differentiate(abs, 0.0, d=1, dir=-1)

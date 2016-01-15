@@ -79,12 +79,24 @@ def get_kxyz(Nxyz, Lxyz):
 
 ######################################################################
 # 1D FFTs for real functions.
-def dst(f):
+def dst(f, axis=-1):
     """Return the Discrete Sine Transform (DST III) of `f`"""
-    return sp.fftpack.dst(f, type=3, axis=-1)
+    args = dict(type=3, axis=axis)
+    if np.iscomplexobj(f):
+        # This is needed for scipy < 0.16.0
+        return (sp.fftpack.dst(f.real, **args) + 1j*
+                sp.fftpack.dst(f.imag, **args))
+    else:
+        return sp.fftpack.dst(f, **args)
 
-
-def idst(F):
+def idst(F, axis=-1):
     """Return the Inverse Discrete Sine Transform (DST II) of `f`"""
     N = F.shape[-1]
-    return sp.fftpack.dst(F, type=2, axis=-1)/(2.0*N)
+    args = dict(type=2, axis=axis)
+    if np.iscomplexobj(F):
+        # This is needed for scipy < 0.16.0
+        res = (sp.fftpack.dst(F.real, **args) + 1j*
+               sp.fftpack.dst(F.imag, **args))
+    else:
+        res = sp.fftpack.dst(F, **args)
+    return res/(2.0*N)

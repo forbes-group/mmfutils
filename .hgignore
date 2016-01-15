@@ -10,3 +10,5 @@ dist
 mmfutils.egg-info
 *.egg
 */htmlcov
+*.pyc
+*.pyo
