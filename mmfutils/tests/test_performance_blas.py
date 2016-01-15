@@ -6,7 +6,8 @@ import pytest
 
 
 class Test_BLAS(object):
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         np.random.seed(1)
 
     def rand(self, shape, complex=True):

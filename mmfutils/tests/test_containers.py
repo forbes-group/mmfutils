@@ -59,12 +59,13 @@ class TestContainerDict(object):
 
 
 class TestContainerConversion(object):
-    def setup_class(self):
-        self.c = Container(a=1, c=[1, 2, 3], b="b")
-        self.cl = ContainerList(a=1, c=[1, 2, 3], b="b")
-        self.cd = ContainerDict(a=1, c=[1, 2, 3], b="b")
-        self.d = dict(a=1, c=[1, 2, 3], b="b")
-        self.l = [('a', 1), ('b', "b"), ('c', [1, 2, 3])]
+    @classmethod
+    def setup_class(cls):
+        cls.c = Container(a=1, c=[1, 2, 3], b="b")
+        cls.cl = ContainerList(a=1, c=[1, 2, 3], b="b")
+        cls.cd = ContainerDict(a=1, c=[1, 2, 3], b="b")
+        cls.d = dict(a=1, c=[1, 2, 3], b="b")
+        cls.l = [('a', 1), ('b', "b"), ('c', [1, 2, 3])]
 
     def check(self, c):
         assert self.c.__getstate__() == c.__getstate__()

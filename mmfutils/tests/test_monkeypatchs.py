@@ -16,14 +16,15 @@ class TestCoverage(object):
     def run_err(self):
         raise SystemExit(1)
 
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         reload(mmfutils.monkeypatches)
 
         class Flake8Command(flake8.main.Flake8Command):
             def __init__(self):
                 pass
 
-        self.flake8_self = Flake8Command()
+        cls.flake8_self = Flake8Command()
 
     def test_cover_monkeypatchs(self):
         # Both these patched commands store the old run method in _run so we

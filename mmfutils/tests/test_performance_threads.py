@@ -53,7 +53,8 @@ class TestThreads(object):
 class TestThreadsBenchmarks(object):
     bench = True
 
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         np.random.seed(1)
 
     def test_numexpr(self):

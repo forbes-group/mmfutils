@@ -7,7 +7,8 @@ import pytest
 
 
 class Test_FFT(object):
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         np.random.seed(1)
 
     def rand(self, shape, complex=True):
@@ -50,7 +51,8 @@ class Test_FFT(object):
 @pytest.mark.skipif(not hasattr(fft, 'pyfftw'),
                     reason="requires pyfftw")
 class Test_FFT_pyfftw(Test_FFT):
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         np.random.seed(1)
 
     def test_fft_pyfftw(self):
