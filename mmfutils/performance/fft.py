@@ -60,7 +60,7 @@ from .threads import SET_THREAD_HOOKS
 SET_THREAD_HOOKS.add(set_num_threads)
 
 
-try:
+try:                     # NOQA  This is too complex, but that is okay
     import pyfftw
     from pyfftw.interfaces.numpy_fft import (fft as _fft,
                                              ifft as _ifft,

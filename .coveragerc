@@ -2,7 +2,6 @@
 # Plots are not yet a part of this package
 omit=
    mmfutils/plot/*
-   mmfutils/tests/*
-   mmfutils/math/bases/*
+   */tests/*
 [html]
 directory = build/_coverage
