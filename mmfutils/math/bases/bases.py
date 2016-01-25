@@ -615,18 +615,68 @@ class CylindricalBasis(Object, BasisMixin):
         else:
             raise NotImplementedError
 
-    def F(self, psi, xr):
+    def get_F(self, r):
+        """Return a function that can extrapolate a radial
+        wavefunction to a new set of abscissa (x, r)."""
+        x, r0 = self.xyz
+        n = np.arange(r0.size)[:, None]
+
+        # Here is the transform matrix
+        _F = self._F(n, r) / self._F(n, r0.T)
+
+        def F(u):
+            return np.dot(u, _F)
+
+        return F
+
+    def F(self, u, xr):
+        r"""Return u evaluated on the new abscissa (Assumes x does not
+        change for now)"""
+        x0, r0 = self.xyz
+        x, r = xr
+        assert np.allclose(x, x0)
+
+        return self.get_F(r)(u)
+
+    def get_Psi(self, r, return_matrix=False):
+        """Return a function that can extrapolate a wavefunction to a
+        new set of abscissa (x, r).
+
+        This includes the factor of $\sqrt{r}$ that converts the
+        wavefunction to the radial function, then uses the basis the
+        extrapolate the radial function.
+
+        Arguments
+        ---------
+        r : array
+           The new abscissa in the radial direction (the $x$ values
+           stay the same.)
+        return_matrix : bool
+           If True, then return the extrapolation matrix Fso that
+           ``Psi = np.dot(psi, F)``
+        """
+        x, r0 = self.xyz
+        n = np.arange(r0.size)[:, None]
+
+        # Here is the transform matrix
+        _F = (np.sqrt(r) * self._F(n, r)) / (np.sqrt(r0.T) * self._F(n, r0.T))
+
+        if return_matrix:
+            return _F
+
+        def Psi(psi):
+            return np.dot(psi, _F)
+
+        return Psi
+
+    def Psi(self, psi, xr):
         r"""Return psi evaluated on the new abscissa (Assumes x does not
         change for now)"""
         x0, r0 = self.xyz
         x, r = xr
         assert np.allclose(x, x0)
-        n = np.arange(r0.size)[:, None]
 
-        # Here is the transform matrix
-        _F = self._F(n, r) / self._F(n, r0.T)
-        psi_new = np.dot(psi, _F)
-        return psi_new
+        return self.get_Psi(r)(psi)
 
     def apply_Lz(self, y, hermitian=False):
         raise NotImplementedError
