@@ -109,31 +109,51 @@ class SphericalBasis(Object, BasisMixin):
 
 
 class PeriodicBasis(Object, BasisMixin):
-    """N-dimensional periodic bases.
+    """dim-dimensional periodic bases.
 
     Parameters
     ----------
-    Nxyz : (Nx, Ny, Nz)
+    Nxyz : (Nx, Ny, ...)
        Number of lattice points in basis.
-    Lxyz : (Lx, Ly, Lz)
+    Lxyz : (Lx, Ly, ...)
        Size of each dimension (length of box and radius)
+    symmetric_lattice: bool
+       If True, then shift the lattice so that it is symmetric about
+       the origin.  The default is to ensure that there is a lattice
+       point at the origin which will make the lattice asymmetric for
+       even Nxyz.
+    axes : (int, int, ...)
+       Axes in array y which correspond to the x, y, ... axes here.
+       This is required for cases where y has additional dimensions.
+       The default is the last dim axes (best for performance).
+    boost_pxyz : float
+       Momentum of moving frame.  Momenta are shifted by this, which
+       corresponds to working in a boosted frame with velocity `vx = px/m`.
     """
     implements(IBasisWithConvolution)
 
-    def __init__(self, Nxyz, Lxyz, symmetric_lattice=False):
+    def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
+                 axes=None, boost_pxyz=None):
         self.symmetric_lattice = symmetric_lattice
         self.Nxyz = np.asarray(Nxyz)
         self.Lxyz = np.asarray(Lxyz)
+        if boost_pxyz is None:
+            boost_pxyz = np.zeros_like(self.Lxyz)
+        self.boost_pxyz = np.asarray(boost_pxyz)
+        if axes is None:
+            axes = np.arange(-self.dim, 0)
+        self.axes = np.asarray(axes)
         Object.__init__(self)
 
     def init(self):
         self.xyz = get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
                            symmetric_lattice=self.symmetric_lattice)
-        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz) - self.boost_pxyz
         self.metric = np.prod(self.Lxyz/self.Nxyz)
         self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
 
-    def laplacian(self, y, factor=1.0, exp=False):
+    def laplacian(self, y, factor=1.0, exp=False,
+                  _k2=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
@@ -145,27 +165,46 @@ class PeriodicBasis(Object, BasisMixin):
         exp : bool
            If `True`, then compute the exponential of the laplacian.
            This is used for split evolvers.
+        _k2 : array, optional
+           If provided then this will be used in place of the sum of
+           the squares of the wavevectors.  This would allow you, for
+           example, to implement a modified dispersion relationship
+           like ``1-cos(k)`` rather than ``k**2``.  It is not a
+           standard part of the interface since it cannot be easily
+           implement for arbitrary bases
         """
-        K = -factor * sum(_p**2 for _p in self._pxyz)
+        if _k2 is None:
+            _k2 = sum(_p**2 for _p in self._pxyz)
+        K = -factor * _k2
         if exp:
             K = np.exp(K)
         return self.ifftn(K * self.fftn(y))
 
+    # We need these wrappers because the state may have additional
+    # indices for components etc. in front.
+    def fft(self, x, axis):
+        """Perform the fft along self.axes[axis]"""
+        axis = self.axes[axis] % len(x.shape)
+        return fft(x, axis=axis)
+
+    def ifft(self, x, axis):
+        """Perform the ifft along self.axes[axis]"""
+        axis = self.axes[axis] % len(x.shape)
+        return ifft(x, axis=axis)
+
     def fftn(self, x):
-        """Perform the fft along the last set of axes"""
-        dim = len(self.Nxyz)
-        s = len(x.shape)
-        return fftn(x, axes=range(s-dim, s))
+        """Perform the fft along spatial axes"""
+        axes = self.axes % len(x.shape)
+        return fftn(x, axes=axes)
 
     def ifftn(self, x):
-        """Perform the ifft along the last set of axes"""
-        dim = len(self.Nxyz)
-        s = len(x.shape)
-        return ifftn(x, axes=range(s-dim, s))
+        """Perform the ifft along spatial axes"""
+        axes = self.axes % len(x.shape)
+        return ifftn(x, axes=axes)
 
     def get_gradient(self, y):
         # TODO: Check this for the highest momentum issue.
-        return [ifft(1j*_p*fft(y, axis=_i), axis=_i)
+        return [self.ifft(1j*_p*self.fft(y, axis=_i), axis=_i)
                 for _i, _p in enumerate(self._pxyz)]
 
     @staticmethod
@@ -220,6 +259,10 @@ class PeriodicBasis(Object, BasisMixin):
             Ck = Ck(k)
         return self.ifftn(Ck * self.fftn(y))
 
+    @property
+    def dim(self):
+        return len(self.Nxyz)
+
 
 class CartesianBasis(PeriodicBasis):
     """N-dimensional periodic bases but with Coulomb convolution that does not
@@ -227,20 +270,29 @@ class CartesianBasis(PeriodicBasis):
 
     Parameters
     ----------
-    Nxyz : (Nx, Ny, Nz)
+    Nxyz : (Nx, Ny, ...)
        Number of lattice points in basis.
-    Lxyz : (Lx, Ly, Lz)
+    Lxyz : (Lx, Ly, ...)
        Size of each dimension (length of box and radius)
+    symmetric_lattice: bool
+       If True, then shift the lattice so that it is symmetric about
+       the origin.  The default is to ensure that there is a lattice
+       point at the origin which will make the lattice asymmetric for
+       even Nxyz.
+    axes : (int, int, ...)
+       Axes in array y which correspond to the x, y, ... axes here.
+       This is required for cases where y has additional dimensions.
+       The default is the last dim axes (best for performance).
     fast_coulomb : bool
        If `True`, use the fast Coulomb algorithm which is slightly less
        accurate but much faster.
-
     """
     implements(IBasisWithConvolution)
 
-    def __init__(self, Nxyz, Lxyz, symmetric_lattice=False, fast_coulomb=True):
+    def __init__(self, Nxyz, Lxyz, axes=None,
+                 symmetric_lattice=False, fast_coulomb=True):
         self.fast_coulomb = fast_coulomb
-        PeriodicBasis.__init__(self, Nxyz=Nxyz, Lxyz=Lxyz,
+        PeriodicBasis.__init__(self, Nxyz=Nxyz, Lxyz=Lxyz, axes=axes,
                                symmetric_lattice=symmetric_lattice)
 
     def convolve_coulomb_fast(self, y, form_factors=[], correct=False):
@@ -411,10 +463,10 @@ class CylindricalBasis(Object, BasisMixin):
     twist : float
        Twist (angle) in periodic dimension.  This adds a constant offset to the
        momenta allowing one to study Bloch waves.
-    px : float
+    boost_px : float
        Momentum of moving frame (along the x axis).  Momenta are shifted by
        this, which corresponds to working in a boosted frame with velocity
-       `vx = px/m`.
+       `vx = boost_px/m`.
     axes : (int, int)
        Axes in array y which correspond to the x and r axes here.
        This is required for cases where y has additional dimensions.
@@ -422,14 +474,14 @@ class CylindricalBasis(Object, BasisMixin):
     """
     implements(IBasis)
 
-    def __init__(self, Nxr, Lxr, twist=0, px=0,
+    def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
         self.twist = twist
-        self.px = px
+        self.boost_px = np.asarray(boost_px)
         self.Nxr = np.asarray(Nxr)
         self.Lxr = np.asarray(Lxr)
         self.symmetric_x = symmetric_x
-        self.axes = axes
+        self.axes = np.asarray(axes)
         Object.__init__(self)
 
     def init(self):
@@ -437,7 +489,7 @@ class CylindricalBasis(Object, BasisMixin):
         x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr,
                     symmetric_lattice=self.symmetric_x)[0]
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
-        kx = (kx0 + float(self.twist) / Lx - self.px)
+        kx = (kx0 + float(self.twist) / Lx - self.boost_px)
         self._kx0 = kx0
         self._kx = kx
         self._kx2 = kx**2
@@ -464,7 +516,6 @@ class CylindricalBasis(Object, BasisMixin):
              for _nr, _r in zip(nr.ravel(), r.ravel())])[None, :]
         self.metric = 2*np.pi * r * _lambda * (Lx / Nx)
         self.metric.setflags(write=False)
-
         # Get the DVR kinetic piece for radial component
         K, r1, r2, w = self._get_K()
 
@@ -487,18 +538,117 @@ class CylindricalBasis(Object, BasisMixin):
         # Cache for K_data from apply_exp_K.
         self._K_data = []
 
-    def laplacian(self, y, factor=1.0, exp=False):
-        r"""Return the laplacian of y."""
+    def laplacian(self, y, factor=1.0, exp=False,
+                  _kx2=None):
+        r"""Return the laplacian of y.
+
+        Arguments
+        ---------
+        factor : float
+           Additional factor (mostly used with `exp=True`).  The
+           implementation must be careful to allow the factor to
+           broadcast across the components.
+        exp : bool
+           If `True`, then compute the exponential of the laplacian.
+           This is used for split evolvers.
+        _kx2 : array, optional
+           If provided then this will be used in place of kx**2.  This
+           would allow you, for example, to implement a modified
+           dispersion relationship along the ``x`` direction
+           like ``1-cos(kx)`` rather than ``kx**2``.  It is not a
+           standard part of the interface since it cannot be easily
+           implement for arbitrary bases
+        """
         if not exp:
-            return self.apply_K(y=y) * (-factor)
+            return self.apply_K(y=y, _kx2=_kx2) * (-factor)
         else:
-            return self.apply_exp_K(y=y, factor=-factor)
+            return self.apply_exp_K(y=y, factor=-factor, _kx2=_kx2)
+
+    def get_gradient(self, y):
+        """Returns the gradient along the x axis."""
+        kx = self._kx
+        return [self.ifft(1j*kx*self.fft(y)), NotImplemented]
+
+    def apply_Lz(self, y, hermitian=False):
+        raise NotImplementedError
+
+    def apply_Px(self, y, hermitian=False):
+        r"""Apply the Pz operator to y without any px.
+
+        Requires :attr:`_pxyz` to be defined.
+        """
+        return self.y_twist * self.ifft(self._kx0 * self.fft(y/self.y_twist))
+
+    def apply_exp_K(self, y, factor, _kx2=None):
+        r"""Return `exp(K*factor)*y` or return precomputed data if
+        `K_data` is `None`.
+        """
+        if _kx2 is None:
+            _kx2 = self._Kx
+        _K_data_max_len = 3
+        ind = None
+        for _i, (_f, _d) in enumerate(self._K_data):
+            if np.allclose(factor, _f):
+                ind = _i
+        if ind is None:
+            _r1, _r2, V, d = self._Kr_diag
+            exp_K_r = _r1 * np.dot(V*np.exp(factor * d), V.T) * _r2
+            exp_K_x = np.exp(factor * _kx2)
+            K_data = (exp_K_r, exp_K_x)
+            self._K_data.append((factor, K_data))
+            ind = -1
+            while len(self._K_data) > _K_data_max_len:
+                # Reduce storage
+                self._K_data.pop(0)
+
+        K_data = self._K_data[ind][1]
+        exp_K_r, exp_K_x = K_data
+        if self.twist == 0:
+            tmp = self.ifft(exp_K_x * self.fft(y))
+        else:
+            tmp = self.y_twist*self.ifft(exp_K_x * self.fft(y/self.y_twist))
+        return np.einsum('...ij,...yj->...yi', exp_K_r, tmp)
+
+    def apply_K(self, y, _kx2=None):
+        r"""Return `K*y` where `K = k**2/2`"""
+        # Here is how the indices work:
+        if _kx2 is None:
+            _kx2 = self._Kx
+
+        if self.twist == 0:
+            yt = self.fft(y)
+            yt *= _kx2
+            yt = self.ifft(yt)
+        else:
+            yt = self.fft(y/self.y_twist)
+            yt *= _kx2
+            yt = self.ifft(yt)
+            yt *= self.y_twist
+
+        # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
+        # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
+        yt += np.dot(y, self._Kr.T)
+        return yt
 
     ######################################################################
-    # DVR Helper functions.
+    # FFT and DVR Helper functions.
     #
     # These are specific to the basis, defining the kinetic energy
     # matrix for example.
+
+    # We need these wrappers because the state may have additional
+    # indices for components etc. in front.
+    def fft(self, x):
+        """Perform the fft along the x axes"""
+        # Makes sure that
+        axis = (self.axes % len(x.shape))[0]
+        return fft(x, axis=axis)
+
+    def ifft(self, x):
+        """Perform the fft along the x axes"""
+        axis = (self.axes % len(x.shape))[0]
+        return ifft(x, axis=axis)
+
     def _get_K(self):
         r"""Return `(K, r1, r2, w)`: the DVR kinetic term for the radial function
         and the appropriate factors for converting to the radial coordinates.
@@ -543,56 +693,6 @@ class CylindricalBasis(Object, BasisMixin):
         r1 = 1./_tmp[i1]
 
         return K, r1, r2, w
-
-    def apply_exp_K(self, y, factor):
-        r"""Return `exp(K*factor)*y` or return precomputed data if
-        `K_data` is `None`.
-        """
-        _K_data_max_len = 3
-        ind = None
-        for _i, (_f, _d) in enumerate(self._K_data):
-            if np.allclose(factor, _f):
-                ind = _i
-        if ind is None:
-            _r1, _r2, V, d = self._Kr_diag
-            exp_K_r = _r1 * np.dot(V*np.exp(factor * d), V.T) * _r2
-            exp_K_x = np.exp(factor * self._Kx)
-            K_data = (exp_K_r, exp_K_x)
-            self._K_data.append((factor, K_data))
-            ind = -1
-            while len(self._K_data) > _K_data_max_len:
-                # Reduce storage
-                self._K_data.pop(0)
-
-        K_data = self._K_data[ind][1]
-        exp_K_r, exp_K_x = K_data
-        axis = self.axes[0]
-        if self.twist == 0:
-            tmp = ifft(exp_K_x * fft(y, axis=axis), axis=axis)
-        else:
-            tmp = self.y_twist*ifft(exp_K_x * fft(y/self.y_twist,
-                                                  axis=axis),
-                                    axis=axis),
-        return np.einsum('...ij,...yj->...yi', exp_K_r, tmp)
-
-    def apply_K(self, y):
-        r"""Return `K*y` where `K = k**2/2`"""
-        # Here is how the indices work:
-        axis = self.axes[0]
-        if self.twist == 0:
-            yt = fft(y, axis=axis)
-            yt *= self._Kx
-            yt = ifft(yt, axis=axis)
-        else:
-            yt = fft(y/self.y_twist, axis=axis)
-            yt *= self._Kx
-            yt = ifft(yt, axis=axis)
-            yt *= self.y_twist
-
-        # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
-        # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
-        yt += np.dot(y, self._Kr.T)
-        return yt
 
     def _r(self, N):
         r"""Return the abscissa."""
@@ -677,15 +777,3 @@ class CylindricalBasis(Object, BasisMixin):
         assert np.allclose(x, x0)
 
         return self.get_Psi(r)(psi)
-
-    def apply_Lz(self, y, hermitian=False):
-        raise NotImplementedError
-
-    def apply_Px(self, y, hermitian=False):
-        r"""Apply the Pz operator to y without any px.
-
-        Requires :attr:`_pxyz` to be defined.
-        """
-        axis = self.axes[0]
-        return self.y_twist * ifft(
-            self._kx0 * fft(y/self.y_twist, axis=axis), axis=axis)

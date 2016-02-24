@@ -13,6 +13,8 @@ import numpy as np
 import scipy.special
 sp = scipy
 
+import pytest
+
 from mmfutils.interface import verifyObject, verifyClass
 from mmfutils.math.bases import bases
 from mmfutils.math.bases.interface import IBasis, IBasisWithConvolution
@@ -46,6 +48,70 @@ class ExactGaussian(object):
         """Exact Laplacian with factor"""
         return (self.factor * self.y *
                 (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
+
+    def get_dy(self, x):
+        """Exact gradient along x direction"""
+        return (-self.y * x/self.r_0**2)
+
+    @property
+    def exp_d2y(self):
+        """Exact exponential of laplacian with factor applied to y"""
+        r_0 = np.sqrt(self.r_0**2 + 2*self.factor)
+        return (self.r_0/r_0)**self.d * self.get_y(r_0=r_0)
+
+
+class ExactGaussianQuart(ExactGaussian):
+    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    bases, we add a quartic term $k^2 + (k^2)^2$.
+    """
+    @property
+    def d2y(self):
+        """Exact Laplacian with factor"""
+        r = self.r
+        r0 = self.r_0
+        d = self.d
+        return (
+            self.factor * self.y *
+            (-r**4 + 2*r**2*(d+2)*r0**2 + (r**2 - d**2 - 2*d)*r0**4 - d*r0**6)
+            /r0**8)
+
+    @property
+    def exp_d2y(self):
+        """Exact exponential of laplacian with factor applied to y"""
+        r_0 = np.sqrt(self.r_0**2 + 2*self.factor)
+        return (self.r_0/r_0)**self.d * self.get_y(r_0=r_0)
+
+
+class ExactGaussianQuartCyl(ExactGaussian):
+    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    bases, we add a quartic term $k^2 + (k^2)^2$.
+    """
+    def __init__(self, x, r, A=1.0, factor=1.0, r_0=1.0):
+        self.x = x
+        self.r = r
+        self.A = A
+        self.factor = factor
+        self.r_0 = r_0
+
+    def get_y(self, r_0=None):
+        if r_0 is None:
+            r_0 = self.r_0
+        r = np.sqrt(self.r**2 + self.x**2)
+        return self.A * np.exp(-(r/r_0)**2/2.0)
+
+    @property
+    def d2y(self):
+        """Exact Laplacian with factor"""
+        r = self.r
+        x = self.x
+        r0 = self.r_0
+        d = 1
+        d2y_x = (
+            (-x**4 + 2*x**2*(d+2)*r0**2 + (x**2 - d**2 - 2*d)*r0**4 - d*r0**6)
+            /r0**8)
+        d = 2
+        d2y_r = (r**2 - d*r0**2)/r0**4
+        return (self.factor * self.y * (d2y_x + d2y_r))
 
     @property
     def exp_d2y(self):
@@ -83,18 +149,20 @@ class LaplacianTests(object):
         """Test the laplacian with a Gaussian."""
         # Real and Complex
         laplacian = self.basis.laplacian
-        for self.exact.factor in [(0.5+0.5j), self.exact.factor]:
-            for self.exact.A in [(0.5+0.5j), self.exact.A]:
-                ddy = laplacian(self.y, factor=self.exact.factor)
-                assert np.allclose(ddy, self.exact.d2y)
+        exact = self.exact
+        for exact.factor in [(0.5+0.5j), exact.factor]:
+            for exact.A in [(0.5+0.5j), exact.A]:
+                ddy = laplacian(exact.y, factor=exact.factor)
+                assert np.allclose(ddy, exact.d2y)
 
-                exp_ddy = laplacian(self.y, factor=self.exact.factor, exp=True)
-                assert np.allclose(exp_ddy, self.exact.exp_d2y)
+                exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
+                assert np.allclose(exp_ddy, exact.exp_d2y)
 
     def test_apply_K(self):
         """Test the application of K."""
-        Ky = self.basis.laplacian(self.y, factor=-0.5)
-        Ky_exact = -0.5 * self.exact.d2y
+        exact = self.exact
+        Ky = self.basis.laplacian(exact.y, factor=-0.5)
+        Ky_exact = -0.5 * exact.d2y
         assert np.allclose(Ky, Ky_exact)
 
 
@@ -161,11 +229,14 @@ class TestPeriodicBasis(ConvolutionTests):
     """
     @classmethod
     def setup_class(cls):
+        dim = 3
         cls.Basis = bases.PeriodicBasis
-        cls.basis = bases.PeriodicBasis(Nxyz=(32,)*3, Lxyz=(25.0,)*3)
+        cls.basis = bases.PeriodicBasis(Nxyz=(32,)*dim, Lxyz=(25.0,)*dim)
         cls.Q = 8.0
         cls.exact = ExactGaussian(
-            r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
+            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
+        cls.exact_quart = ExactGaussianQuart(
+            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
         cls.Mi = -1.747564594633182190636212
 
     def test_coulomb(self):
@@ -201,15 +272,44 @@ class TestPeriodicBasis(ConvolutionTests):
         assert np.allclose(V[0], V_no_ff)
         assert np.allclose(V[1], V_no_ff)
 
+    def test_laplacian_quart(self):
+        """Test the laplacian with a Gaussian and modified dispersion."""
+        # Real and Complex
+        laplacian = self.basis.laplacian
+        k2 = sum(_k**2 for _k in self.basis._pxyz)
+        k4 = k2**2
+        _k2 = k2 + k4
+        exact = self.exact_quart
+        for exact.factor in [(0.5+0.5j), exact.factor]:
+            for exact.A in [(0.5+0.5j), exact.A]:
+                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                assert np.allclose(ddy, exact.d2y, atol=1e-6)
+
+                #exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                #assert np.allclose(exp_ddy, exact.exp_d2y)
+
+    def test_gradient(self):
+        """Test the gradient"""
+        get_gradient = self.basis.get_gradient
+        xyz = self.basis.xyz
+        exact = self.exact
+        for exact.A in [(0.5+0.5j), exact.A]:
+            dy = get_gradient(exact.y)
+            dy_exact = map(exact.get_dy, xyz)
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
 
 class TestCartesianBasis(ConvolutionTests):
     @classmethod
     def setup_class(cls):
+        dim = 3
         cls.Basis = bases.CartesianBasis
-        cls.basis = bases.CartesianBasis(Nxyz=(32,)*3, Lxyz=(25.0,)*3)
+        cls.basis = bases.CartesianBasis(Nxyz=(32,)*dim, Lxyz=(25.0,)*dim)
         cls.Q = 8.0
         cls.exact = ExactGaussian(
-            r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
+            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
+        cls.exact_quart = ExactGaussianQuart(
+            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
 
     def test_coulomb_exact(self):
         """Test computation of the coulomb potential."""
@@ -281,6 +381,32 @@ class TestCartesianBasis(ConvolutionTests):
         assert np.allclose(V[0], V_exact, rtol=0.052)
         assert np.allclose(V[1], V_exact, rtol=0.052)
 
+    def test_laplacian_quart(self):
+        """Test the laplacian with a Gaussian and modified dispersion."""
+        # Real and Complex
+        laplacian = self.basis.laplacian
+        k2 = sum(_k**2 for _k in self.basis._pxyz)
+        k4 = k2**2
+        _k2 = k2 + k4
+        exact = self.exact_quart
+        for exact.factor in [(0.5+0.5j), exact.factor]:
+            for exact.A in [(0.5+0.5j), exact.A]:
+                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                assert np.allclose(ddy, exact.d2y, atol=1e-6)
+
+                #exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                #assert np.allclose(exp_ddy, exact.exp_d2y)
+
+    def test_gradient(self):
+        """Test the gradient"""
+        get_gradient = self.basis.get_gradient
+        xyz = self.basis.xyz
+        exact = self.exact
+        for exact.A in [(0.5+0.5j), exact.A]:
+            dy = get_gradient(exact.y)
+            dy_exact = map(exact.get_dy, xyz)
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
 
 class TestCylindricalBasis(LaplacianTests):
     @classmethod
@@ -292,6 +418,8 @@ class TestCylindricalBasis(LaplacianTests):
         cls.Q = 8.0
         cls.exact = ExactGaussian(
             r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
+        cls.exact_quart = ExactGaussianQuartCyl(
+            x=x, r=r, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
 
         cls.Nm = 5             # Number of functions to test
         cls.Nn = 5             # Used when functions are compared
@@ -327,3 +455,39 @@ class TestCylindricalBasis(LaplacianTests):
             dF = (dF[1:] + dF[:-1])/2.0
 
             assert np.allclose(dF, dF_fd, atol=1e-2)
+
+    def test_laplacian_quart(self):
+        """Test the laplacian with a Gaussian and modified dispersion."""
+        # Real and Complex
+        laplacian = self.basis.laplacian
+        kx2 = self.basis._kx2
+        kx4 = kx2**2
+        _kx2 = kx2 + kx4
+        exact = self.exact_quart
+        for exact.factor in [(0.5+0.5j), exact.factor]:
+            for exact.A in [(0.5+0.5j), exact.A]:
+                ddy = laplacian(exact.y, factor=exact.factor, _kx2=_kx2)
+                assert np.allclose(ddy, exact.d2y)
+
+                #exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                #assert np.allclose(exp_ddy, exact.exp_d2y)
+
+    def test_gradient(self):
+        """Test the gradient"""
+        get_gradient = self.basis.get_gradient
+        x, r = self.basis.xyz
+        exact = self.exact
+        for exact.A in [(0.5+0.5j), exact.A]:
+            dy = get_gradient(exact.y)[0]
+            dy_exact = exact.get_dy(x)
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
+
+class TestCoverage(object):
+    """Walk down some error branches for coverage."""
+    def test_convolve_coulomb_exact(self):
+        dim = 1
+        basis = bases.CartesianBasis(Nxyz=(32,)*dim, Lxyz=(25.0,)*dim)
+        exact = ExactGaussian(r=abs(basis.xyz[0]), d=dim)
+        with pytest.raises(NotImplementedError):
+            basis.convolve_coulomb_exact(exact.y, method='unknown')
