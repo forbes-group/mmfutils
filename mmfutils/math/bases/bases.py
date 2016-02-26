@@ -148,7 +148,11 @@ class PeriodicBasis(Object, BasisMixin):
     def init(self):
         self.xyz = get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
                            symmetric_lattice=self.symmetric_lattice)
-        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz) - self.boost_pxyz
+        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+
+        # Add boosts
+        self._pxyz = [_p - _b
+                      for (_p, _b) in zip(self._pxyz, self.boost_pxyz)]
         self.metric = np.prod(self.Lxyz/self.Nxyz)
         self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
 
