@@ -22,13 +22,20 @@ from setuptools.command.test import test as original_test
 import mmfutils.monkeypatches
 VERSION = mmfutils.__version__
 
+setup_requires = [
+    'pytest-runner'
+]
+
 install_requires = [
     "zope.interface>=3.8.0",
     'husl',
 ]
 
 test_requires = [
-    'nose>=1.3',
+    'pytest',
+    'pytest-cov',
+    'pytest-flake8',
+    'pytest-xdist',
     'ipython>=3.0',
     'coverage<=3.7.1',
     'flake8',
@@ -69,8 +76,9 @@ class test(original_test):
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
-      cmdclass=dict(test=test),
+      #cmdclass=dict(test=test),
 
+      setup_requires=setup_requires,
       install_requires=install_requires,
       extras_require={},
       tests_require=test_requires,
@@ -101,7 +109,6 @@ setup(name='mmfutils',
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
           'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
       ],
       )

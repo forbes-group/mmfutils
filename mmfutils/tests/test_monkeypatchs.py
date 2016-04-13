@@ -2,7 +2,7 @@
 import os.path
 import mmfutils.monkeypatches
 import flake8.main
-import nose.tools as nt
+import pytest
 
 PROJECT_DIR = os.path.join(os.path.dirname(mmfutils.__file__), '..')
 
@@ -16,7 +16,7 @@ class TestCoverage(object):
     def run_err(self):
         raise SystemExit(1)
 
-    def setUp(self):
+    def setup_class(self):
         reload(mmfutils.monkeypatches)
 
         class Flake8Command(flake8.main.Flake8Command):
@@ -30,6 +30,6 @@ class TestCoverage(object):
         # can sub it out to ensure coverage testing.
         self.flake8_self.run(_run=self.run_noerr)
 
-    @nt.raises(SystemExit)
     def test_flake8_patch_err(self):
-        self.flake8_self.run(_run=self.run_err)
+        with pytest.raises(SystemExit):
+            self.flake8_self.run(_run=self.run_err)
