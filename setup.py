@@ -19,7 +19,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as original_test
 
-import mmfutils.monkeypatches
+import mmfutils
 VERSION = mmfutils.__version__
 
 setup_requires = [
@@ -36,8 +36,7 @@ test_requires = [
     'pytest-cov',
     'pytest-flake8',
     'pytest-xdist',
-    'ipython>=3.0',
-    'coverage<=3.7.1',
+    'coverage',
     'flake8',
     "ipython>=4.0",
     "ipyparallel",

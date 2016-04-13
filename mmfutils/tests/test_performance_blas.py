@@ -137,7 +137,7 @@ class Test_BLAS(object):
 
     @pytest.mark.bench
     def test_dnorm_bench(self):
-        shape = (500, 500)
+        shape = (1000, 1000)
         x = self.rand(shape, complex=False)
         y = x + 0j
 

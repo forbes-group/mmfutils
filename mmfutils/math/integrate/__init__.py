@@ -445,8 +445,7 @@ def Richardson(f, ps=None, l=2, n0=1):
     f0 = f(n0)
     if hasattr(f0, 'shape'):
         # Allows us to deal with array valued functions
-        S = np.zeros(np.hstack([(n+1, n+1),
-                                f0.shape]), dtype=f0.dtype)
+        S = np.zeros((n+1, n+1) + f0.shape, dtype=f0.dtype)
     else:
         S = np.zeros((n+1, n+1), dtype=type(f0))
 

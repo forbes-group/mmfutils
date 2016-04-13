@@ -16,6 +16,7 @@ using something like::
     done
 
 Note: The FFTW library does not work with negative indices for axis.
+Indices should first be normalized by ``inds % len(shape)``.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -60,7 +61,7 @@ from .threads import SET_THREAD_HOOKS
 SET_THREAD_HOOKS.add(set_num_threads)
 
 
-try:
+try:                     # NOQA  This is too complex, but that is okay
     import pyfftw
     from pyfftw.interfaces.numpy_fft import (fft as _fft,
                                              ifft as _ifft,

@@ -1,6 +1,7 @@
 from mmfutils.performance import threads
 
 import numpy as np
+import pytest
 import timeit
 try:
     import numexpr
@@ -50,6 +51,7 @@ class TestThreads(object):
             assert fft._THREADS == nthreads
 
 
+@pytest.mark.bench
 class TestThreadsBenchmarks(object):
     bench = True
 

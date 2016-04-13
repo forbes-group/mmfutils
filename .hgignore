@@ -1,6 +1,7 @@
 syntax: glob
 
-.coverage
+.cache/*
+.coverage*
 .eggs
 .ipynb_checkpoints
 .tox
@@ -9,3 +10,5 @@ dist
 mmfutils.egg-info
 *.egg
 */htmlcov
+*.pyc
+*.pyo
