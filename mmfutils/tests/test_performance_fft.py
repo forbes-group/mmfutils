@@ -24,7 +24,7 @@ class Test_FFT(object):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axis in [None, 0, 1, -1]:
+            for axis in [None, 0, 1, -1, -2]:
                 kw = {}
                 if axis is not None:
                     kw = dict(axis=axis)
@@ -39,7 +39,7 @@ class Test_FFT(object):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axes in [None, [0], [1], [1, 0]]:
+            for axes in [None, [0], [1], [-1], [-2], [1, 0]]:
                 kw = {}
                 if axes is not None:
                     kw = dict(axes=axes)
@@ -62,7 +62,7 @@ class Test_FFT_pyfftw(Test_FFT):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axis in [None, 0, 1, -1]:
+            for axis in [None, 0, 1, -1, -2]:
                 kw = {}
                 if axis is not None:
                     kw = dict(axis=axis)
@@ -77,7 +77,7 @@ class Test_FFT_pyfftw(Test_FFT):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axes in [None, [0], [1], [1, 0]]:
+            for axes in [None, [0], [1], [-1], [-2], [1, 0]]:
                 kw = {}
                 if axes is not None:
                     kw = dict(axes=axes)
@@ -92,7 +92,7 @@ class Test_FFT_pyfftw(Test_FFT):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axis in [None, 0, 1, -1]:
+            for axis in [None, 0, 1, -1, -2]:
                 kw = {}
                 if axis is not None:
                     kw = dict(axis=axis)
@@ -107,7 +107,7 @@ class Test_FFT_pyfftw(Test_FFT):
 
         for threads in [1, 2]:
             fft.set_num_threads(threads)
-            for axes in [None, [0], [1], [1, 0]]:
+            for axes in [None, [0], [1], [-1], [-2], [1, 0]]:
                 kw = {}
                 if axes is not None:
                     kw = dict(axes=axes)
