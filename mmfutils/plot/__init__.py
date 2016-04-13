@@ -15,6 +15,18 @@ from .viridis import test_cm as viridis
 matplotlib.cm.viridis = viridis
 matplotlib.cm.cmap_d.update(viridis=viridis)
 
+from matplotlib.colors import LinearSegmentedColormap
+
+# Constructed with seaborn
+# import seaborn as sns
+# sns.diverging_palette(0, 255, n=4, s=63, l=73, sep=1, center='dark')
+diverging_colormap = LinearSegmentedColormap.from_list(
+    'diverging',
+    np.array([[0.62950738, 0.70001025, 0.89382127, 1.],
+              # [0.13300000, 0.13300000, 0.13300000, 1.],
+              [0.00000000, 0.00000000, 0.00000000, 1.],
+              [0.90488582, 0.62784940, 0.68104318, 1.]]))
+
 
 def _fix_args(x, y, z):
     """Fix the arguments to allow for more flexible processing."""
@@ -26,7 +38,8 @@ def _fix_args(x, y, z):
     return x, y, z
 
 
-def imcontourf(x, y, z, interpolate=True, *v, **kw):
+def imcontourf(x, y, z, interpolate=True, diverging=False,
+               *v, **kw):
     r"""Like :func:`matplotlib.pyplot.contourf` but does not actually find
     contours.  Just displays `z` using
     :func:`matplotlib.pyplot.imshow` which is much faster and uses
@@ -41,6 +54,10 @@ def imcontourf(x, y, z, interpolate=True, *v, **kw):
     interpolate : bool
        If `True`, then interpolate the function onto an evenly spaced set of
        abscissa using cublic splines.
+    diverging : bool
+       If `True`, then the output is normalized so that diverging
+       colormaps will have 0 in the middle.  This is done by setting
+       `vmin` and `vmax` symmetrically.
     """
     x, y, z = _fix_args(x, y, z)
 
@@ -55,8 +72,15 @@ def imcontourf(x, y, z, interpolate=True, *v, **kw):
     assert np.allclose(np.diff(np.diff(x)), 0)
     assert np.allclose(np.diff(np.diff(y)), 0)
     kwargs = dict(**kw)
-    kwargs.setdefault('cmap', 'gist_heat')
     kwargs.setdefault('aspect', 'auto')
+    if diverging:
+        z_max = abs(z).max()
+        kwargs.setdefault('vmin', -z_max)
+        kwargs.setdefault('vmax', z_max)
+        kwargs.setdefault('cmap', diverging_colormap)
+    else:
+        kwargs.setdefault('cmap', viridis)
+
     img = plt.imshow(
         np.rollaxis(z, 0, 2), origin='lower',
         extent=(x[0], x[-1], y[0], y[-1]), *v, **kwargs)
