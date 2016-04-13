@@ -1,5 +1,4 @@
 import pickle
-import nose.tools as nt
 
 from mmfutils.containers import Object, Container, ContainerList, ContainerDict
 
@@ -12,25 +11,25 @@ class TestContainer(object):
         o.dont_store_this = "BAD"
 
         o1 = pickle.loads(pickle.dumps(o))
-        nt.eq_(repr(o), repr(o1))
-        nt.ok_(hasattr(o, 'dont_store_this'))
-        nt.ok_(not hasattr(o1, 'dont_store_this'))
+        assert repr(o) == repr(o1)
+        assert hasattr(o, 'dont_store_this')
+        assert not hasattr(o1, 'dont_store_this')
 
     def test_container_delattr(self):
         # Not encouraged but provided
         c = Container(c=[1, 2, 3], a=1, b="b")
         del c.b
-        nt.ok_('a' in c)
-        nt.ok_('b' not in c)
-        nt.ok_('c' in c)
+        assert 'a' in c
+        assert 'b' not in c
+        assert 'c' in c
 
     def test_preserve_order_of_picklable_attributes(self):
         """Check that the order of attributes defined by
         picklable_attributes is preserved"""
         c = Container(a=1, b=2, picklable_attributes=['b', 'a'])
-        nt.eq_(repr(c), "Container(b=2, a=1)")
+        assert repr(c) == "Container(b=2, a=1)"
         c.picklable_attributes = ['a', 'b']
-        nt.eq_(repr(c), "Container(a=1, b=2)")
+        assert repr(c) == "Container(a=1, b=2)"
 
 
 class TestContainerList(object):
@@ -38,9 +37,9 @@ class TestContainerList(object):
         # Not encouraged but provided
         c = ContainerList(c=[1, 2, 3], a=1, b="b")
         del c[1]
-        nt.ok_('a' in c)
-        nt.ok_('b' not in c)
-        nt.ok_('c' in c)
+        assert 'a' in c
+        assert 'b' not in c
+        assert 'c' in c
 
 
 class TestContainerDict(object):
@@ -48,27 +47,28 @@ class TestContainerDict(object):
         # Not encouraged but provided
         c = ContainerDict(c=[1, 2, 3], a=1, b="b")
         del c['b']
-        nt.ok_('a' in c)
-        nt.ok_('b' not in c)
-        nt.ok_('c' in c)
+        assert 'a' in c
+        assert 'b' not in c
+        assert 'c' in c
 
     def test_container_setitem(self):
         # Not encouraged but provided
         c = ContainerDict(c=[1, 2, 3], a=1, b="b")
         c['a'] = 3
-        nt.eq_(c.a, 3)
+        assert c.a == 3
 
 
 class TestContainerConversion(object):
-    def setUp(self):
-        self.c = Container(a=1, c=[1, 2, 3], b="b")
-        self.cl = ContainerList(a=1, c=[1, 2, 3], b="b")
-        self.cd = ContainerDict(a=1, c=[1, 2, 3], b="b")
-        self.d = dict(a=1, c=[1, 2, 3], b="b")
-        self.l = [('a', 1), ('b', "b"), ('c', [1, 2, 3])]
+    @classmethod
+    def setup_class(cls):
+        cls.c = Container(a=1, c=[1, 2, 3], b="b")
+        cls.cl = ContainerList(a=1, c=[1, 2, 3], b="b")
+        cls.cd = ContainerDict(a=1, c=[1, 2, 3], b="b")
+        cls.d = dict(a=1, c=[1, 2, 3], b="b")
+        cls.l = [('a', 1), ('b', "b"), ('c', [1, 2, 3])]
 
     def check(self, c):
-        nt.eq_(self.c.__getstate__(), c.__getstate__())
+        assert self.c.__getstate__() == c.__getstate__()
 
     def test_conversions(self):
         self.check(Container(self.c))
@@ -112,16 +112,16 @@ class TestObject(object):
         o.dont_store_this = "BAD"
 
         o1 = pickle.loads(pickle.dumps(o))
-        nt.eq_(repr(o), repr(o1))
-        nt.ok_(hasattr(o, 'dont_store_this'))
-        nt.ok_(not hasattr(o1, 'dont_store_this'))
+        assert repr(o) == repr(o1)
+        assert hasattr(o, 'dont_store_this')
+        assert not hasattr(o1, 'dont_store_this')
 
     def test_empty_object(self):
         o = MyEmptyObject()
-        nt.eq_(o.x, 5)
+        assert o.x == 5
         o1 = pickle.loads(pickle.dumps(o))
-        nt.eq_(o1.x, 5)
-        nt.ok_(not o1.picklable_attributes)
+        assert o1.x == 5
+        assert not o1.picklable_attributes
 
 
 class TestPersist(object):
@@ -137,9 +137,9 @@ class TestPersist(object):
         exec str(a) in d
         o1 = d['o']
 
-        nt.eq_(repr(o), repr(o1))
-        nt.ok_(hasattr(o, 'dont_store_this'))
-        nt.ok_(not hasattr(o1, 'dont_store_this'))
+        assert repr(o) == repr(o1)
+        assert hasattr(o, 'dont_store_this')
+        assert not hasattr(o1, 'dont_store_this')
 
 
 class Issue4(ContainerDict):
