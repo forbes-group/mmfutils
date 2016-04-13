@@ -55,28 +55,9 @@ for mod in list(sys.modules.keys()):
 del mod
 
 
-class test(original_test):
-    description = "Run all tests and checks (customized for this project)"
-
-    def run(self):
-        # Call this to do complicated distribute stuff but don't run
-        # any tests here.
-        self.dry_run = True
-        original_test.run(self)
-
-        # This is used to see if we are running tests.
-        os.environ['CI'] = 'true'
-        for cmd in ['nosetests', 'flake8', 'check']:
-            try:
-                self.run_command(cmd)
-            except SystemExit as e:
-                if e.code:
-                    raise
-
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
-      #cmdclass=dict(test=test),
 
       setup_requires=setup_requires,
       install_requires=install_requires,
