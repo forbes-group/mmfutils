@@ -44,6 +44,7 @@ test_requires = [
     "numpy",
     "numexpr",
     "weave",
+    "uncertainties",
 ]
 
 # Remove mmfutils so that it gets properly covered in tests. See
