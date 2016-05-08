@@ -94,6 +94,10 @@ Table of Contents
 
    -  `3.1 Releases <#3.1-Releases>`__
 
+-  `4. Change Log <#4.-Change-Log>`__
+
+   -  `4.1 REL: 0.4.7 <#4.1-REL:-0.4.7>`__
+
 1.1 Installing
 --------------
 
@@ -1335,3 +1339,34 @@ Then create this branch and commit this:
 9.  Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
 10. Optional: Update any ``setup.py`` files that depend on your new
     features/fixes etc.
+
+4. Change Log
+=============
+
+4.1 REL: 0.4.7
+--------------
+
+API changes:
+
+-  Added ``mmfutils.interface.describe_interface()`` for inserting
+   interfaces into documentation.
+-  Added some DVR basis code to ``mmfutils.math.bases``.
+-  Added a diverging colormap and some support in ``mmfutils.plot``.
+-  Added a Wigner Ville distribution computation in
+   ``mmfutils.math.wigner``
+-  Added ``mmfutils.optimize.usolve`` and ``ubrentq`` for finding roots
+   with ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+   support.
+
+Issues:
+
+-  Resolve issue #8: Use
+   ```ipyparallel`` <https://github.com/ipython/ipyparallel>`__ now.
+-  Resolve issue #9: Use `pytest <https://pytest.org>`__ rather than
+   ``nose`` (which is no longer supported).
+-  Resolve issue #10: PYFFTW wrappers now support negative ``axis`` and
+   ``axes`` arguments.
+-  Address issue #11: Preliminary version of some DVR basis classes.
+-  Resolve issue #12: Added solvers with
+   ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+   support.

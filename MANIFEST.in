@@ -1,0 +1,3 @@
+# Include the license file and change log
+include LICENSE.txt
+include CHANGES.txt
