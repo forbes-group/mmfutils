@@ -10,7 +10,10 @@ import subprocess
 import time
 import weakref
 
-from IPython import parallel
+try:
+    import ipyparallel
+except ImportError:
+    from IPython import parallel as ipyparallel
 
 __all__ = ['get_cluster']
 
@@ -88,7 +91,7 @@ class Cluster(object):
         fail if the cluster is just starting up.
         """
         try:
-            client = parallel.Client(
+            client = ipyparallel.Client(
                 profile=self.profile, ipython_dir=self.ipython_dir)
             client.close()
             return True
@@ -174,16 +177,16 @@ class Cluster(object):
 
         while True:
             if timeout < time.time() - tic:
-                raise parallel.TimeoutError(
+                raise ipyparallel.TimeoutError(
                     "{} engines did not start in timeout={}s".format(
                         n_min, timeout))
             try:
-                self.client = parallel.Client(
+                self.client = ipyparallel.Client(
                     profile=self.profile, ipython_dir=self.ipython_dir)
                 break
             except IOError:
                 logging.warning("No ipcontroller-client.json, waiting...")
-            except parallel.TimeoutError:     # pragma: nocover
+            except ipyparallel.TimeoutError:     # pragma: nocover
                 logging.warning("No controller, waiting...")
             time.sleep(self.sleep_time)
 
@@ -195,7 +198,7 @@ class Cluster(object):
         logging.info("{} of {} running".format(running, n_min))
         while len(self.client) < n_min:
             if timeout < time.time() - tic:   # pragma: nocover
-                raise parallel.TimeoutError(
+                raise ipyparallel.TimeoutError(
                     "{} engines did not start in timeout={}s".format(
                         n_min, timeout))
             time.sleep(self.sleep_time)

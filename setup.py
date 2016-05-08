@@ -19,23 +19,32 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as original_test
 
-import mmfutils.monkeypatches
+import mmfutils
 VERSION = mmfutils.__version__
+
+setup_requires = [
+    'pytest-runner'
+]
 
 install_requires = [
     "zope.interface>=3.8.0",
-    'ipython>=3.0',
     'husl',
 ]
 
 test_requires = [
-    'nose>=1.3',
-    'ipython>=3.0',
-    'coverage<=3.7.1',
+    'pytest',
+    'pytest-cov',
+    'pytest-flake8',
+    'pytest-xdist',
+    'coverage',
     'flake8',
+    "ipython>=4.0",
+    "ipyparallel",
     "persist",
     "numpy",
-    "numexpr"
+    "numexpr",
+    "weave",
+    "uncertainties",
 ]
 
 # Remove mmfutils so that it gets properly covered in tests. See
@@ -46,31 +55,11 @@ for mod in list(sys.modules.keys()):
 del mod
 
 
-class test(original_test):
-    description = "Run all tests and checks (customized for this project)"
-
-    def finalize_options(self):
-        # Don't actually run any "test" tests (we will use nosetest)
-        self.test_suit = None
-
-    def run(self):
-        # Call this to do complicated distribute stuff.
-        original_test.run(self)
-
-        # This is used to see if we are running tests.
-        os.environ['CI'] = 'true'
-        for cmd in ['nosetests', 'flake8', 'check']:
-            try:
-                self.run_command(cmd)
-            except SystemExit as e:
-                if e.code:
-                    raise
-
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
-      cmdclass=dict(test=test),
 
+      setup_requires=setup_requires,
       install_requires=install_requires,
       extras_require={},
       tests_require=test_requires,
@@ -101,7 +90,6 @@ setup(name='mmfutils',
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
           'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
       ],
       )

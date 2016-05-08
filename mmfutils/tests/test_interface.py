@@ -1,5 +1,4 @@
-import nose.tools as nt
-
+import pytest
 import zope.interface.document
 import zope.interface.exceptions
 
@@ -49,24 +48,23 @@ class InterfaceTest(object):
 class TestInterfaces(object):
     def test_verifyClass(self):
         verifyClass(IInterfaceTest, InterfaceTest)
+        with pytest.raises(
+                zope.interface.exceptions.BrokenMethodImplementation):
+            verifyClass(IInterfaceTest, BrokenInterfaceTest1)
 
     def test_verifyObject(self):
         o = InterfaceTest()
         verifyObject(IInterfaceTest, o)
 
-    @nt.raises(zope.interface.exceptions.BrokenMethodImplementation)
-    def test_verifyBrokenClass(self):
-        verifyClass(IInterfaceTest, BrokenInterfaceTest1)
-
-    @nt.raises(zope.interface.exceptions.BrokenMethodImplementation)
-    def test_verifyBrokenObject1(self):
         o = BrokenInterfaceTest1()
-        verifyObject(IInterfaceTest, o)
+        with pytest.raises(
+                zope.interface.exceptions.BrokenMethodImplementation):
+            verifyObject(IInterfaceTest, o)
 
-    @nt.raises(zope.interface.exceptions.BrokenImplementation)
-    def test_verifyBrokenObject2(self):
         o = BrokenInterfaceTest2()
-        verifyObject(IInterfaceTest, o)
+        with pytest.raises(
+                zope.interface.exceptions.BrokenImplementation):
+            verifyObject(IInterfaceTest, o)
 
 
 class Doctests(object):

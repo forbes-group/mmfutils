@@ -1,8 +1,7 @@
 from mmfutils.math.differentiate import differentiate
 
 import math
-
-import nose.tools as nt
+import numpy as np
 
 
 class TestDifferentiate(object):
@@ -17,11 +16,11 @@ class TestDifferentiate(object):
 
         exact = -math.cos(x0)
         res = differentiate(f, dir=-1, **kw)
-        nt.assert_almost_equal(res, exact, places=12)
+        assert np.allclose(res, exact, rtol=1e-12)
 
         exact = math.cos(x0)
         res = differentiate(f, dir=+1, **kw)
-        nt.assert_almost_equal(res, exact, places=12)
+        assert np.allclose(res, exact, rtol=1e-12)
 
     def test_left_2(self):
         """Test directional second derivatives"""
@@ -34,8 +33,8 @@ class TestDifferentiate(object):
 
         exact = math.sin(x0)
         res = differentiate(f, dir=-1, **kw)
-        nt.assert_almost_equal(res, exact, places=9)
+        assert np.allclose(res, exact, rtol=1e-9)
 
         exact = -math.sin(x0)
         res = differentiate(f, dir=+1, **kw)
-        nt.assert_almost_equal(res, exact, places=9)
+        assert np.allclose(res, exact, rtol=1e-9)

@@ -1,3 +1,7 @@
 [run]
 # Plots are not yet a part of this package
-omit=mmfutils/plot/*
+omit=
+   mmfutils/plot/*
+   */tests/*
+[html]
+directory = build/_coverage

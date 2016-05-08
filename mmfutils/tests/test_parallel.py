@@ -5,16 +5,14 @@ import subprocess
 import tempfile
 import time
 
-import nose.tools as nt
+import pytest
 
-from mmfutils.parallel import Cluster, get_cluster, parallel
+from mmfutils.parallel import Cluster, get_cluster, ipyparallel
 
 import parallel_module
 
 
 class TestCluster(object):
-    slow = 1
-
     @classmethod
     def setup_class(cls):
         """We start all the clusters here in parallel so we don't have to wait
@@ -55,43 +53,46 @@ class TestCluster(object):
         """Simple test connecting to a cluster."""
         cluster = get_cluster(profile='testing1',
                               ipython_dir=self.ipython_dir)
-        nt.ok_(cluster is self.cluster1)
-        nt.eq_(max(1, multiprocessing.cpu_count() - 1), len(cluster))
+        assert cluster is self.cluster1
+        assert max(1, multiprocessing.cpu_count() - 1) == len(cluster)
 
     def test_pbs(self):
         """Test that the PBS_NODEFILE is used if defined"""
         with get_cluster(profile='testing_pbs',
                          ipython_dir=self.ipython_dir) as cluster:
-            nt.ok_(cluster is self.cluster_pbs)
-            nt.eq_(3, len(cluster))
+            assert cluster is self.cluster_pbs
+            assert 3 == len(cluster)
 
     def test_doublestart(self):
         """Test that starting a running cluster does nothing."""
         tic = time.time()
         self.cluster1.start()
-        nt.ok_(time.time() - tic < 0.1)
+        assert time.time() - tic < 0.1
 
-    @nt.raises(parallel.TimeoutError)
     def test_timeout1(self):
         """Test timeout (coverage)"""
-        self.cluster1.wait(timeout=0)
+        with pytest.raises(ipyparallel.TimeoutError):
+            self.cluster1.wait(timeout=0)
 
     def test_views(self):
         view1 = self.cluster1.direct_view
         view1['x'] = 5.0
         view2 = self.cluster1.direct_view
-        nt.ok_(view1 is view2)
-        nt.eq_(sum(view2['x']), 5*len(self.cluster1))
+        assert view1 is view2
+        assert sum(view2['x']) == 5*len(self.cluster1)
 
         p = range(20)
         res = self.cluster1.load_balanced_view.map(
             parallel_module.exp2, p, block=True)
-        nt.eq_(res, [2**_p for _p in p])
+        assert res == [2**_p for _p in p]
 
     def test_del(self):
         """Test deleting of cluster objects"""
         cls = self.__class__
         key = cls.cluster3.key
-        nt.ok_(key in Cluster._clusters)
+        assert key in Cluster._clusters
         del cls.cluster3
-        nt.ok_(key not in Cluster._clusters)
+        assert key not in Cluster._clusters
+
+
+pytest.mark.slow(TestCluster)

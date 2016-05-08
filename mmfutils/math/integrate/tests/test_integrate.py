@@ -2,8 +2,6 @@ import itertools
 
 import numpy as np
 
-import nose.tools as nt
-
 from mmfutils.math.integrate import Richardson
 
 
@@ -46,4 +44,4 @@ class TestRichardson(object):
 
         ns = np.arange(6)
         slopes = 2*(ns + 1)
-        nt.ok_(np.allclose(map(slope, ns), slopes, rtol=0.05))
+        assert np.allclose(map(slope, ns), slopes, rtol=0.05)

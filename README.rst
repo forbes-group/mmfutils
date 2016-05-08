@@ -94,6 +94,10 @@ Table of Contents
 
    -  `3.1 Releases <#3.1-Releases>`__
 
+-  `4. Change Log <#4.-Change-Log>`__
+
+   -  `4.1 REL: 0.4.7 <#4.1-REL:-0.4.7>`__
+
 1.1 Installing
 --------------
 
@@ -184,7 +188,7 @@ to ``init()``.
             # Set highest momentum to zero if N is even to
             # avoid rapid oscillations
             if self.N % 2 == 0:
-                self.k[self.N/2.0] = 0.0
+                self.k[self.N//2] = 0.0
                 
         def compute_derivative(self, f):
             """Return the derivative of f."""        
@@ -503,55 +507,13 @@ Finally, a working instance:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We also monkeypatch ``zope.interface.documentation.asStructuredText()``
-to provide a mechanism for documentating interfaces in a notebook. This
-still requires a bit of work to convert the string to HTML for display
-using ``docutils``:
+to provide a mechanism for documentating interfaces in a notebook.
 
 .. code:: python
 
-    # Chunk of code to display interfaces.
-    # See: http://code.activestate.com/recipes/
-    #            193890-using-rest-restructuredtext-to-create-html-snippet/
-    import IPython.display
-    
-    from docutils import core
-    from docutils.writers.html4css1 import Writer, HTMLTranslator
-    
-    import zope.interface.document
-    
-    
-    class NoHeaderHTMLTranslator(HTMLTranslator):
-        def __init__(self, document):
-            HTMLTranslator.__init__(self, document)
-            self.head_prefix = ['']*5
-            self.body_prefix = []
-            self.body_suffix = []
-            self.stylesheet = []
-    
-    
-    _w = Writer()
-    _w.translator_class = NoHeaderHTMLTranslator
-    
-    
-    def reSTify(string):
-        return IPython.display.HTML(core.publish_string(string, writer=_w))
-    
-    
-    def describe_interface(interface):
-        rst = zope.interface.document.asStructuredText(interface)
-        return IPython.display.display(reSTify(rst))
-
-Now we can show the interface in our documentation:
-
-.. code:: python
-
+    from mmfutils.interface import describe_interface
     describe_interface(IAdder)
 
-
-.. parsed-literal::
-
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
-      import pkg_resources
 
 
 
@@ -578,6 +540,7 @@ Now we can show the interface in our documentation:
     <tt class="docutils literal">add(other)</tt> -- Return self + other.</blockquote>
     </blockquote>
     </div>
+
 
 
 
@@ -713,17 +676,17 @@ then it will match these to the shape of ``z``).
 
 .. parsed-literal::
 
-    CPU times: user 1.12 ms, sys: 82 µs, total: 1.2 ms
-    Wall time: 1.2 ms
-    CPU times: user 37 ms, sys: 1.17 ms, total: 38.2 ms
-    Wall time: 38.2 ms
+    CPU times: user 1.05 ms, sys: 54 µs, total: 1.11 ms
+    Wall time: 1.11 ms
+    CPU times: user 38.2 ms, sys: 1.25 ms, total: 39.4 ms
+    Wall time: 39.4 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.contour.QuadContourSet instance at 0x114e54368>
+    <matplotlib.contour.QuadContourSet instance at 0x115216c20>
 
 
 
@@ -734,7 +697,7 @@ then it will match these to the shape of ``z``).
 
 
 
-.. image:: README_files/README_52_3.png
+.. image:: README_files/README_50_3.png
 
 
 2.5.2 Angular Variables
@@ -781,13 +744,13 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet instance at 0x115bc5248>,
-     <matplotlib.contour.QuadContourSet instance at 0x115be2dd0>)
+    (<matplotlib.contour.QuadContourSet instance at 0x115f66d88>,
+     <matplotlib.contour.QuadContourSet instance at 0x115f8d950>)
 
 
 
 
-.. image:: README_files/README_55_2.png
+.. image:: README_files/README_53_2.png
 
 
 2.6 Debugging
@@ -850,13 +813,11 @@ This runs the following code:
 
 .. parsed-literal::
 
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
-      import pkg_resources
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
     [NbConvertApp] Support files will be in README_files/
     [NbConvertApp] Making directory README_files
     [NbConvertApp] Making directory README_files
-    [NbConvertApp] Writing 44609 bytes to README.rst
+    [NbConvertApp] Writing 29492 bytes to README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -882,16 +843,10 @@ Here is an example:
 
 .. parsed-literal::
 
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/command/install_scripts.py:3: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
+    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/setuptools-19.1.1-py2.7.egg/setuptools/dist.py:284: UserWarning: Normalizing '0.4.7dev' to '0.4.7.dev0'
     running test
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module flake8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/flake8/__init__.pyc, but /Users/mforbes/work/mmfbb/mmfutils/flake8-2.4.1-py2.7.egg is being added to sys.path
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/distribute-0.6.27-py2.7.egg/setuptools/dist.py:247: UserWarning: Module pep8 was already imported from /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pep8.pyc, but /Users/mforbes/work/mmfbb/mmfutils/pep8-1.5.7-py2.7.egg is being added to sys.path
     running nosetests
     running egg_info
-    writing requirements to mmfutils.egg-info/requires.txt
-    writing mmfutils.egg-info/PKG-INFO
-    writing top-level names to mmfutils.egg-info/top_level.txt
-    writing dependency_links to mmfutils.egg-info/dependency_links.txt
     writing requirements to mmfutils.egg-info/requires.txt
     writing mmfutils.egg-info/PKG-INFO
     writing top-level names to mmfutils.egg-info/top_level.txt
@@ -909,6 +864,7 @@ Here is an example:
     Doctest: mmfutils.containers.Object ... ok
     Doctest: mmfutils.debugging.debug ... ok
     Doctest: mmfutils.debugging.persistent_locals ... ok
+    Doctest: mmfutils.interface.describe_interface ... ok
     Doctest: mmfutils.math.differentiate.differentiate ... ok
     Doctest: mmfutils.math.differentiate.hessian ... ok
     Test the Richardson extrapolation for the correct scaling behaviour. ... ok
@@ -926,6 +882,7 @@ Here is an example:
     Doctest: mmfutils.math.integrate.ssum_python ... ok
     Test directional first derivatives ... ok
     Test directional second derivatives ... ok
+    Doctest: mmfutils.optimize.bracket_monotonic ... ok
     Doctest: mmfutils.performance.fft.resample ... ok
     Doctest: mmfutils.performance.numexpr ... ok
     mmfutils.tests.test_containers.TestContainer.test_container_delattr ... ok
@@ -954,19 +911,13 @@ Here is an example:
     ok
     mmfutils.tests.test_monkeypatchs.TestCoverage.test_flake8_patch_err ... INFO:root:Patching flake8 for issues 39 and 40
     ok
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/pygments/plugin.py:39: UserWarning: Module errno was already imported from None, but /data/src/python/pygsl-0.9.5 is being added to sys.path
-      import pkg_resources
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_kernel_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_console_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_qtconsole_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_notebook_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipython_nbconvert_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipcontroller_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipengine_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/ipcluster_config.py'
-    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA/profile_testing/iplogger_config.py'
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A/profile_testing/ipython_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A/profile_testing/ipython_kernel_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A/profile_testing/ipcontroller_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A/profile_testing/ipengine_config.py'
+    [ProfileCreate] Generating default config file: u'/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A/profile_testing/ipcluster_config.py'
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing1 --n=7 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A"
+    WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
@@ -977,7 +928,8 @@ Here is an example:
     INFO:root:waiting for 1 engines
     INFO:root:0 of 1 running
     INFO:root:7 of 1 running
-    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing_pbs --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
+    INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=testing_pbs --n=3 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A"
+    WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
     WARNING:root:No ipcontroller-client.json, waiting...
@@ -997,14 +949,14 @@ Here is an example:
     INFO:root:3 of 1 running
     INFO:root:waiting for 3 engines
     INFO:root:3 of 3 running
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing_pbs --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
-    2015-12-01 12:02:29.961 [IPClusterStop] Stopping cluster [pid=13563] with [signal=2]
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing_pbs --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A"
+    2016-01-05 12:16:55.566 [IPClusterStop] Stopping cluster [pid=17497] with [signal=2]
     ok
     Test timeout (coverage) ... ok
     mmfutils.tests.test_parallel.TestCluster.test_views ... DEBUG:root:Importing canning map
     ok
-    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmpLXUSEA"
-    2015-12-01 12:02:30.535 [IPClusterStop] Stopping cluster [pid=13535] with [signal=2]
+    INFO:root:Stopping cluster: ipcluster stop --profile=testing1 --ipython-dir="/var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gn/T/tmp9itx0A"
+    2016-01-05 12:16:56.330 [IPClusterStop] Stopping cluster [pid=17461] with [signal=2]
     mmfutils.tests.test_performance_blas.Test_BLAS.test_daxpy ... ok
     mmfutils.tests.test_performance_blas.Test_BLAS.test_ddot ... ok
     mmfutils.tests.test_performance_blas.Test_BLAS.test_dnorm ... ok
@@ -1031,21 +983,22 @@ Here is an example:
     mmfutils                           1      0   100%   
     mmfutils.containers               85      0   100%   
     mmfutils.debugging                47      0   100%   
-    mmfutils.interface                47      0   100%   
+    mmfutils.interface                70      0   100%   
     mmfutils.math                      0      0   100%   
     mmfutils.math.differentiate       61      0   100%   
     mmfutils.math.integrate          193      0   100%   
     mmfutils.monkeypatches            14      0   100%   
-    mmfutils.parallel                121      0   100%   
+    mmfutils.optimize                 13      0   100%   
+    mmfutils.parallel                124      2    98%   15-16
     mmfutils.performance               0      0   100%   
     mmfutils.performance.blas         58      0   100%   
     mmfutils.performance.fft          61      0   100%   
     mmfutils.performance.numexpr      10      0   100%   
     mmfutils.performance.threads      10      0   100%   
     ------------------------------------------------------------
-    TOTAL                            708      0   100%   
+    TOTAL                            747      2    99%   
     ----------------------------------------------------------------------
-    Ran 71 tests in 18.769s
+    Ran 73 tests in 19.302s
     
     OK
 
@@ -1085,7 +1038,7 @@ Complete code coverage information is provided in
     <div id='header'>
         <div class='content'>
             <h1>Coverage report:
-                <span class='pc_cov'>100%</span>
+                <span class='pc_cov'>99%</span>
             </h1>
             <img id='keyboard_icon' src='keybd_closed.png'>
         </div>
@@ -1123,11 +1076,11 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class='total'>
                     <td class='name left'>Total</td>
-                    <td>708</td>
-                    <td>0</td>
+                    <td>747</td>
+                    <td>2</td>
                     <td>71</td>
                     
-                    <td class='right'>100%</td>
+                    <td class='right'>99%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -1161,7 +1114,7 @@ Complete code coverage information is provided in
                 
                 <tr class='file'>
                     <td class='name left'><a href='mmfutils_interface.html'>mmfutils.interface</a></td>
-                    <td>47</td>
+                    <td>70</td>
                     <td>0</td>
                     <td>14</td>
                     
@@ -1205,12 +1158,21 @@ Complete code coverage information is provided in
                 </tr>
                 
                 <tr class='file'>
-                    <td class='name left'><a href='mmfutils_parallel.html'>mmfutils.parallel</a></td>
-                    <td>121</td>
+                    <td class='name left'><a href='mmfutils_optimize.html'>mmfutils.optimize</a></td>
+                    <td>13</td>
                     <td>0</td>
-                    <td>8</td>
+                    <td>0</td>
                     
                     <td class='right'>100%</td>
+                </tr>
+                
+                <tr class='file'>
+                    <td class='name left'><a href='mmfutils_parallel.html'>mmfutils.parallel</a></td>
+                    <td>124</td>
+                    <td>2</td>
+                    <td>8</td>
+                    
+                    <td class='right'>98%</td>
                 </tr>
                 
                 <tr class='file'>
@@ -1359,8 +1321,8 @@ doc/source/mmfutils.optimize.rst mmfutils.optimize =================
 
    hg com -m "REL: " hg push -b .
 7. Create a pull request on the development fork from your branch to
-   ``default`` on bitbucket. Review it, fix anything, then accept the PR
-   and close the branch.
+   ``default`` on the release project bitbucket. Review it, fix
+   anything, then accept the PR and close the branch.
 8. **Start new branch**: On the same development branch (not
    ``default``), increase the version number in ``mmfutils/__init__.py``
    and add ``dev``: i.e.:
@@ -1372,4 +1334,39 @@ Then create this branch and commit this:
 ::
 
        hg branch "0.4.7"
-       hg com -m "BRN: 0.4.7"
+       hg com -m "BRN: Started branch 0.4.7"
+
+9.  Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
+10. Optional: Update any ``setup.py`` files that depend on your new
+    features/fixes etc.
+
+4. Change Log
+=============
+
+4.1 REL: 0.4.7
+--------------
+
+API changes:
+
+-  Added ``mmfutils.interface.describe_interface()`` for inserting
+   interfaces into documentation.
+-  Added some DVR basis code to ``mmfutils.math.bases``.
+-  Added a diverging colormap and some support in ``mmfutils.plot``.
+-  Added a Wigner Ville distribution computation in
+   ``mmfutils.math.wigner``
+-  Added ``mmfutils.optimize.usolve`` and ``ubrentq`` for finding roots
+   with ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+   support.
+
+Issues:
+
+-  Resolve issue #8: Use
+   ```ipyparallel`` <https://github.com/ipython/ipyparallel>`__ now.
+-  Resolve issue #9: Use `pytest <https://pytest.org>`__ rather than
+   ``nose`` (which is no longer supported).
+-  Resolve issue #10: PYFFTW wrappers now support negative ``axis`` and
+   ``axes`` arguments.
+-  Address issue #11: Preliminary version of some DVR basis classes.
+-  Resolve issue #12: Added solvers with
+   ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+   support.

@@ -2,6 +2,10 @@
 default = ssh://hg@bitbucket.org/mforbes/mmfutils-fork
 pristine = ssh://hg@bitbucket.org/mforbes/mmfutils
 
+[alias]
+qcom = commit
+
 [hooks]
-pre-commit = ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
+pre-qcom = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
+pre-commit = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 pre-commit.runtests = python -O setup.py test
