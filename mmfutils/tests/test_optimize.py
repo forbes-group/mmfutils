@@ -18,3 +18,16 @@ class Test(object):
         exact = (a*c)**(1./n)
         res = ans - exact
         assert np.allclose(0, [res.nominal_value, res.std_dev])
+
+    def test_usolve_1(self):
+        """Should also work with regular numbers (which is faster)."""
+        n = 2.0
+        c = 1.0
+        a = 3.0
+
+        def f(x):
+            return x**n - a*c
+
+        ans = optimize.ubrentq(f, 0, max(1, a))
+        exact = (a*c)**(1./n)
+        assert np.allclose(ans, exact)
