@@ -65,8 +65,10 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
             np.allclose(np.diff(np.diff(x)), 0) and
             np.allclose(np.diff(np.diff(y)), 0)):
         spl = sp.interpolate.RectBivariateSpline(x, y, z)
-        x = np.linspace(x.min(), x.max(), len(x))
-        y = np.linspace(y.min(), y.max(), len(y))
+        Nx = int(min(2*len(x), (x.max()-x.min()) / np.diff(sorted(x)).min()))
+        Ny = int(min(2*len(y), (y.max()-y.min()) / np.diff(sorted(y)).min()))
+        x = np.linspace(x.min(), x.max(), Nx)
+        y = np.linspace(y.min(), y.max(), Ny)
         z = spl(x, y)
 
     assert np.allclose(np.diff(np.diff(x)), 0)
