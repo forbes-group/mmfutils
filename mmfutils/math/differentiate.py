@@ -169,7 +169,7 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
         n += 1
         err[0] = abs(_d - d0)
         d0 = _d
-        if (err[0] > err_old).any() or (n > nmax):
+        if np.any(err[0] > err_old) or (n > nmax):
             break
         err_old = err[0]
     return r.next()
