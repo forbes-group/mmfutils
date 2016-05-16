@@ -1,17 +1,21 @@
 """Various useful contexts.
-
-with Interrupts() as interrupted:
-    while not interrupted:
-        do stuff
-
-
 """
 import signal
 from threading import RLock
 
 
-class Interrupt(object):
+class NoInterrupt(object):
     """Suspend the various signals during the execution block.
+
+    Note: This is not yet threadsafe.  Semaphores should be used so that the
+      ultimate KeyboardInterrupt is raised only by the outer-most context (in
+      the main thread?)  The present code works for a single thread because the
+      outermost context will return last.
+
+      See:
+
+      * http://stackoverflow.com/questions/323972/
+        is-there-any-way-to-kill-a-thread-in-python
 
     >>> import os, signal, time
 
@@ -41,7 +45,7 @@ class Interrupt(object):
     Now we protect the loop from interrupts.
     >>> n = [0, 0]
     >>> try:
-    ...     with Interrupt() as interrupted:
+    ...     with NoInterrupt() as interrupted:
     ...         f(n)
     ... except KeyboardInterrupt:
     ...     print("Caught KeyboardInterrupt")
@@ -54,7 +58,7 @@ class Interrupt(object):
 
     >>> n = [0, 0]
     >>> try:
-    ...     with Interrupt() as interrupted:
+    ...     with NoInterrupt() as interrupted:
     ...         f(n, interrupted)
     ... except KeyboardInterrupt:
     ...     print("Caught KeyboardInterrupt")
@@ -62,7 +66,7 @@ class Interrupt(object):
     >>> n
     [5, 5]
     """
-    _interrupts = set()
+    _instances = set()  # Instances of NoInterrupt suspending signals
     _signals = set((signal.SIGINT, signal.SIGTERM))
     _signal_handlers = {}  # Dictionary of original handlers
     _signals_raised = []
@@ -80,15 +84,9 @@ class Interrupt(object):
                 cls._signals = set(signals)
                 cls._reset_handlers()
 
-            if cls._interrupts:
+            if cls._instances:
                 # Only set the handlers if there are interrupt instances
                 cls._set_handlers()
-
-    @classmethod
-    def _reset_handlers(cls):
-        with cls._lock:
-            for _sig in list(cls._signal_handlers):
-                signal.signal(_sig, cls._signal_handlers.pop(_sig))
 
     @classmethod
     def _set_handlers(cls):
@@ -99,12 +97,18 @@ class Interrupt(object):
                     _sig, cls.handle_signal)
         
     @classmethod
+    def _reset_handlers(cls):
+        with cls._lock:
+            for _sig in list(cls._signal_handlers):
+                signal.signal(_sig, cls._signal_handlers.pop(_sig))
+
+    @classmethod
     def handle_signal(cls, signum, frame):
         with cls._lock:
             cls._signals_raised.append((signum, frame))
 
     def __init__(self):
-        Interrupt._interrupts.add(self)
+        NoInterrupt._instances.add(self)
         self.catch_signals()
 
     def __enter__(self):
@@ -112,8 +116,8 @@ class Interrupt(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         with self._lock:
-            self._interrupts.remove(self)
-            if not self._interrupts:
+            self._instances.remove(self)
+            if not self._instances:
                 self._reset_handlers()
                 if exc_type is None and self:
                     # Only raise an exception if all the interrupts have been

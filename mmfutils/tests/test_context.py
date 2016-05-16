@@ -4,13 +4,13 @@ import time
 
 import pytest
 
-from mmfutils.contexts import Interrupt
+from mmfutils.contexts import NoInterrupt
 
 
-class TestInterrupt(object):
+class TestNoInterrupt(object):
     def test_typical_use(self):
         """Typical usage"""
-        with Interrupt() as interrupted:
+        with NoInterrupt() as interrupted:
             done = False
             n = 0
             while not done and not interrupted:
@@ -22,9 +22,9 @@ class TestInterrupt(object):
         
     def test_restoration_of_handlers(self):
         original_hs = {_sig: signal.getsignal(_sig)
-                       for _sig in Interrupt._signals}
-        with Interrupt():
-            with Interrupt():
+                       for _sig in NoInterrupt._signals}
+        with NoInterrupt():
+            with NoInterrupt():
                 for _sig in original_hs:
                     assert original_hs[_sig] is not signal.getsignal(_sig)
             for _sig in original_hs:
@@ -34,7 +34,7 @@ class TestInterrupt(object):
 
     def test_signal(self):
         with pytest.raises(KeyboardInterrupt):
-            with Interrupt() as interrupted:
+            with NoInterrupt() as interrupted:
                 m = -1
                 for n in xrange(10):
                     if n == 5:
@@ -51,7 +51,7 @@ class TestInterrupt(object):
 
         # And that the interrupts are reset
         try:
-            with Interrupt() as interrupted:
+            with NoInterrupt() as interrupted:
                 n = 0
                 while n < 10 and not interrupted:
                     n += 1
@@ -61,13 +61,13 @@ class TestInterrupt(object):
         assert n == 10
 
     def test_set_signal(self):
-        signals = set(Interrupt._signals)
+        signals = set(NoInterrupt._signals)
         try:
-            Interrupt.catch_signals((signal.SIGHUP,))
+            NoInterrupt.catch_signals((signal.SIGHUP,))
             with pytest.raises(KeyboardInterrupt):
-                with Interrupt() as interrupted:
+                with NoInterrupt() as interrupted:
                     while not interrupted:
                         os.kill(os.getpid(), signal.SIGHUP)
         finally:
             # Reset signals
-            Interrupt.catch_signals(signals)
+            NoInterrupt.catch_signals(signals)
