@@ -11,7 +11,7 @@ the following form:
 """
 import numpy as np
 import scipy.special
-sp = scipy
+import scipy as sp
 
 import pytest
 
@@ -19,6 +19,7 @@ from mmfutils.interface import verifyObject, verifyClass
 from mmfutils.math.bases import bases
 from mmfutils.math.bases.interface import IBasis, IBasisWithConvolution
 
+del scipy
 
 # def rand_complex(shape):
 #     """Return a random complex array"""

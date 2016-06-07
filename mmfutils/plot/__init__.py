@@ -7,15 +7,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 import scipy.interpolate
-sp = scipy
+import scipy as sp
 
-# Monkeypatch matplotlib to add the new viridis color map
 import matplotlib.cm
-from .viridis import test_cm as viridis
-matplotlib.cm.viridis = viridis
-matplotlib.cm.cmap_d.update(viridis=viridis)
 
 from matplotlib.colors import LinearSegmentedColormap
+
+from .viridis import test_cm as viridis
+
+del scipy
+
+# Monkeypatch matplotlib to add the new viridis color map
+matplotlib.cm.viridis = viridis
+matplotlib.cm.cmap_d.update(viridis=viridis)
 
 # Constructed with seaborn
 # import seaborn as sns

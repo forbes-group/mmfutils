@@ -2,8 +2,6 @@ r"""Some utilities for computing properties of the Bessel functions for the DVR
 basis."""
 from __future__ import division
 
-__all__ = ['sinc', 'J', 'j_root', 'J_sqrt_pole']
-
 from warnings import warn
 
 import numpy as np
@@ -14,6 +12,9 @@ sp = scipy
 
 _EPS = finfo(np.double).eps
 _TINY = finfo(np.double).tiny
+
+
+__all__ = ['sinc', 'J', 'j_root', 'J_sqrt_pole']
 
 
 def sinc(x, d=0):

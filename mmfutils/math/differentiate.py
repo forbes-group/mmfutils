@@ -134,8 +134,9 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
         return f(x)
 
     if 2 < d:
-        df = lambda x: differentiate(f=f, x=x, d=d-2, h0=h0, dir=dir,
-                                     l=l, nmax=nmax)
+        def df(x):
+            return differentiate(f=f, x=x, d=d-2, h0=h0, dir=dir,
+                                 l=l, nmax=nmax)
         return differentiate(df, x=x, d=2, h0=h0, dir=dir,
                              l=l, nmax=nmax, err=err)
 

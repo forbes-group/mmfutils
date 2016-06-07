@@ -1,13 +1,11 @@
-r"""Utilities"""
 """Provides convenience containers that support pickling and archiving.
 
 Archiving is supported through the interface defined by the ``persist``
 package (though use of that package is optional and it is not a dependency).
 """
+import collections
 
 __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
-
-import collections
 
 
 ######################################################################

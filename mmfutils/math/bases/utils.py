@@ -1,10 +1,6 @@
 """General utility functions"""
 from __future__ import absolute_import, division
 
-__all__ = ('prod', 'norm', 'ndgrid',
-           'fft', 'ifft', 'fftn', 'ifftn', 'fftn', 'ifftn', 'resample',
-           'dst', 'idst', 'get_xyz')
-
 import functools
 import operator
 
@@ -13,6 +9,10 @@ from numpy.linalg import norm
 import scipy as sp
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
+
+__all__ = ('prod', 'norm', 'ndgrid',
+           'fft', 'ifft', 'fftn', 'ifftn', 'fftn', 'ifftn', 'resample',
+           'dst', 'idst', 'get_xyz')
 
 
 def prod(x):

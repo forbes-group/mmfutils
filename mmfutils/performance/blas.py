@@ -6,11 +6,13 @@ that I routinely used.  It should give you an idea about how to add your own.
 """
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['daxpy', 'zaxpy']
-
 import numpy.linalg
-np = numpy
+import numpy as np
 from scipy.linalg import get_blas_funcs
+
+del numpy
+
+__all__ = ['daxpy', 'zaxpy']
 
 _BLAS = True
 

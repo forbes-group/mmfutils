@@ -1,6 +1,8 @@
 """Various useful contexts.
 """
 import signal
+import time
+
 from threading import RLock
 
 
@@ -70,6 +72,11 @@ class NoInterrupt(object):
     _signals = set((signal.SIGINT, signal.SIGTERM))
     _signal_handlers = {}  # Dictionary of original handlers
     _signals_raised = []
+    _force_n = 3
+
+    # Time, in seconds, for which 3 successive interrupts will raise a
+    # KeyboardInterrupt
+    _force_timeout = 1
 
     # Lock should be re-entrant (I think) since a signal might be sent during
     # operation of one of the functions.
@@ -105,7 +112,19 @@ class NoInterrupt(object):
     @classmethod
     def handle_signal(cls, signum, frame):
         with cls._lock:
-            cls._signals_raised.append((signum, frame))
+            cls._signals_raised.append((signum, frame, time.time()))
+            if cls._forced_interrupt():
+                raise KeyboardInterrupt("Interrupt forced")
+
+    @classmethod
+    def _forced_interrupt(cls):
+        """Return True if `_force_n` interrupts have been recieved in the past
+        `_force_timeout` seconds"""
+        with cls._lock:
+            return (cls._force_n <= len(cls._signals_raised)
+                    and
+                    cls._force_timeout > (cls._signals_raised[-1][-1] -
+                                          cls._signals_raised[-3][-1]))
 
     def __init__(self):
         NoInterrupt._instances.add(self)
