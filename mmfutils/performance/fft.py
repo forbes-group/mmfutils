@@ -20,13 +20,17 @@ Indices should first be normalized by ``inds % len(shape)``.
 """
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq', 'resample']
-
 import functools
 import itertools
 
 import numpy.fft
-np = numpy
+import numpy as np
+
+from .threads import SET_THREAD_HOOKS
+
+del numpy
+
+__all__ = ['fft', 'ifft', 'fftn', 'ifftn', 'fftfreq', 'resample']
 
 
 # Numpy versions with a default axis specified
@@ -57,7 +61,6 @@ def set_num_threads(nthreads):
     global _THREADS
     _THREADS = nthreads
 
-from .threads import SET_THREAD_HOOKS
 SET_THREAD_HOOKS.add(set_num_threads)
 
 

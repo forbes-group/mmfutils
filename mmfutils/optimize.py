@@ -33,7 +33,7 @@ def bracket_monotonic(f, x0=0.0, x1=1.0, factor=2.0):
     return (x0, x1)
 
 
-def usolve(f, *v, **kw):
+def usolve(f, a, *v, **kw):
     """Return the root of `f(x) = 0` with uncertainties propagated.
 
     Arguments
@@ -45,15 +45,17 @@ def usolve(f, *v, **kw):
     solver : function
        Solver function (default is scipy.optimize.brentq).
     v, kw :
-       Remaining arguments will be passed as `solver(f, *v, **kw)`.
+       Remaining arguments will be passed as `solver(f, a, *v, **kw)`.
     """
-    from uncertainties import nominal_value, ufloat
-    solver = kw.pop('solver', None)
+    from uncertainties import nominal_value, ufloat, AffineScalarFunc
+    import scipy.optimize
+    solver = kw.pop('solver', scipy.optimize.brentq)
 
-    if solver is None:
-        from scipy.optimize import brentq as solver
+    if not isinstance(f(a), AffineScalarFunc):
+        # Just solve normally which is faster
+        return solver(f, a, *v, **kw)
 
-    x = solver(lambda _x: nominal_value(f(_x)), *v, **kw)
+    x = solver(lambda _x: nominal_value(f(_x)), a, *v, **kw)
     _x = ufloat(x, 0)
     zero = f(_x)
     params = [_k for _k in zero.derivatives if _k is not _x]

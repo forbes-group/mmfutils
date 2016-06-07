@@ -7,15 +7,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 import scipy.interpolate
-sp = scipy
+import scipy as sp
 
-# Monkeypatch matplotlib to add the new viridis color map
 import matplotlib.cm
-from .viridis import test_cm as viridis
-matplotlib.cm.viridis = viridis
-matplotlib.cm.cmap_d.update(viridis=viridis)
 
 from matplotlib.colors import LinearSegmentedColormap
+
+from .viridis import test_cm as viridis
+
+del scipy
+
+# Monkeypatch matplotlib to add the new viridis color map
+matplotlib.cm.viridis = viridis
+matplotlib.cm.cmap_d.update(viridis=viridis)
 
 # Constructed with seaborn
 # import seaborn as sns
@@ -64,10 +68,12 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     if interpolate and not (
             np.allclose(np.diff(np.diff(x)), 0) and
             np.allclose(np.diff(np.diff(y)), 0)):
-        spl = sp.interpolate.RectBivariateSpline(x, y, z)
-        x = np.linspace(x.min(), x.max(), len(x))
-        y = np.linspace(y.min(), y.max(), len(y))
-        z = spl(x, y)
+        spl = sp.interpolate.RectBivariateSpline(x, y, z, kx=1, ky=1, s=0)
+        Nx = int(min(5*len(x), (x.max()-x.min()) / np.diff(sorted(x)).min()))
+        Ny = int(min(5*len(y), (y.max()-y.min()) / np.diff(sorted(y)).min()))
+        x = np.linspace(x.min(), x.max(), Nx)
+        y = np.linspace(y.min(), y.max(), Ny)
+        z = spl(x[:, None], y[None, :])
 
     assert np.allclose(np.diff(np.diff(x)), 0)
     assert np.allclose(np.diff(np.diff(y)), 0)

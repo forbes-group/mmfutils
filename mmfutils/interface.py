@@ -1,11 +1,11 @@
 """Stand-in for zope.interface if it is not available."""
 
+import logging
+import warnings
+
 __all__ = ['Interface', 'Attribute', 'implements',
            'verifyObject', 'verifyClass',
            'describe_interface']
-
-import logging
-import warnings
 
 try:
     import zope.interface

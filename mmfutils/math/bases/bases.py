@@ -1,15 +1,10 @@
 from __future__ import absolute_import, division
 
-__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis']
-
 import itertools
 import math
 
 import numpy as np
-_TINY = np.finfo(float).tiny
-
 import scipy.fftpack
-sp = scipy
 
 from mmfutils.containers import Object
 
@@ -17,6 +12,12 @@ from .interface import implements, IBasis, IBasisWithConvolution, BasisMixin
 from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
                     get_xyz, get_kxyz)
 from mmfutils.math import bessel
+
+sp = scipy
+
+_TINY = np.finfo(float).tiny
+
+__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis']
 
 
 class SphericalBasis(Object, BasisMixin):
