@@ -9,6 +9,12 @@ from threading import RLock
 class NoInterrupt(object):
     """Suspend the various signals during the execution block.
 
+    Arguments
+    ---------
+    ignore : bool
+       If True, then do not raise a KeyboardInterrupt if a soft interrupt is
+       caught.
+
     Note: This is not yet threadsafe.  Semaphores should be used so that the
       ultimate KeyboardInterrupt is raised only by the outer-most context (in
       the main thread?)  The present code works for a single thread because the
@@ -24,23 +30,27 @@ class NoInterrupt(object):
     This loop will get interrupted in the middle so that m and n will not be
     the same.
 
-    >>> def f(n, interrupted=False):
+    >>> def f(n, interrupted=False, force=False):
     ...     done = False
     ...     while not done and not interrupted:
     ...         n[0] += 1
     ...         if n[0] == 5:
     ...             # Simulate user interrupt
     ...             os.kill(os.getpid(), signal.SIGINT)
+    ...             if force:
+    ...                 # Simulated a forced interrupt with multiple signals
+    ...                 os.kill(os.getpid(), signal.SIGINT)
+    ...                 os.kill(os.getpid(), signal.SIGINT)
     ...             time.sleep(0.1)
     ...         n[1] += 1
     ...         done = n[0] >= 10
 
     >>> n = [0, 0]
-    >>> try:
+    >>> try:  # All doctests need to be wrapped in try blocks to not kill py.test!
     ...     f(n)
-    ... except KeyboardInterrupt:
-    ...     print("Caught KeyboardInterrupt")
-    Caught KeyboardInterrupt
+    ... except KeyboardInterrupt, err:
+    ...     print("KeyboardInterrupt: {}".format(err))
+    KeyboardInterrupt:
     >>> n
     [5, 4]
 
@@ -49,11 +59,32 @@ class NoInterrupt(object):
     >>> try:
     ...     with NoInterrupt() as interrupted:
     ...         f(n)
-    ... except KeyboardInterrupt:
-    ...     print("Caught KeyboardInterrupt")
-    Caught KeyboardInterrupt
+    ... except KeyboardInterrupt, err:
+    ...     print("KeyboardInterrupt: {}".format(err))
+    KeyboardInterrupt:
     >>> n
     [10, 10]
+
+    One can ignore the exception if desired:
+    >>> n = [0, 0]
+    >>> with NoInterrupt(ignore=True) as interrupted:
+    ...     f(n)
+    >>> n
+    [10, 10]
+
+    Three rapid exceptions will still force an interrupt when it occurs.  This
+    might occur at random places in your code, so don't do this unless you
+    really need to stop the process.
+    >>> n = [0, 0]
+    >>> try:
+    ...     with NoInterrupt() as interrupted:
+    ...         f(n, force=True)
+    ... except KeyboardInterrupt, err:
+    ...     print("KeyboardInterrupt: {}".format(err))
+    KeyboardInterrupt: Interrupt forced
+    >>> n
+    [5, 4]
+
 
     If `f()` is slow, we might want to interrupt it at safe times.  This is
     what the `interrupted` flag is for:
@@ -62,9 +93,16 @@ class NoInterrupt(object):
     >>> try:
     ...     with NoInterrupt() as interrupted:
     ...         f(n, interrupted)
-    ... except KeyboardInterrupt:
-    ...     print("Caught KeyboardInterrupt")
-    Caught KeyboardInterrupt
+    ... except KeyboardInterrupt, err:
+    ...     print("KeyboardInterrupt: {}".format(err))
+    KeyboardInterrupt:
+    >>> n
+    [5, 5]
+
+    Again: the exception can be ignored
+    >>> n = [0, 0]
+    >>> with NoInterrupt(ignore=True) as interrupted:
+    ...     f(n, interrupted)
     >>> n
     [5, 5]
     """
@@ -126,7 +164,8 @@ class NoInterrupt(object):
                     cls._force_timeout > (cls._signals_raised[-1][-1] -
                                           cls._signals_raised[-3][-1]))
 
-    def __init__(self):
+    def __init__(self, ignore=False):
+        self.ignore = ignore
         NoInterrupt._instances.add(self)
         self.catch_signals()
 
@@ -137,15 +176,17 @@ class NoInterrupt(object):
         with self._lock:
             self._instances.remove(self)
             if not self._instances:
+                # Only raise an exception if all the instances have been
+                # cleared, otherwise we might still be in a protected
+                # context somewhere.
                 self._reset_handlers()
-                if exc_type is None and self:
-                    # Only raise an exception if all the interrupts have been
-                    # cleared, otherwise we might still be in a protected
-                    # context somewhere.
+                if self:
+                    # An interrupt was raised.
                     while self._signals_raised:
                         # Clear previous signals
                         self._signals_raised.pop()
-                    raise KeyboardInterrupt()
+                    if exc_type is None and not self.ignore:
+                        raise KeyboardInterrupt()
 
     @classmethod
     def __nonzero__(cls):
