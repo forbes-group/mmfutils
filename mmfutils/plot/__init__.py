@@ -11,11 +11,14 @@ import scipy as sp
 
 import matplotlib.cm
 
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from .viridis import test_cm as viridis
 
 del scipy
+
+__all__ = ['diverging_colormap', 'MidpointNormalize', 'imcontourf', 'viridis',
+           'color_angle', 'color_complex']
 
 # Monkeypatch matplotlib to add the new viridis color map
 matplotlib.cm.viridis = viridis
@@ -30,6 +33,55 @@ diverging_colormap = LinearSegmentedColormap.from_list(
               # [0.13300000, 0.13300000, 0.13300000, 1.],
               [0.00000000, 0.00000000, 0.00000000, 1.],
               [0.90488582, 0.62784940, 0.68104318, 1.]]))
+
+
+class MidpointNormalize(Normalize):
+    """Colormap normalization that ensures a balanced distribution about the
+    specified midpoint.
+
+    Use this with a diverging colormap to ensure that the midpoint lies in the
+    middle of the colormap.
+
+    Examples
+    --------
+    >>> norm = MidpointNormalize(midpoint=1.0)
+    >>> norm(np.arange(4))
+    masked_array(data = [ 0.25  0.5   0.75  1.  ],
+                 mask = False,
+           fill_value = 1e+20)
+
+    >>> norm = MidpointNormalize(midpoint=1.0, vmin=-3)
+    >>> norm(np.arange(4))
+    masked_array(data = [ 0.375  0.5    0.625  0.75 ],
+                 mask = False,
+           fill_value = 1e+20)
+    """
+    def __init__(self, vmin=None, vmax=None, clip=False, midpoint=0):
+        self.midpoint = midpoint
+        Normalize.__init__(self, vmin=vmin, vmax=vmax, clip=clip)
+
+    def autoscale_None(self, A):
+        """Sets vmin and vmax if they are None."""
+        if np.size(A) > 0:
+            # Work with midpoint removed
+            vmax = np.ma.max(A) - self.midpoint
+            vmin = np.ma.min(A) - self.midpoint
+            if self.vmin is None:
+                if self.vmax is not None:
+                    vmin = -(self.vmax - self.midpoint)
+                else:
+                    vmin = min(vmin, -vmax)
+                self.vmin = vmin + self.midpoint
+
+            if self.vmax is None:
+                if self.vmin is not None:
+                    vmax = -(self.vmin - self.midpoint)
+                else:
+                    vmax = max(vmax, -vmin)
+                self.vmax = vmax + self.midpoint
+            assert self.vmin <= self.vmax
+            assert np.allclose(self.midpoint - self.vmin,
+                               self.vmax - self.midpoint)
 
 
 def _fix_args(x, y, z):
