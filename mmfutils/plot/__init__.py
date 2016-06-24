@@ -79,9 +79,12 @@ class MidpointNormalize(Normalize):
                 else:
                     vmax = max(vmax, -vmin)
                 self.vmax = vmax + self.midpoint
-            assert self.vmin <= self.vmax
-            assert np.allclose(self.midpoint - self.vmin,
-                               self.vmax - self.midpoint)
+
+            # These assertions are written this way to allow them to work with
+            # fully masked arrays.  See issue 16.
+            assert not self.vmin > self.vmax
+            assert np.ma.allclose(self.midpoint - self.vmin,
+                                  self.vmax - self.midpoint)
 
 
 def _fix_args(x, y, z):
