@@ -13,16 +13,18 @@ import matplotlib.cm
 
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
-from .viridis import test_cm as viridis
+from .cmaps import cmaps
 
 del scipy
 
-__all__ = ['diverging_colormap', 'MidpointNormalize', 'imcontourf', 'viridis',
+__all__ = ['diverging_colormap', 'MidpointNormalize', 'imcontourf',
            'color_angle', 'color_complex']
 
-# Monkeypatch matplotlib to add the new viridis color map
-matplotlib.cm.viridis = viridis
-matplotlib.cm.cmap_d.update(viridis=viridis)
+# Monkeypatch matplotlib to add the new color maps
+for cmap in cmaps:
+    if not hasattr(matplotlib.cm, cmap):
+        setattr(matplotlib.cm, cmap, cmaps[cmap])
+        matplotlib.cm.cmap_d.update(cmap=cmaps[cmap])
 
 # Constructed with seaborn
 # import seaborn as sns
@@ -140,7 +142,7 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
         kwargs.setdefault('vmax', z_max)
         kwargs.setdefault('cmap', diverging_colormap)
     else:
-        kwargs.setdefault('cmap', viridis)
+        kwargs.setdefault('cmap', cmaps['viridis'])
 
     img = plt.imshow(
         np.rollaxis(z, 0, 2), origin='lower',
