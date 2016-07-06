@@ -47,7 +47,7 @@ def usolve(f, a, *v, **kw):
     v, kw :
        Remaining arguments will be passed as `solver(f, a, *v, **kw)`.
     """
-    from uncertainties import nominal_value, ufloat, AffineScalarFunc
+    from uncertainties.core import nominal_value, ufloat, AffineScalarFunc
     import scipy.optimize
     solver = kw.pop('solver', scipy.optimize.brentq)
 
