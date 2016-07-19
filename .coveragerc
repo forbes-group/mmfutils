@@ -1,7 +1,10 @@
 [run]
 # Plots are not yet a part of this package
 omit=
-   mmfutils/plot/*
+   mmfutils/plot/errors.py
+   mmfutils/plot/contour.py
+   mmfutils/plot/colors.py
+   mmfutils/plot/publish.py
    */tests/*
 [html]
 directory = build/_coverage
