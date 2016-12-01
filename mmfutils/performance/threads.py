@@ -21,6 +21,7 @@ def set_num_threads(nthreads):
     for set_num_threads in SET_THREAD_HOOKS:
         set_num_threads(nthreads)
 
+
 try:             # pragma: nocover  Can't do this on public CI servers
     import mkl
     MKL_NUM_THREADS = mkl.get_max_threads()
