@@ -49,6 +49,7 @@ def fftn_numpy(Phi, axes=None):
 def ifftn_numpy(Phit, axes=None):
     return np.fft.ifftn(Phit, axes=axes)
 
+
 fftfreq = np.fft.fftfreq
 fftshift = np.fft.fftshift
 
@@ -60,6 +61,7 @@ _PLANNER_EFFORT = 'FFTW_MEASURE'
 def set_num_threads(nthreads):
     global _THREADS
     _THREADS = nthreads
+
 
 SET_THREAD_HOOKS.add(set_num_threads)
 

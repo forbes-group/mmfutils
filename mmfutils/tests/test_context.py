@@ -2,6 +2,8 @@ import os
 import signal
 import time
 
+import numpy as np
+
 import pytest
 
 from mmfutils.contexts import NoInterrupt
@@ -71,3 +73,42 @@ class TestNoInterrupt(object):
         finally:
             # Reset signals
             NoInterrupt.catch_signals(signals)
+
+    def simulate_interrupt(self, interrupted=False, force=False):
+        """Simulates an interrupt or forced interupt in the middle of a
+        loop."""
+        self.n = [0, 0]
+        done = False
+        while not done and not interrupted:
+            self.n[0] += 1
+            if self.n[0] == 5:
+                # Simulate user interrupt
+                os.kill(os.getpid(), signal.SIGINT)
+                if force:
+                    # Simulated a forced interrupt with multiple signals
+                    os.kill(os.getpid(), signal.SIGINT)
+                    os.kill(os.getpid(), signal.SIGINT)
+                time.sleep(0.1)
+            self.n[1] += 1
+            done = self.n[0] >= 10
+
+    def test_issue_14(self):
+        """Regression test for issue 14 and bug discovered there."""
+        with pytest.raises(KeyboardInterrupt):
+            with NoInterrupt() as interrupted:
+                self.simulate_interrupt(interrupted=interrupted, force=True)
+        assert np.allclose(self.n, [5, 4])
+
+        try:
+            # We need to wrap this in a try block otherwise py.test will think
+            # that the user aborted the test.
+
+            # All interrupts should be cleared and this should run to
+            # completion.
+            with NoInterrupt() as interrupted:
+                self.simulate_interrupt(force=False)
+        except KeyboardInterrupt:
+            pass
+
+        # This used to fail since the interrupts were not cleared.
+        assert np.allclose(self.n, [10, 10])

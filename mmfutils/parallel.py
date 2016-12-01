@@ -257,6 +257,7 @@ class Cluster(object):
             cluster.wait(n_min=n_min)
         return cluster
 
+
 atexit.register(Cluster.stop_all)
 
 get_cluster = Cluster.get_cluster

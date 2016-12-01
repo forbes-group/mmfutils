@@ -11,15 +11,20 @@ import scipy as sp
 
 import matplotlib.cm
 
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
-from .viridis import test_cm as viridis
+from .cmaps import cmaps
 
 del scipy
 
-# Monkeypatch matplotlib to add the new viridis color map
-matplotlib.cm.viridis = viridis
-matplotlib.cm.cmap_d.update(viridis=viridis)
+__all__ = ['diverging_colormap', 'MidpointNormalize', 'imcontourf',
+           'color_angle', 'color_complex']
+
+# Monkeypatch matplotlib to add the new color maps
+for cmap in cmaps:
+    if not hasattr(matplotlib.cm, cmap):
+        setattr(matplotlib.cm, cmap, cmaps[cmap])
+        matplotlib.cm.cmap_d.update(cmap=cmaps[cmap])
 
 # Constructed with seaborn
 # import seaborn as sns
@@ -30,6 +35,58 @@ diverging_colormap = LinearSegmentedColormap.from_list(
               # [0.13300000, 0.13300000, 0.13300000, 1.],
               [0.00000000, 0.00000000, 0.00000000, 1.],
               [0.90488582, 0.62784940, 0.68104318, 1.]]))
+
+
+class MidpointNormalize(Normalize):
+    """Colormap normalization that ensures a balanced distribution about the
+    specified midpoint.
+
+    Use this with a diverging colormap to ensure that the midpoint lies in the
+    middle of the colormap.
+
+    Examples
+    --------
+    >>> norm = MidpointNormalize(midpoint=1.0)
+    >>> norm(np.arange(4))
+    masked_array(data = [ 0.25  0.5   0.75  1.  ],
+                 mask = False,
+           fill_value = 1e+20)
+
+    >>> norm = MidpointNormalize(midpoint=1.0, vmin=-3)
+    >>> norm(np.arange(4))
+    masked_array(data = [ 0.375  0.5    0.625  0.75 ],
+                 mask = False,
+           fill_value = 1e+20)
+    """
+    def __init__(self, vmin=None, vmax=None, clip=False, midpoint=0):
+        self.midpoint = midpoint
+        Normalize.__init__(self, vmin=vmin, vmax=vmax, clip=clip)
+
+    def autoscale_None(self, A):
+        """Sets vmin and vmax if they are None."""
+        if np.size(A) > 0:
+            # Work with midpoint removed
+            vmax = np.ma.max(A) - self.midpoint
+            vmin = np.ma.min(A) - self.midpoint
+            if self.vmin is None:
+                if self.vmax is not None:
+                    vmin = -(self.vmax - self.midpoint)
+                else:
+                    vmin = min(vmin, -vmax)
+                self.vmin = vmin + self.midpoint
+
+            if self.vmax is None:
+                if self.vmin is not None:
+                    vmax = -(self.vmin - self.midpoint)
+                else:
+                    vmax = max(vmax, -vmin)
+                self.vmax = vmax + self.midpoint
+
+            # These assertions are written this way to allow them to work with
+            # fully masked arrays.  See issue 16.
+            assert not self.vmin > self.vmax
+            assert np.ma.allclose(self.midpoint - self.vmin,
+                                  self.vmax - self.midpoint)
 
 
 def _fix_args(x, y, z):
@@ -85,7 +142,7 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
         kwargs.setdefault('vmax', z_max)
         kwargs.setdefault('cmap', diverging_colormap)
     else:
-        kwargs.setdefault('cmap', viridis)
+        kwargs.setdefault('cmap', cmaps['viridis'])
 
     img = plt.imshow(
         np.rollaxis(z, 0, 2), origin='lower',
