@@ -157,7 +157,7 @@ to ``init()``.
 2.1.1.1 Object Example
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: ipython2
 
     ROOTDIR = !hg root
     ROOTDIR = ROOTDIR[0]
@@ -208,7 +208,7 @@ to ``init()``.
 One feature is that a nice ``repr()`` of the object is produced. Now
 let's do a calculation:
 
-.. code:: python
+.. code:: ipython2
 
     f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
     df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
@@ -227,7 +227,7 @@ Here we demonstrate pickling. Note that the pickle is very small, and
 when unpickled, ``init()`` is called to re-establish ``s.x`` and
 ``s.k``.
 
-.. code:: python
+.. code:: ipython2
 
     import pickle
     s_repr = pickle.dumps(s)
@@ -248,7 +248,7 @@ do the updates, then call ``init()``. Good practice is to call
 ``init()`` automatically before any serious calculation to ensure that
 the object is brought up to date before the computation.
 
-.. code:: python
+.. code:: ipython2
 
     s.N = 64
     s.L = 2.0
@@ -263,7 +263,7 @@ the object is brought up to date before the computation.
 Finally, we demonstrate that ``Object`` instances can be archived using
 the ``persist`` package:
 
-.. code:: python
+.. code:: ipython2
 
     import persist.archive;reload(persist.archive)
     a = persist.archive.Archive(check_on_insert=True)
@@ -326,7 +326,7 @@ These were designed with the following use cases in mind:
 2.1.2.1 Container Examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: ipython2
 
     from mmfutils.containers import Container
     
@@ -341,7 +341,7 @@ These were designed with the following use cases in mind:
     (1, 'Hi there', 2)
 
 
-.. code:: python
+.. code:: ipython2
 
     # Attributes are mutable
     c.b = 'Ho there'
@@ -353,7 +353,7 @@ These were designed with the following use cases in mind:
     Container(a=1, b='Ho there', c=2)
 
 
-.. code:: python
+.. code:: ipython2
 
     # Other attributes can be used for temporary storage but will not be pickled.
     import numpy as np
@@ -375,7 +375,7 @@ These were designed with the following use cases in mind:
      [ 1.  1.  1. ...,  1.  1.  1.]]
 
 
-.. code:: python
+.. code:: ipython2
 
     import pickle
     c1 = pickle.loads(pickle.dumps(c))
@@ -413,7 +413,7 @@ checking interface requirements. Interfaces provide a convenient way of
 communicating to a programmer what needs to be done to used your code.
 This can then be checked in tests.
 
-.. code:: python
+.. code:: ipython2
 
     from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implements
     
@@ -428,7 +428,7 @@ This can then be checked in tests.
 
 Here is a broken implementation. We muck up the arguments to ``add``:
 
-.. code:: python
+.. code:: ipython2
 
     class AdderBroken(object):
         implements(IAdder)
@@ -455,7 +455,7 @@ Now we get ``add`` right, but forget to define ``value``. This is only
 caught when we have an object since the attribute is supposed to be
 defined in ``__init__()``:
 
-.. code:: python
+.. code:: ipython2
 
     class AdderBroken(object):
         implements(IAdder)
@@ -483,7 +483,7 @@ defined in ``__init__()``:
 
 Finally, a working instance:
 
-.. code:: python
+.. code:: ipython2
 
     class Adder(object):
         implements(IAdder)
@@ -509,7 +509,7 @@ Finally, a working instance:
 We also monkeypatch ``zope.interface.documentation.asStructuredText()``
 to provide a mechanism for documentating interfaces in a notebook.
 
-.. code:: python
+.. code:: ipython2
 
     from mmfutils.interface import describe_interface
     describe_interface(IAdder)
@@ -552,7 +552,7 @@ connecting to IPython clusters. The ``parallel.Cluster`` class
 represents and controls a cluster. The cluster is specified by the
 profile name, and can be started or stopped from this class:
 
-.. code:: python
+.. code:: ipython2
 
     import logging
     logger = logging.getLogger()
@@ -588,7 +588,7 @@ If you only need a cluster for a single task, it can be managed with a
 context. Be sure to wait for the result to be computed before exiting
 the context and shutting down the cluster!
 
-.. code:: python
+.. code:: ipython2
 
     with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
         view = client.load_balanced_view
@@ -658,7 +658,7 @@ animations and interactive work. It also supports my idea of saner
 array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
 then it will match these to the shape of ``z``).
 
-.. code:: python
+.. code:: ipython2
 
     %matplotlib inline
     from matplotlib import pyplot as plt
@@ -706,7 +706,7 @@ then it will match these to the shape of ``z``).
 A couple of tools are provided to visualize angular fields, such as the
 phase of a complex wavefunction.
 
-.. code:: python
+.. code:: ipython2
 
     %matplotlib inline
     from matplotlib import pyplot as plt
@@ -760,7 +760,7 @@ A couple of debugging tools are provided. The most useful is the
 ``debug`` decorator which will store the local variables of a function
 in a dictionary or in your global scope.
 
-.. code:: python
+.. code:: ipython2
 
     from mmfutils.debugging import debug
     
@@ -806,7 +806,7 @@ file carefully to make sure that no one inserts malicious code.
 
 This runs the following code:
 
-.. code:: python
+.. code:: ipython2
 
     !cd $ROOTDIR; ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
 
@@ -836,7 +836,7 @@ one of:
 
 Here is an example:
 
-.. code:: python
+.. code:: ipython2
 
     !cd $ROOTDIR; python setup.py test
 
@@ -1006,7 +1006,7 @@ Here is an example:
 Complete code coverage information is provided in
 ``build/_coverage/index.html``.
 
-.. code:: python
+.. code:: ipython2
 
     from IPython.display import HTML
     with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:

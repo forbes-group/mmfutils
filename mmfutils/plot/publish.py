@@ -61,7 +61,7 @@ class Paper(object):
 
     Example
     -------
-    >>> import os.path, tempfile
+    >>> import os.path, tempfile, shutil
     >>> class MyPaper(Paper):
     ...     figdir = tempfile.mkdtemp()
     ...
@@ -69,7 +69,7 @@ class Paper(object):
     ...         fig = self.figure(
     ...             width='columnwidth',  # For two-column documents, vs. 'textwidth'
     ...         )
-    ...         x = np.linspace(-1 1, 100)
+    ...         x = np.linspace(-1, 1, 100)
     ...         y = np.sin(4*np.pi*x)
     ...         plt.plot(x, y, '-')
     ...         plt.xlabel("$x$")
@@ -77,7 +77,10 @@ class Paper(object):
     ...         return fig
     >>> paper = MyPaper()
     >>> paper.draw_all()
-    >>> os.path.exists(os.path.join(paper.figdir, 'sine.pdf')
+    Drawing figure: fig_sine()
+    Saving plot as '.../sine.pdf'...
+    Saving plot as '.../sine.pdf'. Done.
+    >>> os.path.exists(os.path.join(paper.figdir, 'sine.pdf'))
     True
     >>> shutil.rmtree(paper.figdir)
     """
