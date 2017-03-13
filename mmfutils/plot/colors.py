@@ -1,4 +1,6 @@
 """Various tools for displaying information with color."""
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 import matplotlib.cm
@@ -7,7 +9,8 @@ from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from .cmaps import cmaps
 
-__all__ = ['MidpointNormalize', 'cm']
+__all__ = ['MidpointNormalize', 'cm',
+           'color_angle', 'color_complex']
 
 
 class MidpointNormalize(Normalize):
