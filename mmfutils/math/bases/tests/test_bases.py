@@ -28,7 +28,7 @@ del scipy
 
 
 class ExactGaussian(object):
-    def __init__(self, r, A=1.0, factor=1.0, r_0=1.0, d=1.0):
+    def __init__(self, r, A=1.1, factor=1.0, r_0=1.0, d=1.0):
         self.r = r
         self.A = A
         self.factor = factor
@@ -59,6 +59,12 @@ class ExactGaussian(object):
         """Exact exponential of laplacian with factor applied to y"""
         r_0 = np.sqrt(self.r_0**2 + 2*self.factor)
         return (self.r_0/r_0)**self.d * self.get_y(r_0=r_0)
+
+    @property
+    def convolution(self):
+        """Exact convolution of the Gaussian with itself."""
+        return (self.A**2 * self.r_0**3 * np.pi**(3./2.)
+                * np.exp(-(self.r/self.r_0)**2/4.0))
 
 
 class ExactGaussianQuart(ExactGaussian):
@@ -204,7 +210,7 @@ class TestSphericalBasis(ConvolutionTests):
     @classmethod
     def setup_class(cls):
         cls.Basis = bases.SphericalBasis
-        cls.basis = bases.SphericalBasis(N=32, R=15.0)
+        cls.basis = bases.SphericalBasis(N=32*2, R=15.0)
         cls.Q = 8.0
         cls.exact = ExactGaussian(
             r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))

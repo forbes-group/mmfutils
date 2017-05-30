@@ -150,6 +150,11 @@ class PeriodicBasis(Object, BasisMixin):
         self.xyz = get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
                            symmetric_lattice=self.symmetric_lattice)
         self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+        self._pxyz_derivative = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+
+        # Zero out odd highest frequency component.
+        for _N, _p in zip(self.Nxyz, self._pxyz_derivative):
+            _p.ravel()[_N//2] = 0.0
 
         # Add boosts
         self._pxyz = [_p - _b
@@ -211,6 +216,11 @@ class PeriodicBasis(Object, BasisMixin):
         # TODO: Check this for the highest momentum issue.
         return [self.ifft(1j*_p*self.fft(y, axis=_i), axis=_i)
                 for _i, _p in enumerate(self._pxyz)]
+
+    def get_divergence(self, ys):
+        # TODO: Check this for the highest momentum issue.
+        return sum(self.ifft(1j*_p*self.fft(_y, axis=_i), axis=_i)
+                   for _i, (_p, _y) in enumerate(zip(self._pxyz, ys)))
 
     @staticmethod
     def _bcast(n, N):
@@ -682,7 +692,7 @@ class CylindricalBasis(Object, BasisMixin):
 
         # DVR kinetic term for radial function:
         K = np.ma.divide(
-            (-1)**(n[i1] - n[i2]) * 8.0 * z[i1] * z[i2],
+            (-1.0)**(n[i1] - n[i2]) * 8.0 * z[i1] * z[i2],
             (z[i1]**2 - z[i2]**2)**2).filled(0)
         K[n, n] = 1.0 / 3.0 * (1.0 + 2.0*(nu**2 - 1.0)/z**2)
         K *= self._kmax**2
@@ -711,7 +721,7 @@ class CylindricalBasis(Object, BasisMixin):
         zn = self._kmax*rn
         z = self._kmax*r
         H = bessel.J_sqrt_pole(nu=nu, zn=zn, d=0)
-        coeff = math.sqrt(2.0*self._kmax)*(-1)**(n + 1)/(1.0 + r/rn)
+        coeff = math.sqrt(2.0*self._kmax)*(-1.0)**(n + 1)/(1.0 + r/rn)
         if 0 == d:
             return coeff * H(z)
         elif 1 == d:

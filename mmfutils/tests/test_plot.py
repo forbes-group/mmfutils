@@ -36,4 +36,4 @@ class TestRasterize(object):
             plt.savefig(f.name)
             size_rasterized = os.stat(f.name).st_size
 
-        assert size_rasterized < size_unrasterized/30
+        assert size_rasterized < size_unrasterized/25
