@@ -190,11 +190,13 @@ class NoInterrupt(object):
                         raise KeyboardInterrupt()
 
     @classmethod
-    def __nonzero__(cls):
+    def __bool__(cls):
         with cls._lock:
             return bool(cls._signals_raised)
 
+    __nonzero__ = __bool__      # For python 2.
 
+    
 class CoroutineWrapper(object):
     """Wrapper for coroutine contexts that allows them to function as a context
     but also as a function.  Similar to open() which may be used both in a
