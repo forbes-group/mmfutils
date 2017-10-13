@@ -58,7 +58,7 @@ class NoInterrupt(object):
     Now we protect the loop from interrupts.
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n)
     ... except KeyboardInterrupt, err:
     ...     print("KeyboardInterrupt: {}".format(err))
@@ -66,9 +66,9 @@ class NoInterrupt(object):
     >>> n
     [10, 10]
 
-    One can ignore the exception if desired:
+    One can ignore the exception if desired (this is the default as of 0.4.11):
     >>> n = [0, 0]
-    >>> with NoInterrupt(ignore=True) as interrupted:
+    >>> with NoInterrupt() as interrupted:
     ...     f(n)
     >>> n
     [10, 10]
@@ -78,7 +78,7 @@ class NoInterrupt(object):
     really need to stop the process.
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, force=True)
     ... except KeyboardInterrupt, err:
     ...     print("KeyboardInterrupt: {}".format(err))
@@ -92,7 +92,7 @@ class NoInterrupt(object):
 
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, interrupted)
     ... except KeyboardInterrupt, err:
     ...     print("KeyboardInterrupt: {}".format(err))
@@ -102,7 +102,7 @@ class NoInterrupt(object):
 
     Again: the exception can be ignored
     >>> n = [0, 0]
-    >>> with NoInterrupt(ignore=True) as interrupted:
+    >>> with NoInterrupt() as interrupted:
     ...     f(n, interrupted)
     >>> n
     [5, 5]
@@ -165,7 +165,7 @@ class NoInterrupt(object):
                     cls._force_timeout > (cls._signals_raised[-1][-1] -
                                           cls._signals_raised[-3][-1]))
 
-    def __init__(self, ignore=False):
+    def __init__(self, ignore=True):
         self.ignore = ignore
         NoInterrupt._instances.add(self)
         self.catch_signals()
@@ -196,7 +196,7 @@ class NoInterrupt(object):
 
     __nonzero__ = __bool__      # For python 2.
 
-    
+
 class CoroutineWrapper(object):
     """Wrapper for coroutine contexts that allows them to function as a context
     but also as a function.  Similar to open() which may be used both in a
