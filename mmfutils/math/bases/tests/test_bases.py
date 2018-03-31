@@ -45,6 +45,16 @@ class ExactGaussian(object):
         return self.get_y()
 
     @property
+    def n(self):
+        """Exact density"""
+        return abs(self.y)**2
+
+    @property
+    def N_3D(self):
+        """Exact total particle number in 3D."""
+        return self.r_0**3 * np.pi**(3./2.) * self.A**2
+    
+    @property
     def d2y(self):
         """Exact Laplacian with factor"""
         return (self.factor * self.y *
@@ -489,6 +499,15 @@ class TestCylindricalBasis(LaplacianTests):
             dy_exact = exact.get_dy(x)
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
+    def test_integrate1(self):
+        x, r = self.basis.xyz
+        n = abs(self.exact.y)**2
+        assert np.allclose((self.basis.metric*n).sum(), self.exact.N_3D)
+        n_1D = self.basis.integrate1(n).ravel()
+        r0 = self.exact.r_0
+        n_1D_exact = self.exact.A**2*(np.pi*r0**2*np.exp(-x**2/r0**2)).ravel()
+        assert np.allclose(n_1D, n_1D_exact)
+        
 
 class TestCoverage(object):
     """Walk down some error branches for coverage."""
