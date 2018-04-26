@@ -17,7 +17,7 @@ __all__ = ['contourf', 'imcontourf', 'phase_contour']
 
 def _fix_args(x, y, z):
     """Fix the arguments to allow for more flexible processing."""
-    x, y, z = map(np.asarray, (x, y, z))
+    x, y, z = list(map(np.asanyarray, (x, y, z)))
 
     x = x[:, 0] if x.shape == z.shape else x.ravel()
     y = y[0, :] if y.shape == z.shape else y.ravel()
