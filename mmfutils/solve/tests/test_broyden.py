@@ -1,6 +1,8 @@
 import pytest
 
 import numpy as np
+import scipy.optimize.nonlin
+import scipy as sp
 
 from mmfutils.solve import broyden
 
@@ -24,6 +26,20 @@ def dyadic_sum(alpha):
     B.add_dyad(a.T, b)
     B_ = alpha*np.eye(4) + a.T.dot(b)
     yield (B, B_)
+
+
+@pytest.fixture
+def jacobian(alpha):
+    np.random.seed(1)
+    a = np.random.random((3, 4)) - 0.5
+    b = np.random.random((3, 4)) - 0.5
+    B = broyden.Jacobian(alpha=alpha, n_max=np.inf)
+    B.add_dyad(a.T, b)
+    B_ = alpha*np.eye(4) + a.T.dot(b)
+    assert np.allclose(B_, B.todense())
+    B_ = sp.optimize.nonlin.asjacobian(B_)
+    x = np.random.random(4) - 0.5
+    yield (B, B_, x)
     
     
 class TestDyadicSum(object):
@@ -37,7 +53,7 @@ class TestDyadicSum(object):
         A = np.random.random(B_.shape) - 0.5
         
         assert np.allclose(B_, B.todense())
-        #assert np.allclose(A.dot(B_), A.dot(B))
+        # assert np.allclose(A.dot(B_), A.dot(B))
         assert np.allclose(A.dot(B_), (np.asmatrix(A)*B))
         assert np.allclose(B_.dot(A), B.dot(A))
 
@@ -93,9 +109,13 @@ class TestJacobianBFGS(object):
         N = 4
         dxs = np.random.random((k, N)) - 0.5
         dfs = np.random.random((k, N)) - 0.5
+        x = np.random.random(N) - 0.5
+        f = np.random.random(N) - 0.5
         v = np.random.random(N) - 0.5
+        J.update(x, f)
         for dx, df in zip(dxs, dfs):
-            J.update(dx, df)
+            x, f = x+dx, f+df
+            J.update(x, f)
             H = J.dense_H()
             assert np.allclose(H.dot(df), dx)
             assert np.allclose(J.solve(df), dx)
@@ -107,5 +127,11 @@ class TestJacobianBFGS(object):
     
 class TestDyadicSumJacobian(object):
     """Test the `scipy.optimize.nonlin.Jacobian` interface."""
-    def test_1(self, dyadic_sum):
-        B, B_ = dyadic_sum
+    def test_1(self, jacobian):
+        B, B_, x = jacobian
+        assert B.dtype == B_.dtype
+        assert B.shape == B_.shape
+        assert np.allclose(B.solve(v=x), B_.solve(v=x))
+        assert np.allclose(B.rsolve(v=x), B_.rsolve(v=x))
+        assert np.allclose(B.matvec(v=x), B_.matvec(v=x))
+        assert np.allclose(B.rmatvec(v=x), B_.rmatvec(v=x))

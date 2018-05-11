@@ -212,6 +212,14 @@ class DyadicSum(object):
 
         self.orthogonalize()
 
+    @property
+    def dtype(self):
+        return np.asarray(self._at).dtype
+
+    @property
+    def shape(self):
+        return (self._at.shape[0], self._b.shape[1])
+
     def copy(self):
         """Return a (deep) copy of self."""
         return copy.deepcopy(self)
@@ -676,11 +684,11 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
 
     @property
     def dtype(self):
-        return self._dx[0].dtype
+        return np.asarray(self._last_f).dtype
 
     @property
     def shape(self):
-        return (len(self._dx[0]),)*2
+        return (len(np.asarray(self._last_f)),)*2
 
     @property
     def _eye(self):
@@ -734,7 +742,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
             rho = 1./(y.dot(s))
             V = I - rho*y[:, None]*s[None, :]
             H = V.T.dot(H).dot(V) + rho*s[:, None]*s[None, :]
-        return H
+        return np.asarray(H)
 
     def dense_J(self):
         """Return a dense array with the Jacobian J."""
@@ -746,6 +754,9 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         if self._last_x is not None:
             dx = x - self._last_x
             df = f - self._last_f
+            if np.allclose(0, df.dot(dx), atol=_EPS**2):
+                raise np.linalg.LinAlgError(
+                    "Current step makes Jacobian singular.")
             self._dx.append(dx)
             self._df.append(df)
             if len(self._dx) > self.n_max:
@@ -763,13 +774,10 @@ class Jacobian(DyadicSum):
         self.method = method
         
     def solve(self, v):
-        return self.dot(v)
+        return self.inv().dot(v)
 
     def rsolve(self, v):
-        return self.__rmul__(v)
-
-    def todense(self):
-        return self.asarray()
+        return self.inv().__rmul__(v)
 
     def update(self, x, f):
         if self.last_x is not None:
@@ -778,6 +786,12 @@ class Jacobian(DyadicSum):
             self.update_broyden(dx=dx, df=df, method=self.method)
         self.last_x = np.copy(x)
         self.last_f = np.copy(f)
+
+    def matvec(self, v):
+        return self.__mul__(v)
+
+    def rmatvec(self, v):
+        return self.__rmul__(v)
 
 
 class L_BFGS(object):
