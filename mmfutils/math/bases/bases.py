@@ -175,7 +175,8 @@ class PeriodicBasis(Object, BasisMixin):
     def Nx(self):
         return self.Nxyz[0]
     
-    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(self, y, factor=1.0, exp=False, kx2=None, k2=None,
+                  twist_phase_x=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
@@ -192,6 +193,8 @@ class PeriodicBasis(Object, BasisMixin):
            "laplacian".  This would allow you, for example, to implement a
            modified dispersion relationship like ``1-cos(kx)`` rather than
            ``kx**2``.
+        k2 : array, optional
+           Replacement for `k2 = kx**2 + ky**2 + kz**2`.
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
@@ -200,10 +203,16 @@ class PeriodicBasis(Object, BasisMixin):
         
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
-        if kx2 is None:
-            kx2 = self.kx**2
+        if k2 is None:
+            if kx2 is None:
+                kx2 = self.kx**2
+            else:
+                assert k2 is None
+            k2 = (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
+        else:
+            assert kx2 is None
         
-        K = -factor * (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
+        K = -factor * k2
         if exp:
             K = np.exp(K)
         if twist_phase_x is None:
@@ -615,7 +624,7 @@ class CylindricalBasis(Object, BasisMixin):
         
     def get_gradient(self, y):
         """Returns the gradient along the x axis."""
-        kx = self._kx
+        kx = self.kx
         return [self.ifft(1j*kx*self.fft(y)), NotImplemented]
 
     def apply_Lz(self, y, hermitian=False):

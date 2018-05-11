@@ -78,7 +78,7 @@ class ExactGaussian(object):
 
 
 class ExactGaussianQuart(ExactGaussian):
-    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    """In order to test the k2 and kx2 option of the laplacian for Periodic
     bases, we add a quartic term $k^2 + (k^2)^2$.
     """
     @property
@@ -100,7 +100,7 @@ class ExactGaussianQuart(ExactGaussian):
 
 
 class ExactGaussianQuartCyl(ExactGaussian):
-    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    """In order to test the k2 and kx2 option of the laplacian for Periodic
     bases, we add a quartic term $k^2 + (k^2)^2$.
     """
     def __init__(self, x, r, A=1.0, factor=1.0, r_0=1.0):
@@ -299,7 +299,7 @@ class TestPeriodicBasis(ConvolutionTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
@@ -408,7 +408,7 @@ class TestCartesianBasis(ConvolutionTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
@@ -483,7 +483,7 @@ class TestCylindricalBasis(LaplacianTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _kx2=_kx2)
+                ddy = laplacian(exact.y, factor=exact.factor, kx2=_kx2)
                 assert np.allclose(ddy, exact.d2y)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
