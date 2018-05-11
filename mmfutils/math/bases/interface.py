@@ -27,8 +27,8 @@ class IBasisMinimal(Interface):
     def laplacian(y, factor=1.0, exp=False):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         factor : float
            Additional factor (mostly used with `exp=True`).  The
            implementation must be careful to allow the factor to
@@ -51,6 +51,11 @@ class IBasis(IBasisMinimal):
         everything.  (Allows some algorithms to improve performance.
         """)
 
+    shape = Attribute(
+        """Array shape the basis.  This is the shape of the array that would be
+        formed by evaluating a function of all coordinates xyz.
+        """)
+
 
 class IBasisWithConvolution(IBasis):
     def convolve_coulomb(y, form_factors):
@@ -59,6 +64,41 @@ class IBasisWithConvolution(IBasis):
 
     def convolve(y, Ck):
         """Convolve y with Ck"""
+
+
+class IBasisKx(IBasis):
+    """This ensures that the basis is periodic in the x direction, and allows
+    the user to access the quasi-momenta `kx` in this direction and to
+    manipulate the form of the laplacian.  The allows one to implement, for
+    example, modified dispersion relations in the x direction such as might
+    arise with artificial gauge fields (Spin-Orbit Coupled BEC's for example)."""
+    kx = Attribute("Momenta in x direction")
+    Lx = Attribute("Length of box in x direction")
+    Nx = Attribute("Number of abscissa in x direction")
+
+    def laplacian(y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+        """Return the laplacian of `y` times `factor` or the exponential of this.
+
+        Parameters
+        ----------
+        factor : float
+           Additional factor (mostly used with `exp=True`).  The
+           implementation must be careful to allow the factor to
+           broadcast across the components.
+        exp : bool
+           If `True`, then compute the exponential of the laplacian.
+           This is used for split evolvers.
+        k2x : None, array
+           Replacement for the default `kx2=kx**2` used when computing the
+           "laplacian".
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the the FFT.  This the the phase that should be removed.  Note: to
+           compensate, the momenta should be shifted as well::
+        
+              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+        """
 
 
 class BasisMixin(object):
@@ -79,3 +119,8 @@ class BasisMixin(object):
         everything.  (Allows some algorithms to improve performance.
         """
         return np.prod(np.asarray(self.metric).shape) == 1
+
+    @property
+    def shape(self):
+        """Return the shape of the basis."""
+        return reduce(np.maximum, [_x.shape for _x in self.xyz])

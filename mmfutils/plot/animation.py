@@ -7,8 +7,14 @@ import os
 import tempfile
 
 from matplotlib import animation
+
+try:
+    from matplotlib.cbook import iterable
+except ImportError:
+    from matplotlib.animation import iterable
+    
 from matplotlib.animation import (TimedAnimation, FuncAnimation, encodebytes,
-                                  writers, rcParams, iterable, six)
+                                  writers, rcParams, six)
 from matplotlib import pyplot as plt
 
 
@@ -20,7 +26,7 @@ class MyFuncAnimation(FuncAnimation):
     2. Allowing user to store video when generating HTML video.
     """
     def __init__(self, fig, func, frames=None, init_func=None, fargs=None,
-                 save_count=100, **kwargs):
+                 save_count=None, **kwargs):
         if fargs:
             self._args = fargs
         else:
@@ -73,9 +79,6 @@ class MyFuncAnimation(FuncAnimation):
 
         else:
             self._drawn_artists = self._init_func()
-            if self._blit:
-                for a in self._drawn_artists:
-                    a.set_animated(self._blit)
         self._save_seq = []
 
     def _draw_frame(self, framedata):
@@ -90,9 +93,6 @@ class MyFuncAnimation(FuncAnimation):
         # Call the func with framedata and args. If blitting is desired,
         # func needs to return a sequence of any artists that were modified.
         self._drawn_artists = self._func(framedata, *self._args)
-        if self._blit:
-            for a in self._drawn_artists:
-                a.set_animated(self._blit)
 
     def to_html5_video(self, filename=None):
         r'''Returns animation as an HTML5 video tag.
@@ -177,6 +177,6 @@ def animate(get_frames, fig=None, display=False, **kw):
 
     args = dict(interval=10, repeat=True)
     args.update(kw)
-    anim = animation.FuncAnimation(fig=fig, func=func, frames=_get_frames(),
-                                   **args)
+    anim = MyFuncAnimation(fig=fig, func=func, frames=_get_frames(),
+                           **args)
     return anim

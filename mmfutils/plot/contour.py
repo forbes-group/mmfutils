@@ -17,7 +17,7 @@ __all__ = ['contourf', 'imcontourf', 'phase_contour']
 
 def _fix_args(x, y, z):
     """Fix the arguments to allow for more flexible processing."""
-    x, y, z = map(np.asarray, (x, y, z))
+    x, y, z = list(map(np.asanyarray, (x, y, z)))
 
     x = x[:, 0] if x.shape == z.shape else x.ravel()
     y = y[0, :] if y.shape == z.shape else y.ravel()
@@ -75,9 +75,16 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
         extent=(x[0], x[-1], y[0], y[-1]), *v, **kwargs)
 
     # Provide a method for updating the data properly for quick plotting.
-    def set_data(z, img=img, sd=img.set_data):
+    def set_data(z, x=None, y=None, img=img, sd=img.set_data):
         sd(np.rollaxis(z, 0, 2))
-
+        if x is not None or y is not None:
+            extent = img.get_extent()
+            if x is not None:
+                extent[:2] = [x[0], x[-1]]
+            if y is not None:
+                extent[:2] = [x[0], x[-1]]
+            img.set_extent(extent)
+            
     img.set_data = set_data
     return img
 

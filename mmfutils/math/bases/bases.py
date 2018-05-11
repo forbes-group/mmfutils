@@ -8,7 +8,8 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
-from .interface import implements, IBasis, IBasisWithConvolution, BasisMixin
+from .interface import (implements, IBasis, IBasisKx, IBasisWithConvolution,
+                        BasisMixin)
 from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
                     get_xyz, get_kxyz)
 from mmfutils.math import bessel
@@ -131,8 +132,8 @@ class PeriodicBasis(Object, BasisMixin):
        Momentum of moving frame.  Momenta are shifted by this, which
        corresponds to working in a boosted frame with velocity `vx = px/m`.
     """
-    implements(IBasisWithConvolution)
-
+    implements(IBasisWithConvolution, IBasisKx)
+    
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
                  axes=None, boost_pxyz=None):
         self.symmetric_lattice = symmetric_lattice
@@ -162,8 +163,20 @@ class PeriodicBasis(Object, BasisMixin):
         self.metric = np.prod(self.Lxyz/self.Nxyz)
         self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
 
-    def laplacian(self, y, factor=1.0, exp=False,
-                  _k2=None):
+    @property
+    def kx(self):
+        return self._pxyz[0]
+
+    @property
+    def Lx(self):
+        return self.Lxyz[0]
+
+    @property
+    def Nx(self):
+        return self.Nxyz[0]
+    
+    def laplacian(self, y, factor=1.0, exp=False, kx2=None, k2=None,
+                  twist_phase_x=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
@@ -175,20 +188,37 @@ class PeriodicBasis(Object, BasisMixin):
         exp : bool
            If `True`, then compute the exponential of the laplacian.
            This is used for split evolvers.
-        _k2 : array, optional
-           If provided then this will be used in place of the sum of
-           the squares of the wavevectors.  This would allow you, for
-           example, to implement a modified dispersion relationship
-           like ``1-cos(k)`` rather than ``k**2``.  It is not a
-           standard part of the interface since it cannot be easily
-           implement for arbitrary bases
+        kx2 : array, optional
+           Replacement for the default `kx2=kx**2` used when computing the
+           "laplacian".  This would allow you, for example, to implement a
+           modified dispersion relationship like ``1-cos(kx)`` rather than
+           ``kx**2``.
+        k2 : array, optional
+           Replacement for `k2 = kx**2 + ky**2 + kz**2`.
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the the FFT.  This the the phase that should be removed.  Note: to
+           compensate, the momenta should be shifted as well::
+        
+              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
-        if _k2 is None:
-            _k2 = sum(_p**2 for _p in self._pxyz)
-        K = -factor * _k2
+        if k2 is None:
+            if kx2 is None:
+                kx2 = self.kx**2
+            else:
+                assert k2 is None
+            k2 = (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
+        else:
+            assert kx2 is None
+        
+        K = -factor * k2
         if exp:
             K = np.exp(K)
-        return self.ifftn(K * self.fftn(y))
+        if twist_phase_x is None:
+            return self.ifftn(K * self.fftn(y))
+        else:
+            return self.ifftn(K * self.fftn(y/twist_phase_x))*twist_phase_x
 
     # We need these wrappers because the state may have additional
     # indices for components etc. in front.
@@ -487,7 +517,7 @@ class CylindricalBasis(Object, BasisMixin):
        This is required for cases where y has additional dimensions.
        The default is the last two axes (best for performance).
     """
-    implements(IBasis)
+    implements(IBasis, IBasisKx)
 
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
@@ -504,10 +534,9 @@ class CylindricalBasis(Object, BasisMixin):
         x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr,
                     symmetric_lattice=self.symmetric_x)[0]
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
-        kx = (kx0 + float(self.twist) / Lx - self.boost_px)
+        self.kx = (kx0 + float(self.twist) / Lx - self.boost_px)
         self._kx0 = kx0
-        self._kx = kx
-        self._kx2 = kx**2
+        self._kx2 = self.kx**2
 
         self.y_twist = np.exp(1j*self.twist*x/Lx)
 
@@ -520,7 +549,7 @@ class CylindricalBasis(Object, BasisMixin):
 
         # This is just the maximum momentum for diagnostics,
         # determining cutoffs etc.
-        self.k_max = np.array([abs(kx).max(), self._kmax])
+        self.k_max = np.array([abs(self.kx).max(), self._kmax])
 
         nr = np.arange(Nr)[None, :]
         r = self._r(Nr)[None, :]  # Do this after setting _kmax
@@ -553,8 +582,15 @@ class CylindricalBasis(Object, BasisMixin):
         # Cache for K_data from apply_exp_K.
         self._K_data = []
 
-    def laplacian(self, y, factor=1.0, exp=False,
-                  _kx2=None):
+    @property
+    def Lx(self):
+        return self.Lxr[0]
+    
+    @property
+    def Nx(self):
+        return self.Nxr[0]
+
+    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
         r"""Return the laplacian of y.
 
         Arguments
@@ -566,22 +602,29 @@ class CylindricalBasis(Object, BasisMixin):
         exp : bool
            If `True`, then compute the exponential of the laplacian.
            This is used for split evolvers.
-        _kx2 : array, optional
-           If provided then this will be used in place of kx**2.  This
-           would allow you, for example, to implement a modified
-           dispersion relationship along the ``x`` direction
-           like ``1-cos(kx)`` rather than ``kx**2``.  It is not a
-           standard part of the interface since it cannot be easily
-           implement for arbitrary bases
+        kx2 : array, optional
+           Replacement for the default `kx2=kx**2` used when computing the
+           "laplacian".  This would allow you, for example, to implement a
+           modified dispersion relationship like ``1-cos(kx)`` rather than
+           ``kx**2``.
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the the FFT.  This the the phase that should be removed.  Note: to
+           compensate, the momenta should be shifted as well::
+        
+              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
         if not exp:
-            return self.apply_K(y=y, _kx2=_kx2) * (-factor)
+            return self.apply_K(y=y, kx2=kx2,
+                                twist_phase_x=twist_phase_x) * (-factor)
         else:
-            return self.apply_exp_K(y=y, factor=-factor, _kx2=_kx2)
-
+            return self.apply_exp_K(y=y, factor=-factor, kx2=kx2,
+                                    twist_phase_x=twist_phase_x)
+        
     def get_gradient(self, y):
         """Returns the gradient along the x axis."""
-        kx = self._kx
+        kx = self.kx
         return [self.ifft(1j*kx*self.fft(y)), NotImplemented]
 
     def apply_Lz(self, y, hermitian=False):
@@ -594,12 +637,12 @@ class CylindricalBasis(Object, BasisMixin):
         """
         return self.y_twist * self.ifft(self._kx0 * self.fft(y/self.y_twist))
 
-    def apply_exp_K(self, y, factor, _kx2=None):
+    def apply_exp_K(self, y, factor, kx2=None, twist_phase_x=None):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
-        if _kx2 is None:
-            _kx2 = self._Kx
+        if kx2 is None:
+            kx2 = self._Kx
         _K_data_max_len = 3
         ind = None
         for _i, (_f, _d) in enumerate(self._K_data):
@@ -608,7 +651,7 @@ class CylindricalBasis(Object, BasisMixin):
         if ind is None:
             _r1, _r2, V, d = self._Kr_diag
             exp_K_r = _r1 * np.dot(V*np.exp(factor * d), V.T) * _r2
-            exp_K_x = np.exp(factor * _kx2)
+            exp_K_x = np.exp(factor * kx2)
             K_data = (exp_K_r, exp_K_x)
             self._K_data.append((factor, K_data))
             ind = -1
@@ -618,27 +661,31 @@ class CylindricalBasis(Object, BasisMixin):
 
         K_data = self._K_data[ind][1]
         exp_K_r, exp_K_x = K_data
-        if self.twist == 0:
+        if twist_phase_x is None or self.twist == 0:
             tmp = self.ifft(exp_K_x * self.fft(y))
         else:
-            tmp = self.y_twist*self.ifft(exp_K_x * self.fft(y/self.y_twist))
+            if twist_phase_x is None:
+                twist_phase_x = self.y_twist
+            tmp = twist_phase_x*self.ifft(exp_K_x * self.fft(y/twist_phase_x))
         return np.einsum('...ij,...yj->...yi', exp_K_r, tmp)
 
-    def apply_K(self, y, _kx2=None):
+    def apply_K(self, y, kx2=None, twist_phase_x=None):
         r"""Return `K*y` where `K = k**2/2`"""
         # Here is how the indices work:
-        if _kx2 is None:
-            _kx2 = self._Kx
+        if kx2 is None:
+            kx2 = self._Kx
 
-        if self.twist == 0:
+        if twist_phase_x is None or self.twist == 0:
             yt = self.fft(y)
-            yt *= _kx2
+            yt *= kx2
             yt = self.ifft(yt)
         else:
-            yt = self.fft(y/self.y_twist)
-            yt *= _kx2
+            if twist_phase_x is None:
+                twist_phase_x = self.y_twist
+            yt = self.fft(y/twist_phase_x)
+            yt *= kx2
             yt = self.ifft(yt)
-            yt *= self.y_twist
+            yt *= twist_phase_x
 
         # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
         # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
@@ -758,7 +805,7 @@ class CylindricalBasis(Object, BasisMixin):
         new set of abscissa (x, r).
 
         This includes the factor of $\sqrt{r}$ that converts the
-        wavefunction to the radial function, then uses the basis the
+        wavefunction to the radial function, then uses the basis to
         extrapolate the radial function.
 
         Arguments
@@ -767,7 +814,7 @@ class CylindricalBasis(Object, BasisMixin):
            The new abscissa in the radial direction (the $x$ values
            stay the same.)
         return_matrix : bool
-           If True, then return the extrapolation matrix Fso that
+           If True, then return the extrapolation matrix F so that
            ``Psi = np.dot(psi, F)``
         """
         x, r0 = self.xyz
@@ -792,3 +839,13 @@ class CylindricalBasis(Object, BasisMixin):
         assert np.allclose(x, x0)
 
         return self.get_Psi(r)(psi)
+
+    def integrate1(self, n):
+        """Perform the integral of n over y and z."""
+        n = np.asarray(n)
+        x, r = self.xyz
+        x_axis, r_axis = self.axes
+        shape = [None] * len(n.shape)
+        shape[x_axis] = slice(None)
+        shape[r_axis] = slice(None)
+        return ((2*np.pi*r * self.weights)[shape] * n).sum(axis=r_axis)

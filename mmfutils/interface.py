@@ -36,70 +36,86 @@ if zope:
     # reStructuredText so I can use it in documentation like README.rst etc.
 
     import zope.interface.document
-    from zope.interface.document import (_justify_and_indent, _trim_doc_string)
+    
+    if hasattr(zope.interface.document, 'asReStructuredText'):
+        del zope.interface.document.asReStructuredText
+        
+    if not hasattr(zope.interface.document, 'asReStructuredText'):
+        from zope.interface.document import (_justify_and_indent, _trim_doc_string)
 
-    def asStructuredText(I, munge=0):
-        """ Output structured text format.  Note, this will whack any existing
-        'structured' format of the text.  """
+        def _justify_and_indent_and_trim_doc_string(string, level=0, munge=0):
 
-        r = ["``%s``" % (I.getName(),)]
-        outp = r.append
-        level = 1
+            # Hack to replace titles used by numpydoc...
+            for indent in [" "*4, " "*8, " "*12]:
+                for title in ['Parameters', 'Arguments']:
+                    src = "\n".join([indent + title, indent + '-'*len(title)])
+                    repl = "\n".join([indent[:-2] + title + ":", ""])
+                    string = string.replace(src, repl)
 
-        if I.getDoc():
-            outp(_justify_and_indent(_trim_doc_string(I.getDoc()), level))
+            return _justify_and_indent(_trim_doc_string(string),
+                                       level=level, munge=munge)
+            
+        def asReStructuredText(I, munge=0):
+            """ Output structured text format.  Note, this will whack any existing
+            'structured' format of the text.
+            """
+            def inline_literal(s):
+                return "``%s``" % (s,)
 
-        bases = [base
-                 for base in I.__bases__
-                 if base is not zope.interface.Interface
-                 ]
-        if bases:
-            outp(_justify_and_indent("This interface extends:", level, munge))
-            level += 1
-            for b in bases:
-                item = "o ``%s``" % b.getName()
-                outp(_justify_and_indent(_trim_doc_string(item), level, munge))
-            level -= 1
+            r = [inline_literal(I.getName())]
+            #r[0] = "\n".join([r[0], "="*len(r[-1])])
 
-        attributes = []
-        methods = []
-        for name, desc in sorted(I.namesAndDescriptions()):
-            if hasattr(desc, 'getSignatureString'):  # ugh...
-                methods.append((name, desc))
-            else:
-                attributes.append((name, desc))
+            outp = r.append
+            level = 1
 
-        if attributes:
+            if I.getDoc():
+                outp(_justify_and_indent_and_trim_doc_string(I.getDoc(), level))
+
+            bases = [base
+                     for base in I.__bases__
+                     if base is not zope.interface.Interface
+                     ]
+            if bases:
+                outp(_justify_and_indent("This interface extends:", level, munge))
+                level += 1
+                for b in bases:
+                    item = "o %s" % inline_literal(b.getName())
+                    outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
+                level -= 1
+
+            namesAndDescriptions = sorted(I.namesAndDescriptions())
+
             outp(_justify_and_indent("Attributes:", level, munge))
             level += 1
-            for name, desc in attributes:
-                item = "``%s`` -- %s" % (desc.getName(),
+            for name, desc in namesAndDescriptions:
+                if not hasattr(desc, 'getSignatureString'):   # ugh...
+                    item = "%s -- %s" % (inline_literal(desc.getName()),
                                          desc.getDoc() or 'no documentation')
-                outp(_justify_and_indent(_trim_doc_string(item), level, munge))
+                    outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
             level -= 1
 
-        if methods:
             outp(_justify_and_indent("Methods:", level, munge))
             level += 1
-            for name, desc in methods:
-                item = "``%s%s`` -- %s" % (desc.getName(),
-                                           desc.getSignatureString(),
-                                           desc.getDoc() or 'no documentation')
-                outp(_justify_and_indent(_trim_doc_string(item), level, munge))
-            level -= 1
-        return "\n\n".join(r) + "\n\n"
+            for name, desc in namesAndDescriptions:
+                if hasattr(desc, 'getSignatureString'):   # ugh...
+                    _call = "%s%s" % (desc.getName(), desc.getSignatureString())
+                    item = "%s -- %s" % (inline_literal(_call),
+                                         desc.getDoc() or 'no documentation')
+                    outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
 
-    logging.info(
-        "Patching zope.interface.document.asStructuredText to format code")
-    zope.interface.document.asStructuredText = asStructuredText
+            return "\n\n".join(r) + "\n\n"
 
+            logging.info(
+                "Patching zope.interface.document.asReStructuredText to format code")
+        zope.interface.document.asReStructuredText = asReStructuredText
+    
 
 def describe_interface(interface, format='ipython'):
     """Return an HTML object for Jupyter notebooks that describes the
     interface.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     interface : Interface
        Interface to extract documentation from.
     format : 'rst', 'html', 'ipython'
@@ -170,7 +186,7 @@ def describe_interface(interface, format='ipython'):
 
     writer = Writer()
     writer.translator_class = NoHeaderHTMLTranslator
-    rst = zope.interface.document.asStructuredText(interface)
+    rst = zope.interface.document.asReStructuredText(interface)
     if format.lower() == 'rst':
         return rst
 
