@@ -36,7 +36,7 @@ class TestNoInterrupt(object):
 
     def test_signal(self):
         with pytest.raises(KeyboardInterrupt):
-            with NoInterrupt() as interrupted:
+            with NoInterrupt(ignore=False) as interrupted:
                 m = -1
                 for n in xrange(10):
                     if n == 5:
@@ -67,7 +67,7 @@ class TestNoInterrupt(object):
         try:
             NoInterrupt.catch_signals((signal.SIGHUP,))
             with pytest.raises(KeyboardInterrupt):
-                with NoInterrupt() as interrupted:
+                with NoInterrupt(ignore=False) as interrupted:
                     while not interrupted:
                         os.kill(os.getpid(), signal.SIGHUP)
         finally:

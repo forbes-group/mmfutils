@@ -69,7 +69,7 @@ class TestInterfaces(object):
 
 class Doctests(object):
     """
-    >>> from zope.interface.document import asStructuredText
+    >>> from zope.interface.document import asReStructuredText
     >>> from mmfutils.interface import Interface, Attribute
     >>> class IInterface1(Interface):
     ...     "IInterface1"
@@ -78,17 +78,19 @@ class Doctests(object):
     ...     p = Attribute('p', "Power")
     ...     def required_method(a, b):
     ...         "Return (a+b)**p + offset"
-    >>> print(asStructuredText(IInterface1))
+    >>> print(asReStructuredText(IInterface1))
     ``IInterface1``
     <BLANKLINE>
-    IInterface1
+     IInterface1
     <BLANKLINE>
      Attributes:
     <BLANKLINE>
       ``offset`` -- Offset
     <BLANKLINE>
+     Methods:
     <BLANKLINE>
-    >>> print(asStructuredText(IInterface2))
+    <BLANKLINE>
+    >>> print(asReStructuredText(IInterface2))
     ``IInterface2``
     <BLANKLINE>
      This interface extends:

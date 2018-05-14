@@ -432,7 +432,6 @@ class Figure(Object):
     legend_dict = dict(fontsize='medium',
                        handlelength=4.0,
                        frameon=True,
-                       isaxes=False,
                        #lw=0.5, c='k'
     )
     tight_layout = False

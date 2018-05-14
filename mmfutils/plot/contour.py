@@ -78,11 +78,11 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     def set_data(z, x=None, y=None, img=img, sd=img.set_data):
         sd(np.rollaxis(z, 0, 2))
         if x is not None or y is not None:
-            extent = img.get_extent()
+            extent = list(img.get_extent())
             if x is not None:
-                extent[:2] = [x[0], x[-1]]
+                extent[:2] = [np.ravel(x)[0], np.ravel(x)[-1]]
             if y is not None:
-                extent[:2] = [x[0], x[-1]]
+                extent[:2] = [np.ravel(y)[0], np.ravel(y)[-1]]
             img.set_extent(extent)
             
     img.set_data = set_data
