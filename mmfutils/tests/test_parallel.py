@@ -9,7 +9,7 @@ import pytest
 
 from mmfutils.parallel import Cluster, get_cluster, ipyparallel
 
-import parallel_module
+from . import parallel_module
 
 
 class TestCluster(object):

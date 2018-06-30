@@ -134,7 +134,7 @@ class TestPersist(object):
         a.insert(o=o)
 
         d = {}
-        exec str(a) in d
+        exec(str(a), d)
         o1 = d['o']
 
         assert repr(o) == repr(o1)

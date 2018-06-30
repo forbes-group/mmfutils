@@ -8,9 +8,9 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from mmfutils.interface import (implements, Interface, Attribute)
+from mmfutils.interface import (classImplements, Interface, Attribute)
 
-__all__ = ['implements', 'IBasis', 'BasisMixin']
+__all__ = ['classImplements', 'IBasis', 'BasisMixin']
 
 
 class IBasisMinimal(Interface):

@@ -49,7 +49,7 @@ class NoInterrupt(object):
     >>> n = [0, 0]
     >>> try:  # All doctests need to be wrapped in try blocks to not kill py.test!
     ...     f(n)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n
@@ -60,7 +60,7 @@ class NoInterrupt(object):
     >>> try:
     ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n
@@ -80,7 +80,7 @@ class NoInterrupt(object):
     >>> try:
     ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, force=True)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt: Interrupt forced
     >>> n
@@ -94,7 +94,7 @@ class NoInterrupt(object):
     >>> try:
     ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, interrupted)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n

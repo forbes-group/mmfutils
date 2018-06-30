@@ -8,7 +8,7 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
-from .interface import (implements, IBasis, IBasisKx, IBasisWithConvolution,
+from .interface import (classImplements, IBasis, IBasisKx, IBasisWithConvolution,
                         BasisMixin)
 from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
                     get_xyz, get_kxyz)
@@ -30,8 +30,6 @@ class SphericalBasis(Object, BasisMixin):
     into the radial functions.  Unlike the DVR techniques, this approach allows
     us to compute the Coulomb interaction for example.
     """
-    implements(IBasisWithConvolution)
-
     def __init__(self, N, R):
         self.N = N
         self.R = R
@@ -110,6 +108,9 @@ class SphericalBasis(Object, BasisMixin):
         return idst(Ck * dst(r*y)) / r
 
 
+classImplements(SphericalBasis, IBasisWithConvolution)
+
+
 class PeriodicBasis(Object, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -132,8 +133,6 @@ class PeriodicBasis(Object, BasisMixin):
        Momentum of moving frame.  Momenta are shifted by this, which
        corresponds to working in a boosted frame with velocity `vx = px/m`.
     """
-    implements(IBasisWithConvolution, IBasisKx)
-    
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
                  axes=None, boost_pxyz=None):
         self.symmetric_lattice = symmetric_lattice
@@ -309,6 +308,9 @@ class PeriodicBasis(Object, BasisMixin):
         return len(self.Nxyz)
 
 
+classImplements(PeriodicBasis, IBasisWithConvolution, IBasisKx)
+
+
 class CartesianBasis(PeriodicBasis):
     """N-dimensional periodic bases but with Coulomb convolution that does not
     use periodic images.  Use this for nuclei in free space.
@@ -332,8 +334,6 @@ class CartesianBasis(PeriodicBasis):
        If `True`, use the fast Coulomb algorithm which is slightly less
        accurate but much faster.
     """
-    implements(IBasisWithConvolution)
-
     def __init__(self, Nxyz, Lxyz, axes=None,
                  symmetric_lattice=False, fast_coulomb=True):
         self.fast_coulomb = fast_coulomb
@@ -493,6 +493,9 @@ class CartesianBasis(PeriodicBasis):
                 y, form_factors=form_factors, **kw)
 
 
+classImplements(CartesianBasis, IBasisWithConvolution)
+
+
 class CylindricalBasis(Object, BasisMixin):
     r"""2D basis for Cylindrical coordinates via a DVR basis.
 
@@ -517,8 +520,6 @@ class CylindricalBasis(Object, BasisMixin):
        This is required for cases where y has additional dimensions.
        The default is the last two axes (best for performance).
     """
-    implements(IBasis, IBasisKx)
-
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
         self.twist = twist
@@ -849,3 +850,6 @@ class CylindricalBasis(Object, BasisMixin):
         shape[x_axis] = slice(None)
         shape[r_axis] = slice(None)
         return ((2*np.pi*r * self.weights)[shape] * n).sum(axis=r_axis)
+
+
+classImplements(CylindricalBasis, IBasis, IBasisKx)

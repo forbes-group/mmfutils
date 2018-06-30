@@ -2,7 +2,7 @@ import pytest
 import zope.interface.document
 import zope.interface.exceptions
 
-from mmfutils.interface import (implements, verifyObject, verifyClass,
+from mmfutils.interface import (classImplements, verifyObject, verifyClass,
                                 Interface, Attribute)
 
 
@@ -15,8 +15,6 @@ class IInterfaceTest(Interface):
 
 
 class BrokenInterfaceTest1(object):
-    implements(IInterfaceTest)
-
     # Note, don't break both attribute and method interfaces at the same time
     # because the verifyObject() test relies on dictionary ordering and might
     # raise BrokenMethodImplementation or BrokenImplementation quasi-randomly
@@ -27,22 +25,27 @@ class BrokenInterfaceTest1(object):
         return a
 
 
-class BrokenInterfaceTest2(object):
-    implements(IInterfaceTest)
+classImplements(BrokenInterfaceTest1, IInterfaceTest)
 
+
+class BrokenInterfaceTest2(object):
     # Missing p
     def required_method(self, a, b):
         return a + b
 
 
-class InterfaceTest(object):
-    implements(IInterfaceTest)
+classImplements(BrokenInterfaceTest2, IInterfaceTest)
 
+
+class InterfaceTest(object):
     def __init__(self, p=1.0):
         self.p = p
 
     def required_method(self, a, b):
         return (a + b)**self.p
+
+
+classImplements(InterfaceTest, IInterfaceTest)
 
 
 class TestInterfaces(object):

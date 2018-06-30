@@ -263,6 +263,7 @@ class ContainerDict(Container, collections.MutableMapping):
 
     Examples
     --------
+    >>> from collections import OrderedDict
     >>> c = ContainerDict(b='Hi', a=1)
     >>> c                       # Note: items sorted for consistent repr
     ContainerDict(a=1, b='Hi')
@@ -271,8 +272,8 @@ class ContainerDict(Container, collections.MutableMapping):
     >>> c['a'] = 2
     >>> c.a
     2
-    >>> dict(c)
-    {'a': 2, 'b': 'Hi'}
+    >>> OrderedDict(c)
+    OrderedDict([('a', 2), ('b', 'Hi')])
     """
     # Methods required by collections.Iterable
     def __iter__(self):

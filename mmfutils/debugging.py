@@ -5,6 +5,8 @@ Most of these are implemented as decorators.
 from __future__ import absolute_import, division, print_function
 import sys
 
+from six import reraise as raise_
+
 __all__ = ['persistent_locals', 'debug']
 
 # Default location
@@ -136,10 +138,10 @@ def debug(*v, **kw):
         def __call__(self, *v, **kw):
             try:
                 res = self.func(*v, **kw)
-            except Exception, e:
+            except Exception as e:
                 # Remove two levels of the traceback so we don't see the
                 # decorator junk.
-                raise e, None, sys.exc_info()[2].tb_next.tb_next
+                raise_(e, None, sys.exc_info()[2].tb_next.tb_next)
             finally:
                 self.env.update(self.func.locals)
                 self.func.clear_locals()
