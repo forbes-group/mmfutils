@@ -43,9 +43,10 @@ def sinc(x, d=0):
         return np.sinc(x/np.pi)
     elif 1 == d:
         x2 = x*x
-        return np.where(abs(x) < 0.01,
-                        x*(x2*(-x2/280 + 0.1) - 1.0)/3.0,
-                        (np.cos(x)-np.sinc(x/np.pi))/x)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            return np.where(abs(x) < 0.01,
+                            x*(x2*(-x2/280 + 0.1) - 1.0)/3.0,
+                            (np.cos(x)-np.sinc(x/np.pi))/x)
     else:
         raise NotImplementedError("Only d=0 or 1 supported (got d={})."
                                   .format(d))
@@ -232,7 +233,7 @@ def j_root(nu, N, rel_tol=2*_EPS):
             n = np.arange(11, N+1)
             npi = n*pi
             x0 = (n+0.5)*pi
-            for c in xrange(5):
+            for c in range(5):
                 np.arctan(x0, x0)
                 x0 += npi
             return np.hstack((x, x0))
@@ -245,7 +246,7 @@ def j_root(nu, N, rel_tol=2*_EPS):
 
         x[0] = nu + nu**(1./3.)
         Jx[0] = J_(x[0])
-        for n in xrange(1, N+1):
+        for n in range(1, N+1):
             x[n] = x[n-1] + pi
             Jx[n] = J_(x[n])
             while Jx[n]*Jx[n-1] > 0:
@@ -257,7 +258,7 @@ def j_root(nu, N, rel_tol=2*_EPS):
         x1 = x[1:]
         J0 = Jx[:-1]
         J1 = Jx[1:]
-        for n in xrange(2):
+        for n in range(2):
             # Invariant:
             # J0*J1 < 0 or J0 = J1 = 0 and x0 = x1
             x_mid = (x0 + x1)/2
@@ -466,7 +467,7 @@ def _Horner(a, d):
     """
     d = np.asarray(d)
     ans = 0*d
-    for n in reversed(xrange(len(a))):
+    for n in reversed(range(len(a))):
         ans += a[n]
         if n > 0:
             ans *= d/n

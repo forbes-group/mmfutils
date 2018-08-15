@@ -161,9 +161,9 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
     p = 2 if dir == 0 else 1
 
     r = Richardson(df, ps=itertools.count(p*p0, p), l=l)
-    r.next()
-    d1 = r.next()
-    d0 = r.next()
+    next(r)
+    d1 = next(r)
+    d0 = next(r)
     err_old = abs(d1 - d0)
     n = 2
     for _d in r:
@@ -173,7 +173,7 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
         if np.any(err[0] > err_old) or (n > nmax):
             break
         err_old = err[0]
-    return r.next()
+    return next(r)
 
 
 def hessian(f, x, **kw):
@@ -226,10 +226,10 @@ def hessian(f, x, **kw):
             x[n] = _xn
         return _f(x)
 
-    for m in xrange(len(x)):
+    for m in range(len(x)):
         D[m] = differentiate(lambda _x: _f_m_n(_x, m=m), d=1, **kw)
         H[m, m] = differentiate(lambda _x: _f_m_n(_x, m=m), d=2, **kw)
-        for n in xrange(m+1, len(x)):
+        for n in range(m+1, len(x)):
             H[m, n] = H[n, m] = differentiate(
                 lambda _xn: differentiate(
                     lambda _xm: _f_m_n(_xm, m, _xn, n), **kw),

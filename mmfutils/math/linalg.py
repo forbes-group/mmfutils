@@ -22,7 +22,7 @@ def block_diag(arrays):
     Examples
     --------
     """
-    arrays = map(np.asarray, arrays)
+    arrays = list(map(np.asarray, arrays))
     shapes = np.array([a.shape for a in arrays])
     out = np.zeros(np.sum(shapes, axis=0))
 

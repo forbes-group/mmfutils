@@ -18,7 +18,7 @@ def ellipkinv(K, iter=4):
     Examples
     --------
     >>> Ks = 10**np.linspace(-10, 1.0, 1000)
-    >>> ms = map(ellipkinv, Ks)
+    >>> ms = list(map(ellipkinv, Ks))
     >>> abs((ellipk(ms)/Ks - 1)).max() < 1e-10
     True
     >>> ellipkinv(np.pi/2.0)

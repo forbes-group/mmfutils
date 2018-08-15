@@ -220,7 +220,7 @@ def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
 
     xs = list(set(p for p in points if a < p and p < b))
     xs.sort()
-    ys = map(f, xs)
+    ys = list(map(f, xs))
     xs.insert(0, a)
     ys.insert(0, fa)
     xs.append(b)
@@ -389,10 +389,10 @@ def Richardson(f, ps=None, l=2, n0=1):
 
     >>> def f(N): return sum(np.arange(1, N+1, dtype=float)**(-2))
     >>> r = Richardson(f, l=3, n0=2)
-    >>> for n in xrange(9):
-    ...     x = r.next()
+    >>> for n in range(9):
+    ...     x = next(r)
     >>> err = abs(x - np.pi**2/6.0)
-    >>> assert err < 1e-14, `err`
+    >>> assert err < 1e-14, 'err'
 
     Now some other examples with different `p` values:
 
@@ -402,10 +402,10 @@ def Richardson(f, ps=None, l=2, n0=1):
 
     >>> def f(N): return sum(np.arange(1, N+1, dtype=float)**(-4))
     >>> r = Richardson(f, ps=itertools.count(3,1))
-    >>> for n in xrange(8):
-    ...     x = r.next()
+    >>> for n in range(8):
+    ...     x = next(r)
     >>> err = abs(x - np.pi**4/90.0)
-    >>> assert err < 1e-14, `err`
+    >>> assert err < 1e-14, 'err'
 
     .. math::
        f(N) = \sum_{n=1}^{N} \frac{1}{n^6} = \frac{\pi^6}{945} +
@@ -413,30 +413,30 @@ def Richardson(f, ps=None, l=2, n0=1):
 
     >>> def f(N): return sum(np.arange(1, N+1, dtype=float)**(-6))
     >>> r = Richardson(f, ps=itertools.count(5))
-    >>> for n in xrange(7):
-    ...     x = r.next()
+    >>> for n in range(7):
+    ...     x = next(r)
     >>> err = abs(x - np.pi**6/945.0)
-    >>> assert err < 1e-14, `err`
+    >>> assert err < 1e-14, 'err'
 
     Richardson works with array valued functions:
 
     >>> def f(N): return np.array([sum(np.arange(1, N+1, dtype=float)**(-2)),
     ...                            sum(np.arange(1, N+1, dtype=float)**(-4))])
     >>> r = Richardson(f, l=3, n0=2)
-    >>> for n in xrange(7):
-    ...     x = r.next()
+    >>> for n in range(7):
+    ...     x = next(r)
     >>> err = abs(x - np.array([np.pi**2/6.0, np.pi**4/90.0])).max()
-    >>> assert err < 1e-13, `err`
+    >>> assert err < 1e-13, 'err'
 
     It also works for complex valued functions:
 
     >>> def f(N): return (sum(np.arange(1, N+1, dtype=float)**(-2)) +
     ...                       1j*sum(np.arange(1, N+1, dtype=float)**(-4)))
     >>> r = Richardson(f, l=3, n0=2)
-    >>> for n in xrange(7):
-    ...     x = r.next()
+    >>> for n in range(7):
+    ...     x = next(r)
     >>> err = abs(x - (np.pi**2/6.0 + 1j*np.pi**4/90.0))
-    >>> assert err < 1e-13, `err`
+    >>> assert err < 1e-13, 'err'
     """
     if ps is None:
         ps = itertools.count(1, 1)
@@ -461,8 +461,8 @@ def Richardson(f, ps=None, l=2, n0=1):
             S[n, 0] = f0
         else:
             S[n, 0] = f(n0*l**n)
-        p.append(ps.next())
-        for m in xrange(1, n+1):
+        p.append(next(ps))
+        for m in range(1, n+1):
             lpm1 = float(l**p[m-1])
             S[n, m] = (lpm1*S[n, m-1] - S[n-1, m-1])/(lpm1 - 1.0)
         n = n+1
@@ -521,7 +521,7 @@ def exact_sum(xs, maxiter=5):
     err = []
     for b in xs:
         (ans, err0) = exact_add(ans, b)
-        for n in xrange(len(err)):
+        for n in range(len(err)):
             (err[n], err0) = exact_add(err[n], err0)
         if err0 != 0:
             err.append(err0)
@@ -542,7 +542,7 @@ def ssum_python(xs):
     method for floating point numbers.  (Python version.)
 
     >>> N = 10000
-    >>> l = [(10.0*n)**3.0 for n in reversed(xrange(N+1))]
+    >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
     >>> (ssum_python(l)[0] - ans, sum(l) - ans)
     (0.0, -5632.0)
@@ -566,7 +566,7 @@ def ssum_inline(xs):
     method for floating point numbers.  (C++ version using weave).
 
     >>> N = 10000
-    >>> l = [(10.0*n)**3.0 for n in reversed(xrange(N+1))]
+    >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
     >>> (ssum_inline(l)[0] - ans, sum(l) - ans)
     (0.0, -5632.0)
@@ -652,14 +652,14 @@ def rsum(f, N0=0, ps=None, l=2,
     """
     def F(N, f=f, fs=[0.0, 0]):
         r"""Return sum of f(n) up to f(N)."""
-        fs[0] += ssum([f(n+N0) for n in xrange(fs[1], N+1)])[0]
+        fs[0] += ssum([f(n+N0) for n in range(fs[1], N+1)])[0]
         fs[1] = N+1
         return fs[0]
     r = Richardson(F, ps=ps, l=l)
-    r1 = r.next()
+    r1 = next(r)
     while True:
         r0 = r1
-        r1 = r.next()
+        r1 = next(r)
         abs_err = abs(r1 - r0)
         rel_err = abs_err/(abs(r1)+abs_tol)
         if (abs_err <= abs_tol or rel_err <= rel_tol):

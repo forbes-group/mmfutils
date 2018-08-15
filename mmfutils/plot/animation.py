@@ -52,7 +52,7 @@ class MyFuncAnimation(FuncAnimation):
             if hasattr(frames, '__len__'):
                 self.save_count = len(frames)
         else:
-            self._iter_gen = lambda: xrange(frames).__iter__()
+            self._iter_gen = lambda: range(frames).__iter__()
             self.save_count = frames
 
         self._init_func = init_func

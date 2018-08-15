@@ -26,14 +26,14 @@ class TestRichardson(object):
         def err(h, n=1):
             n0 = 1./h
             r = Richardson(F, n0=n0, l=2.0, ps=itertools.count(2, 2))
-            for _n in xrange(n):
-                r.next()
-            return abs(r.next() - df)
+            for _n in range(n):
+                next(r)
+            return abs(next(r) - df)
 
         # Draw the following to identify where these points should be for
         # calculating the slope:
         # hs = 10**linspace(-5,1,100)
-        # for n in xrange(7):
+        # for n in range(7):
         #     plt.plot(np.log10(hs), np.log10(err(hs, n=n)))
         lh = [-4, -2.3, -1.2, -0.5, 0.0, 0.36, 0.72]
         rh = [0, 0, 0, 0.3, 0.5, 0.6, 0.8]
@@ -44,4 +44,4 @@ class TestRichardson(object):
 
         ns = np.arange(6)
         slopes = 2*(ns + 1)
-        assert np.allclose(map(slope, ns), slopes, rtol=0.05)
+        assert np.allclose(list(map(slope, ns)), slopes, rtol=0.05)

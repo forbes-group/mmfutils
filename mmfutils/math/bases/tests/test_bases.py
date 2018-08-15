@@ -312,7 +312,7 @@ class TestPeriodicBasis(ConvolutionTests):
         exact = self.exact
         for exact.A in [(0.5+0.5j), exact.A]:
             dy = get_gradient(exact.y)
-            dy_exact = map(exact.get_dy, xyz)
+            dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
 
@@ -421,7 +421,7 @@ class TestCartesianBasis(ConvolutionTests):
         exact = self.exact
         for exact.A in [(0.5+0.5j), exact.A]:
             dy = get_gradient(exact.y)
-            dy_exact = map(exact.get_dy, xyz)
+            dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
 
@@ -448,10 +448,10 @@ class TestCylindricalBasis(LaplacianTests):
         b = self.basis
         x, r = b.xyz
         R = self.R
-        for _m in xrange(self.Nm):
+        for _m in range(self.Nm):
             Fm = b._F(_m, R)
             assert np.allclose(np.trapz(abs(Fm)**2, R), 1.0, rtol=1e-3)
-            for _n in xrange(_m+1, self.Nn):
+            for _n in range(_m+1, self.Nn):
                 Fn = b._F(_n, R)
                 assert np.allclose(np.trapz(Fm.conj()*Fn, R), 0.0, atol=1e-3)
 
@@ -460,7 +460,7 @@ class TestCylindricalBasis(LaplacianTests):
         b = self.basis
         x, r = b.xyz
         R = self.R + 0.1        # Derivatives are singular at origin
-        for _m in xrange(self.Nm):
+        for _m in range(self.Nm):
             F = b._F(_m, R)
             dF = b._F(_m, R, d=1)
 

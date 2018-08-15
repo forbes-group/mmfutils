@@ -208,7 +208,7 @@ class CoroutineWrapper(object):
         self.started = False
 
     def __enter__(self, *v, **kw):
-        self.res = self.coroutine.next()   # Prime the coroutine
+        self.res = next(self.coroutine)   # Prime the coroutine
         self.started = True
         return self.send
 
@@ -291,7 +291,7 @@ def coroutine(coroutine):
     def wrapper(*v, **kw):
         return CoroutineWrapper(coroutine(*v, **kw))
         # primed_coroutine = coroutine(*v, **kw)
-        # primed_coroutine.next()
+        # next(primed_coroutine)
         # yield primed_coroutine.send
         # primed_coroutine.close()
     return wrapper

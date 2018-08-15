@@ -6,6 +6,8 @@ symmetry.
 """
 from __future__ import absolute_import, division, print_function
 
+import functools
+
 import numpy as np
 
 from mmfutils.interface import (classImplements, Interface, Attribute)
@@ -123,4 +125,4 @@ class BasisMixin(object):
     @property
     def shape(self):
         """Return the shape of the basis."""
-        return reduce(np.maximum, [_x.shape for _x in self.xyz])
+        return functools.reduce(np.maximum, [_x.shape for _x in self.xyz])
