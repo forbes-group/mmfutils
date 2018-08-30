@@ -1,6 +1,6 @@
 
-1. MMF Utils
-============
+MMF Utils
+=========
 
 Small set of utilities: containers and interfaces.
 
@@ -29,10 +29,25 @@ in a notebook.
 
    <tr>
 
-::
+.. raw:: html
 
-    <td>[Main](https://bitbucket.org/mforbes/mmfutils)</td>
-    <td>[Fork](https://bitbucket.org/mforbes/mmfutils-fork)</td>
+   <td>
+
+`Main <https://bitbucket.org/mforbes/mmfutils>`__
+
+.. raw:: html
+
+   </td>
+
+.. raw:: html
+
+   <td>
+
+`Fork <https://bitbucket.org/mforbes/mmfutils-fork>`__
+
+.. raw:: html
+
+   </td>
 
 .. raw:: html
 
@@ -42,10 +57,27 @@ in a notebook.
 
    <tr>
 
-::
+.. raw:: html
 
-    <td>[![mmfutils Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils/latest)</td>
-    <td>[![mmfutils-fork Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest)</td>
+   <td>
+
+`mmfutils Build
+Status <https://drone.io/bitbucket.org/mforbes/mmfutils/latest>`__
+
+.. raw:: html
+
+   </td>
+
+.. raw:: html
+
+   <td>
+
+`mmfutils-fork Build
+Status <https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest>`__
+
+.. raw:: html
+
+   </td>
 
 .. raw:: html
 
@@ -55,67 +87,342 @@ in a notebook.
 
    </table>
 
+.. raw:: html
+
+   <h1>
+
 Table of Contents
-=================
 
--  `1. MMF Utils <#1.-MMF-Utils>`__
+.. raw:: html
 
-   -  `1.1 Installing <#1.1-Installing>`__
+   </h1>
 
--  `2. Usage <#2.-Usage>`__
+.. raw:: html
 
-   -  `2.1 Containers <#2.1-Containers>`__
+   <div class="toc">
 
-      -  `2.1.1 Object <#2.1.1-Object>`__
+.. raw:: html
 
-         -  `2.1.1.1 Object Example <#2.1.1.1-Object-Example>`__
+   <ul class="toc-item">
 
-      -  `2.1.2 Container <#2.1.2-Container>`__
+.. raw:: html
 
-         -  `2.1.2.1 Container Examples <#2.1.2.1-Container-Examples>`__
+   <li>
 
-   -  `2.2 Interfaces <#2.2-Interfaces>`__
+1  MMF Utils
 
-      -  `2.2.1 Interface
-         Documentation <#2.2.1-Interface-Documentation>`__
+.. raw:: html
 
-   -  `2.3 Parallel <#2.3-Parallel>`__
-   -  `2.4 Performance <#2.4-Performance>`__
-   -  `2.5 Plotting <#2.5-Plotting>`__
+   <ul class="toc-item">
 
-      -  `2.5.1 Fast Filled Contour
-         Plots <#2.5.1-Fast-Filled-Contour-Plots>`__
-      -  `2.5.2 Angular Variables <#2.5.2-Angular-Variables>`__
+.. raw:: html
 
-   -  `2.6 Debugging <#2.6-Debugging>`__
-   -  `2.7 Mathematics <#2.7-Mathematics>`__
+   <li>
 
--  `3. Developer Instructions <#3.-Developer-Instructions>`__
+1.1  Installing
 
-   -  `3.1 Releases <#3.1-Releases>`__
+.. raw:: html
 
--  `4. Change Log <#4.-Change-Log>`__
+   </li>
 
-   -  `4.1 REL: 0.4.7 <#4.1-REL:-0.4.7>`__
+.. raw:: html
 
-1.1 Installing
---------------
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2  Usage
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.1  Containers
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.1.1  Object
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.1.1.1  Object Example
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.1.2  Container
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.1.2.1  Container Examples
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.2  Contexts
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.3  Interfaces
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.3.1  Interface Documentation
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.4  Parallel
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.5  Performance
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.6  Plotting
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+2.6.1  Fast Filled Contour Plots
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.7  Angular Variables
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.8  Debugging
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+2.9  Mathematics
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+3  Developer Instructions
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+3.1  Releases
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4  Change Log
+
+.. raw:: html
+
+   <ul class="toc-item">
+
+.. raw:: html
+
+   <li>
+
+4.1  REL: 0.4.7
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   </ul>
+
+.. raw:: html
+
+   </div>
+
+Installing
+----------
 
 This package can be installed from `from the bitbucket
 project <https://bitbucket.org/mforbes/mmfutils>`__:
 
 .. code:: bash
 
-    pip install hg+https://bitbucket.org/mforbes/mmfutils
+   pip install hg+https://bitbucket.org/mforbes/mmfutils
 
-2. Usage
-========
+Usage
+=====
 
-2.1 Containers
---------------
+Containers
+----------
 
-2.1.1 Object
-~~~~~~~~~~~~
+Object
+~~~~~~
 
 The ``Object`` object provides a base class to satisfy the following
 use-case.
@@ -154,8 +461,8 @@ after restoring a pickle. A further use-case is to allow one to change
 many parameters, then reinitialize the object once with an explicit call
 to ``init()``.
 
-2.1.1.1 Object Example
-^^^^^^^^^^^^^^^^^^^^^^
+Object Example
+^^^^^^^^^^^^^^
 
 .. code:: ipython2
 
@@ -206,7 +513,7 @@ to ``init()``.
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
-let's do a calculation:
+let’s do a calculation:
 
 .. code:: ipython2
 
@@ -289,8 +596,8 @@ the ``persist`` package:
 
 
 
-2.1.2 Container
-~~~~~~~~~~~~~~~
+Container
+~~~~~~~~~
 
 The ``Container`` object is a slight extension of ``Object`` that
 provides a simple container for storing data with attribute and
@@ -323,8 +630,8 @@ These were designed with the following use cases in mind:
    ``ContainerList`` and ``ContainerDict`` will depend on subsequent
    usage. Containers can be converted from one type to another.
 
-2.1.2.1 Container Examples
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Container Examples
+^^^^^^^^^^^^^^^^^^
 
 .. code:: ipython2
 
@@ -395,7 +702,7 @@ These were designed with the following use cases in mind:
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-9-cbfd03ed340e> in <module>()
+    <ipython-input-9-c6cad315ac19> in <module>()
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print c1
     ----> 4 c1.large_temporary_array
@@ -404,8 +711,34 @@ These were designed with the following use cases in mind:
     AttributeError: 'Container' object has no attribute 'large_temporary_array'
 
 
-2.2 Interfaces
---------------
+Contexts
+--------
+
+The ``mmfutils.contexts`` module provides two useful contexts:
+
+``NoInterrupt``: This can be used to susspend ``KeyboardInterrupt``
+exceptions until they can be dealt with at a point that is convenient. A
+typical use is when performing a series of calculations in a loop. By
+placing the loop in a ``NoInterrupt`` context, one can avoid an
+interrupt from ruining a calculation:
+
+.. code:: ipython2
+
+    from mmfutils.contexts import NoInterrupt
+    
+    complete = False
+    n = 0
+    with NoInterrupt() as interrupted:
+        while not complete and not interrupted:
+            n += 1
+            if n > 10:
+                complete = True
+
+Note: One can nest ``NoInterrupt`` contexts so that outer loops are also
+interrupted.
+
+Interfaces
+----------
 
 The interfaces module collects some useful
 `zope.interface <http://docs.zope.org/zope.interface/>`__ tools for
@@ -503,8 +836,8 @@ Finally, a working instance:
 
 
 
-2.2.1 Interface Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Interface Documentation
+~~~~~~~~~~~~~~~~~~~~~~~
 
 We also monkeypatch ``zope.interface.documentation.asStructuredText()``
 to provide a mechanism for documentating interfaces in a notebook.
@@ -523,8 +856,8 @@ to provide a mechanism for documentating interfaces in a notebook.
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
-    <title></title>
+    <meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
+    <title>&lt;string&gt;</title>
     
     <div class="document">
     
@@ -544,8 +877,8 @@ to provide a mechanism for documentating interfaces in a notebook.
 
 
 
-2.3 Parallel
-------------
+Parallel
+--------
 
 The ``mmfutils.parallel`` module provides some tools for launching and
 connecting to IPython clusters. The ``parallel.Cluster`` class
@@ -571,8 +904,21 @@ profile name, and can be started or stopped from this class:
 
 .. parsed-literal::
 
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
+
+
+.. parsed-literal::
+
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-    WARNING:root:No ipcontroller-client.json, waiting...
+
+
+.. parsed-literal::
+
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
+
+
+.. parsed-literal::
+
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
@@ -582,6 +928,7 @@ profile name, and can be started or stopped from this class:
 .. parsed-literal::
 
     True
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
 
 
 If you only need a cluster for a single task, it can be managed with a
@@ -599,8 +946,21 @@ the context and shutting down the cluster!
 
 .. parsed-literal::
 
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
+
+
+.. parsed-literal::
+
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-    WARNING:root:No ipcontroller-client.json, waiting...
+
+
+.. parsed-literal::
+
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
+
+
+.. parsed-literal::
+
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
@@ -609,14 +969,15 @@ the context and shutting down the cluster!
 
 .. parsed-literal::
 
+    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
     True
 
 
 If you just need to connect to a running cluster, you can use
 ``parallel.get_client()``.
 
-2.4 Performance
----------------
+Performance
+-----------
 
 The ``mmfutils.performance`` module provides some tools for high
 performance computing. Note: this module requires some additional
@@ -624,7 +985,7 @@ packages including
 `numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
 `pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
 package installed by anaconda. Some of these require building system
-libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
 various components will not be imported by default.
 
 Here is a brief description of the components:
@@ -636,27 +997,26 @@ Here is a brief description of the components:
    Also enables the planning cache and setting threads so you can better
    control your performance.
 -  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don't do this carefully, it will crash
-   your program so fast you won't even get a traceback.)
+   disabling the VML. (If you don’t do this carefully, it will crash
+   your program so fast you won’t even get a traceback.)
 -  ``mmfutils.performance.threads``: Provides some hooks for setting the
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
 
-2.5 Plotting
-------------
+Plotting
+--------
 
 Several tools are provided in ``mmfutils.plot``:
 
-2.5.1 Fast Filled Contour Plots
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Fast Filled Contour Plots
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
-function, but uses ``plt.imshow`` which is much faster. This has
-limitations – the data must be equally spaced for example, and it
-effectively has as many contours as colours – but is useful for
-animations and interactive work. It also supports my idea of saner
-array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
-then it will match these to the shape of ``z``).
+``mmfutils.plot.imcontourf`` is similar to matplotlib’s ``plt.contourf``
+function, but uses ``plt.imshow`` which is much faster. This is useful
+for animations and interactive work. It also supports my idea of saner
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+then it will match these to the shape of ``z``). Matplotlib now provies
+``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
 .. code:: ipython2
 
@@ -665,43 +1025,46 @@ then it will match these to the shape of ``z``).
     import time
     import numpy as np
     from mmfutils import plot as mmfplt
-    x = np.linspace(-1, 1, 100)[:, None]
-    y = np.linspace(-0.1, 0.1, 200)[None, :]
+    x = np.linspace(-1, 1, 100)[:, None]**3
+    y = np.linspace(-0.1, 0.1, 200)[None, :]**3
     z = np.sin(10*x)*y**2
-    plt.subplot(121)
-    %time mmfplt.imcontourf(x, y, z)
-    plt.subplot(122)
+    plt.figure(figsize=(12,3))
+    plt.subplot(141)
+    %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
+    plt.subplot(142)
     %time plt.contourf(x.ravel(), y.ravel(), z.T, 50, cmap='gist_heat')
+    plt.subplot(143)
+    %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat')
+    plt.subplot(144)
+    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat')
 
 
 .. parsed-literal::
 
-    CPU times: user 1.05 ms, sys: 54 µs, total: 1.11 ms
-    Wall time: 1.11 ms
-    CPU times: user 38.2 ms, sys: 1.25 ms, total: 39.4 ms
-    Wall time: 39.4 ms
+    CPU times: user 9.77 ms, sys: 50 µs, total: 9.82 ms
+    Wall time: 9.86 ms
+    CPU times: user 43.5 ms, sys: 1.19 ms, total: 44.6 ms
+    Wall time: 44.7 ms
+    CPU times: user 426 ms, sys: 34.1 ms, total: 460 ms
+    Wall time: 450 ms
+    CPU times: user 2.39 ms, sys: 346 µs, total: 2.73 ms
+    Wall time: 2.74 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.contour.QuadContourSet instance at 0x115216c20>
+    <matplotlib.collections.QuadMesh at 0x1209acd10>
 
 
 
-.. parsed-literal::
 
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/matplotlib/collections.py:590: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-      if self._edgecolors == str('face'):
+.. image:: README_files/README_54_2.png
 
 
-
-.. image:: README_files/README_50_3.png
-
-
-2.5.2 Angular Variables
-~~~~~~~~~~~~~~~~~~~~~~~
+Angular Variables
+-----------------
 
 A couple of tools are provided to visualize angular fields, such as the
 phase of a complex wavefunction.
@@ -723,7 +1086,7 @@ phase of a complex wavefunction.
     
     # This is a little slow but allows you to vary the luminosity.
     plt.subplot(132).set_aspect(1)
-    mmfplt.imcontourf(x, y, mmfplt.color_complex(z), aspect=1)
+    mmfplt.imcontourf(x, y, mmfplt.colors.color_complex(z), aspect=1)
     mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
     
     # This is faster if you just want to show the phase and allows
@@ -734,27 +1097,21 @@ phase of a complex wavefunction.
     mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
 
 
-.. parsed-literal::
-
-    /data/apps/anaconda/envs/work/lib/python2.7/site-packages/matplotlib/collections.py:650: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-      if self._edgecolors_original != str('face'):
-
-
 
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet instance at 0x115f66d88>,
-     <matplotlib.contour.QuadContourSet instance at 0x115f8d950>)
+    (<matplotlib.contour.QuadContourSet at 0x11558d8d0>,
+     <matplotlib.contour.QuadContourSet at 0x115630b10>)
 
 
 
 
-.. image:: README_files/README_53_2.png
+.. image:: README_files/README_57_1.png
 
 
-2.6 Debugging
--------------
+Debugging
+---------
 
 A couple of debugging tools are provided. The most useful is the
 ``debug`` decorator which will store the local variables of a function
@@ -778,15 +1135,15 @@ in a dictionary or in your global scope.
     (1.0, 2.0, 2.8284271247461903, 1.0)
 
 
-2.7 Mathematics
----------------
+Mathematics
+-----------
 
 We include a few mathematical tools here too. In particular, numerical
 integration and differentiation. Check the API documentation for
 details.
 
-3. Developer Instructions
-=========================
+Developer Instructions
+======================
 
 If you are a developer of this package, there are a few things to be
 aware of.
@@ -799,7 +1156,7 @@ aware of.
 
    ::
 
-       %include ../.hgrc
+      %include ../.hgrc
 
 **Security Warning:** if you do this, be sure to inspect the ``.hgrc``
 file carefully to make sure that no one inserts malicious code.
@@ -808,7 +1165,7 @@ This runs the following code:
 
 .. code:: ipython2
 
-    !cd $ROOTDIR; ipython nbconvert --to=rst --output=README.rst doc/README.ipynb
+    !cd $ROOTDIR; jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 
 
 .. parsed-literal::
@@ -821,7 +1178,7 @@ This runs the following code:
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
-fail if any of these do not pass, or if we don't have complete code
+fail if any of these do not pass, or if we don’t have complete code
 coverage. This uses
 `nosetests <https://nose.readthedocs.org/en/latest/>`__ and
 `flake8 <http://flake8.readthedocs.org>`__. To run individal tests do
@@ -829,10 +1186,10 @@ one of:
 
 .. code:: bash
 
-    python setup.py nosetests
-    python setup.py flake8
-    python setup.py check
-    python setup.py test   # This runs them all using a custom command defined in setup.py
+   python setup.py nosetests
+   python setup.py flake8
+   python setup.py check
+   python setup.py test   # This runs them all using a custom command defined in setup.py
 
 Here is an example:
 
@@ -1238,12 +1595,12 @@ Complete code coverage information is provided in
 
 
 
-3.1 Releases
-------------
+Releases
+--------
 
 We try to keep the repository clean with the following properties:
 
-1. The default branch is stable: i.e. if someone runs ``hg clone``, this
+1. The default branch is stable: i.e. if someone runs ``hg clone``, this
    will pull the latest stable release.
 2. Each release has its own named branch so that e.g. ``hg up 0.4.6``
    will get the right thing. Note: this should update to the development
@@ -1259,22 +1616,22 @@ To do this, we advocate the following proceedure.
 2. **Work**: Do your work, committing as required with messages as shown
    in the repository with the following keys:
 
--  ``DOC``: Documentation changes.
--  ``API``: Changes to the exising API. This could break old code.
--  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
-   these should not break existing codes.
--  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
-   etc.)
--  ``TST``: Update tests, code coverage, etc.
--  ``BUG``: Address an issue as filed on the issue tracker.
--  ``BRN``: Start a new branch (see below).
--  ``REL``: Release (see below).
--  ``WIP``: Work in progress. Do not depend on these! They will be
-   stripped. This is useful when testing things like the rendering of
-   documentation on bitbucket etc. where you need to push an incomplete
-   set of files. Please collapse and strip these eventually when you get
-   things working.
--  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
+   -  ``DOC``: Documentation changes.
+   -  ``API``: Changes to the exising API. This could break old code.
+   -  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
+      these should not break existing codes.
+   -  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
+      etc.)
+   -  ``TST``: Update tests, code coverage, etc.
+   -  ``BUG``: Address an issue as filed on the issue tracker.
+   -  ``BRN``: Start a new branch (see below).
+   -  ``REL``: Release (see below).
+   -  ``WIP``: Work in progress. Do not depend on these! They will be
+      stripped. This is useful when testing things like the rendering of
+      documentation on bitbucket etc. where you need to push an
+      incomplete set of files. Please collapse and strip these
+      eventually when you get things working.
+   -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
 3. **``python setup.py test``**: Make sure the tests pass. (``hg com``
    will do this automatically if you have linked the ``.hgrc`` file as
@@ -1285,31 +1642,41 @@ To do this, we advocate the following proceedure.
    cd doc sphinx-apidoc -eTE ../mmfutils -o source rm
    source/mmfutis.tests.\*
 
-Edit any new files created (titles often need to be added) and check
-that this looks good with
+   Edit any new files created (titles often need to be added) and check
+   that this looks good with
 
-::
+   make html open build/html/index.html
 
-     make html
-     open build/html/index.html
-     
+   Look especially for errors of the type
+   ``WARNING: document isn't included in any toctree``. This indicates
+   that you probably need to add the module to an upper level
+   ``.. toctree::``. Also look for
+   ``WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated``.
+   This indicates you need to add a title to a new file. For example,
+   when I added the ``mmf.math.optimize`` module, I needed to update the
+   following:
 
-Look especially for errors of the type
-``WARNING: document isn't included in any toctree``. This indicates that
-you probably need to add the module to an upper level ``.. toctree::``.
-Also look for
-``WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated``.
-This indicates you need to add a title to a new file. For example, when
-I added the ``mmf.math.optimize`` module, I needed to update the
-following:
+.. code:: rst
 
-\`\`\`rst .. doc/source/mmfutils.rst mmfutils ========
+      .. doc/source/mmfutils.rst
+      mmfutils
+      ========
+      
+      .. toctree::
+          ...
+          mmfutils.optimize
+          ...
 
-.. toctree:: ... mmfutils.optimize ... ````\ rst ..
-doc/source/mmfutils.optimize.rst mmfutils.optimize =================
+.. code:: rst
 
-.. automodule:: mmfutils.optimize :members: :undoc-members:
-:show-inheritance: \`\`\`
+      .. doc/source/mmfutils.optimize.rst
+      mmfutils.optimize
+      =================
+          
+      .. automodule:: mmfutils.optimize
+          :members:
+          :undoc-members:
+          :show-inheritance:
 
 5. **``hg histedit``**: (or ``hg rebase``, or ``hg strip`` as needed)
    Clean up the repo before you push. Branches should generally be
@@ -1319,7 +1686,11 @@ doc/source/mmfutils.optimize.rst mmfutils.optimize =================
    Commit only this change and then push only the branch you are working
    on:
 
-   hg com -m "REL: " hg push -b .
+   ::
+
+      hg com -m "REL: <version>"
+      hg push -b .
+
 7. Create a pull request on the development fork from your branch to
    ``default`` on the release project bitbucket. Review it, fix
    anything, then accept the PR and close the branch.
@@ -1327,24 +1698,26 @@ doc/source/mmfutils.optimize.rst mmfutils.optimize =================
    ``default``), increase the version number in ``mmfutils/__init__.py``
    and add ``dev``: i.e.:
 
-   **version** = '0.4.7dev'
+   ::
+
+      __version__ = '0.4.7dev'
 
 Then create this branch and commit this:
 
 ::
 
-       hg branch "0.4.7"
-       hg com -m "BRN: Started branch 0.4.7"
+      hg branch "0.4.7"
+      hg com -m "BRN: Started branch 0.4.7"
 
 9.  Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
 10. Optional: Update any ``setup.py`` files that depend on your new
     features/fixes etc.
 
-4. Change Log
-=============
+Change Log
+==========
 
-4.1 REL: 0.4.7
---------------
+REL: 0.4.7
+----------
 
 API changes:
 
