@@ -1639,13 +1639,22 @@ To do this, we advocate the following proceedure.
 4. **Update Docs**: Update the documentation if needed. To generate new
    documentation run:
 
-   cd doc sphinx-apidoc -eTE ../mmfutils -o source rm
-   source/mmfutis.tests.\*
+   .. code:: bash
+
+      cd doc
+      sphinx-apidoc -eTE ../mmfutils -o source
+      rm source/mmfutis.tests.*
+
+   Include any changes at the bottom of this file
+   (``doc/README.ipynb``).
 
    Edit any new files created (titles often need to be added) and check
    that this looks good with
 
-   make html open build/html/index.html
+   .. code:: bash
+
+      make html
+      open build/html/index.html
 
    Look especially for errors of the type
    ``WARNING: document isn't included in any toctree``. This indicates
@@ -1686,7 +1695,7 @@ To do this, we advocate the following proceedure.
    Commit only this change and then push only the branch you are working
    on:
 
-   ::
+   .. code:: bash
 
       hg com -m "REL: <version>"
       hg push -b .
