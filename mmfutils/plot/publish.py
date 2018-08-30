@@ -138,7 +138,7 @@ class Paper(object):
             name = meth
             meth = getattr(self, name)
         elif inspect.ismethod(meth):
-            name = meth.im_func.func_name
+            name = meth.__name__
         print("Drawing figure: %s()" % (name,))
         fig = meth(*v, **kw)
         if fig.tight_layout:
@@ -707,7 +707,7 @@ class Figure(Object):
         try:
             _max_adjust = 10
             adjusted = False
-            for _n in xrange(_max_adjust):
+            for _n in range(_max_adjust):
                 adjusted = self._adjust(logger=logger)
                 if adjusted:
                     fig.canvas.draw()

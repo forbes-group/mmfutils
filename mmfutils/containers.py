@@ -197,7 +197,7 @@ class Container(Object, collections.Sized, collections.Iterable,
                 # assume dict-like
                 self.__dict__.update(obj)
                 if isinstance(obj, collections.Sequence):
-                    self.picklable_attributes = list(zip(*obj)[0])
+                    self.picklable_attributes = list(list(zip(*obj))[0])
                     self.picklable_attributes.extend(
                         _k for _k in kw if _k not in self.__dict__)
 

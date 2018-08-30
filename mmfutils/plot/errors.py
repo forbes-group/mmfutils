@@ -30,7 +30,7 @@ def plot_errorbars(x, y, dx=None, dy=None, colour='', linestyle='',
         ymax = y + dy
         ymin = y - dy
 
-    for n in xrange(len(x)):
+    for n in range(len(x)):
         if dx is not None:
             plt.plot([xmin[n], xmax[n]], [y[n], y[n]],
                      '-|' + colour, lw=barwidth)
@@ -62,7 +62,7 @@ def plot_err(x, y, yerr=None, xerr=None, **kwarg):
         if yerr is not None:
             yerr = yerr.swapaxes(0, plot_axis)
         Nx, Ny = y.shape
-        for n in xrange(Ny):
+        for n in range(Ny):
             if yerr is None:
                 plt.errorbar(x, y[:, n], xerr=xerr, **kwarg)
             else:

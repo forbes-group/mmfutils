@@ -401,7 +401,7 @@ class CartesianBasis(PeriodicBasis):
             for F in form_factors:
                 C = C * F(k)
             dV = self.ifftn(C * self.fftn(y - resample(y0, N)))
-            if np.issubdtype(V.dtype, complex):
+            if np.issubdtype(V.dtype, np.complex128):
                 V += dV
             else:
                 assert np.allclose(0, V.imag)
@@ -458,7 +458,7 @@ class CartesianBasis(PeriodicBasis):
                 y_delta = (exp_delta.conj() * y)
                 k = np.sqrt(sum((_k + _d)**2 for _k, _d in zip(K, delta)))
                 dV = (exp_delta * self.ifftn(C(k) * self.fftn(y_delta)))
-                if np.issubdtype(V.dtype, complex):
+                if np.issubdtype(V.dtype, np.complex128):
                     V += dV
                 else:
                     assert np.allclose(0, V.imag)
@@ -472,13 +472,13 @@ class CartesianBasis(PeriodicBasis):
             shape_padded = shape.copy()
             shape_padded[-dim:] = N_padded
             y_padded = np.zeros(shape_padded, dtype=y.dtype)
-            inds = [slice(0, _N) for _N in shape]
+            inds = tuple(slice(0, _N) for _N in shape)
             y_padded[inds] = y
             k = np.sqrt(
                 sum(_K**2 for _K in get_kxyz(N_padded, L_padded)))
 
             # This broadcasts to the appropriate size
-            b_cast = [None] * (dim - len(N)) + [slice(None)]*dim
+            b_cast = (None,) * (dim - len(N)) + (slice(None),)*dim
             return self.ifftn(C(k)[b_cast] * self.fftn(y_padded))[inds]
         else:
             raise NotImplementedError(
@@ -849,7 +849,7 @@ class CylindricalBasis(Object, BasisMixin):
         shape = [None] * len(n.shape)
         shape[x_axis] = slice(None)
         shape[r_axis] = slice(None)
-        return ((2*np.pi*r * self.weights)[shape] * n).sum(axis=r_axis)
+        return ((2*np.pi*r * self.weights)[tuple(shape)] * n).sum(axis=r_axis)
 
 
 classImplements(CylindricalBasis, IBasis, IBasisKx)

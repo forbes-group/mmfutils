@@ -104,9 +104,9 @@ if zope:
                     outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
 
             return "\n\n".join(r) + "\n\n"
-
-            logging.info(
-                "Patching zope.interface.document.asReStructuredText to format code")
+        
+        logging.info(
+            "Patching zope.interface.document.asReStructuredText to format code")
         zope.interface.document.asReStructuredText = asReStructuredText
     
 
@@ -190,7 +190,7 @@ def describe_interface(interface, format='ipython'):
     if format.lower() == 'rst':
         return rst
 
-    html = core.publish_string(rst, writer=writer)
+    html = core.publish_string(rst, writer=writer).decode()
     if format.lower() == 'html':
         return html
 

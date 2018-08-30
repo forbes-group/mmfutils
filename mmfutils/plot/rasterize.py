@@ -37,6 +37,7 @@ def contourf(*v, **kw):
     `rasterized` keyword."""
     was_interactive = matplotlib.is_interactive()
     matplotlib.interactive(False)
+    rasterized = kw.pop('rasterized', None)
     contour_set = plt.contourf(*v, **kw)
     figure = plt.gcf()
     for _c in contour_set.collections:
@@ -44,7 +45,7 @@ def contourf(*v, **kw):
         _c.set_figure(figure)
     collection = ListCollection(
         contour_set.collections,
-        rasterized=kw.get('rasterized', None))
+        rasterized=rasterized)
     ax = plt.gca()
     ax.add_artist(collection)
     matplotlib.interactive(was_interactive)

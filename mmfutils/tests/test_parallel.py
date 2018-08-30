@@ -27,7 +27,7 @@ class TestCluster(object):
         cls.cluster1.start()
 
         with tempfile.NamedTemporaryFile(delete=False) as nodefile:
-            nodefile.write("\n".join(['localhost']*3))
+            nodefile.write(b"\n".join([b'localhost']*3))
             nodefile.close()
 
         # Now start a cluster with nodes in PBS_NODEFILE

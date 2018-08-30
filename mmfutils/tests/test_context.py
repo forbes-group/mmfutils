@@ -38,7 +38,7 @@ class TestNoInterrupt(object):
         with pytest.raises(KeyboardInterrupt):
             with NoInterrupt(ignore=False) as interrupted:
                 m = -1
-                for n in xrange(10):
+                for n in range(10):
                     if n == 5:
                         os.kill(os.getpid(), signal.SIGINT)
                     if interrupted:

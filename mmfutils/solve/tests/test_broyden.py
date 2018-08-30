@@ -61,12 +61,12 @@ class TestDyadicSum(object):
         """Test error messages"""
         with pytest.raises(ValueError) as e:
             broyden.DyadicSum(n_max=2, use_svd=False)
-        assert e.value.message == 'Finite `n_max=2` requires `svd=True`.'
+        assert e.value.args[0] == 'Finite `n_max=2` requires `svd=True`.'
 
         s = broyden.DyadicSum()
         with pytest.raises(ValueError) as e:
             s['x']
-        assert (e.value.message ==
+        assert (e.value.args[0] ==
                 "DyadicSum only supports two-dimensional indexing.  Got 'x'")
         
         a = np.random.random((4, 6))
@@ -74,7 +74,7 @@ class TestDyadicSum(object):
         s = broyden.DyadicSum(n_max=np.inf)
         with pytest.raises(ValueError) as e:
             s.add_dyad(a.T, b)
-        assert (e.value.message ==
+        assert (e.value.args[0] ==
                 "If sigma==None, a and b must have same length. Got 4 and 5.")
 
     def test_rectangular(self):
