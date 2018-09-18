@@ -1,5 +1,6 @@
 """Various useful contexts.
 """
+import functools
 import signal
 import time
 
@@ -48,7 +49,7 @@ class NoInterrupt(object):
     >>> n = [0, 0]
     >>> try:  # All doctests need to be wrapped in try blocks to not kill py.test!
     ...     f(n)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n
@@ -57,17 +58,17 @@ class NoInterrupt(object):
     Now we protect the loop from interrupts.
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n
     [10, 10]
 
-    One can ignore the exception if desired:
+    One can ignore the exception if desired (this is the default as of 0.4.11):
     >>> n = [0, 0]
-    >>> with NoInterrupt(ignore=True) as interrupted:
+    >>> with NoInterrupt() as interrupted:
     ...     f(n)
     >>> n
     [10, 10]
@@ -77,9 +78,9 @@ class NoInterrupt(object):
     really need to stop the process.
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, force=True)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt: Interrupt forced
     >>> n
@@ -91,9 +92,9 @@ class NoInterrupt(object):
 
     >>> n = [0, 0]
     >>> try:
-    ...     with NoInterrupt() as interrupted:
+    ...     with NoInterrupt(ignore=False) as interrupted:
     ...         f(n, interrupted)
-    ... except KeyboardInterrupt, err:
+    ... except KeyboardInterrupt as err:
     ...     print("KeyboardInterrupt: {}".format(err))
     KeyboardInterrupt:
     >>> n
@@ -101,7 +102,7 @@ class NoInterrupt(object):
 
     Again: the exception can be ignored
     >>> n = [0, 0]
-    >>> with NoInterrupt(ignore=True) as interrupted:
+    >>> with NoInterrupt() as interrupted:
     ...     f(n, interrupted)
     >>> n
     [5, 5]
@@ -164,7 +165,7 @@ class NoInterrupt(object):
                     cls._force_timeout > (cls._signals_raised[-1][-1] -
                                           cls._signals_raised[-3][-1]))
 
-    def __init__(self, ignore=False):
+    def __init__(self, ignore=True):
         self.ignore = ignore
         NoInterrupt._instances.add(self)
         self.catch_signals()
@@ -189,6 +190,108 @@ class NoInterrupt(object):
                         raise KeyboardInterrupt()
 
     @classmethod
-    def __nonzero__(cls):
+    def __bool__(cls):
         with cls._lock:
             return bool(cls._signals_raised)
+
+    __nonzero__ = __bool__      # For python 2.
+
+
+class CoroutineWrapper(object):
+    """Wrapper for coroutine contexts that allows them to function as a context
+    but also as a function.  Similar to open() which may be used both in a
+    function or as a file object.  Note: be sure to call close() if you do not
+    use this as a context.
+    """
+    def __init__(self, coroutine):
+        self.coroutine = coroutine
+        self.started = False
+
+    def __enter__(self, *v, **kw):
+        self.res = next(self.coroutine)   # Prime the coroutine
+        self.started = True
+        return self.send
+
+    def __exit__(self, type, value, tb):
+        self.close()
+        return
+
+    def send(self, *v):
+        self.res = self.coroutine.send(*v)
+        return self.res
+
+    def __call__(self, *v):
+        if not self.started:
+            self.__enter__()
+        return self.send(*v)
+
+    def close(self):
+        self.coroutine.close()
+
+
+def coroutine(coroutine):
+    """Decorator for a context that yeilds an function from a coroutine.
+
+    This allows you to write functions that maintain state between calls.  The
+    use as a context here ensures that the coroutine is closed.
+
+    Examples
+    --------
+    Here is an example based on that suggested by Thomas Kluyver:
+    http://takluyver.github.io/posts/readable-python-coroutines.html
+
+    >>> @coroutine
+    ... def get_have_seen(case_sensitive=False):
+    ...     seen = set()    # Set of words already seen.  This is the "state"
+    ...     word = (yield)
+    ...     while True:
+    ...         if not case_sensitive:
+    ...             word = word.lower()
+    ...         result = word in seen
+    ...         seen.add(word)
+    ...         word = (yield result)
+    >>> with get_have_seen(case_sensitive=False) as have_seen:
+    ...     print(have_seen("hello"))
+    ...     print(have_seen("hello"))
+    ...     print(have_seen("Hello"))
+    ...     print(have_seen("hi"))
+    ...     print(have_seen("hi"))
+    False
+    True
+    True
+    False
+    True
+    >>> have_seen("hi")
+    Traceback (most recent call last):
+       ...
+    StopIteration
+
+    You can also use this as a function (like open()) but don't forget to close
+    it.
+    >>> have_seen = get_have_seen(case_sensitive=True)
+    >>> have_seen("hello")
+    False
+    >>> have_seen("hello")
+    True
+    >>> have_seen("Hello")
+    False
+    >>> have_seen("hi")
+    False
+    >>> have_seen("hi")
+    True
+    >>> have_seen.close()
+    >>> have_seen("hi")
+    Traceback (most recent call last):
+       ...
+    StopIteration
+
+    """
+    # @contextlib.contextmanager
+    @functools.wraps(coroutine)
+    def wrapper(*v, **kw):
+        return CoroutineWrapper(coroutine(*v, **kw))
+        # primed_coroutine = coroutine(*v, **kw)
+        # next(primed_coroutine)
+        # yield primed_coroutine.send
+        # primed_coroutine.close()
+    return wrapper

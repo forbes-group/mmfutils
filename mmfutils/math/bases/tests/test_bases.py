@@ -28,7 +28,7 @@ del scipy
 
 
 class ExactGaussian(object):
-    def __init__(self, r, A=1.0, factor=1.0, r_0=1.0, d=1.0):
+    def __init__(self, r, A=1.1, factor=1.0, r_0=1.0, d=1.0):
         self.r = r
         self.A = A
         self.factor = factor
@@ -45,6 +45,16 @@ class ExactGaussian(object):
         return self.get_y()
 
     @property
+    def n(self):
+        """Exact density"""
+        return abs(self.y)**2
+
+    @property
+    def N_3D(self):
+        """Exact total particle number in 3D."""
+        return self.r_0**3 * np.pi**(3./2.) * self.A**2
+    
+    @property
     def d2y(self):
         """Exact Laplacian with factor"""
         return (self.factor * self.y *
@@ -60,9 +70,15 @@ class ExactGaussian(object):
         r_0 = np.sqrt(self.r_0**2 + 2*self.factor)
         return (self.r_0/r_0)**self.d * self.get_y(r_0=r_0)
 
+    @property
+    def convolution(self):
+        """Exact convolution of the Gaussian with itself."""
+        return (self.A**2 * self.r_0**3 * np.pi**(3./2.)
+                * np.exp(-(self.r/self.r_0)**2/4.0))
+
 
 class ExactGaussianQuart(ExactGaussian):
-    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    """In order to test the k2 and kx2 option of the laplacian for Periodic
     bases, we add a quartic term $k^2 + (k^2)^2$.
     """
     @property
@@ -84,7 +100,7 @@ class ExactGaussianQuart(ExactGaussian):
 
 
 class ExactGaussianQuartCyl(ExactGaussian):
-    """In order to test the _k2 and _kx2 option of the laplacian for Periodic
+    """In order to test the k2 and kx2 option of the laplacian for Periodic
     bases, we add a quartic term $k^2 + (k^2)^2$.
     """
     def __init__(self, x, r, A=1.0, factor=1.0, r_0=1.0):
@@ -204,7 +220,7 @@ class TestSphericalBasis(ConvolutionTests):
     @classmethod
     def setup_class(cls):
         cls.Basis = bases.SphericalBasis
-        cls.basis = bases.SphericalBasis(N=32, R=15.0)
+        cls.basis = bases.SphericalBasis(N=32*2, R=15.0)
         cls.Q = 8.0
         cls.exact = ExactGaussian(
             r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
@@ -283,7 +299,7 @@ class TestPeriodicBasis(ConvolutionTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
@@ -296,7 +312,7 @@ class TestPeriodicBasis(ConvolutionTests):
         exact = self.exact
         for exact.A in [(0.5+0.5j), exact.A]:
             dy = get_gradient(exact.y)
-            dy_exact = map(exact.get_dy, xyz)
+            dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
 
@@ -392,7 +408,7 @@ class TestCartesianBasis(ConvolutionTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _k2=_k2)
+                ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
@@ -405,7 +421,7 @@ class TestCartesianBasis(ConvolutionTests):
         exact = self.exact
         for exact.A in [(0.5+0.5j), exact.A]:
             dy = get_gradient(exact.y)
-            dy_exact = map(exact.get_dy, xyz)
+            dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
 
@@ -432,10 +448,10 @@ class TestCylindricalBasis(LaplacianTests):
         b = self.basis
         x, r = b.xyz
         R = self.R
-        for _m in xrange(self.Nm):
+        for _m in range(self.Nm):
             Fm = b._F(_m, R)
             assert np.allclose(np.trapz(abs(Fm)**2, R), 1.0, rtol=1e-3)
-            for _n in xrange(_m+1, self.Nn):
+            for _n in range(_m+1, self.Nn):
                 Fn = b._F(_n, R)
                 assert np.allclose(np.trapz(Fm.conj()*Fn, R), 0.0, atol=1e-3)
 
@@ -444,7 +460,7 @@ class TestCylindricalBasis(LaplacianTests):
         b = self.basis
         x, r = b.xyz
         R = self.R + 0.1        # Derivatives are singular at origin
-        for _m in xrange(self.Nm):
+        for _m in range(self.Nm):
             F = b._F(_m, R)
             dF = b._F(_m, R, d=1)
 
@@ -467,7 +483,7 @@ class TestCylindricalBasis(LaplacianTests):
         exact = self.exact_quart
         for exact.factor in [(0.5+0.5j), exact.factor]:
             for exact.A in [(0.5+0.5j), exact.A]:
-                ddy = laplacian(exact.y, factor=exact.factor, _kx2=_kx2)
+                ddy = laplacian(exact.y, factor=exact.factor, kx2=_kx2)
                 assert np.allclose(ddy, exact.d2y)
 
                 # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
@@ -483,6 +499,15 @@ class TestCylindricalBasis(LaplacianTests):
             dy_exact = exact.get_dy(x)
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
+    def test_integrate1(self):
+        x, r = self.basis.xyz
+        n = abs(self.exact.y)**2
+        assert np.allclose((self.basis.metric*n).sum(), self.exact.N_3D)
+        n_1D = self.basis.integrate1(n).ravel()
+        r0 = self.exact.r_0
+        n_1D_exact = self.exact.A**2*(np.pi*r0**2*np.exp(-x**2/r0**2)).ravel()
+        assert np.allclose(n_1D, n_1D_exact)
+        
 
 class TestCoverage(object):
     """Walk down some error branches for coverage."""

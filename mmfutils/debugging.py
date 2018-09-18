@@ -5,6 +5,8 @@ Most of these are implemented as decorators.
 from __future__ import absolute_import, division, print_function
 import sys
 
+from six import reraise as raise_
+
 __all__ = ['persistent_locals', 'debug']
 
 # Default location
@@ -23,8 +25,8 @@ class persistent_locals(object):
     ...     return z
     >>> f(1)
     2
-    >>> f.locals
-    {'y': 1, 'x': 1, 'z': 2}
+    >>> sorted(f.locals.items())
+    [('x', 1), ('y', 1), ('z', 2)]
     >>> f.clear_locals()
     >>> f.locals
     {}
@@ -75,8 +77,8 @@ def debug(*v, **kw):
     ...     return z
     >>> f(1)
     2
-    >>> env
-    {'y': 1, 'x': 1, 'z': 2}
+    >>> sorted(env.items())
+    [('x', 1), ('y', 1), ('z', 2)]
 
     This will put the local variables directly in the global scope:
 
@@ -110,8 +112,8 @@ def debug(*v, **kw):
       File "<doctest mmfutils.debugging.debug[13]>", line 4, in f
         z = 2/y
     ZeroDivisionError: division by zero
-    >>> print(env)
-    {'y': 0, 'x': 0}
+    >>> sorted(env.items())
+    [('x', 0), ('y', 0)]
     """
     func = None
     env = kw.get('locals', kw.get('env', _LOCALS))
@@ -136,10 +138,10 @@ def debug(*v, **kw):
         def __call__(self, *v, **kw):
             try:
                 res = self.func(*v, **kw)
-            except Exception, e:
+            except Exception as e:
                 # Remove two levels of the traceback so we don't see the
                 # decorator junk.
-                raise e, None, sys.exc_info()[2].tb_next.tb_next
+                raise_(e.__class__, e, sys.exc_info()[2].tb_next.tb_next)
             finally:
                 self.env.update(self.func.locals)
                 self.func.clear_locals()

@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pickle
 
 from mmfutils.containers import Object, Container, ContainerList, ContainerDict
@@ -134,7 +136,7 @@ class TestPersist(object):
         a.insert(o=o)
 
         d = {}
-        exec str(a) in d
+        exec(str(a), d)
         o1 = d['o']
 
         assert repr(o) == repr(o1)
@@ -149,7 +151,7 @@ class Issue4(ContainerDict):
     --------
     >>> i = Issue4(a=6)
     >>> i.a, i.b
-    (6, 3)
+    (6, 3.0)
     >>> i
     Issue4(a=6, b=None)
 

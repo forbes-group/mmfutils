@@ -9,7 +9,7 @@ import pytest
 
 from mmfutils.parallel import Cluster, get_cluster, ipyparallel
 
-import parallel_module
+from . import parallel_module
 
 
 class TestCluster(object):
@@ -27,7 +27,7 @@ class TestCluster(object):
         cls.cluster1.start()
 
         with tempfile.NamedTemporaryFile(delete=False) as nodefile:
-            nodefile.write("\n".join(['localhost']*3))
+            nodefile.write(b"\n".join([b'localhost']*3))
             nodefile.close()
 
         # Now start a cluster with nodes in PBS_NODEFILE

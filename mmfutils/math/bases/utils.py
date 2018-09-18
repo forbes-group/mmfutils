@@ -54,9 +54,10 @@ def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
        typically the case for performance).
     """
     xyz = []
-    _offset = 0.5 if symmetric_lattice else 0
+    # Special case for N = 1 should also always be centered
+    _offsets = [0.5 if symmetric_lattice or _N == 1 else 0 for _N in Nxyz]
     xyz = ndgrid(*[_l/_n * (np.arange(-_n/2, _n/2) + _offset)
-                   for _n, _l in zip(Nxyz, Lxyz)])
+                   for _n, _l, _offset in zip(Nxyz, Lxyz, _offsets)])
     return xyz
 
 

@@ -35,8 +35,8 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['scipy', 'matplotlib',
                 'scipy.fftpack', 'scipy.integrate', 'scipy.interpolate',
-                'scipy.linalg', 'scipy.weave',
-                'matplotlib.cm', 'matplotlib.colors']
+                'scipy.linalg', 'scipy.weave', 'scipy.special', 'scipy.stats',
+                'matplotlib.cm', 'matplotlib.colors', 'matplotlib.collections']
 sys.modules.update((_name, Mock()) for _name in MOCK_MODULES)
 
 # Unfortunately, the following fails... not sure how to fix

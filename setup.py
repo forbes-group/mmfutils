@@ -29,6 +29,7 @@ setup_requires = [
 install_requires = [
     "zope.interface>=3.8.0",
     'husl',
+    'backports.tempfile',
 ]
 
 test_requires = [
