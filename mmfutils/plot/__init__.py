@@ -302,3 +302,108 @@ cm_huslp = make_angle_colormap(map='huslp')
 
 plt.register_cmap(name='husl', cmap=cm_husl)
 plt.register_cmap(name='huslp', cmap=cm_huslp)
+
+
+class ListCollection(matplotlib.collections.Collection):
+    r"""Provide a simple :class:`matplotlib.collections.Collection` of a list of
+    artists.  Provided so that this collection of artists can be simultaneously
+    rasterized.  Used by my custom :func:`contourf` function."""
+    def __init__(self, collections, **kwargs):
+        matplotlib.collections.Collection.__init__(self, **kwargs)
+        self.set_collections(collections)
+
+    def set_collections(self, collections):
+        self._collections = collections
+
+    def get_collections(self):
+        return self._collections
+
+    @matplotlib.artist.allow_rasterization
+    def draw(self, renderer):
+        for _c in self._collections:
+            _c.draw(renderer)
+
+
+def contourf(*v, **kw):
+    r"""Replacement for :func:`matplotlib.pyplot.contourf` that supports the
+    `rasterized` keyword."""
+    was_interactive = matplotlib.is_interactive()
+    matplotlib.interactive(False)
+    contour_set = plt.contourf(*v, **kw)
+    for _c in contour_set.collections:
+        _c.remove()
+    collection = ListCollection(
+        contour_set.collections,
+        rasterized=kw.get('rasterized', None))
+    ax = plt.gca()
+    ax.add_artist(collection)
+    matplotlib.interactive(was_interactive)
+    return contour_set
+
+
+def error_line(x, y, dy, fgc='k', bgc='w', N=20, fill=True):
+    """Plots a curve (x, y) with gaussian errors dy represented by
+    shading out to 5 dy."""
+    yp0 = y
+    ym0 = y
+    pdf = sp.stats.norm().pdf
+    to_rgb = plt.matplotlib.colors.ColorConverter().to_rgb
+
+    bg_colour = np.array(to_rgb(bgc))
+    fg_colour = np.array(to_rgb(fgc))
+    if fill:
+        patches = []
+    else:
+        lines = []
+
+    ax = plt.gca()
+    for sigma in np.linspace(0, 5, N)[1:]:
+        yp = y+dy*sigma
+        ym = y-dy*sigma
+        c = pdf(sigma)/pdf(0.0)
+        #colour = fg_colour*c + (1.0-c)*bg_colour
+        colour = fg_colour
+
+        if fill:
+            X = np.hstack((x, np.flipud(x)))
+            Y = np.hstack((yp0, np.flipud(yp)))
+            patches.extend(
+                ax.fill(X, Y, fc=colour, ec=colour, lw=0, alpha=c))
+            X = np.hstack((x, np.flipud(x)))
+            Y = np.hstack((ym0, np.flipud(ym)))
+            patches.extend(
+                ax.fill(X, Y, fc=fg_colour, ec=fg_colour, lw=0, alpha=c))
+        else:
+            lines.extend(
+                ax.plot(x, yp, color=colour, alpha=c) +
+                ax.plot(x, ym, color=fg_colour*c+(1.0-c)*bg_colour))
+
+        ym0 = ym
+        yp0 = yp
+
+    if fill:
+        artists = [matplotlib.collections.PatchCollection(patches)]
+    else:
+        if False:
+            # Can't add alphas to LineCollection unfortunately.
+            args = dict(
+                zip(['segments', 'linewidths', 'colors', 'antialiaseds',
+                     'linestyles'],
+                    zip(*[(_l.get_xydata(),
+                           _l.get_linewidth(),
+                           _l.get_color(),
+                           _l.get_antialiased(),
+                           _l.get_linestyle())
+                          for _l in lines])))
+            artists = [matplotlib.collections.LineCollection(**args)]
+        else:
+            artists = [ListCollection(lines)]
+
+        # Remove individual lines from the axis...
+        for _l in lines:
+            _l.remove()
+
+        # ... and add back as a collection.
+        ax.add_collection(artists[0])
+
+    return artists
