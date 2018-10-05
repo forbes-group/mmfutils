@@ -61,8 +61,7 @@ in a notebook.
 
    <td>
 
-`mmfutils Build
-Status <https://drone.io/bitbucket.org/mforbes/mmfutils/latest>`__
+|mmfutils Build Status|
 
 .. raw:: html
 
@@ -72,8 +71,7 @@ Status <https://drone.io/bitbucket.org/mforbes/mmfutils/latest>`__
 
    <td>
 
-`mmfutils-fork Build
-Status <https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest>`__
+|mmfutils-fork Build Status|
 
 .. raw:: html
 
@@ -86,6 +84,11 @@ Status <https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest>`__
 .. raw:: html
 
    </table>
+
+.. |mmfutils Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils/status.png
+   :target: https://drone.io/bitbucket.org/mforbes/mmfutils/latest
+.. |mmfutils-fork Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/status.png
+   :target: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest
 
 .. raw:: html
 
@@ -383,7 +386,27 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.4.7
+4.1  REL: 0.4.10
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.2  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.3  REL: 0.4.7
 
 .. raw:: html
 
@@ -1610,9 +1633,15 @@ We try to keep the repository clean with the following properties:
 
 To do this, we advocate the following proceedure.
 
-1. **``hg up <version>``**: Make sure this is the correct development
-   branch, not the default branch. (Check by ``hg up default`` which
-   should take you to the default branch.)
+1. **Update to Correct Branch**: Make sure this is the correct
+   development branch, not the default branch by explicitly updating:
+
+   .. code:: bash
+
+      hg up <version>
+
+   (Compare with ``hg up default`` which should take you to the default
+   branch instead.)
 2. **Work**: Do your work, committing as required with messages as shown
    in the repository with the following keys:
 
@@ -1633,9 +1662,20 @@ To do this, we advocate the following proceedure.
       eventually when you get things working.
    -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
-3. **``python setup.py test``**: Make sure the tests pass. (``hg com``
-   will do this automatically if you have linked the ``.hgrc`` file as
-   discussed above.
+3. **Tests**: Make sure the tests pass. Do do this you should run the
+   tests in both the ``_test2`` and ``_test3`` environments:
+
+   .. code:: bash
+
+      conda env update --file environment._test2.yml  # If needed
+      conda env update --file environment._test3.yml  # If needed
+      conda activate _test2; py.test
+      conda activate _test3; py.test
+
+   (``hg com`` will automatically run tests after pip-installing
+   everything in ``setup.py`` if you have linked the ``.hgrc`` file as
+   discussed above, but the use of independent environments is preferred
+   now.)
 4. **Update Docs**: Update the documentation if needed. To generate new
    documentation run:
 
@@ -1656,14 +1696,13 @@ To do this, we advocate the following proceedure.
       make html
       open build/html/index.html
 
-   Look especially for errors of the type
-   ``WARNING: document isn't included in any toctree``. This indicates
-   that you probably need to add the module to an upper level
-   ``.. toctree::``. Also look for
-   ``WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated``.
-   This indicates you need to add a title to a new file. For example,
-   when I added the ``mmf.math.optimize`` module, I needed to update the
-   following:
+   Look especially for errors of the type “WARNING: document isn’t
+   included in any toctree”. This indicates that you probably need to
+   add the module to an upper level ``.. toctree::``. Also look for
+   “WARNING: toctree contains reference to document u’…’ that doesn’t
+   have a title: no link will be generated”. This indicates you need to
+   add a title to a new file. For example, when I added the
+   ``mmf.math.optimize`` module, I needed to update the following:
 
 .. code:: rst
 
@@ -1687,9 +1726,10 @@ To do this, we advocate the following proceedure.
           :undoc-members:
           :show-inheritance:
 
-5. **``hg histedit``**: (or ``hg rebase``, or ``hg strip`` as needed)
-   Clean up the repo before you push. Branches should generally be
-   linear unless there is an exceptional reason to split development.
+5. **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
+   ``hg strip`` as needed to clean up the repo before you push. Branches
+   should generally be linear unless there is an exceptional reason to
+   split development.
 6. **Release**: First edit ``mmfutils/__init__.py`` and update the
    version number by removing the ``dev`` part of the version number.
    Commit only this change and then push only the branch you are working
@@ -1700,10 +1740,25 @@ To do this, we advocate the following proceedure.
       hg com -m "REL: <version>"
       hg push -b .
 
-7. Create a pull request on the development fork from your branch to
-   ``default`` on the release project bitbucket. Review it, fix
-   anything, then accept the PR and close the branch.
-8. **Start new branch**: On the same development branch (not
+7. **Pull Request**: Create a pull request on the development fork from
+   your branch to ``default`` on the release project bitbucket. Review
+   it, fix anything, then accept the PR and close the branch.
+8. **Publish on PyPI**: Publish the released version on
+   `PyPI <https://pypi.org/project/mmfutils/>`__ using
+   `twine <https://pypi.org/project/twine/>`__
+
+   .. code:: bash
+
+      # Build the package.
+      python setup.py sdist bdist_wheel
+
+      # Test that everything looks right:
+      twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+      # Upload to PyPI
+      twine upload dist/*
+
+9. **Start new branch**: On the same development branch (not
    ``default``), increase the version number in ``mmfutils/__init__.py``
    and add ``dev``: i.e.:
 
@@ -1718,12 +1773,40 @@ Then create this branch and commit this:
       hg branch "0.4.7"
       hg com -m "BRN: Started branch 0.4.7"
 
-9.  Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
-10. Optional: Update any ``setup.py`` files that depend on your new
+10. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
+
+11. Optional: Update any ``setup.py`` files that depend on your new
     features/fixes etc.
 
 Change Log
 ==========
+
+REL: 0.4.10
+-----------
+
+API changes:
+
+-  Added ``contourf``, ``error_line``, and ``ListCollections`` to
+   ``mmfutils.plot``.
+-  Added Python 3 support (still a couple of issues such as
+   ``mmfutils.math.integrate.ssum_inline``.)
+-  Added ``mmf.math.bases.IBasisKx`` and update ``lagrangian`` in bases
+   to accept ``k2`` and ``kx2`` for modified dispersion control (along
+   x).
+-  Added ``math.special.ellipkinv``.
+-  Added some new ``mmfutils.math.linalg`` tools.
+
+Issues:
+
+-  Resolved issue #20: ``DyadicSum`` and
+   ``scipy.optimize.nonlin.Jacobian``
+-  Resolved issue #22: imcontourf now respects masked arrays.
+-  Resolved issue #24: Support Python 3.
+
+REL: 0.4.9
+----------
+
+*< incomplete >*
 
 REL: 0.4.7
 ----------

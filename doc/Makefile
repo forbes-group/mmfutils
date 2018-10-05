@@ -51,7 +51,10 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
-html:
+../README.rst: README.ipynb
+	jupyter nbconvert --to=rst --output=../README.rst README.ipynb
+
+html: ../README.rst
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

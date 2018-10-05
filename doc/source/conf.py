@@ -33,15 +33,18 @@ class Mock(MagicMock):
     def __getattr__(self, name):
         return Mock()
 
-MOCK_MODULES = ['scipy', 'matplotlib',
-                'scipy.fftpack', 'scipy.integrate', 'scipy.interpolate',
-                'scipy.linalg', 'scipy.weave', 'scipy.special', 'scipy.stats',
-                'matplotlib.cm', 'matplotlib.colors', 'matplotlib.collections']
+MOCK_MODULES = ['matplotlib',
+                'matplotlib.cm', 'matplotlib.colors', 'matplotlib.collections',
+                #'scipy',
+                #'scipy.fftpack', 'scipy.integrate', 'scipy.interpolate',
+                #'scipy.weave', 'scipy.special', 'scipy.stats',
+                #'scipy.linalg',
+]
 sys.modules.update((_name, Mock()) for _name in MOCK_MODULES)
 
 # Unfortunately, the following fails... not sure how to fix
-import scipy.linalg
-scipy.linalg.get_blas_funcs = Mock(return_value=[Mock(), Mock()])
+#import scipy.linalg
+#scipy.linalg.get_blas_funcs = Mock(return_value=[Mock(), Mock()])
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
