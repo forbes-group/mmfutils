@@ -73,9 +73,15 @@ try:                     # NOQA  This is too complex, but that is okay
                                              fftn as _fftn,
                                              ifftn as _ifftn)
 
+    # Hack to get the version from pyfftw to resolve issue #25
+    from pkg_resources import parse_version
+    pyfftw_version = getattr(pyfftw, 'version', '0')
+    while hasattr(pyfftw_version, 'version'):
+        pyfftw_version = pyfftw_version.version
+
     # By default, pyfftw does not cache the plans.  Here we enable the cache
     # and set the keepalive time to an hour.
-    if getattr(pyfftw, 'version', '0') >= '0.9.2':
+    if parse_version(pyfftw_version) >= parse_version('0.9.2'):
         pyfftw.interfaces.cache.enable()
         pyfftw.interfaces.cache.set_keepalive_time(60*60)
 
