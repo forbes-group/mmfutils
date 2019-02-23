@@ -2,7 +2,9 @@ import itertools
 
 import numpy as np
 
-from mmfutils.math.integrate import Richardson
+import pytest
+
+from mmfutils.math import integrate
 
 
 class TestRichardson(object):
@@ -25,7 +27,7 @@ class TestRichardson(object):
 
         def err(h, n=1):
             n0 = 1./h
-            r = Richardson(F, n0=n0, l=2.0, ps=itertools.count(2, 2))
+            r = integrate.Richardson(F, n0=n0, l=2.0, ps=itertools.count(2, 2))
             for _n in range(n):
                 next(r)
             return abs(next(r) - df)
@@ -45,3 +47,67 @@ class TestRichardson(object):
         ns = np.arange(6)
         slopes = 2*(ns + 1)
         assert np.allclose(list(map(slope, ns)), slopes, rtol=0.05)
+
+
+@pytest.fixture(params=[integrate.ssum, integrate.ssum_python])
+def ssum(request):
+    yield request.param
+
+
+@pytest.fixture(params=[integrate.ssum_numba, integrate.ssum_cython])
+def ssum_fast(request):
+    yield request.param
+
+
+@pytest.fixture(params=[np.int32, np.int64,
+                        np.float32, np.float64,
+                        np.complex64, np.complex128])
+def dtype(request):
+    yield request.param
+
+
+class TestSSum(object):
+    def test_1(self, ssum):
+        N = 10000
+        l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
+        ans = 250.0*((N + 1.0)*N)**2
+        assert np.allclose(ssum(l)[0]-ans, 0)
+        assert not np.allclose(sum(l)-ans, 0)
+
+    def test_harmonic(self, ssum):
+        """Harmonic series.
+
+        Series such as these  should be summed in reverse, but ssum
+        should do it well."""
+        sn = 1./np.arange(1, 10**4)
+        Hn, Hn_err = integrate.exact_sum(sn)
+        ans, err = ssum(sn)
+        assert abs(ans - Hn) < err
+        assert not abs(sum(sn) - Hn) < err         # Normal sum not good...
+        assert abs(sum(reversed(sn)) - Hn) < err   # unless elements sorted
+
+    def test_truncation(self, ssum):
+        N = 10000
+        np.random.seed(3)
+        r = np.random.randint(-2**30, 2**30, 4*N)
+        A = np.array(
+            [int(a)*2**90 + int(b)*2**60 + int(c)*2**30 + int(d)
+             for (a, b, c, d) in zip(r[:N], r[N:2*N], r[2*N:3*N], r[3*N:4*N])])
+        B = A.astype(float)/3987.0  # Introduce truncation errors
+        exact_ans = A.sum()
+        ans, err = ssum(B)
+        ans *= 3987.0
+        err *= 3987.0
+        exact_err = abs(float(int(ans) - exact_ans))
+        assert exact_err < err
+        assert not exact_err < err/1000.0    
+
+    def test_types(self, ssum, dtype):
+        N = 10
+        l = [(10*n)**3 for n in reversed(range(N+1))]
+        exact_ans = sum(l)
+        x = np.asarray(l, dtype=dtype)
+        res = ssum(x)
+        assert np.allclose(res[0], exact_ans)
+        
+        

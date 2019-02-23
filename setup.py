@@ -16,14 +16,16 @@ without having to introduce an additional dependence.
 import os
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 from setuptools.command.test import test as original_test
 
 import mmfutils
 VERSION = mmfutils.__version__
 
 setup_requires = [
-    'pytest-runner'
+    'pytest-runner',
+    'setuptools>=18.0',      # automatically handles Cython extensions
+    'cython>=0.28.4',
 ]
 
 install_requires = [
@@ -44,7 +46,6 @@ test_requires = [
     "persist",
     "numpy",
     "numexpr",
-    "weave",
     "uncertainties",
 ]
 
@@ -60,6 +61,10 @@ setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
 
+      ext_modules=[Extension(
+          'mmfutils.math.integrate._ssum',
+          ['mmfutils/math/integrate/_ssum_cython.pyx']
+      )],
       setup_requires=setup_requires,
       install_requires=install_requires,
       extras_require={},
