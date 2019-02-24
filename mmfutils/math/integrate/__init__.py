@@ -306,7 +306,7 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
 
     if (abs(h) < min_step_size or ac <= a or b <= cb):
         # Minimum step size reached; singularity possible.
-        logging.warn(" ".join([
+        logging.warning(" ".join([
             'mquad:MinStepSize:',
             'Minimum step size reached.',
             "({} < {})".format(abs(h), min_step_size),
@@ -315,7 +315,7 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
         return Q0, err*err
 
     if f.res_dict['fcnt'] > f.max_fcnt:  # pragma: no cover
-        logging.warn(" ".join([
+        logging.warning(" ".join([
             'mquad:MaxFcnCount:',
             'Maximum function count {} exceeded.'.format(f.max_fcnt),
             'Singularity likely.']))
@@ -335,7 +335,7 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
 
     if not np.isfinite(f.norm(Q)):  # pragma: no cover
         # Infinite or Not-a-Number function value encountered.
-        logging.warn(" ".join(['mquad:ImproperFcnValue:',
+        logging.warning(" ".join(['mquad:ImproperFcnValue:',
                                'Inf or NaN function value encountered.']))
         return Q, err2
 

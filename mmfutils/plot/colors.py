@@ -24,15 +24,15 @@ class MidpointNormalize(Normalize):
     --------
     >>> norm = MidpointNormalize(midpoint=1.0)
     >>> norm(np.arange(4))
-    masked_array(data = [ 0.25 0.5 0.75 1. ],
-                 mask = False,
-           fill_value = 1e+20)
+    masked_array(data=[0.25, 0.5 , 0.75, 1. ],
+                 mask=False,
+           fill_value=1e+20)
 
     >>> norm = MidpointNormalize(midpoint=1.0, vmin=-3)
     >>> norm(np.arange(4))
-    masked_array(data = [ 0.375 0.5 0.625 0.75 ],
-                 mask = False,
-           fill_value = 1e+20)
+    masked_array(data=[0.375, 0.5 , 0.625, 0.75 ],
+                 mask=False,
+           fill_value=1e+20)
     """
     def __init__(self, vmin=None, vmax=None, clip=False, midpoint=0):
         self.midpoint = midpoint

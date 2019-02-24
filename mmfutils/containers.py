@@ -4,6 +4,10 @@ Archiving is supported through the interface defined by the ``persist``
 package (though use of that package is optional and it is not a dependency).
 """
 import collections
+try:                            # Python 3
+    from collections import abc
+except ImportError:             # Python 2
+    import collections as abc
 
 __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 
@@ -151,8 +155,7 @@ class Object(object):
         object.__setattr__(self, key, value)
 
 
-class Container(Object, collections.Sized, collections.Iterable,
-                collections.Container):
+class Container(Object, abc.Sized, abc.Iterable, abc.Container):
     """Simple container object.
 
     Attributes can be specified in the constructor.  These will form the
@@ -196,7 +199,7 @@ class Container(Object, collections.Sized, collections.Iterable,
             else:
                 # assume dict-like
                 self.__dict__.update(obj)
-                if isinstance(obj, collections.Sequence):
+                if isinstance(obj, abc.Sequence):
                     self.picklable_attributes = list(list(zip(*obj))[0])
                     self.picklable_attributes.extend(
                         _k for _k in kw if _k not in self.__dict__)
@@ -204,15 +207,15 @@ class Container(Object, collections.Sized, collections.Iterable,
         self.__dict__.update(kw)
         Object.__init__(self)
 
-    # Methods required by collections.Container
+    # Methods required by abc.Container
     def __contains__(self, key):
         return key in self.picklable_attributes
 
-    # Methods required by collections.Sized
+    # Methods required by abc.Sized
     def __len__(self):
         return len(self.picklable_attributes)
 
-    # Methods required by collections.Iterable
+    # Methods required by abc.Iterable
     def __iter__(self):
         for _k in self.picklable_attributes:
             yield getattr(self, _k)
@@ -222,7 +225,7 @@ class Container(Object, collections.Sized, collections.Iterable,
         self.picklable_attributes.remove(key)
 
 
-class ContainerList(Container, collections.Sequence):
+class ContainerList(Container, abc.Sequence):
     """Simple container object that behaves like a list.
 
     Examples
@@ -238,12 +241,12 @@ class ContainerList(Container, collections.Sequence):
     >>> tuple(c)                # Order is lexicographic
     (2, 'Hi')
     """
-    # Methods required by collections.Sequence
+    # Methods required by abc.Sequence
     def __getitem__(self, i):
         key = self.picklable_attributes[i]
         return getattr(self, key)
 
-    # Methods required by collections.MutableSequence
+    # Methods required by abc.MutableSequence
     # We only provide a few
     def __setitem__(self, i, value):
         key = self.picklable_attributes[i]
@@ -254,7 +257,7 @@ class ContainerList(Container, collections.Sequence):
         self.__delattr__(key)
 
 
-class ContainerDict(Container, collections.MutableMapping):
+class ContainerDict(Container, abc.MutableMapping):
     """Simple container object that behaves like a dict.
 
     Attributes can be specified in the constructor.  These will form the
@@ -275,15 +278,15 @@ class ContainerDict(Container, collections.MutableMapping):
     >>> OrderedDict(c)
     OrderedDict([('a', 2), ('b', 'Hi')])
     """
-    # Methods required by collections.Iterable
+    # Methods required by abc.Iterable
     def __iter__(self):
         return self.picklable_attributes.__iter__()
 
-    # Methods required by collections.Mapping
+    # Methods required by abc.Mapping
     def __getitem__(self, key):
         return getattr(self, key)
 
-    # Methods required by collections.MutableMapping
+    # Methods required by abc.MutableMapping
     def __setitem__(self, key, value):
         setattr(self, key, value)
 

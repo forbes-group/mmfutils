@@ -90,21 +90,22 @@ class DyadicSum(object):
     Examples
     --------
     >>> J = DyadicSum()
-    >>> x = np.mat([[1.0],
-    ...             [2.0]])
+    >>> x = np.array([[1.0],
+    ...               [2.0]])
     >>> J*x - x
-    matrix([[ 0.],
-            [ 0.]])
-    >>> b = np.mat([[1.0, 0.0]])
-    >>> a = np.mat([[0.0],
-    ...             [2.0]])
+    array([[0.],
+           [0.]])
+    >>> b = np.array([[1.0, 0.0]])
+    >>> a = np.array([[0.0],
+    ...               [2.0]])
 
     >>> J.add_dyad(a, b)
     >>> J*x
-    matrix([[ 1.],
-            [ 4.]])
-    >>> x.T*J
-    matrix([[ 5., 2.]])
+    array([[1.],
+           [4.]])
+    >>> x.T*J                   # doctest: +SKIP
+    >>> J.__rmul__(x.T)
+    array([[5., 2.]])
 
     Here is an example of limiting the size of the dyadic.
 
@@ -231,17 +232,17 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.todense()
-        array([[ 2., 3.],
-               [ 2., 5.]])
+        array([[2., 3.],
+               [2., 5.]])
         >>> M.reset()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         """
         self._at = np.empty((0, 0), dtype=float)
         self._b = np.empty((0, 0), dtype=float)
@@ -456,14 +457,14 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.todense()
-        array([[ 2., 3.],
-               [ 2., 5.]])
+        array([[2., 3.],
+               [2., 5.]])
         """
         if len(self._b) == 0:
             return np.array(self.alpha)
@@ -481,13 +482,13 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.diag()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.diag()
-        array([ 2., 5.])
+        array([2., 5.])
         """
         if len(self._b) == 0:
             return np.array(1.0)

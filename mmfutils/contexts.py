@@ -161,9 +161,8 @@ class NoInterrupt(object):
         `_force_timeout` seconds"""
         with cls._lock:
             return (cls._force_n <= len(cls._signals_raised)
-                    and
-                    cls._force_timeout > (cls._signals_raised[-1][-1] -
-                                          cls._signals_raised[-3][-1]))
+                    and cls._force_timeout > (cls._signals_raised[-1][-1]
+                                              - cls._signals_raised[-3][-1]))
 
     def __init__(self, ignore=True):
         self.ignore = ignore
@@ -196,7 +195,20 @@ class NoInterrupt(object):
 
     __nonzero__ = __bool__      # For python 2.
 
+    def map(self, function, sequence, *v, **kw):
+        """Map function onto sequence until interrupted or done.
 
+        Interrupts will not occur inside function() unless forced.
+        """
+        res = []
+        with self as interrupted:
+            for s in sequence:
+                if interrupted:
+                    break
+                res.append(function(s, *v, **kw))
+        return res
+
+    
 class CoroutineWrapper(object):
     """Wrapper for coroutine contexts that allows them to function as a context
     but also as a function.  Similar to open() which may be used both in a

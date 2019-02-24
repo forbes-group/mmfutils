@@ -179,7 +179,47 @@ class TestNoInterrupt(object):
         #                      (1, 0), (1, 1), (1, 3)]
 
     def test_unused_context(self):
-        ni = NoInterrupt()
+        """Test issue 28: bare instance hides signals.
+
+        Signals should only be caught in contexts.
+        """
+        NoInterrupt()
+
+        # Signals should no longer be caught
         with pytest.raises(KeyboardInterrupt):
             self.simulate_interrupt()
             time.sleep(1)
+
+    def test_map(self):
+        def f(x, values_computed):
+            if x == 2:
+                self.simulate_interrupt()
+                time.sleep(0.1)
+            values_computed.append(x)
+            return x**2
+
+        values_computed = []
+        res = NoInterrupt().map(f, [1, 2, 3], values_computed=values_computed)
+        assert res == [1, 4]
+        
+        with pytest.raises(KeyboardInterrupt):
+            self.simulate_interrupt()
+            time.sleep(1)
+
+        # Here the interrupt should not be ignored, but f() should be
+        # allowed to complete.
+        values_computed = []
+        res = []
+        with pytest.raises(KeyboardInterrupt):
+            res = NoInterrupt(ignore=False).map(f, [1, 2, 3],
+                                                values_computed=values_computed)
+        assert res == []
+        assert values_computed == [1, 2]
+            
+        # As opposed to a normal map:
+        values_computed = []
+        res = []
+        with pytest.raises(KeyboardInterrupt):
+            res = map(lambda x: f(x, values_computed), [1, 2, 3])
+        assert res == []
+        assert values_computed == [1]

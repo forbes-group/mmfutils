@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 import itertools
 import os
 import tempfile
+import base64
 
 from matplotlib import animation
 
@@ -13,8 +14,14 @@ try:
 except ImportError:
     from matplotlib.animation import iterable
     
-from matplotlib.animation import (TimedAnimation, FuncAnimation, encodebytes,
-                                  writers, rcParams, six)
+from matplotlib.animation import (TimedAnimation, FuncAnimation,
+                                  writers, rcParams)
+try:     # Python 3
+    encodebytes = base64.encodebytes
+except:  # Python 2
+    encodebytes = base64.encodestring
+
+
 from matplotlib import pyplot as plt
 
 
@@ -45,7 +52,7 @@ class MyFuncAnimation(FuncAnimation):
         # will be treated as a number of frames.
         if frames is None:
             self._iter_gen = itertools.count
-        elif six.callable(frames):
+        elif callable(frames):
             self._iter_gen = frames
         elif iterable(frames):
             self._iter_gen = lambda: iter(frames)
@@ -94,7 +101,7 @@ class MyFuncAnimation(FuncAnimation):
         # func needs to return a sequence of any artists that were modified.
         self._drawn_artists = self._func(framedata, *self._args)
 
-    def to_html5_video(self, filename=None):
+    def to_html5_video(self, filename=None, extra_args=None):
         r'''Returns animation as an HTML5 video tag.
 
         This saves the animation as an h264 video, encoded in base64
@@ -121,7 +128,8 @@ class MyFuncAnimation(FuncAnimation):
                 Writer = writers[rcParams['animation.writer']]
                 writer = Writer(codec='h264',
                                 bitrate=rcParams['animation.bitrate'],
-                                fps=1000. / self._interval)
+                                fps=1000. / self._interval,
+                                extra_args=extra_args)
                 self.save(f.name, writer=writer)
 
             # Now open and base64 encode

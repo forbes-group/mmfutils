@@ -1,4 +1,4 @@
-"""
+r"""
 
 As a test function, we compute the Laplacian of a Gaussian which has
 the following form:
@@ -7,7 +7,8 @@ the following form:
 
             y(r) &= e^{-(r/r_0)^2/2}\\
    \nabla^2 y(r) &= \frac{r^2 - dr_0^2}{r_0^4} y(r)\\
-   e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d} e^{-r^2/(r_0^2+2a)/2}
+   e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d}
+   e^{-r^2/(r_0^2+2a)/2}
 """
 import numpy as np
 import scipy.special
@@ -57,8 +58,8 @@ class ExactGaussian(object):
     @property
     def d2y(self):
         """Exact Laplacian with factor"""
-        return (self.factor * self.y *
-                (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
+        return (self.factor * self.y
+                * (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
 
     def get_dy(self, x):
         """Exact gradient along x direction"""

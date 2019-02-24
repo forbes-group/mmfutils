@@ -62,6 +62,7 @@ class Paper(object):
     Example
     -------
     >>> import os.path, tempfile, shutil
+    >>> import matplotlib; matplotlib.use('pdf')
     >>> class MyPaper(Paper):
     ...     figdir = tempfile.mkdtemp()
     ...
