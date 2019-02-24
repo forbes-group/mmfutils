@@ -13,7 +13,7 @@ dependencies:
   - zope.interface>=3.8.0
   - docutils
   - cython
-
+  - numba
 
   #- ipywidgets
   #- ipykernel        # Use with nb_conda_kernels so jupyter sees this kernel

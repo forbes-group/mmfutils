@@ -6,25 +6,24 @@ import logging
 import numpy as np
 
 sp = None
-weave = None
+numba = None
 try:
     import scipy.integrate
     sp = scipy
-    try:
-        from scipy import weave
-    except ImportError:         # pragma: no cover
-        import weave
+    import numba
 except ImportError:         # pragma: no cover
     pass
 
 __all__ = ['quad', 'mquad', 'Richardson', 'rsum']
 
-_abs_tol = 1e-12
-_rel_tol = 1e-8
-_eps = np.finfo(float).eps
+_ABS_TOL = 1e-12
+_REL_TOL = 1e-8
+_EPS = np.finfo(float).eps
+
+from ._ssum import ssum as _ssum_cython
 
 
-def quad(f, a, b, epsabs=_abs_tol, epsrel=_rel_tol,
+def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL,
          limit=1000, points=None, **kwargs):
     r"""
     An improved version of integrate.quad that does some argument
@@ -76,7 +75,7 @@ def quad(f, a, b, epsabs=_abs_tol, epsrel=_rel_tol,
     return (y, err)
 
 
-def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
+def mquad(f, a, b, abs_tol=_ABS_TOL, verbosity=0,
           fa=None, fb=None,
           save_fx=False, res_dict=None,
           max_fcnt=10000, min_step_size=None,
@@ -141,13 +140,13 @@ def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
     ...     v = np.exp(1j*np.array([[1.0, 2.0, 3.0]])*x)
     ...     return v.T.conj()*v/2.0/np.pi
     >>> ans = mquad(f, 0, 2*np.pi)
-    >>> abs(ans - np.eye(ans.shape[0])).max() < _abs_tol
+    >>> abs(ans - np.eye(ans.shape[0])).max() < _ABS_TOL
     True
 
     >>> res_dict = {}
     >>> def f(x): return x**2
     >>> ans = mquad(f, -2, 1, res_dict=res_dict, save_fx=True)
-    >>> abs(ans - 3.0) < _abs_tol
+    >>> abs(ans - 3.0) < _ABS_TOL
     True
     >>> x = np.array([xy[0] for xy in res_dict['xy']])
     >>> y = np.array([xy[1] for xy in res_dict['xy']])
@@ -187,7 +186,7 @@ def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
     res_dict['fcnt'] = 0
 
     if min_step_size is None:
-        min_step_size = _eps/1024.0*abs(b-a)
+        min_step_size = _EPS/1024.0*abs(b-a)
 
     # We augment and decorate the function to pass various related
     # arguments to the helpers.
@@ -260,17 +259,17 @@ def mquad(f, a, b, abs_tol=_abs_tol, verbosity=0,
 
         # Fudge endpoints to avoid infinities.
         if f.norm(fa_) == np.inf:
-            fa_ = f(a_ + _eps*(b_ - a_))
+            fa_ = f(a_ + _EPS*(b_ - a_))
 
         if f.norm(fb_) == np.inf:
-            fb_ = f(b_ - _eps*(b_ - a_))
+            fb_ = f(b_ - _EPS*(b_ - a_))
 
         r, e2 = _mquadstep(f, a_, b_, fa_, fb_, abs_tol2, min_step_size,
                            verbosity)
         res += r
         err2 += e2
 
-    res_dict['err'] = np.maximum(np.sqrt(err2), abs(_eps*res))
+    res_dict['err'] = np.maximum(np.sqrt(err2), abs(_EPS*res))
     return res
 
 
@@ -357,7 +356,7 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
         Q = Qac + Qcb
         err2 = err_ac2 + err_cb2
 
-    return Q, np.maximum(err2, (_eps*Q)**2)
+    return Q, np.maximum(err2, (_EPS*Q)**2)
 
 
 def Richardson(f, ps=None, l=2, n0=1):
@@ -561,21 +560,64 @@ def ssum_python(xs):
     return (sum, err)
 
 
-def ssum_inline(xs):
+if numba:
+    @numba.jit(nopython=True)
+    def ssum_numba(xs, _eps=_EPS):
+        r"""Return (sum(xs), err) computed stably using Kahan's summation
+        method for floating point numbers.  (Numba version.)
+
+        >>> N = 10000
+        >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
+        >>> ans = 250.0*((N + 1.0)*N)**2
+        >>> (ssum_numba(l)[0] - ans, sum(l) - ans)
+        (0.0, -5632.0)
+
+        Should run less than 8 times slower than a regular sum.
+        >>> import time
+        >>> n = 1./np.arange(1, 2**10)
+        >>> t = time.time();tmp = n.sum();t0 = time.time() - t;
+        >>> t = time.time();tmp = ssum_numba(n);t1 = time.time() - t;
+        >>> t1 < 8.0*t0
+        True
+        """
+        sum = 0.0
+        carry = 0.0
+        for x in xs:
+            y = x - carry
+            tmp = sum + y
+            carry = (tmp - sum) - y
+            sum = tmp
+
+        err = max(abs(2.0*sum*_eps), len(xs)*_eps*_eps)
+        return (sum, err)
+
+
+def ssum_cython(xs, _eps=_EPS):
+    xs = np.asarray(xs)
+    sum = _ssum_cython(xs)
+    ##if isinstance(xs.dtype, np.inexact):
+    #    eps = np.finfo(xs.dtype).eps
+    #else:
+    #    eps = 0.0
+    err = max(abs(2.0*sum*_eps), len(xs)*_eps*_eps)
+    return (sum, err)
+
+
+def ssum(xs):
     r"""Return (sum(xs), err) computed stably using Kahan's summation
     method for floating point numbers.  (C++ version using weave).
 
     >>> N = 10000
     >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
-    >>> (ssum_inline(l)[0] - ans, sum(l) - ans)
+    >>> (ssum(l)[0] - ans, sum(l) - ans)
     (0.0, -5632.0)
 
     Here is an example of the Harmonic series.  Series such as these
     should be summed in reverse, but ssum should do it well.
     >>> sn = 1./np.arange(1, 10**4)
     >>> Hn, Hn_err = exact_sum(sn)
-    >>> ans, err = ssum_inline(sn)
+    >>> ans, err = ssum(sn)
     >>> abs(ans - Hn) < err
     True
     >>> abs(sum(sn) - Hn) < err # Normal sum not good!
@@ -591,7 +633,7 @@ def ssum_inline(xs):
     ...      for (a, b, c, d) in zip(r[:N], r[N:2*N], r[2*N:3*N], r[3*N:4*N])])
     >>> B = A.astype(float)/3987.0 # Introduce truncation errors
     >>> exact_ans = A.sum()
-    >>> ans, err = ssum_inline(B)
+    >>> ans, err = ssum(B)
     >>> ans *= 3987.0
     >>> err *= 3987.0
     >>> exact_err = abs(float(long(ans) - exact_ans))
@@ -599,44 +641,12 @@ def ssum_inline(xs):
     True
     >>> exact_err < err/1000.0
     False
-
-    ssum runs less than 8 times slower than a regular sum.
-    >>> import time
-    >>> n = 1./np.arange(1, 2**10)
-    >>> t = time.time();tmp = n.sum();t0 = time.time() - t;
-    >>> t = time.time();tmp = ssum_inline(n);t1 = time.time() - t;
-    >>> t1 < 8.0*t0
-    True
     """
-    code = '''
-    double volatile t, y;
-    double sum = 0.0;
-    double volatile c = 0.0;
-    int i;
-    Py_BEGIN_ALLOW_THREADS
-    for (i=0;i<Nxs[0];++i) {
-        y = xs[i] - c;
-        t = sum + y;
-        c = (t - sum) - y;
-        sum = t;
-    }
-    Py_END_ALLOW_THREADS
-    return_val = sum;
-    '''
-    xs = np.asarray(xs).astype(np.double)
-    sum = weave.inline(code, ['xs'])
-
-    eps = np.finfo(np.double).eps
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
-
-    return (sum, err)
-
-
-ssum = ssum_python if weave is None else ssum_inline
+    return ssum_cython(xs)
 
 
 def rsum(f, N0=0, ps=None, l=2,
-         abs_tol=_abs_tol, rel_tol=_rel_tol,
+         abs_tol=_ABS_TOL, rel_tol=_REL_TOL,
          verbosity=0):
     """Sum f using Richardson extrapolation.
 
