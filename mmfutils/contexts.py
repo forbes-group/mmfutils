@@ -167,10 +167,10 @@ class NoInterrupt(object):
 
     def __init__(self, ignore=True):
         self.ignore = ignore
-        NoInterrupt._instances.add(self)
-        self.catch_signals()
 
     def __enter__(self):
+        self.catch_signals()
+        NoInterrupt._instances.add(self)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
