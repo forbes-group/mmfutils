@@ -10,6 +10,15 @@ from mmfutils.contexts import NoInterrupt
 
 
 class TestNoInterrupt(object):
+    def simulate_interrupt(self, force=False):
+        """Simulates an interrupt or forced interupt."""
+        # Simulate user interrupt
+        os.kill(os.getpid(), signal.SIGINT)
+        if force:
+            # Simulated a forced interrupt with multiple signals
+            os.kill(os.getpid(), signal.SIGINT)
+            os.kill(os.getpid(), signal.SIGINT)
+
     def test_typical_use(self):
         """Typical usage"""
         with NoInterrupt() as interrupted:
@@ -40,7 +49,7 @@ class TestNoInterrupt(object):
                 m = -1
                 for n in range(10):
                     if n == 5:
-                        os.kill(os.getpid(), signal.SIGINT)
+                        self.simulate_interrupt()
                     if interrupted:
                         m = n
         assert n == 9
@@ -48,7 +57,7 @@ class TestNoInterrupt(object):
 
         # Make sure the signals can still be raised.
         with pytest.raises(KeyboardInterrupt):
-            os.kill(os.getpid(), signal.SIGINT)
+            self.simulate_interrupt()
             time.sleep(1)
 
         # And that the interrupts are reset
@@ -69,19 +78,10 @@ class TestNoInterrupt(object):
             with pytest.raises(KeyboardInterrupt):
                 with NoInterrupt(ignore=False) as interrupted:
                     while not interrupted:
-                        os.kill(os.getpid(), signal.SIGHUP)
+                        self.simulate_interrupt()
         finally:
             # Reset signals
             NoInterrupt.catch_signals(signals)
-
-    def simulate_interrupt(self, force=False):
-        """Simulates an interrupt or forced interupt."""
-        # Simulate user interrupt
-        os.kill(os.getpid(), signal.SIGINT)
-        if force:
-            # Simulated a forced interrupt with multiple signals
-            os.kill(os.getpid(), signal.SIGINT)
-            os.kill(os.getpid(), signal.SIGINT)
 
     def interrupted_loop(self, interrupted=False, force=False):
         """Simulates an interrupt or forced interupt in the middle of a
@@ -177,3 +177,9 @@ class TestNoInterrupt(object):
         # Perhaps this should be the result.
         # assert completed == [(0, 0), (0, 1), (0, 2), (0, 3),
         #                      (1, 0), (1, 1), (1, 3)]
+
+    def test_unused_context(self):
+        ni = NoInterrupt()
+        with pytest.raises(KeyboardInterrupt):
+            self.simulate_interrupt()
+            time.sleep(1)
