@@ -169,8 +169,8 @@ class NoInterrupt(object):
         self.ignore = ignore
 
     def __enter__(self):
-        self.catch_signals()
         NoInterrupt._instances.add(self)
+        self.catch_signals()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
