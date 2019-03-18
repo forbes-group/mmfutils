@@ -68,6 +68,22 @@ class IBasisWithConvolution(IBasis):
         """Convolve y with Ck"""
 
 
+class IBasisExtended(IBasis):
+    """Extended basis with quantum numbers etc.  Used with fermionic
+    functionals where you need a complete set of states."""
+    def get_quantum_numbers():
+        """Return a set of iterators over the quantum numbers for the
+        basis."""
+
+    def get_laplacian(qns):
+        """Return the matrix representation of the laplacian for the
+        specified quantum numbers.
+        
+        This should be a 2-dimensional array (matrix) whose indices can
+        be reshaped if needed.
+        """
+
+
 class IBasisKx(IBasis):
     """This ensures that the basis is periodic in the x direction, and allows
     the user to access the quasi-momenta `kx` in this direction and to

@@ -226,6 +226,12 @@ class TestSphericalBasis(ConvolutionTests):
         cls.exact = ExactGaussian(
             r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
 
+    def test_convolution(self):
+        """Test the convolution."""
+        y = self.y
+        convolution = self.basis.convolve(y, y)
+        assert np.allclose(convolution, self.exact.convolution)
+
 
 class TestPeriodicBasis(ConvolutionTests):
     """In this case, the exact Coulomb potential is difficult to
