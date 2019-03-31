@@ -14,13 +14,13 @@ try:
 except ImportError:         # pragma: no cover
     pass
 
+from ._ssum import ssum as _ssum_cython
+
 __all__ = ['quad', 'mquad', 'Richardson', 'rsum']
 
 _ABS_TOL = 1e-12
 _REL_TOL = 1e-8
 _EPS = np.finfo(float).eps
-
-from ._ssum import ssum as _ssum_cython
 
 
 def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL,

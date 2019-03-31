@@ -15,6 +15,10 @@ dependencies:
   - cython
   - numba
 
+  # Compatibility
+  - backports.tempfile   # For TemporaryDirectory in animation.py
+  - pathlib
+  
   #- ipywidgets
   #- ipykernel        # Use with nb_conda_kernels so jupyter sees this kernel
     

@@ -26,25 +26,73 @@ class NoInterrupt(object):
       * http://stackoverflow.com/questions/323972/
         is-there-any-way-to-kill-a-thread-in-python
 
+    Examples
+    --------
+    The simplest use-cases look like these:
+
+    Simple context:
+
+    >>> with NoInterrupt():
+    ...    pass             # do something
+
+    Context with a cleanly aborted loop:
+
+    >>> with NoInterrupt() as interrupted:
+    ...     done = False
+    ...     while not interrupted and not done:
+    ...         # Do something
+    ...         done = True
+
+    Map:
+
+    >>> NoInterrupt().map(abs, [1, -1, 2, -2])
+    [1, 1, 2, 2]
+
+    Keyboard interrupt signals are suspended during the execution of
+    the block unless forced by the user (3 rapid interrupts within
+    1s).  Interrupts are ignored by default unless `ignore=False` is
+    specified, in which case they will be raised when the context is
+    ended.
+    
+    If you want to control when you exit the block, use the
+    `interrupted` flag. This could be used, for example, while
+    plotting frames in an animation (see doc/Animation.ipynb).
+    Without the NoInterrupt() context, if the user sends a keyboard
+    interrupt to the process while plotting, at best, a huge
+    stack-trace is produced, and at worst, the kernel will crash
+    (randomly depending on where the interrupt was received).  With
+    this context, the interrupt will change `interrupted` to True so
+    you can exit the context when it is safe.
+
+    The last case is mapping a function to data.  This will allow the
+    user to interrupt the process between function calls.
+
+    In the following examples we demonstrate this by simulating
+    interrupts
+
     >>> import os, signal, time
+    >>> def simulate_interrupt(force=False):
+    ...     os.kill(os.getpid(), signal.SIGINT)
+    ...     if force:
+    ...         # Simulated a forced interrupt with multiple signals
+    ...         os.kill(os.getpid(), signal.SIGINT)
+    ...         os.kill(os.getpid(), signal.SIGINT)
+    ...     time.sleep(0.1)   # Wait so signal can be received predictably
 
     This loop will get interrupted in the middle so that m and n will not be
     the same.
 
-    >>> def f(n, interrupted=False, force=False):
-    ...     done = False
-    ...     while not done and not interrupted:
+    >>> def f(n, interrupted=False, force=False, interrupt=True):
+    ...     while n[0] < 10 and not interrupted:
     ...         n[0] += 1
-    ...         if n[0] == 5:
-    ...             # Simulate user interrupt
-    ...             os.kill(os.getpid(), signal.SIGINT)
-    ...             if force:
-    ...                 # Simulated a forced interrupt with multiple signals
-    ...                 os.kill(os.getpid(), signal.SIGINT)
-    ...                 os.kill(os.getpid(), signal.SIGINT)
-    ...             time.sleep(0.1)
+    ...         if n[0] == 5 and interrupt:
+    ...             simulate_interrupt(force=force)
     ...         n[1] += 1
-    ...         done = n[0] >= 10
+
+    >>> n = [0, 0]
+    >>> f(n, interrupt=False)
+    >>> n
+    [10, 10]
 
     >>> n = [0, 0]
     >>> try:  # All doctests need to be wrapped in try blocks to not kill py.test!
@@ -106,6 +154,7 @@ class NoInterrupt(object):
     ...     f(n, interrupted)
     >>> n
     [5, 5]
+
     """
     _instances = set()  # Instances of NoInterrupt suspending signals
     _signals = set((signal.SIGINT, signal.SIGTERM))

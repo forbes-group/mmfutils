@@ -12,3 +12,4 @@ mmfutils.egg-info
 */htmlcov
 *.pyc
 *.pyo
+.pytest_cache/

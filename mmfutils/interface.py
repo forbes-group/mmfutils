@@ -25,6 +25,9 @@ except ImportError:             # pragma: nocover
     def implements(*interfaces):
         """Dummy"""
 
+    def classImplements(cls, *interfaces):
+        """Dummy"""
+
     def verifyObject(iface, candidate):
         """Dummy"""
 
