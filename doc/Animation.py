@@ -1,16 +1,16 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,py
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.3'
 #       jupytext_version: 1.0.5
 #   kernelspec:
-#     display_name: Python [conda env:_test2]
+#     display_name: Python [conda env:_test3]
 #     language: python
-#     name: conda-env-_test2-py
+#     name: conda-env-_test3-py
 # ---
 
 # # Animation with IPython Notebooks
@@ -32,7 +32,7 @@ while t < 5:
     plt.clf()
     plt.plot(x, np.sin(2*np.pi*t*x))
     plt.axis([0,1,-1,1])
-    plt.title("t={}".format(t))
+    plt.title("t={:.1f}".format(t))
     t += 0.1
     display(fig)
     clear_output(wait=True)    
@@ -54,14 +54,15 @@ def get_data():
         yield t, x, y
         t += 0.1
         
-def plot_data((t, x, y), fig=None):
+def plot_data(data, fig=None):
+    t, x, y = data
     if fig is None:
         # I can specify a custom size here if needed
         fig = plt.gcf()
     plt.clf()
     l = plt.plot(x, y)
     plt.axis([0,1,-1,1])
-    plt.title("t={}".format(t))
+    plt.title("t={:.1f}".format(t))
     display(fig)
     clear_output(wait=True)
     return fig
@@ -125,7 +126,7 @@ def get_plot_data(fig=None, display=IPython.display.display):
     while True:
         t, x, y = (yield fig) # Arguments passed from the yield statement
         line.set_data(x, y)    # Updating the data is faster than redrawing
-        title.set_text("t={}".format(t))
+        title.set_text("t={:.1f}".format(t))
         if display:
             display(fig)
             clear_output(wait=True)
@@ -141,7 +142,7 @@ with get_plot_data() as plot_data:
 # Now we can use the `animation` module to make a movie.  Since our plotting function calls `display()`, the frames will be shown as they are drawn.
 
 # %%time
-from mmfutils.plot import animation;reload(animation)
+from mmfutils.plot import animation
 fig = plt.gcf()
 with get_plot_data(fig=fig) as plot_data:
     anim = animation.MyFuncAnimation(fig, plot_data, get_data())
@@ -149,7 +150,7 @@ with get_plot_data(fig=fig) as plot_data:
 
 # %%time
 from IPython.display import HTML
-from mmfutils.plot import animation;reload(animation)
+from mmfutils.plot import animation
 fig = plt.gcf()
 with get_plot_data(fig=fig) as plot_data:
     anim = animation.MyFuncAnimation(fig, plot_data, get_data(), interval=10, repeat=False)
@@ -167,13 +168,16 @@ HTML(FILE_VIDEO_TAG.format('im.mp4'))
 # Another option is to embed the video directly as data.  The video then gets stored in the notebook itself, making the notebook very large, but allowing it to be kept as a single file:
 
 # +
+from mmfutils.plot.animation import encodebytes
 from IPython.display import HTML
-EMBEDED_VIDEO_TAG = """<video controls><source src="data:video/x-m4v;base64,{0}" type="video/mp4">
+EMBEDED_VIDEO_TAG = """<video controls><source type="video/mp4" src="data:video/mp4;base64,{0}">
+  Your browser does not support the video tag.</video>"""
+_EMBEDED_VIDEO_TAG = """<video controls><source src="data:video/x-m4v;base64,{0}" type="video/mp4">
 </video>"""
 with open('im.mp4', 'rb') as f:
-    video = f.read()
+    video = encodebytes(f.read()).decode('ascii')
 
-HTML(EMBEDED_VIDEO_TAG.format(video.encode("base64")))
+HTML(EMBEDED_VIDEO_TAG.format(video))
 # -
 
 # ### Video Encoding
@@ -189,6 +193,9 @@ with get_plot_data(fig=fig, display=False) as plot_data:
 
 # !ls -lah $filename
 with open(filename, 'rb') as f:
-    video = f.read()
+    video = encodebytes(f.read()).decode('ascii')
 display(HTML(FILE_VIDEO_TAG.format(filename)),
-        HTML(EMBEDED_VIDEO_TAG.format(video.encode("base64"))))
+        HTML(EMBEDED_VIDEO_TAG.format(video)))
+# -
+
+

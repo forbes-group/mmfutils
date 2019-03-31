@@ -9,9 +9,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.0.5
 #   kernelspec:
-#     display_name: Python [conda env:_test2]
+#     display_name: Python [conda env:_test3]
 #     language: python
-#     name: conda-env-_test2-py
+#     name: conda-env-_test3-py
 # ---
 
 # # MMF Utils
@@ -112,7 +112,7 @@ class State(Object):
         return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
 
 s = State(256)
-print s
+s
 # -
 
 # One feature is that a nice ``repr()`` of the object is produced.  Now let's do a calculation:
@@ -142,7 +142,7 @@ a = persist.archive.Archive(check_on_insert=True)
 a.insert(s=s)
 
 d = {}
-exec str(a) in d
+exec(str(a), d)
 
 d['s']
 # -
@@ -205,7 +205,9 @@ with NoInterrupt() as interrupted:
             complete = True
 # -
 
-# Note: One can nest ``NoInterrupt`` contexts so that outer loops are also interrupted.
+# Note: One can nest ``NoInterrupt`` contexts so that outer loops are also interrupted.  Another use-case is mapping.  See [doc/Animation.ipynb](Animation.ipynb) for more examples.
+
+NoInterrupt().map(abs, range(-100, 100))
 
 # ## Interfaces
 
