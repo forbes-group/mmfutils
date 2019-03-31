@@ -29,25 +29,10 @@ in a notebook.
 
    <tr>
 
-.. raw:: html
+::
 
-   <td>
-
-`Main <https://bitbucket.org/mforbes/mmfutils>`__
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-`Fork <https://bitbucket.org/mforbes/mmfutils-fork>`__
-
-.. raw:: html
-
-   </td>
+    <td>[Main](https://bitbucket.org/mforbes/mmfutils)</td>
+    <td>[Fork](https://bitbucket.org/mforbes/mmfutils-fork)</td>
 
 .. raw:: html
 
@@ -57,25 +42,10 @@ in a notebook.
 
    <tr>
 
-.. raw:: html
+::
 
-   <td>
-
-|mmfutils Build Status|
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-|mmfutils-fork Build Status|
-
-.. raw:: html
-
-   </td>
+    <td>[![mmfutils Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils/latest)</td>
+    <td>[![mmfutils-fork Build Status]](https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest)</td>
 
 .. raw:: html
 
@@ -84,11 +54,6 @@ in a notebook.
 .. raw:: html
 
    </table>
-
-.. |mmfutils Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils/status.png
-   :target: https://drone.io/bitbucket.org/mforbes/mmfutils/latest
-.. |mmfutils-fork Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/status.png
-   :target: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest
 
 .. raw:: html
 
@@ -436,7 +401,7 @@ project <https://bitbucket.org/mforbes/mmfutils>`__:
 
 .. code:: bash
 
-   pip install hg+https://bitbucket.org/mforbes/mmfutils
+    pip install hg+https://bitbucket.org/mforbes/mmfutils
 
 Usage
 =====
@@ -536,7 +501,7 @@ Object Example
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
-let’s do a calculation:
+let's do a calculation:
 
 .. code:: ipython2
 
@@ -1008,7 +973,7 @@ packages including
 `numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
 `pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
 package installed by anaconda. Some of these require building system
-libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
 various components will not be imported by default.
 
 Here is a brief description of the components:
@@ -1020,8 +985,8 @@ Here is a brief description of the components:
    Also enables the planning cache and setting threads so you can better
    control your performance.
 -  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don’t do this carefully, it will crash
-   your program so fast you won’t even get a traceback.)
+   disabling the VML. (If you don't do this carefully, it will crash
+   your program so fast you won't even get a traceback.)
 -  ``mmfutils.performance.threads``: Provides some hooks for setting the
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
@@ -1034,10 +999,10 @@ Several tools are provided in ``mmfutils.plot``:
 Fast Filled Contour Plots
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``mmfutils.plot.imcontourf`` is similar to matplotlib’s ``plt.contourf``
+``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
-array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
 then it will match these to the shape of ``z``). Matplotlib now provies
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
@@ -1179,7 +1144,7 @@ aware of.
 
    ::
 
-      %include ../.hgrc
+       %include ../.hgrc
 
 **Security Warning:** if you do this, be sure to inspect the ``.hgrc``
 file carefully to make sure that no one inserts malicious code.
@@ -1201,7 +1166,7 @@ This runs the following code:
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
-fail if any of these do not pass, or if we don’t have complete code
+fail if any of these do not pass, or if we don't have complete code
 coverage. This uses
 `nosetests <https://nose.readthedocs.org/en/latest/>`__ and
 `flake8 <http://flake8.readthedocs.org>`__. To run individal tests do
@@ -1209,10 +1174,10 @@ one of:
 
 .. code:: bash
 
-   python setup.py nosetests
-   python setup.py flake8
-   python setup.py check
-   python setup.py test   # This runs them all using a custom command defined in setup.py
+    python setup.py nosetests
+    python setup.py flake8
+    python setup.py check
+    python setup.py test   # This runs them all using a custom command defined in setup.py
 
 Here is an example:
 
@@ -1623,7 +1588,7 @@ Releases
 
 We try to keep the repository clean with the following properties:
 
-1. The default branch is stable: i.e. if someone runs ``hg clone``, this
+1. The default branch is stable: i.e. if someone runs ``hg clone``, this
    will pull the latest stable release.
 2. Each release has its own named branch so that e.g. ``hg up 0.4.6``
    will get the right thing. Note: this should update to the development
@@ -1636,95 +1601,84 @@ To do this, we advocate the following proceedure.
 1. **Update to Correct Branch**: Make sure this is the correct
    development branch, not the default branch by explicitly updating:
 
-   .. code:: bash
+``bash    hg up <version>``
 
-      hg up <version>
+(Compare with ``hg up default`` which should take you to the default
+branch instead.) 2. **Work**: Do your work, committing as required with
+messages as shown in the repository with the following keys:
 
-   (Compare with ``hg up default`` which should take you to the default
-   branch instead.)
-2. **Work**: Do your work, committing as required with messages as shown
-   in the repository with the following keys:
-
-   -  ``DOC``: Documentation changes.
-   -  ``API``: Changes to the exising API. This could break old code.
-   -  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
-      these should not break existing codes.
-   -  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
-      etc.)
-   -  ``TST``: Update tests, code coverage, etc.
-   -  ``BUG``: Address an issue as filed on the issue tracker.
-   -  ``BRN``: Start a new branch (see below).
-   -  ``REL``: Release (see below).
-   -  ``WIP``: Work in progress. Do not depend on these! They will be
-      stripped. This is useful when testing things like the rendering of
-      documentation on bitbucket etc. where you need to push an
-      incomplete set of files. Please collapse and strip these
-      eventually when you get things working.
-   -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
+-  ``DOC``: Documentation changes.
+-  ``API``: Changes to the exising API. This could break old code.
+-  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
+   these should not break existing codes.
+-  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
+   etc.)
+-  ``TST``: Update tests, code coverage, etc.
+-  ``BUG``: Address an issue as filed on the issue tracker.
+-  ``BRN``: Start a new branch (see below).
+-  ``REL``: Release (see below).
+-  ``WIP``: Work in progress. Do not depend on these! They will be
+   stripped. This is useful when testing things like the rendering of
+   documentation on bitbucket etc. where you need to push an incomplete
+   set of files. Please collapse and strip these eventually when you get
+   things working.
+-  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
 3. **Tests**: Make sure the tests pass. Do do this you should run the
    tests in both the ``_test2`` and ``_test3`` environments:
 
-   .. code:: bash
+``bash    conda env update --file environment._test2.yml  # If needed    conda env update --file environment._test3.yml  # If needed    conda activate _test2; py.test    conda activate _test3; py.test``
 
-      conda env update --file environment._test2.yml  # If needed
-      conda env update --file environment._test3.yml  # If needed
-      conda activate _test2; py.test
-      conda activate _test3; py.test
+(``hg com`` will automatically run tests after pip-installing everything
+in ``setup.py`` if you have linked the ``.hgrc`` file as discussed
+above, but the use of independent environments is preferred now.) 4.
+**Update Docs**: Update the documentation if needed. To generate new
+documentation run:
 
-   (``hg com`` will automatically run tests after pip-installing
-   everything in ``setup.py`` if you have linked the ``.hgrc`` file as
-   discussed above, but the use of independent environments is preferred
-   now.)
-4. **Update Docs**: Update the documentation if needed. To generate new
-   documentation run:
+``bash    cd doc    sphinx-apidoc -eTE ../mmfutils -o source    rm source/mmfutis.tests.*``
 
-   .. code:: bash
+Include any changes at the bottom of this file (``doc/README.ipynb``).
 
-      cd doc
-      sphinx-apidoc -eTE ../mmfutils -o source
-      rm source/mmfutis.tests.*
+Edit any new files created (titles often need to be added) and check
+that this looks good with
 
-   Include any changes at the bottom of this file
-   (``doc/README.ipynb``).
+::
 
-   Edit any new files created (titles often need to be added) and check
-   that this looks good with
+     ```bash
+     make html
+     open build/html/index.html
+     ```
+     
 
-   .. code:: bash
-
-      make html
-      open build/html/index.html
-
-   Look especially for errors of the type “WARNING: document isn’t
-   included in any toctree”. This indicates that you probably need to
-   add the module to an upper level ``.. toctree::``. Also look for
-   “WARNING: toctree contains reference to document u’…’ that doesn’t
-   have a title: no link will be generated”. This indicates you need to
-   add a title to a new file. For example, when I added the
-   ``mmf.math.optimize`` module, I needed to update the following:
+Look especially for errors of the type "WARNING: document isn't included
+in any toctree". This indicates that you probably need to add the module
+to an upper level ``.. toctree::``. Also look for "WARNING: toctree
+contains reference to document u'...' that doesn't have a title: no link
+will be generated". This indicates you need to add a title to a new
+file. For example, when I added the ``mmf.math.optimize`` module, I
+needed to update the following:
 
 .. code:: rst
 
-      .. doc/source/mmfutils.rst
-      mmfutils
-      ========
-      
-      .. toctree::
-          ...
-          mmfutils.optimize
-          ...
+       .. doc/source/mmfutils.rst
+       mmfutils
+       ========
+       
+       .. toctree::
+           ...
+           mmfutils.optimize
+           ...
 
 .. code:: rst
 
-      .. doc/source/mmfutils.optimize.rst
-      mmfutils.optimize
-      =================
-          
-      .. automodule:: mmfutils.optimize
-          :members:
-          :undoc-members:
-          :show-inheritance:
+       .. doc/source/mmfutils.optimize.rst
+       mmfutils.optimize
+       =================
+           
+       .. automodule:: mmfutils.optimize
+           :members:
+           :undoc-members:
+           :show-inheritance:
 
 5. **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
    ``hg strip`` as needed to clean up the repo before you push. Branches
@@ -1735,43 +1689,33 @@ To do this, we advocate the following proceedure.
    Commit only this change and then push only the branch you are working
    on:
 
-   .. code:: bash
+``bash    hg com -m "REL: <version>"    hg push -b .`` 7. **Pull
+Request**: Create a pull request on the development fork from your
+branch to ``default`` on the release project bitbucket. Review it, fix
+anything, then accept the PR and close the branch. 8. **Publish on
+PyPI**: Publish the released version on
+`PyPI <https://pypi.org/project/mmfutils/>`__ using
+`twine <https://pypi.org/project/twine/>`__
 
-      hg com -m "REL: <version>"
-      hg push -b .
+\`\`\`bash # Build the package. python setup.py sdist bdist\_wheel
 
-7. **Pull Request**: Create a pull request on the development fork from
-   your branch to ``default`` on the release project bitbucket. Review
-   it, fix anything, then accept the PR and close the branch.
-8. **Publish on PyPI**: Publish the released version on
-   `PyPI <https://pypi.org/project/mmfutils/>`__ using
-   `twine <https://pypi.org/project/twine/>`__
+# Test that everything looks right: twine upload --repository-url
+https://test.pypi.org/legacy/ dist/\*
 
-   .. code:: bash
-
-      # Build the package.
-      python setup.py sdist bdist_wheel
-
-      # Test that everything looks right:
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-
-      # Upload to PyPI
-      twine upload dist/*
+# Upload to PyPI twine upload dist/\* \`\`\`
 
 9. **Start new branch**: On the same development branch (not
    ``default``), increase the version number in ``mmfutils/__init__.py``
    and add ``dev``: i.e.:
 
-   ::
-
-      __version__ = '0.4.7dev'
+   **version** = '0.4.7dev'
 
 Then create this branch and commit this:
 
 ::
 
-      hg branch "0.4.7"
-      hg com -m "BRN: Started branch 0.4.7"
+       hg branch "0.4.7"
+       hg com -m "BRN: Started branch 0.4.7"
 
 10. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
 
@@ -1835,3 +1779,4 @@ Issues:
 -  Resolve issue #12: Added solvers with
    ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
    support.
+
