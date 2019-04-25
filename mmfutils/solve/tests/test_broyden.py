@@ -54,7 +54,7 @@ class TestDyadicSum(object):
         
         assert np.allclose(B_, B.todense())
         # assert np.allclose(A.dot(B_), A.dot(B))
-        assert np.allclose(A.dot(B_), (np.asmatrix(A)*B))
+        assert np.allclose(A.dot(B_), A.dot(B))
         assert np.allclose(B_.dot(A), B.dot(A))
 
     def test_errors(self):

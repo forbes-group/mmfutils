@@ -637,7 +637,7 @@ class DyadicSum(object):
         Bdf = self.dot(df)
         
         if method == 'good':
-            dxB = np.asmatrix(dx)*self
+            dxB = np.asarray(dx)*self
             self.add_dyad((dx - Bdf)/dx.dot(Bdf), dxB)
         else:
             self.add_dyad((dx - Bdf)/df.dot(df), df)

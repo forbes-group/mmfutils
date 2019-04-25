@@ -2,76 +2,143 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import itertools
-import os
-import tempfile
 import base64
 
-from matplotlib import animation
+import sys
 
-try:
-    from matplotlib.cbook import iterable
-except ImportError:
-    from matplotlib.animation import iterable
-    
-from matplotlib.animation import (TimedAnimation, FuncAnimation,
-                                  writers, rcParams)
-try:     # Python 3
-    encodebytes = base64.encodebytes
-except:  # Python 2
-    encodebytes = base64.encodestring
+from pathlib import Path
 
-
+from matplotlib.animation import (FuncAnimation, _log, writers, rcParams)
 from matplotlib import pyplot as plt
 
+# Python 2-3 compatibility.
+if sys.version_info < (3, 0):
+    encodebytes = base64.encodestring
+    from backports.tempfile import TemporaryDirectory
+else:
+    encodebytes = base64.encodebytes
+    from tempfile import TemporaryDirectory
+    
 
 class MyFuncAnimation(FuncAnimation):
     """Refactoring of the FuncAnimation class to do the following:
 
-    1. Allow running to the end of `frames()` generator if save_count ==
-       None.
-    2. Allowing user to store video when generating HTML video.
+    1. Allowing user to store video when generating HTML video.
+    2. Allow clean stopping between frames in a NoInterupt context.
     """
-    def __init__(self, fig, func, frames=None, init_func=None, fargs=None,
-                 save_count=None, **kwargs):
-        if fargs:
-            self._args = fargs
+    def __init__(self, *v, interrupted=False, **kw):
+        self.interrupted = interrupted
+        FuncAnimation.__init__(self, *v, **kw)
+
+    def new_frame_seq(self):
+        for frame in FuncAnimation.new_frame_seq(self):
+            if self.interrupted:
+                break
+            yield frame
+        
+    def to_html5_video(self, embed_limit=None,
+                       filename=None, extra_args=None):
+        """
+        Convert the animation to an HTML5 ``<video>`` tag.
+
+        This saves the animation as an h264 video, encoded in base64
+        directly into the HTML5 video tag. This respects the rc parameters
+        for the writer as well as the bitrate. This also makes use of the
+        ``interval`` to control the speed, and uses the ``repeat``
+        parameter to decide whether to loop.
+
+        Parameters
+        ----------
+        embed_limit : float, optional
+            Limit, in MB, of the returned animation. No animation is created
+            if the limit is exceeded.
+            Defaults to :rc:`animation.embed_limit` = 20.0.
+
+        New Parameters
+        --------------
+        filename : str, optional
+           If provided, save the movie in this file and keep it,
+           otherwise the movie will be stored in a temporary directory
+           and deleted after.
+
+        Returns
+        -------
+        video_tag : str
+            An HTML5 video tag with the animation embedded as base64 encoded
+            h264 video.
+            If the *embed_limit* is exceeded, this returns the string
+            "Video too large to embed."
+        """
+        VIDEO_TAG = r'''<video {size} {options}>
+  <source type="video/mp4" src="data:video/mp4;base64,{video}">
+  Your browser does not support the video tag.
+</video>'''
+        # Cache the rendering of the video as HTML
+        if not hasattr(self, '_base64_video'):
+            # Save embed limit, which is given in MB
+            if embed_limit is None:
+                embed_limit = rcParams['animation.embed_limit']
+
+            # Convert from MB to bytes
+            embed_limit *= 1024 * 1024
+
+            ######################################################################
+            # Modified code here to allow saving to filename instead
+            
+            # We create a writer manually so that we can get the
+            # appropriate size for the tag
+            Writer = writers[rcParams['animation.writer']]
+            writer = Writer(codec='h264',
+                            bitrate=rcParams['animation.bitrate'],
+                            fps=1000. / self._interval)
+            if filename is None:
+                # Can't open a NamedTemporaryFile twice on Windows, so use a
+                # TemporaryDirectory instead.
+                with TemporaryDirectory() as tmpdir:
+                    path = Path(tmpdir, "temp.m4v")
+                    self.save(str(path), writer=writer)
+                    # Now open and base64 encode.
+                    with open(str(path), 'rb') as video:
+                        vid64 = encodebytes(video.read())
+                    # The following works on python 3 only
+                    # vid64 = encodebytes(path.read_bytes())
+            else:
+                path = Path(filename)
+                self.save(str(path), writer=writer)
+                # Now open and base64 encode.
+                with open(str(path), 'rb') as video:
+                    vid64 = encodebytes(video.read())
+                # The following works on python 3 only
+                # vid64 = encodebytes(path.read_bytes())
+
+            # End of modifications
+            ######################################################################
+            vid_len = len(vid64)
+            if vid_len >= embed_limit:
+                _log.warning(
+                    "Animation movie is %s bytes, exceeding the limit of %s. "
+                    "If you're sure you want a large animation embedded, set "
+                    "the animation.embed_limit rc parameter to a larger value "
+                    "(in MB).", vid_len, embed_limit)
+            else:
+                self._base64_video = vid64.decode('ascii')
+                self._video_size = 'width="{}" height="{}"'.format(
+                    *writer.frame_size)
+
+        # If we exceeded the size, this attribute won't exist
+        if hasattr(self, '_base64_video'):
+            # Default HTML5 options are to autoplay and display video controls
+            options = ['controls', 'autoplay']
+
+            # If we're set to repeat, make it loop
+            if hasattr(self, 'repeat') and self.repeat:
+                options.append('loop')
+
+            return VIDEO_TAG.format(video=self._base64_video,
+                                    size=self._video_size,
+                                    options=' '.join(options))
         else:
-            self._args = ()
-        self._func = func
-
-        # Amount of framedata to keep around for saving movies. This is only
-        # used if we don't know how many frames there will be: in the case
-        # of no generator or in the case of a callable.
-        self.save_count = save_count
-
-        # Set up a function that creates a new iterable when needed. If nothing
-        # is passed in for frames, just use itertools.count, which will just
-        # keep counting from 0. A callable passed in for frames is assumed to
-        # be a generator. An iterable will be used as is, and anything else
-        # will be treated as a number of frames.
-        if frames is None:
-            self._iter_gen = itertools.count
-        elif callable(frames):
-            self._iter_gen = frames
-        elif iterable(frames):
-            self._iter_gen = lambda: iter(frames)
-            if hasattr(frames, '__len__'):
-                self.save_count = len(frames)
-        else:
-            self._iter_gen = lambda: range(frames).__iter__()
-            self.save_count = frames
-
-        self._init_func = init_func
-
-        # Needs to be initialized so the draw functions work without checking
-        self._save_seq = []
-
-        TimedAnimation.__init__(self, fig, **kwargs)
-
-        # Need to reset the saved seq, since right now it will contain data
-        # for a single frame from init, which is not what we want.
-        self._save_seq = []
+            return 'Video too large to embed.'
 
     def _init_draw(self):
         # Initialize the drawing either using the given init_func or by
@@ -80,78 +147,21 @@ class MyFuncAnimation(FuncAnimation):
         # artists.
         if self._init_func is None:
             try:
+                # New: ignore StopIteration.  Needed in notebooks
+                # where matplotlib tries to run this again.
                 self._draw_frame(next(self.new_frame_seq()))
             except StopIteration:
                 pass
 
         else:
             self._drawn_artists = self._init_func()
+            if self._blit:
+                if self._drawn_artists is None:
+                    raise RuntimeError('The init_func must return a '
+                                       'sequence of Artist objects.')
+                for a in self._drawn_artists:
+                    a.set_animated(self._blit)
         self._save_seq = []
-
-    def _draw_frame(self, framedata):
-        # Save the data for potential saving of movies.
-        self._save_seq.append(framedata)
-
-        # Make sure to respect save_count (keep only the last save_count
-        # around)
-        if self.save_count is not None:
-            self._save_seq = self._save_seq[-self.save_count:]
-
-        # Call the func with framedata and args. If blitting is desired,
-        # func needs to return a sequence of any artists that were modified.
-        self._drawn_artists = self._func(framedata, *self._args)
-
-    def to_html5_video(self, filename=None, extra_args=None):
-        r'''Returns animation as an HTML5 video tag.
-
-        This saves the animation as an h264 video, encoded in base64
-        directly into the HTML5 video tag. This respects the rc parameters
-        for the writer as well as the bitrate. This also makes use of the
-        ``interval`` to control the speed, and uses the ``repeat``
-        parameter to decide whether to loop.
-        '''
-        VIDEO_TAG = r'''<video {size} {options}>
-  <source type="video/mp4" src="data:video/mp4;base64,{video}">
-  Your browser does not support the video tag.
-</video>'''
-        # Cache the the rendering of the video as HTML
-        if not hasattr(self, '_base64_video'):
-            if filename is None:
-                file_ = tempfile.NamedTemporaryFile(suffix='.m4v',
-                                                    delete=False)
-            else:
-                file_ = open(filename, 'wb')
-
-            with file_ as f:
-                # We create a writer manually so that we can get the
-                # appropriate size for the tag
-                Writer = writers[rcParams['animation.writer']]
-                writer = Writer(codec='h264',
-                                bitrate=rcParams['animation.bitrate'],
-                                fps=1000. / self._interval,
-                                extra_args=extra_args)
-                self.save(f.name, writer=writer)
-
-            # Now open and base64 encode
-            with open(f.name, 'rb') as video:
-                vid64 = encodebytes(video.read())
-                self._base64_video = vid64.decode('ascii')
-                self._video_size = 'width="{0}" height="{1}"'.format(
-                    *writer.frame_size)
-
-            if filename is None:
-                # Now we can remove
-                os.remove(f.name)
-
-        # Default HTML5 options are to autoplay and to display video controls
-        options = ['controls', 'autoplay']
-
-        # If we're set to repeat, make it loop
-        if self.repeat:
-            options.append('loop')
-        return VIDEO_TAG.format(video=self._base64_video,
-                                size=self._video_size,
-                                options=' '.join(options))
 
 
 def animate(get_frames, fig=None, display=False, **kw):

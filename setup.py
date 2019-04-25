@@ -24,7 +24,6 @@ USE_CYTHON = True
 CYTHON_EXT = '.pyx' if USE_CYTHON else '.c'
 
 setup_requires = [
-    'pytest-runner',
     'setuptools>=18.0',      # automatically handles Cython extensions
     'cython>=0.28.4' if USE_CYTHON else ''
 ]

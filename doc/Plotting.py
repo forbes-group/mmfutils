@@ -125,7 +125,7 @@ font.size           : 10.0
                        ## Can be any of the LaTeX font names, including
                        ## the special name "regular" for the same font
                        ## used in regular text.
-    
+
 
 # +
 def eg():
