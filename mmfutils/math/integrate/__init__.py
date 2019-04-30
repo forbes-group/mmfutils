@@ -576,7 +576,7 @@ if numba:
         >>> import time
         >>> n = 1./np.arange(1, 2**10)
         >>> t = time.time();tmp = n.sum();t0 = time.time() - t;
-        >>> np.allclose(n.sum(), ssum_numba(n))
+        >>> np.allclose(n.sum(), ssum_numba(n)[0])
         True
         >>> t = time.time();tmp = ssum_numba(n);t1 = time.time() - t;
         >>> t1 < 8.0*t0
@@ -628,7 +628,7 @@ def ssum(xs):
     True
 
     Here is an example where the truncation errors are tested.
-    >>> try: long
+    >>> try: long = long
     ... except: long = int
     >>> N = 10000
     >>> np.random.seed(3)

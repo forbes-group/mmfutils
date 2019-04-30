@@ -37,9 +37,9 @@ dependencies:
   
   # Needed for . mmf_setup and hg ccom
   - notebook
-  
-  - pip:
-    - mmf_setup>=0.1.11
-    - persist
-    - husl
-    
+
+  # My stuff
+  - mmf_setup>=0.1.11
+  - husl
+  - persist <3.0
+      

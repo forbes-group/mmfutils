@@ -2,16 +2,16 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,py
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.3'
 #       jupytext_version: 1.0.5
 #   kernelspec:
-#     display_name: Python [conda env:_test2]
+#     display_name: Python [conda env:_test3]
 #     language: python
-#     name: conda-env-_test2-py
+#     name: conda-env-_test3-py
 # ---
 
 # + {"init_cell": true}
@@ -217,10 +217,9 @@ plt.ylabel(r'$J_0(z)$');
 
 # For use with wavefunctions, we must include the transformation to and from
 
-from itertools import product
-list(product([1,2,3], ['a', 'b']))
-
-
+import scipy.fftpack
+import scipy as sp
+sp.__version__ < "0.16.0"
 
 from mmfutils.math.bases import CylindricalBasis
 basis = CylindricalBasis(Nxr=(2, 10), Lxr=(1.0, 1.0))
@@ -256,5 +255,398 @@ basis = CylindricalBasis(Nxr=(2, 10), Lxr=(1.0, 1.0))
 x, r = basis.xyz
 gaussian = test_bases.ExactGaussian(r=r, d=2)
 
+# ## Spherical Basis
+
+# For spherically symmetric problems, one solution is to use a Bessel function DVR basis.
+#
+# Another possibility is to use a periodic 1D basis of odd functions.  This follows from the radial equations:
+#
+# $$
+#   \nabla^2 \psi(\vect{r}) = \frac{1}{r^2}\diff{}{r} r^2 \diff{\psi}{r}, \qquad
+#   \psi(r) = u(r)/r,\qquad
+#   \nabla^2 \psi(r) = \nabla^2 \frac{u(r)}{r} = \frac{1}{r}\diff[2]{u(r)}{r}.
+# $$
+#
+# Hence, we can work with the radial Schrödinger equation for $u(r)$ instead (but still use the proper functions to compute the non-linear pieces).
+
+# ### Fourier Transforms
+
+# The Fourier transform simplifies by noting that $\tilde{n}(\vect{k}) = \tilde{n}(k)$ depends only on the magnitude of $\vect{k}$ so we can take $\vect{k} = (0,0,k)$:
+#
+# $$
+#   \tilde{n}(k) = \int \d^3{\vect{r}}\; e^{-\I\vect{k}\cdot\vect{r}} n(r)\\
+#   = 2\pi \int_0^{\infty}r^2\d{r}\int_{-1}^{1}\d\cos\theta\; e^{-\I kr\cos\theta} n(r)
+#   = 2\pi \int_0^{\infty}r^2\d{r}\; 2\frac{\sin kr}{kr} n(r)
+#   = \frac{4\pi}{k} \int_0^{\infty}\d{r}\; r\sin(kr) n(r)\\
+#   = \frac{2\pi}{k} \int_{-\infty}^{\infty}\d{x}\; x\sin(kx)n(\abs{x})
+#   = \frac{-2\pi}{k} \Im \int_{-\infty}^{\infty}\d{x}\; e^{-\I kx} xn(\abs{x}).
+# $$
+#
+# Hence, we can use the standard 1D Fourier transform of $rn(\abs{r})$.  The only subtlety is at $k=0$ where we can use:
+#
+# $$
+#   \tilde{n}(0) = \int_0^{\infty}\d{r}\; 4\pi r^2 n(r) 
+#                = \int_{-\infty}^{\infty}\d{x}\; 2\pi x^2 n(\abs{x}).
+# $$
+#
+# The inverse is similar with some factors of $2\pi$:
+#
+# $$
+#   n(r) = \frac{1}{\pi r} \int_{0}^{\infty}\frac{\d{k}}{2\pi}\;
+#           \sin(kr) k\tilde{n}(\abs{k})
+#        = \frac{1}{2\pi r} \Im \int_{-\infty}^{\infty}\frac{\d{k}}{2\pi}\;
+#           e^{\I kr} k\tilde{n}(\abs{k}), \qquad
+#   n(0) = \int_{0}^{\infty}\frac{\d{k}}{(2\pi)^3} 4\pi k^2 \tilde{n}(k).
+# $$
+
+# As an example, we use the proton form factor with $r_0^{-2} = k_0^2 = 0.71$GeV$^2$:
+#
+# $$
+#   G_p(r) = \frac{e^{-r/r_0}}{8\pi r_0^3}, \qquad
+#   \tilde{G}_{p}(k) = \left(1 + \frac{k^2}{k_0^2}\right)^{-2}
+# $$
+
+# +
+import numpy as np
+
+r_0 = 1.0
+k_0 = 1./r_0
+
+N = 64
+L = 10.0
+#L = 10.0
+dx = L/N
+dk = 2*np.pi / L
 
 
+######## To Do: Make work with symmetric lattice!
+symmetric = True  # If True, then use a symmetric grid with no point at x=0
+symmetric = False
+x = np.arange(N)*dx - L / 2 + (dx / 2 if symmetric else 0)
+k = 2*np.pi * np.fft.fftfreq(N, dx)
+r = abs(x)
+
+G_r = np.exp(-r/r_0)/8/np.pi*r_0**3
+G_k = 1./(1 + k**2/k_0**2)**2
+
+def sft(n, dx=dx):
+    """Spherical Fourier transform"""
+    if symmetric:
+        assert np.allclose(n, n[::-1])
+    else:        
+        assert np.allclose(n[1:], n[1:][::-1])
+
+    N = len(n)
+    L = dx * N
+    x = np.arange(N)*dx - L / 2.0 + (dx / 2 if symmetric else 0)
+    k = 2*np.pi * np.fft.fftfreq(N, dx)
+    _ft = np.fft.fft(np.fft.fftshift(x*n))
+    #assert np.allclose(_ft.real, 0)
+    return np.ma.divide(-2*np.pi * _ft.imag * dx, k).filled(
+        (2*np.pi * x**2 * n * dx).sum())
+
+def isft(n, dx=dx):
+    """Spherical Inverse Fourier transform"""
+    N = len(n)
+    L = dx * N
+    dk = 2*np.pi / L
+    x = np.arange(N)*dx - L / 2.0 + (dx / 2 if symmetric else 0)
+    k = 2*np.pi * np.fft.fftfreq(N, dx)
+    _ift = np.fft.fftshift(np.fft.ifft(k*n))
+    #assert np.allclose(_ft.real, 0)
+    return np.ma.divide(_ift.imag, 2*np.pi * dx * x).filled(
+        (2*np.pi * k**2 * n / (2*np.pi)**3).sum() * dk)
+
+
+# -
+
+# ### Coulomb Convolution
+
+# One problem that arises in some nuclear physics work is to compute the Coulomb potential for a nucleus:
+#
+# $$
+#   V(R) = \int \d^3{\vect{r}}\; \frac{n(r)}{4\pi\abs{r-R}}.
+# $$
+#
+# This has two complications: 1) the singularities and the 2) long-range nature of the interaction which can give rise to images in a periodic box.  Our standard resolution is to use the truncated interaction and pad the array of charges so that the convolution with the truncated interaction does not pickup charges from the neighboring cells (which are now further away because of the padding).
+#
+# $$
+#   K_D(r) = \begin{cases}
+#     \frac{1}{4\pi r} & r\leq D,\\
+#     0 & r> D.
+#   \end{cases}, \qquad
+#   \tilde{K}_{D}(k) = \frac{1-\cos kD}{k^2}, \qquad
+#   \tilde{K}_{D}(0) = \frac{D^2}{2}.
+# $$
+
+# +
+def pad(f):
+    N = len(f)
+    F = np.zeros(2*N, dtype=f.dtype)
+    F[N//2:N//2+N] = f
+    F[-N//2] = f[0]
+    return F
+
+def unpad(F):
+    N = len(F)//2
+    return F[N//2:N//2+N]
+
+
+# +
+import scipy.special
+sp = scipy
+eps = np.finfo(float).eps
+a = 0.5
+D = L
+n_r = np.exp(-r**2/2/a**2)
+V_r = a**3/(r + eps) * np.sqrt(np.pi/2) * sp.special.erf((r + eps)/a/np.sqrt(2))
+
+_K = 2*np.pi * np.fft.fftfreq(2*N, dx)
+K_D = np.ma.divide(1.0 - np.cos(_K*D), _K**2).filled(D**2/2.0)
+res = unpad(isft(sft(pad(n_r))*K_D))
+assert np.allclose(res, V_r)
+
+
+# +
+# Self-contained convolution.  Reduces some intermediate steps.
+def coulomb(n_r, dx=dx):
+    N = len(n_r)
+    L = N * dx
+    D = L
+
+    X = np.arange(2*N)*dx - L
+    K = 2*np.pi * np.fft.fftfreq(2*N, dx)
+
+    K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+    n = pad(n_r)
+
+    _ft = np.fft.fft(np.fft.fftshift(X*n))
+    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
+    _ift = np.fft.fftshift(np.fft.ifft(K*tmp))
+    dk = np.pi / L
+    res = np.ma.divide(_ift.imag,  X).filled((K**2*tmp/(2*np.pi)).sum()*dk*dx)
+
+    return unpad(res)
+
+assert np.allclose(coulomb(n_r), V_r)
+
+
+# +
+# Now get rid of fftshift.
+def coulomb(n_r, dx=dx):
+    N = len(n_r)
+    L = N * dx
+    D = L
+    dk = np.pi / L
+
+    X = np.arange(2*N)*dx - L
+    K = 2*np.pi * np.fft.fftfreq(2*N, dx)
+
+    K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+    n = pad(n_r)
+
+    _ft = np.fft.fft(X*n)
+    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
+    _ift = np.fft.ifft(-_ft.imag*K_D)
+    res = np.ma.divide(_ift.imag,  X).filled(-(K**2*tmp/(2*np.pi)).sum()*dk*dx)
+    # Not sure I understand the - sign needed here...
+
+    return unpad(res)
+
+assert np.allclose(coulomb(n_r), V_r)
+# -
+
+# ### Discrete Sine Transform
+
+# We can improve performance here by using the [discrete sine transform (DST)](http://en.wikipedia.org/wiki/Discrete_sine_transform).  For best performance, one should use the DST-II or RODFT10 version which computes:
+#
+# \begin{gather}
+#   \DeclareMathOperator{\DST}{DST}
+#   2N f_n
+#       = \overbrace{2\sum_{k=0}^{N-1} F_k \sin[\pi(k+\tfrac{1}{2})(n+1)/N] \Big|_{n=0}^{N-1}}^{\DST_{II}(F_k)},
+#   \tag{RODFT10 (DST-II)}\\
+#   F_k
+#       = \overbrace{(-1)^{k}f_{N-1}+2\sum_{n=0}^{N-2} f_n \sin[\pi(k+\tfrac{1}{2})(n+1)/N] \Big|_{k=0}^{N-1}}^{\DST_{III}(f_x)},
+#   \tag{RODFT10 (DST-III)}\\
+#   \DST_{III}^{-1} = \frac{1}{2N}\DST_{II}.
+# \end{gather}
+#
+# In physical notation, we have abscissa $x = x_n = (n+1) R/N$ and $k = k_n = \pi (n+1/2)/R = 2\pi (n+1/2)/L$ for $n\in\{0,1,\cdots, N-1\}$.  Note that here we have $N$ points in the radial direction with radius $R$, hence $\d{x} = R/N$.  The correspondance with the usual periodic box is $L = 2R$.
+#
+# $$
+#   2Nf_x = \overbrace{2\sum_k F_{k}\sin(kx)}^{\DST_{II}[F_k]}
+#         = 2R\int_0^{\infty} \frac{\d{k}}{\pi} F_{k} \sin(kx),\\
+#   F_k = \overbrace{\cdots + 2\sum_x f_x \sin(kx)}^{\DST_{III}[f_x]}
+#       = \cdots + \frac{2N}{R}\int_0^{\infty} \d{x}\;f_x \sin(kx),\\
+#   \int_0^{\infty}\frac{\d{k}}{\pi} F_{k} \sin(kx) 
+#     \equiv \frac{1}{2R}\DST_{II}[F_k]
+#     \equiv \frac{N}{R}\DST_{III}^{-1}[F_k],\\
+#   \int_0^{\infty} \d{x}\;f_x \sin(kx) 
+#     \equiv \frac{R}{2N}{\DST_{III}[f_x]}.
+# $$
+#
+# From these and the expressions derived earlier, we can express the full 3D Fourier transforms:
+#
+# $$
+#   \tilde{f}_k = \frac{4\pi}{k} \int_{0}^{\infty}\d{x}\; \sin(kx) xf(x)
+#               = \frac{2\pi}{k}\frac{R}{N}\DST_{III}[x f(x)],\\
+#   f(x) = \frac{1}{2\pi x} \int_0^{\infty}\frac{\d{k}}{\pi}\; \sin(kx) k \tilde{f}_k
+#        = \frac{1}{2\pi x}\frac{N}{R}\DST_{III}^{-1}[k \tilde{f}_k].
+# $$
+
+# ### Convolution (3D)
+#
+# Convolution of spherically symmetric functions proceeds as follows:
+#
+# $$
+#   \DeclareMathOperator{\DST}{DST}
+#   V(x) = \int \d^{3}\vect{r}\;C(\norm{\vect{x}-\vect{r}})y(r)
+#   =
+#   \int \frac{\d^{3}\vect{k}}{(2\pi)^3}\;
+#   e^{\I \vect{k}\cdot\vect{r}}
+#   \tilde{C}_{\vect{k}} \tilde{y}_{\vect{k}}
+#   =
+#   \int \frac{\d^{3}\vect{k}}{(2\pi)^3}\;
+#   e^{\I \vect{k}\cdot\vect{r}}
+#   \tilde{C}_{\vect{k}} \tilde{y}_{\vect{k}},\\  
+#   \tilde{C}_{\vect{k}} 
+#   = \frac{4\pi}{k} \int_0^{\infty}\d{r}\; \sin(kr) rC(r)
+#   = \begin{cases}
+#     \frac{2\pi}{k} \frac{R}{N}\DST(rC) & k \neq 0\\
+#     \int \d^3{\vect{r}}\;C(r) & k = 0.
+#   \end{cases}
+# $$
+#
+# $$
+#   V(r) = \frac{1}{2\pi r}\frac{N}{R} \DST^{-1}\left[
+#     k \tilde{C}_k \tilde{y}_k
+#   \right]
+#   = \frac{1}{2\pi x}\frac{N}{R} \DST^{-1}\left[
+#     k \tilde{C}_k \frac{2\pi}{k} \frac{R}{N} \DST(ry_r)
+#   \right]
+#   = \frac{1}{r} \DST^{-1}\left[\tilde{C}_k \DST(ry_r)\right].
+# $$
+#
+# This is the form used in `SphericalBasis.convolve()`.
+#
+
+# +
+# %pylab inline --no-import-all
+import scipy.fftpack
+import scipy as sp
+def dst(f):
+    return scipy.fftpack.dst(f, type=3)
+
+def idst(F):
+    N = len(F)
+    return scipy.fftpack.dst(F, type=2)/(2.0*N)
+
+# Now work it for only positive abscissa
+N = 32
+R = 5.0
+dx = R/N
+r = (1.0 + np.arange(N)) * dx 
+rr = np.linspace(0,R,100.0)
+k = np.pi * (0.5 + np.arange(N))/R
+
+a = 0.5
+
+n_r = np.exp(-r**2/2/a**2)
+V_r = a**3/r * np.sqrt(np.pi/2) * sp.special.erf(r/a/np.sqrt(2))
+
+f_r = r*n_r
+f_rr = rr*np.exp(-rr**2/2/a**2)
+df_r = (1.0-(r/a)**2)*np.exp(-r**2/2/a**2)
+df_rr = (1.0-(rr/a)**2)*np.exp(-rr**2/2/a**2)
+ddf_r = (r**2-3*a**2)/a**4*f_r
+ddf_rr = (rr**2-3*a**2)/a**4*f_rr
+
+assert np.allclose(idst(-k**2*dst(f_r)), ddf_r)
+
+F_k = dst(f_r)/(2.0*N)
+assert np.allclose(
+    f_rr, 2*(F_k[None, :]*np.sin(k[None,:]*rr[:,None])).sum(axis=-1))
+# -
+
+# Finally, we compute the convolution required for the Coulomb potential.  These relationships are much simpler:
+#
+# $$
+#   k\tilde{n}(k) 
+#   = 4\pi \int_0^{\infty}\d{r}\; \sin(kr) rn(r), \qquad
+#   V(r) = \frac{1}{\pi r} \int_{0}^{\infty}\frac{\d{k}}{2\pi}\;
+#           \sin(kr) k\tilde{n}(k)
+# $$
+#
+# Again, we do this in a padded box:
+
+# We use the following test functions (in $d$-dimensions):
+#
+# $$
+#   y(r) = A e^{-(r/r_0)^2/2}, \qquad
+#   \nabla^2 y(r) = \frac{r^2 - d r_0^2}{r_0^4} y(r), \qquad
+#   e^{a\nabla^2} y(r) = A\frac{r_0^d}{\sqrt{r_0^2+2a}^d}
+#   e^{-r^2/(r_0^2+2a)/2}.
+# $$
+#
+# As a test, the convolution of this Gaussian with itself in 3D is:
+#
+# $$
+#   \int \d^{3}\vect{r}\; y(\norm{\vect{x}-\vect{r}})y(r) = 
+#   2\pi\int_0^{\infty}\d{r}\int_{-1}^{1}\d{\cos\theta}\; 
+#   r^2 y\left(\sqrt{x^2 + r^2 - 2xr\cos\theta}\right)y(r)\\
+#   = A^2r_0^3 \pi^{3/2}e^{-(x/r_0)^2/4}
+# $$
+#
+
+# +
+# Now work it for only positive abscissa
+L = 2*R
+D = L
+
+rN_r = np.concatenate([r*n_r, 0*n_r])
+K = np.pi * (0.5 + np.arange(2*N)) / (2*R)
+
+K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+
+kN_k = dst(rN_r)
+V = idst(K_D * kN_k)[:N] /  r
+assert np.allclose(V, V_r)
+# -
+
+# Here we check that convolution preserves the norm.  We use the proton form factor.
+
+# +
+import scipy.fftpack
+def dst(f):
+    return scipy.fftpack.dst(f, type=3)
+
+def idst(F):
+    N = len(F)
+    return scipy.fftpack.dst(F, type=2)/(2.0*N)
+
+N = 32
+R = 5.0
+r0 = 0.5
+k0 = 10.0
+dx = R/N
+r = (1.0 + np.arange(N)) * dx
+k = np.pi * (0.5 + np.arange(N)) / R
+
+metric = 4*np.pi * r**2 * dx
+n = np.exp(-(r/r0)**2/2)/(r0*np.sqrt(2*np.pi))**3
+assert np.allclose(1, (n*metric).sum())
+
+Gk = 1./(1 + k**2/k0**2)**2
+G = idst(Gk)/r
+q = idst(Gk * dst(r*n))/r
+
+assert np.allclose(1, (q*metric).sum())
+# -
+
+# Convolution proceedes as follows (let $q = \sqrt{r^2 + R^2 - 2rR\cos\theta}$ so that $q\d{q} = -rR\d(\cos\theta)$):
+#
+# $$
+#   V(R) = \int\d^{3}{r}\; n(r)f(\abs{R-r}) 
+#   = \frac{2\pi}{R} \int_{0}^{\infty}\d{r}\; rn(r) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
+#   = \frac{\pi}{R} \int_{-\infty}^{\infty}\d{r}\; rn(\abs{r}) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
+# $$

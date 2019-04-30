@@ -26,8 +26,8 @@ class MyFuncAnimation(FuncAnimation):
     1. Allowing user to store video when generating HTML video.
     2. Allow clean stopping between frames in a NoInterupt context.
     """
-    def __init__(self, *v, interrupted=False, **kw):
-        self.interrupted = interrupted
+    def __init__(self, *v, **kw):
+        self.interrupted = kw.pop('interrupted', False)
         FuncAnimation.__init__(self, *v, **kw)
 
     def new_frame_seq(self):

@@ -100,9 +100,11 @@ class SphericalBasis(Object, BasisMixin):
         """
         r = self.xyz[0]
         k = self._pxyz[0]
+        N, R = self.N, self.R
+        R_N = R/N
         if Ck is None:
             C0 = (self.metric * C).sum()
-            Ck = np.ma.divide(2*np.pi * dst(r*C), k).filled(C0)
+            Ck = np.ma.divide(2*np.pi * R_N * dst(r*C), k).filled(C0)
         else:
             Ck = Ck(k)
         return idst(Ck * dst(r*y)) / r
@@ -355,7 +357,7 @@ class CartesianBasis(PeriodicBasis):
                                symmetric_lattice=symmetric_lattice)
 
     def convolve_coulomb_fast(self, y, form_factors=[], correct=False):
-        """Return the approximate convolution `int(C(x-r)*y(r),r)` where
+        r"""Return the approximate convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
            C(r) = 1/r
@@ -423,7 +425,7 @@ class CartesianBasis(PeriodicBasis):
         return V
 
     def convolve_coulomb_exact(self, y, form_factors=[], method='sum'):
-        """Return the convolution `int(C(x-r)*y(r),r)` where
+        r"""Return the convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
            C(r) = 1/r

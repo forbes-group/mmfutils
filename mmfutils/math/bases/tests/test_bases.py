@@ -89,9 +89,9 @@ class ExactGaussianQuart(ExactGaussian):
         r0 = self.r_0
         d = self.d
         return (
-            self.factor * self.y *
-            (-r**4 + 2*r**2*(d+2)*r0**2 + (r**2 - d**2 - 2*d)*r0**4 - d*r0**6)
-            /r0**8)
+            self.factor * self.y
+            * (-r**4 + 2*r**2*(d+2)*r0**2 + (r**2 - d**2 - 2*d)*r0**4 - d*r0**6)
+            / r0**8)
 
     @property
     def exp_d2y(self):
@@ -234,7 +234,7 @@ class TestSphericalBasis(ConvolutionTests):
 
 
 class TestPeriodicBasis(ConvolutionTests):
-    """In this case, the exact Coulomb potential is difficult to
+    r"""In this case, the exact Coulomb potential is difficult to
     calculate, but for a localized charge distribution, it can be
     computed at the origin in terms of a Madelung constant through the
     relationship

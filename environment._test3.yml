@@ -3,26 +3,34 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3
-  - matplotlib>=1.5
-  - numpy
-  - scipy>=0.17.1
-  - numexpr
-  - uncertainties
-  - ipyparallel
-  - zope.interface>=3.8.0
+  - cython >=0.28.4
   - docutils
-  - cython
+  - ipyparallel
+  - ipython >=4.0
+  - matplotlib>=1.5
   - numba
+  - numexpr
+  - numpy >=1.15.4
   - pathlib
+  - python >=3.0
+  - uncertainties
+  - zope.interface>=3.8.0
 
   #- ipywidgets
   #- ipykernel        # Use with nb_conda_kernels so jupyter sees this kernel
     
   # For testing
-  - pytest-flake8
+  - coverage
+  - docutils
+  - flake8
+  - persist
+  - pytest
   - pytest-cov
-  - pytest-runner
+  - pytest-flake8
+  - pytest-xdist
+  - scipy >=0.17.1
+  - uncertainties
+    
   #- pylint
   #- mock
   #- pep8
@@ -35,7 +43,7 @@ dependencies:
   # Needed for . mmf_setup and hg ccom
   - notebook
 
-  - pip:
-    - mmf_setup>=0.1.11
-    - persist
-    - husl
+  # My stuff
+  - mmf_setup>=0.1.11
+  - persist >=3.0
+  - husl
