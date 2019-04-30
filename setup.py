@@ -13,22 +13,25 @@ without having to introduce an additional dependence.
   https://bitbucket.org/mforbes/mmfutils/issues
 
 """
-import os
 import sys
 
-from setuptools import setup, find_packages
-from setuptools.command.test import test as original_test
+from setuptools import setup, find_packages, Extension
 
 import mmfutils
 VERSION = mmfutils.__version__
 
+USE_CYTHON = True
+CYTHON_EXT = '.pyx' if USE_CYTHON else '.c'
+
 setup_requires = [
-    'pytest-runner'
+    'setuptools>=18.0',      # automatically handles Cython extensions
+    'cython>=0.28.4' if USE_CYTHON else ''
 ]
 
 install_requires = [
     "zope.interface>=3.8.0",
     'husl',
+    'pathlib',
     'backports.tempfile',
 ]
 
@@ -44,9 +47,14 @@ test_requires = [
     "persist",
     "numpy",
     "numexpr",
-    "weave",
     "uncertainties",
 ]
+
+extensions = [
+    Extension(
+        'mmfutils.math.integrate._ssum',
+        ['mmfutils/math/integrate/_ssum_cython' + CYTHON_EXT]
+    )]
 
 # Remove mmfutils so that it gets properly covered in tests. See
 # http://stackoverflow.com/questions/11279096
@@ -56,10 +64,16 @@ for mod in list(sys.modules.keys()):
 del mod
 
 
+if USE_CYTHON:
+    from Cython.Build import cythonize
+    extensions = cythonize(extensions)
+
+
 setup(name='mmfutils',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
 
+      ext_modules=extensions,
       setup_requires=setup_requires,
       install_requires=install_requires,
       extras_require={},

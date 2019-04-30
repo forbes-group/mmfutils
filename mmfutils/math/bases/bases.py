@@ -100,9 +100,11 @@ class SphericalBasis(Object, BasisMixin):
         """
         r = self.xyz[0]
         k = self._pxyz[0]
+        N, R = self.N, self.R
+        R_N = R/N
         if Ck is None:
             C0 = (self.metric * C).sum()
-            Ck = np.ma.divide(2*np.pi * dst(r*C), k).filled(C0)
+            Ck = np.ma.divide(2*np.pi * R_N * dst(r*C), k).filled(C0)
         else:
             Ck = Ck(k)
         return idst(Ck * dst(r*y)) / r
@@ -132,12 +134,15 @@ class PeriodicBasis(Object, BasisMixin):
     boost_pxyz : float
        Momentum of moving frame.  Momenta are shifted by this, which
        corresponds to working in a boosted frame with velocity `vx = px/m`.
+    smoothing_cutoff : float
+       Fraction of maximum momentum used in the function smooth().
     """
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
-                 axes=None, boost_pxyz=None):
+                 axes=None, boost_pxyz=None, smoothing_cutoff=0.8):
         self.symmetric_lattice = symmetric_lattice
         self.Nxyz = np.asarray(Nxyz)
         self.Lxyz = np.asarray(Lxyz)
+        self.smoothing_cutoff = smoothing_cutoff
         if boost_pxyz is None:
             boost_pxyz = np.zeros_like(self.Lxyz)
         self.boost_pxyz = np.asarray(boost_pxyz)
@@ -161,6 +166,13 @@ class PeriodicBasis(Object, BasisMixin):
                       for (_p, _b) in zip(self._pxyz, self.boost_pxyz)]
         self.metric = np.prod(self.Lxyz/self.Nxyz)
         self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
+
+        p2_pc2 = sum(
+            (_p/(self.smoothing_cutoff * _p).max())**2
+            for _p in self._pxyz)
+        self._smoothing_factor = np.where(p2_pc2 < 1, 1, 0)
+        #np.exp(-p2_pc2**4)
+        #self._smoothing_factor = 1.0
 
     @property
     def kx(self):
@@ -240,6 +252,10 @@ class PeriodicBasis(Object, BasisMixin):
         """Perform the ifft along spatial axes"""
         axes = self.axes % len(x.shape)
         return ifftn(x, axes=axes)
+
+    def smooth(self, x, frac=0.8):
+        """Smooth the state by multiplying by form factor."""
+        return self.ifftn(self._smoothing_factor*self.fftn(x))
 
     def get_gradient(self, y):
         # TODO: Check this for the highest momentum issue.
@@ -341,7 +357,7 @@ class CartesianBasis(PeriodicBasis):
                                symmetric_lattice=symmetric_lattice)
 
     def convolve_coulomb_fast(self, y, form_factors=[], correct=False):
-        """Return the approximate convolution `int(C(x-r)*y(r),r)` where
+        r"""Return the approximate convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
            C(r) = 1/r
@@ -409,7 +425,7 @@ class CartesianBasis(PeriodicBasis):
         return V
 
     def convolve_coulomb_exact(self, y, form_factors=[], method='sum'):
-        """Return the convolution `int(C(x-r)*y(r),r)` where
+        r"""Return the convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
            C(r) = 1/r
@@ -591,6 +607,8 @@ class CylindricalBasis(Object, BasisMixin):
     def Nx(self):
         return self.Nxr[0]
 
+    ######################################################################
+    # IBasisMinimal: Required methods
     def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
         r"""Return the laplacian of y.
 
@@ -622,7 +640,8 @@ class CylindricalBasis(Object, BasisMixin):
         else:
             return self.apply_exp_K(y=y, factor=-factor, kx2=kx2,
                                     twist_phase_x=twist_phase_x)
-        
+    ######################################################################
+
     def get_gradient(self, y):
         """Returns the gradient along the x axis."""
         kx = self.kx
@@ -757,9 +776,9 @@ class CylindricalBasis(Object, BasisMixin):
 
         return K, r1, r2, w
 
-    def _r(self, N):
+    def _r(self, N, nu=0.0):
         r"""Return the abscissa."""
-        nu = 0.0                # l=0 cylindrical: nu = l + d/2 - 1
+        # l=0 cylindrical: nu = l + d/2 - 1
         return bessel.j_root(nu=nu, N=N) / self._kmax
 
     def _F(self, n, r, d=0):

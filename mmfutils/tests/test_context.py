@@ -10,6 +10,17 @@ from mmfutils.contexts import NoInterrupt
 
 
 class TestNoInterrupt(object):
+    @staticmethod
+    def simulate_interrupt(force=False):
+        """Simulates an interrupt or forced interupt."""
+        # Simulate user interrupt
+        os.kill(os.getpid(), signal.SIGINT)
+        if force:
+            # Simulated a forced interrupt with multiple signals
+            os.kill(os.getpid(), signal.SIGINT)
+            os.kill(os.getpid(), signal.SIGINT)
+        time.sleep(0.1)
+
     def test_typical_use(self):
         """Typical usage"""
         with NoInterrupt() as interrupted:
@@ -40,7 +51,7 @@ class TestNoInterrupt(object):
                 m = -1
                 for n in range(10):
                     if n == 5:
-                        os.kill(os.getpid(), signal.SIGINT)
+                        self.simulate_interrupt()
                     if interrupted:
                         m = n
         assert n == 9
@@ -48,7 +59,7 @@ class TestNoInterrupt(object):
 
         # Make sure the signals can still be raised.
         with pytest.raises(KeyboardInterrupt):
-            os.kill(os.getpid(), signal.SIGINT)
+            self.simulate_interrupt()
             time.sleep(1)
 
         # And that the interrupts are reset
@@ -69,19 +80,10 @@ class TestNoInterrupt(object):
             with pytest.raises(KeyboardInterrupt):
                 with NoInterrupt(ignore=False) as interrupted:
                     while not interrupted:
-                        os.kill(os.getpid(), signal.SIGHUP)
+                        self.simulate_interrupt()
         finally:
             # Reset signals
             NoInterrupt.catch_signals(signals)
-
-    def simulate_interrupt(self, force=False):
-        """Simulates an interrupt or forced interupt."""
-        # Simulate user interrupt
-        os.kill(os.getpid(), signal.SIGINT)
-        if force:
-            # Simulated a forced interrupt with multiple signals
-            os.kill(os.getpid(), signal.SIGINT)
-            os.kill(os.getpid(), signal.SIGINT)
 
     def interrupted_loop(self, interrupted=False, force=False):
         """Simulates an interrupt or forced interupt in the middle of a
@@ -95,7 +97,6 @@ class TestNoInterrupt(object):
             self.n[0] += 1
             if self.n[0] == 5:
                 self.simulate_interrupt(force=force)
-                time.sleep(0.1)
             self.n[1] += 1
             done = self.n[0] >= 10
 
@@ -129,7 +130,6 @@ class TestNoInterrupt(object):
                         break
                     if a == 1 and b == 1:
                         self.simulate_interrupt()
-                        time.sleep(0.1)
                     completed.append((a, b))
                     
         assert completed == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1),
@@ -146,7 +146,6 @@ class TestNoInterrupt(object):
                             break
                         if a ==1 and b == 1:
                             self.simulate_interrupt()
-                            time.sleep(0.1)
                         completed.append((a, b))
 
         assert completed == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1)]
@@ -162,7 +161,6 @@ class TestNoInterrupt(object):
                             break
                         if a ==1 and b == 1:
                             self.simulate_interrupt()
-                            time.sleep(0.1)
                         completed.append((a, b))
 
                 with NoInterrupt(ignore=True) as i3:
@@ -177,3 +175,60 @@ class TestNoInterrupt(object):
         # Perhaps this should be the result.
         # assert completed == [(0, 0), (0, 1), (0, 2), (0, 3),
         #                      (1, 0), (1, 1), (1, 3)]
+
+    def test_unused_context(self):
+        """Test issue 28: bare instance hides signals.
+
+        Signals should only be caught in contexts.
+        """
+        NoInterrupt()
+
+        # Signals should no longer be caught
+        with pytest.raises(KeyboardInterrupt):
+            self.simulate_interrupt()
+            time.sleep(1)
+
+    def test_reused_context(self):
+        """Test that NoInterrupt() instances can be reused."""
+        ni = NoInterrupt()
+        with pytest.raises(KeyboardInterrupt):
+            with ni as interrupted:
+                self.interrupted_loop(interrupted=interrupted, force=True)
+        assert np.allclose(self.n, [5, 4])
+            
+        with ni as interrupted:
+            self.interrupted_loop(interrupted=interrupted, force=False)
+        assert np.allclose(self.n, [5, 5])
+
+    def test_map(self):
+        def f(x, values_computed):
+            if x == 2:
+                self.simulate_interrupt()
+            values_computed.append(x)
+            return x**2
+
+        values_computed = []
+        res = NoInterrupt().map(f, [1, 2, 3], values_computed=values_computed)
+        assert res == [1, 4]
+        
+        with pytest.raises(KeyboardInterrupt):
+            # Signals still work.
+            self.simulate_interrupt()
+
+        # Here the interrupt should not be ignored, but f() should be
+        # allowed to complete.
+        values_computed = []
+        res = []
+        with pytest.raises(KeyboardInterrupt):
+            res = NoInterrupt(ignore=False).map(f, [1, 2, 3],
+                                                values_computed=values_computed)
+        assert res == []
+        assert values_computed == [1, 2]
+            
+        # As opposed to a normal map:
+        values_computed = []
+        res = []
+        with pytest.raises(KeyboardInterrupt):
+            res = list(map(lambda x: f(x, values_computed), [1, 2, 3]))
+        assert res == []
+        assert values_computed == [1]

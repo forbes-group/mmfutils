@@ -1,6 +1,7 @@
 """General utility functions"""
 from __future__ import absolute_import, division
 
+from distutils.version import StrictVersion
 import functools
 import operator
 
@@ -83,22 +84,30 @@ def get_kxyz(Nxyz, Lxyz):
 def dst(f, axis=-1):
     """Return the Discrete Sine Transform (DST III) of `f`"""
     args = dict(type=3, axis=axis)
-    if np.iscomplexobj(f):
-        # This is needed for scipy < 0.16.0
-        return (sp.fftpack.dst(f.real, **args) + 1j*
-                sp.fftpack.dst(f.imag, **args))
-    else:
-        return sp.fftpack.dst(f, **args)
+    return sp.fftpack.dst(f, **args)
 
 
 def idst(F, axis=-1):
     """Return the Inverse Discrete Sine Transform (DST II) of `f`"""
     N = F.shape[-1]
     args = dict(type=2, axis=axis)
-    if np.iscomplexobj(F):
-        # This is needed for scipy < 0.16.0
-        res = (sp.fftpack.dst(F.real, **args) + 1j*
-               sp.fftpack.dst(F.imag, **args))
-    else:
-        res = sp.fftpack.dst(F, **args)
-    return res/(2.0*N)
+    return sp.fftpack.dst(F, **args)/(2.0*N)
+
+
+if StrictVersion(sp.__version__) < StrictVersion('0.16.0'):
+    # Scipy pre 0.16.0 cannot handle complex inputs.
+    dst_real, idst_real = dst, idst
+
+    def dst(f, axis=-1):
+        """Return the Discrete Sine Transform (DST III) of `f`"""
+        res = dst_real(f.real)
+        if np.iscomplexobj(f):
+            res = res + 1j*dst_real(f.imag)
+        return res
+
+    def idst(F, axis=-1):
+        """Return the Inverse Discrete Sine Transform (DST II) of `f`"""
+        res = idst_real(F.real)
+        if np.iscomplexobj(F):
+            res = res + 1j*idst_real(F.imag)
+        return res

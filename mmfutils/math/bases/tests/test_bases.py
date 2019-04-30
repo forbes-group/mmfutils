@@ -1,4 +1,4 @@
-"""
+r"""
 
 As a test function, we compute the Laplacian of a Gaussian which has
 the following form:
@@ -7,7 +7,8 @@ the following form:
 
             y(r) &= e^{-(r/r_0)^2/2}\\
    \nabla^2 y(r) &= \frac{r^2 - dr_0^2}{r_0^4} y(r)\\
-   e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d} e^{-r^2/(r_0^2+2a)/2}
+   e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d}
+   e^{-r^2/(r_0^2+2a)/2}
 """
 import numpy as np
 import scipy.special
@@ -57,8 +58,8 @@ class ExactGaussian(object):
     @property
     def d2y(self):
         """Exact Laplacian with factor"""
-        return (self.factor * self.y *
-                (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
+        return (self.factor * self.y
+                * (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
 
     def get_dy(self, x):
         """Exact gradient along x direction"""
@@ -88,9 +89,9 @@ class ExactGaussianQuart(ExactGaussian):
         r0 = self.r_0
         d = self.d
         return (
-            self.factor * self.y *
-            (-r**4 + 2*r**2*(d+2)*r0**2 + (r**2 - d**2 - 2*d)*r0**4 - d*r0**6)
-            /r0**8)
+            self.factor * self.y
+            * (-r**4 + 2*r**2*(d+2)*r0**2 + (r**2 - d**2 - 2*d)*r0**4 - d*r0**6)
+            / r0**8)
 
     @property
     def exp_d2y(self):
@@ -225,9 +226,15 @@ class TestSphericalBasis(ConvolutionTests):
         cls.exact = ExactGaussian(
             r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
 
+    def test_convolution(self):
+        """Test the convolution."""
+        y = self.y
+        convolution = self.basis.convolve(y, y)
+        assert np.allclose(convolution, self.exact.convolution)
+
 
 class TestPeriodicBasis(ConvolutionTests):
-    """In this case, the exact Coulomb potential is difficult to
+    r"""In this case, the exact Coulomb potential is difficult to
     calculate, but for a localized charge distribution, it can be
     computed at the origin in terms of a Madelung constant through the
     relationship

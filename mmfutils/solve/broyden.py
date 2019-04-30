@@ -11,7 +11,7 @@ import numpy as np
 
 # We import these here in case we want to change in future to use more
 # efficient implementations.
-from numpy import dot
+from numpy import matmul
 
 import scipy.optimize.nonlin
 import scipy as sp
@@ -58,8 +58,6 @@ class DyadicSum(object):
     .. todo:: Support __array_ufunc__:
        https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
 
-    .. note::   
-
     Examples
     --------
     >>> np.random.seed(3)
@@ -70,41 +68,43 @@ class DyadicSum(object):
     >>> b = B[:n, :]
     >>> sigma = np.eye(n)
     >>> s = DyadicSum(at=at, b=b, sigma=sigma, n_max=n)
-    >>> np.allclose(np.dot(s._at*s._sigma, s._b), np.dot(at, b))
+    >>> np.allclose(s._at*s._sigma @ s._b, at @ b)        # doctest: +SKIP
     True
 
     Now we add the remaining terms.  The dyadic sum should be the
-    best rank n approximation of `At*B`:
+    best rank n approximation of `At @ B`:
 
     >>> s.add_dyad(at=At[:, n:], b=B[n:, :], sigma=np.eye(m))
-    >>> U, d, Vt = np.linalg.svd(np.dot(At, B))
-    >>> d[n:] = 0                   # Make rank deficient approx
-    >>> np.allclose(np.dot(s._at*s._sigma, s._b), np.dot(U*d, Vt))
+    >>> U, d, Vt = np.linalg.svd(At @ B)                  # doctest: +SKIP
+    >>> d[n:] = 0    # Make rank deficient approx         # doctest: +SKIP
+    >>> np.allclose(s._at*s._sigma @ s._b, U*d @ Vt)      # doctest: +SKIP
     True
 
     Note that the approximation is not exact:
 
-    >>> np.allclose(np.dot(s._at*s._sigma, s._b), np.dot(At, B))
+    >>> np.allclose(s._at*s._sigma @ s._b, At @ B)        # doctest: +SKIP
     False
 
     Examples
     --------
     >>> J = DyadicSum()
-    >>> x = np.mat([[1.0],
-    ...             [2.0]])
-    >>> J*x - x
-    matrix([[ 0.],
-            [ 0.]])
-    >>> b = np.mat([[1.0, 0.0]])
-    >>> a = np.mat([[0.0],
-    ...             [2.0]])
+    >>> x = np.array([[1.0],
+    ...               [2.0]])
+    >>> J @ x - x                                         # doctest: +SKIP
+    array([[0.],
+           [0.]])
+    >>> b = np.array([[1.0, 0.0]])
+    >>> a = np.array([[0.0],
+    ...               [2.0]])
 
     >>> J.add_dyad(a, b)
-    >>> J*x
-    matrix([[ 1.],
-            [ 4.]])
-    >>> x.T*J
-    matrix([[ 5., 2.]])
+    >>> J @ x                                             # doctest: +SKIP
+    array([[1.],
+           [4.]])
+    >>> x.T @ J                                           # doctest: +SKIP 
+    array([[5., 2.]])
+    >>> J.__rmatmul__(x.T)
+    array([[5., 2.]])
 
     Here is an example of limiting the size of the dyadic.
 
@@ -181,6 +181,10 @@ class DyadicSum(object):
     alpha : float
        Initial dyad is this factor times the identity.
     """
+    # Ensure that this has higher priority than numpy or scipy arrays
+    # so that A @ B will call B.__rmatmul__ if B is a DyadicSum.
+    __array_priority__ = 100.0   # https://stackoverflow.com/questions/55879170
+
     def __init__(self,
                  at=None, b=None, sigma=None, alpha=1.0,
                  n_max=np.inf, use_svd=True,
@@ -231,17 +235,17 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.todense()
-        array([[ 2., 3.],
-               [ 2., 5.]])
+        array([[2., 3.],
+               [2., 5.]])
         >>> M.reset()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         """
         self._at = np.empty((0, 0), dtype=float)
         self._b = np.empty((0, 0), dtype=float)
@@ -396,8 +400,8 @@ class DyadicSum(object):
             # This could be optimized using BLAS and LAPACK here for
             # both inplace operations and to avoid making copies.
             # Right now there is no point in the added complication.
-            aa = dot(at, at.T)
-            bb = dot(b, b.T)
+            aa = matmul(at, at.T)
+            bb = matmul(b, b.T)
 
             la = np.linalg.cholesky(aa)
             lb = np.linalg.cholesky(bb)
@@ -408,7 +412,7 @@ class DyadicSum(object):
         else:
             qa, ra = np.linalg.qr(at)      # at = qa*ra
             qb, rb = np.linalg.qr(b.T)     # b = rb.T*qb.T
-            sigma = dot(ra, dot(sigma, rb.T))
+            sigma = matmul(ra, matmul(sigma, rb.T))
             if self.use_svd:
                 u, d_, vt = np.linalg.svd(sigma)
                 max_inds = np.where(d_/d_.max() >=
@@ -418,8 +422,8 @@ class DyadicSum(object):
                 else:
                     max_ind = self.n_max
                 max_ind = min(max_ind, len(u))
-                at = dot(qa, u[:, :max_ind])
-                b = dot(vt[:max_ind, :], qb.T)
+                at = matmul(qa, u[:, :max_ind])
+                b = matmul(vt[:max_ind, :], qb.T)
                 sigma = d_[:max_ind]
             else:
                 at = qa
@@ -456,22 +460,22 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.todense()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.todense()
-        array([[ 2., 3.],
-               [ 2., 5.]])
+        array([[2., 3.],
+               [2., 5.]])
         """
         if len(self._b) == 0:
             return np.array(self.alpha)
 
         if 1 == len(self._sigma.shape):
-            M = dot(self._at*self._sigma, self._b)
+            M = matmul(self._at*self._sigma, self._b)
         else:
-            M = dot(self._at, dot(self._sigma, self._b))
+            M = matmul(self._at, matmul(self._sigma, self._b))
         return M + self.alpha*np.eye(*M.shape)
 
     def diag(self, k=0):
@@ -481,13 +485,13 @@ class DyadicSum(object):
         --------
         >>> M = DyadicSum()
         >>> M.diag()
-        array(1.0)
+        array(1.)
         >>> M.add_dyad([1, 0], [1, 0])
         >>> M.add_dyad([0, 2], [1, 0])
         >>> M.add_dyad([3, 0], [0, 1])
         >>> M.add_dyad([0, 4], [0, 1])
         >>> M.diag()
-        array([ 2., 5.])
+        array([2., 5.])
         """
         if len(self._b) == 0:
             return np.array(1.0)
@@ -497,7 +501,7 @@ class DyadicSum(object):
         if 1 == len(self._sigma.shape):
             at = self._at*self._sigma
         else:
-            at = dot(self._at, self._sigma)
+            at = matmul(self._at, self._sigma)
         na = at.shape[0]
         nb = b.shape[1]
         ka = max(0, -k)
@@ -508,7 +512,7 @@ class DyadicSum(object):
             d += self.alpha
         return d
 
-    def __mul__(self, x):
+    def __matmul__(self, x):
         r"""Matrix multiplication: Return self*x."""
         if 0 == len(self._b):
             res = self.alpha*x
@@ -517,16 +521,16 @@ class DyadicSum(object):
             if 1 == len(shape):
                 x = x.reshape((len(x), 1))
             if 1 == len(self._sigma.shape):
-                res = self.alpha * x + dot(self._at,
-                                           np.multiply(self._sigma[:, None],
-                                                       dot(self._b, x)))
+                res = self.alpha * x + matmul(self._at,
+                                              np.multiply(self._sigma[:, None],
+                                                          matmul(self._b, x)))
             else:
-                res = self.alpha * x + dot(self._at, dot(self._sigma,
-                                                         dot(self._b, x)))
+                res = self.alpha * x + matmul(self._at, matmul(self._sigma,
+                                                               matmul(self._b, x)))
             res = res.reshape(shape)
         return res
 
-    def __rmul__(self, x):
+    def __rmatmul__(self, x):
         r"""Matrix multiplication: Return x*self."""
         if 0 == len(self._b):
             res = self.alpha * x
@@ -535,12 +539,12 @@ class DyadicSum(object):
             if 1 == len(shape):
                 x = x.reshape((1, len(x)))
             if 1 == len(self._sigma.shape):
-                res = self.alpha * x + dot(
-                    np.multiply(dot(x, self._at),
+                res = self.alpha * x + matmul(
+                    np.multiply(matmul(x, self._at),
                                 self._sigma[None, :]), self._b)
             else:
-                res = self.alpha * x + dot(dot(dot(x, self._at),
-                                               self._sigma), self._b)
+                res = self.alpha * x + matmul(matmul(matmul(x, self._at),
+                                                     self._sigma), self._b)
             res = res.reshape(shape)
         return res
 
@@ -566,8 +570,8 @@ class DyadicSum(object):
 
     def dot(self, x):
         """Return the matrix multiplication of self with x."""
-        return self.__mul__(x)
-    
+        return self.__matmul__(x)
+
     def __getitem__(self, key):
         r"""Minimal support of two-dimensional indexing.
 
@@ -603,9 +607,9 @@ class DyadicSum(object):
             if 2 < len(b.shape):
                 b = np.rollaxis(b, 0, -1)
             if 1 == len(self._sigma.shape):
-                res = dot(at*self._sigma, b).squeeze()
+                res = matmul(at*self._sigma, b).squeeze()
             else:
-                res = dot(at, dot(self._sigma, b)).sqeeze()
+                res = matmul(at, matmul(self._sigma, b)).sqeeze()
 
             if res.shape == ():
                 res = res.reshape((1, 1))
@@ -636,14 +640,14 @@ class DyadicSum(object):
         Bdf = self.dot(df)
         
         if method == 'good':
-            dxB = np.asmatrix(dx)*self
+            dxB = self.__rmatmul__(np.asarray(dx))     # dx @ self
             self.add_dyad((dx - Bdf)/dx.dot(Bdf), dxB)
         else:
             self.add_dyad((dx - Bdf)/df.dot(df), df)
 
 
 class JacobianBFGS(sp.optimize.nonlin.Jacobian):
-    """Represent a symmetric matrix by a memory-limited L-BFGS approximation.
+    r"""Represent a symmetric matrix by a memory-limited L-BFGS approximation.
 
     This assumes that the Jacobian $J_{ij} = \partial_i\partial_j f(x)$ is
     symmetric, and stores a memory-limited representation of the Hessian $H =
@@ -653,7 +657,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
 
     .. [Nocedal:2006]
        Jorge Nocedal and Stephen J. Wright, `"Numerical Optimization"
-       <http://dx.doi.org/10.1007/978-0-387-40065-5>`_,  ,  (2006) 
+       <http://dx.doi.org/10.1007/978-0-387-40065-5>`_,  ,  (2006)
 
     Attributes
     ----------
@@ -777,7 +781,7 @@ class Jacobian(DyadicSum):
         return self.inv().dot(v)
 
     def rsolve(self, v):
-        return self.inv().__rmul__(v)
+        return self.inv().__rmatmul__(v)
 
     def update(self, x, f):
         if self.last_x is not None:
@@ -788,10 +792,10 @@ class Jacobian(DyadicSum):
         self.last_f = np.copy(f)
 
     def matvec(self, v):
-        return self.__mul__(v)
+        return self.__matmul__(v)
 
     def rmatvec(self, v):
-        return self.__rmul__(v)
+        return self.__rmatmul__(v)
 
 
 class L_BFGS(object):

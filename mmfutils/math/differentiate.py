@@ -194,8 +194,8 @@ def hessian(f, x, **kw):
     >>> def f(x): return np.arctan2(*x)
     >>> def df(x): return np.array([x[1], -x[0]])/np.sum(x**2)
     >>> def ddf(x):
-    ...     return np.array([[-2.*x[0]*x[1], -np.diff(x**2)],
-    ...                      [-np.diff(x**2), 2.*x[0]*x[1]]])/np.sum(x**2)**2
+    ...     return np.array([[-2.*x[0]*x[1], -np.diff(x**2)[0]],
+    ...                      [-np.diff(x**2)[0], 2.*x[0]*x[1]]])/np.sum(x**2)**2
     >>> x = [0.1, 0.2]
     >>> D, H = hessian(f, x, h0=0.1)
     >>> x= np.asarray(x)

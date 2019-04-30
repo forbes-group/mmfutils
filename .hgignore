@@ -12,3 +12,5 @@ mmfutils.egg-info
 */htmlcov
 *.pyc
 *.pyo
+.pytest_cache/
+doc/*.ipynb     # Only store .py files by default.

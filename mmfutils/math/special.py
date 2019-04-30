@@ -1,5 +1,6 @@
 from __future__ import division, with_statement, print_function, absolute_import
 
+import math
 import numpy as np
 
 from scipy.special import ellipe, ellipk, lambertw
@@ -40,3 +41,29 @@ def ellipkinv(K, iter=4):
         df = (E_m - (1-m)*K_m) / (2*m*(1-m))
         m -= f/df
     return m
+
+
+def step(t, t1, alpha=3.0):
+    r"""Smooth step function that goes from 0 at time ``t=0`` to 1 at time
+    ``t=t1``.  This step function is $C_\infty$:
+    """
+    if t < 0.0:
+        return 0.0
+    elif t < t1:
+        return (1 + math.tanh(alpha*math.tan(math.pi*(2*t/t1-1)/2)))/2
+    else:
+        return 1.0
+
+
+def mstep(t, t1, alpha=3.0):
+    r"""Smooth step function that goes from 0 at time ``t=0`` to 1 at time
+    ``t=t1``. This step function is $C_\infty$:
+    
+    This is a vectorized version of `step()` using np.piecewi.
+    """
+    t = np.asarray(t)
+    return np.piecewise(
+        t,
+        [t < 0.0, np.logical_and(0 <= t, t < t1)],
+        [0.0, lambda t: (1 + np.tanh(alpha*np.tan(np.pi*(2*t/t1-1)/2)))/2, 1.0])
+    

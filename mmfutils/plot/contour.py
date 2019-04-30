@@ -115,7 +115,7 @@ def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, **kw):
                      levels=levels, **args)
     c2 = plt.contour(x, y, abs(np.angle(_z*np.exp(0.5j*np.pi))),
                      levels=levels, **args)
-    c2.levels = (c2.levels + 0.5*np.pi)
+    c2.levels = np.add(c2.levels, 0.5*np.pi)
     c2.levels = np.where(c2.levels <= np.pi,
                          c2.levels,
                          c2.levels - 2.0*np.pi)
