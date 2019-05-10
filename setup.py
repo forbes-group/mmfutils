@@ -20,7 +20,7 @@ from setuptools import setup, find_packages, Extension
 import mmfutils
 VERSION = mmfutils.__version__
 
-USE_CYTHON = True
+USE_CYTHON = False
 CYTHON_EXT = '.pyx' if USE_CYTHON else '.c'
 
 setup_requires = [

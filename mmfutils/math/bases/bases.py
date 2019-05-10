@@ -8,6 +8,7 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
+from . import interface
 from .interface import (classImplements, IBasis, IBasisKx, IBasisWithConvolution,
                         BasisMixin)
 from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
@@ -18,7 +19,8 @@ sp = scipy
 
 _TINY = np.finfo(float).tiny
 
-__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis']
+__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
+           'interface']
 
 
 class SphericalBasis(Object, BasisMixin):

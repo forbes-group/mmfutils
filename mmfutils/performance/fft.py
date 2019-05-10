@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function
 
 import functools
 import itertools
+import warnings
 
 import numpy.fft
 import numpy as np
@@ -195,6 +196,7 @@ try:                     # NOQA  This is too complex, but that is okay
     fftn = fftn_pyfftw
     ifftn = ifftn_pyfftw
 except ImportError:              # pragma: nocover
+    warnings.warn("Could not import pyfftw... falling back to numpy")
     fft = fft_numpy
     ifft = ifft_numpy
     fftn = fftn_numpy
