@@ -51,12 +51,22 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     if interpolate and not (
             np.allclose(np.diff(np.diff(x)), 0) and
             np.allclose(np.diff(np.diff(y)), 0)):
-        spl = sp.interpolate.RectBivariateSpline(x, y, z, kx=1, ky=1, s=0)
+
         Nx = int(min(5*len(x), (x.max()-x.min()) / np.diff(sorted(x)).min()))
         Ny = int(min(5*len(y), (y.max()-y.min()) / np.diff(sorted(y)).min()))
-        x = np.linspace(x.min(), x.max(), Nx)
-        y = np.linspace(y.min(), y.max(), Ny)
-        z = spl(x[:, None], y[None, :])
+        X = np.linspace(x.min(), x.max(), Nx)
+        Y = np.linspace(y.min(), y.max(), Ny)
+        
+        # Vectorize this over last few indices of z.  This allows z to
+        # be an RGB tuple for example.
+        z_ = np.reshape(z, z.shape[:2] + (int(np.prod(z.shape[2:])),))
+        Z = []
+        for _n in range(z_.shape[-1]):
+            spl = sp.interpolate.RectBivariateSpline(
+                x, y, z_[..., _n], kx=1, ky=1, s=0)
+            Z.append(spl(X[:, None], Y[None, :]).T)
+        Z = np.transpose(Z)
+        x, y, z = X, Y, np.reshape(Z, (Nx, Ny) + z.shape[2:])
 
     assert np.allclose(np.diff(np.diff(x)), 0)
     assert np.allclose(np.diff(np.diff(y)), 0)
