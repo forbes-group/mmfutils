@@ -6,8 +6,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.4'
+#       jupytext_version: 1.1.3
 #   kernelspec:
 #     display_name: Python [conda env:_test3]
 #     language: python
@@ -17,6 +17,8 @@
 # + {"init_cell": true}
 import mmf_setup;mmf_setup.nbinit()
 # -
+
+# # Background
 
 # Here are the properties of the basis, including abscissa, basis functions, integration weights, and some quantities that appear in the DVR literature.  The general idea of a DVR basis is to introduce a set of basis functions $F_n(x) = \braket{x|F_n}$ and an associated set of abscissa $x_n$ such that:
 #
@@ -46,7 +48,8 @@ import mmf_setup;mmf_setup.nbinit()
 #   \qquad \ket{F_n} = \sqrt{\lambda_n}\ket{\Delta_n}, \qquad
 #   \lambda_n = \frac{1}{\braket{\Delta_n|\Delta_n}}
 #             = \frac{1}{\Delta_n(x_n)}
-#             = \frac{1}{F_n^2(x_n)}.
+#             = \frac{1}{F_n^2(x_n)},\qquad
+#   F_n(x_m) = \frac{\delta_{mn}}{\sqrt{\lambda_n}}.
 # $$
 #
 # The normalization factors $\lambda_n$ act as a set of integration weights that are exact for all functions $g(x) = F_{i}^*(x) F_{j}(x)$ expressed as products of basis elements:
@@ -114,51 +117,7 @@ import mmf_setup;mmf_setup.nbinit()
 # \end{gather}
 #
 
-# ## Cylindrical Basis
-
-# To represent problems with cylindrical coordinates we use a periodic basis for $x$ and a bessel-function DVR basis for the radial coordinate. Here we describe the properties of the bessel-function basis.  These are expressed in terms of the [Bessel function](https://en.wikipedia.org/wiki/Bessel_function#Bessel's_integrals) (with $n \equiv \alpha \equiv \nu$:
-#
-# $$
-#   J_\nu(x) = \frac{1}{\pi}\int_0^{\pi}\cos(\nu\tau - x\sin\tau)\d{\tau} 
-#   - \frac{\sin \nu\pi}{\pi}\int_0^\infty e^{-x\sinh t - \nu t}\d{t} 
-# $$
-
-# +
-import numpy as np
-from scipy.integrate import quad
-from mmfutils.math import bessel
-
-alpha = 1.1
-x = 1.5
-J_0 = bessel.J(alpha, 0)
-J_0(x)
-
-def J(x, nu):
-    """Integral definition of J_n(x)."""
-    def integrand1(tau):
-        return np.cos(nu*tau-x*np.sin(tau))/np.pi
-    def integrand2(t):
-        return np.sin(nu*np.pi)*np.exp(-x*np.sinh(t) - nu*t)/np.pi
-    res1, err1 = quad(integrand1, 0, np.pi)
-    res2, err2 = quad(integrand2, 0, np.inf)
-    return res1 - res2, np.sqrt(err1**2 + err2**2)
-
-assert np.allclose(J(x, alpha)[0], J_0(x))
-# -
-
-# %pylab inline --no-import-all
-plt.figure(figsize=(12,3))
-z = np.linspace(0, 10*np.pi, 100)
-for nu in [0,1,2,3]:
-    l, = plt.plot(z/np.pi, bessel.J(nu,d=0)(z), 
-                  label=r"$\nu={}$".format(nu))
-    for z0 in bessel.j_root(nu, 10):
-        if z0 <= z.max():
-            plt.axvline(z0/np.pi, c=l.get_c(), ls='-', alpha=0.5)
-plt.grid(True)
-plt.legend()
-plt.xlabel(r'$z/\pi$');
-plt.ylabel(r'$J_0(z)$');
+# # Spherical Symmetry
 
 # Recall that in $d$-dimensions, [the Laplacian is](https://en.wikipedia.org/wiki/Spherical_harmonics#Higher_dimensions):
 #
@@ -189,25 +148,89 @@ plt.ylabel(r'$J_0(z)$');
 #   \nu_{d,l} = l + \frac{d}{2} - 1.
 # $$
 #
-# The Bessel-function DVR basis is chosen to provide an exponentially accurate representation of the radial portion of the wavefunction, including the singular centrifugal piece.  The advantage of this is exponential accuracy for analytic potentials, but each $\nu_{d,l}$ has a different set of abscissa which is inconvenient.  We have found that fairly good accuracy can be achieved using only $l=0$ and $l=1$ bases, shifting the residual portion of the $r^{-2}$ term into the potential, but this needs to be carefully checked.  (For example, with $d=3$, the $l=0$ basis works well for even $l$ while the $l=1$ basis must be used for odd $l$.)
+# The Bessel-function DVR basis is chosen to provide an exponentially accurate representation of the radial portion of the wavefunction, including the singular centrifugal piece.  Thus, the DVR basis functions are orthogonal under the metric:
+#
+# $$
+#   \braket{F_{\nu,m}|F_{\nu,n}} = \int_0^{\infty} \d{r}\; F_{\nu,m}^*(r)F_{\nu,n}(r) = \delta_{mn},
+# $$
+#
+# which *does not include the angular or $r^{d-1}$ factors*. The advantage of this is exponential accuracy for analytic potentials, but each $\nu_{d,l}$ has a different set of abscissa which is inconvenient.  We have found that fairly good accuracy can be achieved using only $l=0$ and $l=1$ bases, shifting the residual portion of the $r^{-2}$ term into the potential, but this needs to be carefully checked.  (For example, with $d=3$, the $l=0$ basis works well for even $l$ while the $l=1$ basis must be used for odd $l$.)
 
-# The Bessel-function DVR basis thus provides an orthonormal basis for the radial wavefunctions under the metric:
+# ## Cylindrical Basis
+
+# To represent problems with cylindrical coordinates we use a periodic basis for $x$ and a Bessel-function DVR basis for the radial coordinate.  Here we describe the properties of the Bessel-function basis for the radial direction.  These are expressed in terms of the [Bessel functions](https://en.wikipedia.org/wiki/Bessel_function#Bessel's_integrals) (with $n \equiv \alpha \equiv \nu$):
 #
 # $$
-#   \braket{f|g} = \int_0^{\infty} f^*(r)g(r)\d{r}.
+#   J_\nu(r) = \frac{1}{\pi}\int_0^{\pi}\cos(\nu\tau - r\sin\tau)\d{\tau} 
+#   - \frac{\sin \nu\pi}{\pi}\int_0^\infty e^{-r\sinh t - \nu t}\d{t},
 # $$
 #
-# Here are the details of the basis:
+# which satisfy the following useful relationships:
+#
+# $$
+#   \int_0^{\infty} \d{r}\; r J_{\nu}(ur)J_{\nu}(vr) = \frac{1}{u}\delta(u-v),\\
+#   \int_0^{\infty}\frac{\d{r}}{r}\; J_{\alpha}(r)J_{\beta}(r) = \frac{2}{\pi}\frac{\sin\Bigl(\tfrac{\pi}{2}(\alpha-\beta)\Bigr)}{\alpha^2-\beta^2}.
+# $$
+
+# +
+import numpy as np
+from scipy.integrate import quad
+from mmfutils.math import bessel
+
+alpha = 1.1
+beta = 1.2
+x = 1.5
+J_alpha = bessel.J(alpha, 0)
+J_beta = bessel.J(beta, 0)
+
+def J(x, nu):
+    """Integral definition of J_n(x)."""
+    def integrand1(tau):
+        return np.cos(nu*tau-x*np.sin(tau))/np.pi
+    def integrand2(t):
+        return np.sin(nu*np.pi)*np.exp(-x*np.sinh(t) - nu*t)/np.pi
+
+    res1, err1 = quad(integrand1, 0, np.pi)
+    with np.errstate(over='ignore'):
+        # Ignore harmless overflow errors
+        res2, err2 = quad(integrand2, 0, np.inf)
+    return res1 - res2, np.sqrt(err1**2 + err2**2)
+
+assert np.allclose(J(x, alpha)[0], J_alpha(x))
+
+def i2(x):
+    return J_alpha(x)*J_beta(x)/x
+
+res, err = quad(i2, 0, np.inf, epsabs=0.001)
+exact = 2/np.pi*np.sin(np.pi/2*(alpha-beta))/(alpha**2-beta**2)
+assert np.allclose(exact, res, atol=err)
+# -
+
+# %pylab inline --no-import-all
+plt.figure(figsize=(12,3))
+z = np.linspace(0, 10*np.pi, 100)
+for nu in [0,1,2,3]:
+    l, = plt.plot(z/np.pi, bessel.J(nu,d=0)(z), 
+                  label=r"$\nu={}$".format(nu))
+    for z0 in bessel.j_root(nu, 10):
+        if z0 <= z.max():
+            plt.axvline(z0/np.pi, c=l.get_c(), ls='-', alpha=0.5)
+plt.grid(True)
+plt.legend()
+plt.xlabel(r'$z/\pi$');
+plt.ylabel(r'$J_0(z)$');
+
+# There is a separate basis for each value of $\nu$ which handles a different angular-momentum singularity.  Once this is fixed, the basis functions are:
 #
 # \begin{gather}
 #   \nu = l+\frac{d}{2}-1,\\
 #   J_\nu(k r_n) = 0, \qquad z_n = k r_n, \tag{abscissa}\\
-#   F_n(r) = (-1)^{n+1}\frac{\sqrt{2k_r}H(k r)}{1+r/r_n}, \qquad
-#   H_n(z) = \frac{\sqrt{z} J_\nu(z)}{z-z_n}, \tag{basis functions}
+#   F_{\nu,n}(r) = (-1)^{n+1}\frac{\sqrt{2k}H_{\nu,n}(k r)}{1+r/r_n}, \qquad
+#   H_{\nu,n}(z) = \frac{\sqrt{z} J_\nu(z)}{z-z_n}, \tag{basis functions}
 #   \\
-#   \lambda_n = \frac{1}{F_n(r_n)^2} = \frac{2}{k z_n [J_\nu'(z_n)]^{2}} \tag{weights}\\
-#   [\mat{T}]_{mn} = \Biggl\langle F_m\Bigg|-\diff[2]{}{r}+\frac{\nu^2-\tfrac{1}{4}}{r^2}
-#                                 \Bigg|F_n\Biggr\rangle
+#   \lambda_n = \frac{1}{F_{\nu,n}(r_n)^2} = \frac{2}{k z_n [J_\nu'(z_n)]^{2}} \tag{weights}\\
+#   [\mat{T}]_{mn} = \Biggl\langle F_{\nu,m}\Bigg|-\diff[2]{}{r}+\frac{\nu^2-\tfrac{1}{4}}{r^2}
+#                                 \Bigg|F_{\nu,n}\Biggr\rangle
 #    = k^2\begin{cases}
 #     (-1)^{m-n}\frac{8z_mz_n}{(z_m^2 - z_n^2)^2}  & n \neq m\\
 #     \tfrac{1}{3}\left[1 + \frac{2(\nu^2 - 1)}{z_n^2}\right] & n = m
@@ -217,43 +240,101 @@ plt.ylabel(r'$J_0(z)$');
 
 # For use with wavefunctions, we must include the transformation to and from
 
-import scipy.fftpack
-import scipy as sp
-sp.__version__ < "0.16.0"
-
 from mmfutils.math.bases import CylindricalBasis
 basis = CylindricalBasis(Nxr=(2, 10), Lxr=(1.0, 1.0))
 x, r = basis.xyz
 k_x, k_r = basis.k_max
 
-# ## Integrals
+# ### Line-of-Sight Integrals
 
-# In the cylindrical basis, we tabulate functions over $x$ and $r$.  For visualization, it is often desired to express these in terms of line-of-sight integrals.  The formal definitions are:
+# For visualization, it is often desired to express a density in terms of the line-of-sight integrals, for example, when imaging a cylindrically symmetric atomic cloud.  The formal definitions are:
 #
 # \begin{align}
 #   \newcommand{\d}{\mathrm{d}}
 #   \newcommand{\abs}[1]{{\lvert#1\rvert}}
 #   \d{r} &= \frac{y\d{y} + z\d{z}}{r}\\
-#   n_{2D}(x, y) &= \int_{-\infty}^\infty \d{z}\; n(x, r)
-#                = \int_{-\infty}^\infty \d{z}\; n(x, \sqrt{y^2+z^2})
-#                = 2\int_0^{\abs{y}} \d{r}\; \frac{rn(x, r)}{\sqrt{r^2-y^2}}\\
-#   n_{1D}(x) &= \iint_{-\infty}^\infty \d{y}\d{z}\; n(x, r)
-#             = \int_0^{\infty} \d{r}\; 2\pi r n(x, r)
+#   n_{1D} &= \iint_{-\infty}^\infty \d{y}\d{z}\; n(r)
+#             = \int_0^{\infty} \d{r}\; 2\pi r n(r),\\
+#   n_{2D}(y) &= \int_{-\infty}^\infty \d{z}\; n(r)
+#                %= 2\int_{0}^\infty \d{z}\; n\left(\sqrt{y^2+z^2}\right)
+#                = 2\int_{\abs{y}}^{\infty} \d{r}\; \frac{rn(r)}{\sqrt{r^2-y^2}}. \tag{Abel Transform}
 # \end{align}
-
-# For testing, consider a Gaussian:
+#
+# The first of these is easy to implement because of the properties of the basis.  Recall that if $f(r)$ and $g(r)$ are well represented in the basis, that the integral $\int_0^{\infty}\d{r}\; f^*(r)g(r) = \sum_n\lambda_n f^*(r_n)g(r_n)$ is accurate.  This means that if the wavefunction
 #
 # $$
-#   n(x, r) = e^{-(x^2+r^2)/r_0^2}, \qquad
+#   \psi(r) = \frac{u(r)}{\sqrt{r}}
+# $$
+#
+# is well represented, then the integral
+#
+# $$
+#   \int_0^\infty\d{r}\; \abs{u(r)}^2 = \int_0^\infty\d{r}\; r\abs{\psi(r)}^2 = \frac{n_{1D}}{2\pi} 
+#   \approx \sum\lambda_n \abs{u(r_n)}^2
+#   = \sum\lambda_n r_nn(r_n)
+# $$
+#
+# is accurate.  This is computed by `integrate1` in the code.
+
+# The second implements an [Abel Transform](https://en.wikipedia.org/wiki/Abel_transform), which is more complicated. If high accuracy is needed, then we can do the following integrals manually, and use the resulting matrix to compute the transform, but this is very slow.
+#
+# $$
+#   n(r) \approx \sum_{mn} \psi_{m}^*\psi_{n} \frac{F_m(r)F_n(r)}{r}\\
+#   n_{2D}(y) \approx \sum_{mn} \psi_{m}^*\psi_{n}
+#   \int_{\abs{y}}^{\infty}\d{r}\;
+#   \frac{2F_m(r)F_n(r)}{\sqrt{r^2-y^2}}.
+# $$
+#
+# Instead, we simply use the form:
+#
+# $$
+#   n_{2D}(y) = \int_{-\infty}^{\infty} \d{z}\; n\left(\sqrt{z^2+y^2}\right).
+# $$
+#
+# We use the basis to extrapolate the wavefunction to the desired abscissa, and then use a trapazoidal rule along $z$ to compute the integral.  This can be broadcast to perform reasonably efficiently.
+#
+
+# ### For testing, consider a Gaussian:
+#
+# $$
+#   n(x, r) = e^{-(x^2+r^2)/r_0^2}, \\
 #   n_{2D}(x,y) = \sqrt{\pi}r_0e^{-(x^2+y^2)/r_0^2}, \qquad
 #   n_{1D}(x) = \pi r_0^2e^{-x^2/r_0^2}.
 # $$
+#
+# Another test:
+#
+# $$
+#   n(x, r) = r^2 e^{-(x^2+r^2)/r_0^2}, \\
+#   n_{2D}(x,y) = \frac{\sqrt{\pi}r_0(r_0^2+2y^2)}{2}e^{-(x^2+y^2)/r_0^2}, \qquad
+#   n_{1D}(x) = \pi r_0^4e^{-x^2/r_0^2}.
+# $$
 
+# +
+# %pylab inline --no-import-all
+import numpy as np
 from mmfutils.math.bases import CylindricalBasis
 from mmfutils.math.bases.tests import test_bases
-basis = CylindricalBasis(Nxr=(2, 10), Lxr=(1.0, 1.0))
+basis = CylindricalBasis(Nxr=(64, 32), Lxr=(25.0,5.0))
 x, r = basis.xyz
-gaussian = test_bases.ExactGaussian(r=r, d=2)
+Ny = 50
+ys = np.linspace(0, r.max(), Ny)[None, :]
+r0 = 1.2
+
+n = np.exp(-(x**2+r**2)/r0**2)
+n_1D = np.pi*r0**2*np.exp(-x**2/r0**2)
+n_2D = np.sqrt(np.pi)*r0*np.exp(-(x**2+ys**2)/r0**2)
+
+print("{}% max error".format(
+    100 * abs(basis.integrate2(n, y=ys) - n_2D).max()/n_2D.max()))
+
+n = r**2*np.exp(-(x**2+r**2)/r0**2)
+n_1D = np.pi*r0**4*np.exp(-x**2/r0**2)
+n_2D = np.sqrt(np.pi)*r0/2*(r0**2+2*ys**2)*np.exp(-(x**2+ys**2)/r0**2)
+
+print("{}% max error".format(
+    100 * abs(basis.integrate2(n, y=ys) - n_2D).max()/n_2D.max()))
+# -
 
 # ## Spherical Basis
 

@@ -863,14 +863,60 @@ class CylindricalBasis(Object, BasisMixin):
         return self.get_Psi(r)(psi)
 
     def integrate1(self, n):
-        """Perform the integral of n over y and z."""
+        """Return the integral of n over y and z."""
         n = np.asarray(n)
         x, r = self.xyz
         x_axis, r_axis = self.axes
-        shape = [None] * len(n.shape)
-        shape[x_axis] = slice(None)
-        shape[r_axis] = slice(None)
-        return ((2*np.pi*r * self.weights)[tuple(shape)] * n).sum(axis=r_axis)
+        bcast = [None] * len(n.shape)
+        bcast[x_axis] = slice(None)
+        bcast[r_axis] = slice(None)
+        return ((2*np.pi*r * self.weights)[tuple(bcast)] * n).sum(axis=r_axis)
 
+    def integrate2(self, n, y=None, Nz=100):
+        """Return the integral of n over z (line-of-sight integral) at y.
+        
+        This is an Abel transform, and is used to compute the 1D
+        line-of-sight integral as would be seen by a photographic
+        image through an axial cloud.
+
+        Arguments
+        ---------
+        n : array
+           (Nx, Nr) array of the function to be integrated tabulated
+           on the abscissa.  Note: the extrapolation assumes that `n =
+           abs(psi)**2` where `psi` is well represented in the basis.
+        y : array, None
+           Ny points at which the resulting integral should be
+           returned.  If not provided, then the function will be
+           tabulated at the radial abscissa.
+        Nz : int
+           Number of points to use in z integral.
+        """
+        n = np.asarray(n)
+        x, r = self.xyz
+        if y is None:
+            y = r
+
+        y = y.ravel()
+        Ny = len(y)
+
+        x_axis, r_axis = self.axes
+        y_axis = r_axis
+        bcast_y = [None] * len(n.shape)
+        bcast_z = [None] * len(n.shape)
+        bcast_y[y_axis] = slice(None)
+        bcast_y.append(None)
+        bcast_z.append(slice(None))
+
+        bcast_y, bcast_z = tuple(bcast_y), tuple(bcast_z)
+
+        z = np.linspace(0, r.max(), Nz)
+        shape_xyz = n.shape[:-1] + (Ny, Nz)
+        rs = np.sqrt(y.ravel()[bcast_y]**2 + z[bcast_z]**2)
+        n_xyz = (abs(self.Psi(np.sqrt(n),
+                              (x, rs.ravel())))**2).reshape(shape_xyz)
+        n_2D = 2 * np.trapz(n_xyz, z, axis=-1)
+        return n_2D
+    
 
 classImplements(CylindricalBasis, IBasis, IBasisKx)
