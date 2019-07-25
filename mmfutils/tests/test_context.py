@@ -17,14 +17,14 @@ def NoInterrupt():
     
 class TestNoInterrupt(object):
     @staticmethod
-    def simulate_interrupt(force=False):
+    def simulate_interrupt(force=False, signum=signal.SIGINT):
         """Simulates an interrupt or forced interupt."""
         # Simulate user interrupt
-        os.kill(os.getpid(), signal.SIGINT)
+        os.kill(os.getpid(), signum)
         if force:
             # Simulated a forced interrupt with multiple signals
-            os.kill(os.getpid(), signal.SIGINT)
-            os.kill(os.getpid(), signal.SIGINT)
+            os.kill(os.getpid(), signum)
+            os.kill(os.getpid(), signum)
         time.sleep(0.1)
 
     def test_typical_use(self, NoInterrupt):
@@ -241,3 +241,34 @@ class TestNoInterrupt(object):
             res = list(map(lambda x: f(x, values_computed), [1, 2, 3]))
         assert res == []
         assert values_computed == [1]
+
+    def test_no_context(self, NoInterrupt):
+        """Test catching signals without a context."""
+        NoInterrupt._signal_count = {}  # Don't do this... just for testing
+        NoInterrupt.register()
+        interrupted = NoInterrupt()
+        assert interrupted._signal_count == {}
+        with pytest.raises(KeyboardInterrupt):
+            self.simulate_interrupt(signum=signal.SIGINT)
+            # Won't get executed because we have not suspended signals
+            self.simulate_interrupt(signum=signal.SIGINT)
+        assert interrupted._signal_count == {signal.SIGINT: 1}
+
+        NoInterrupt.reset()     # Prevent triggering a forced interrupt
+
+        interrupted1 = NoInterrupt()
+        assert interrupted       # Old interrupted still registers the interrupt
+        assert not interrupted1  # New interrupted does not.
+
+        # reset() does not reset counts.
+        assert interrupted._signal_count == {signal.SIGINT: 1}
+        assert interrupted1._signal_count == {signal.SIGINT: 1}
+ 
+        NoInterrupt.suspend()
+        self.simulate_interrupt(signum=signal.SIGTERM)
+        self.simulate_interrupt(signum=signal.SIGTERM)
+        assert interrupted1._signal_count == {signal.SIGINT: 1,
+                                              signal.SIGTERM: 2}
+        NoInterrupt.resume()
+        with pytest.raises(KeyboardInterrupt):
+            self.simulate_interrupt(signum=signal.SIGINT)

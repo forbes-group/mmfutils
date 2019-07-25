@@ -1,6 +1,7 @@
 """Various useful contexts.
 """
 import functools
+import os
 import signal
 import time
 
@@ -12,87 +13,6 @@ import warnings
 def is_main_thread():
     """Return True if this is the main thread."""
     return threading.current_thread() is threading.main_thread()
-
-
-class CatchInterrupts(object):
-    """Object to catch interrupt signals and perform custom handling.
-
-    Once invoked, all specified signals will be intercepted and their
-    counts accumulated.  Additionally, specified handlers will be
-    called.
-    """
-    _signals = set((signal.SIGINT, signal.SIGTERM))
-
-    _signal_count = {}
-    _original_handlers = {}
-    _handlers = {}
-
-    # Lock should be re-entrant (I think) since a signal might be sent during
-    # operation of one of the functions.
-    _lock = threading.RLock()
-
-    @classmethod
-    def handle_signal(cls, signum, frame):
-        """Increase signal count and call handlers if registered."""
-        # Handlers should only be called in the main thread
-        assert is_main_thread()
-        with cls._lock:
-            cls._signal_count.setdefault(signum, 0)
-            cls._signal_count[signum] += 1
-
-            # Handlers should only be called for signals who's
-            # original handlers have been stored.
-            assert signum in cls._original_handlers
-            handler = cls._handlers.get(signum, cls._original_handlers[signum])
-            handler(signum, frame)
-
-    @classmethod
-    def catch_signals(cls, signals=None):
-        """Start catching signals.
-
-        Arguments
-        ---------
-        signals : list, None
-           Register our custom single handler with the specified signals.
-        """
-        assert is_main_thread()  # Only catch signals in the main thread.
-        with cls._lock:
-            if signals:
-                cls._signals = signals
-                cls.disable()
-                
-            cls._original_handlers = {
-                _signum: signal.signal(_signum, cls.handle_signal)
-                for _signum in cls._signals}
- 
-    @classmethod
-    def disable(cls):
-        """Fully disable all handling and restore the original handlers."""
-        with cls._lock:
-            while cls._original_handlers:
-                _signum, _handler = cls._original_handlers.popitem()
-                signal.signal(_signum, _handler)
-            cls._signal_count = {}
-
-    @classmethod
-    def set_handler(cls, handler, signals=None):
-        """Set the handler for the specified signals.
-
-        Arguments
-        ---------
-        signals : None, [signum]
-           Signals for which to set handlers.
-        """
-
-    @classmethod
-    def remove_handler(cls, handler, signals=None):
-        """Remove the handler for the specified signals.
-
-        Arguments
-        ---------
-        signals : None, [signum]
-           Signals for which to set handlers.
-        """
 
 
 class NoInterrupt(object):
@@ -325,11 +245,16 @@ class NoInterrupt(object):
             self.signal_count_at_start = dict(self._signal_count)
 
     @classmethod
-    def registered(cls):
+    def is_registered(cls):
         """Return True if handlers are registered."""
         with cls._lock:
-            return bool(cls._signals.intersection(cls._original_handlers))
-
+            registered = bool(cls._signals.intersection(cls._original_handlers))
+            if registered:
+                assert all([
+                    signal.getsignal(_signum) == cls.handle_signal
+                    for _signum in cls._original_handlers])
+            return registered
+        
     @classmethod
     def register(cls):
         """Register the handlers so that signals can be suspended."""
@@ -340,11 +265,11 @@ class NoInterrupt(object):
             raise RuntimeError(_msg)
         
         with cls._lock:
-            if not cls.registered():
+            if not cls.is_registered():
                 cls._original_handlers = {
                     _signum: signal.signal(_signum, cls.handle_signal)
                     for _signum in cls._signals}
-            assert cls.registered()
+            assert cls.is_registered()
             
     @classmethod
     def unregister(cls):
@@ -354,7 +279,7 @@ class NoInterrupt(object):
             while cls._original_handlers:
                 _signum, _handler = cls._original_handlers.popitem()
                 signal.signal(_signum, _handler)
-            assert not cls.registered()
+            assert not cls.is_registered()
 
     @classmethod
     def set_signals(cls, signals):
@@ -369,7 +294,7 @@ class NoInterrupt(object):
         """
         signals = set(signals)
         with cls._lock:
-            if cls.registered and signals != cls._signals:
+            if cls.is_registered() and signals != cls._signals:
                 cls.unregister()
                 cls._signals = set(signals)
                 cls.register()
@@ -398,6 +323,17 @@ class NoInterrupt(object):
             cls._signals_suspended.discard(signum)
 
     @classmethod
+    def reset(cls):
+        """Reset the signal logs and return last signal `(signum, frame, time)`.
+        """
+        res = None
+        if hasattr(cls, '_last_signal'):
+            res = cls._last_signal
+            del cls._last_signal
+        cls._signals_raised = {}
+        return(res)
+    
+    @classmethod
     def handle_signal(cls, signum, frame):
         """Custom signal handler.
 
@@ -406,13 +342,30 @@ class NoInterrupt(object):
         original handlers will be called.
         """
         with cls._lock:
+            cls._last_signal = (signum, frame, time.time())
             cls._signals_raised.setdefault(signum, [])
-            cls._signals_raised[signum].append((frame, time.time()))
+            cls._signals_raised[signum].append(cls._last_signal)
             cls._signal_count.setdefault(signum, 0)
             cls._signal_count[signum] += 1
             if (cls._forced_interrupt(signum)
                     or signum not in cls._signals_suspended):
-                cls._original_handlers[signum](signum, frame)
+                cls.handle_original_signal(signum=signum, frame=frame)
+
+    @classmethod
+    def handle_original_signal(cls, signum, frame):
+        """Call the original handler."""
+        # This is a bit tricky because python does not provide a
+        # default handler for SIGTERM so we can't simply use it.
+        handler = cls._original_handlers[signum]
+        if handler:
+            handler(signum, frame)
+        else:
+            if cls.is_registered():
+                cls.unregister()
+                os.kill(os.getpid(), signum)
+                cls.register()
+            else:
+                os.kill(os.getpid(), signum)
 
     @classmethod
     def _forced_interrupt(cls, signum):
@@ -430,11 +383,11 @@ class NoInterrupt(object):
             self._active = True
             self.signal_count_at_start = dict(self._signal_count)
             if is_main_thread():
-                if not self.registered():
+                if not self.is_registered():
                     self.register()
                 self.suspend()
                 NoInterrupt._instances.add(self)
-            elif not self.registered():
+            elif not self.is_registered():
                     _msg = "\n".join([
                         "Thread {} entering unregistered NoInterrupt() context.",
                         "Interrupts will not be processed!  "
@@ -455,12 +408,14 @@ class NoInterrupt(object):
                 # Only raise an exception if all the instances have been
                 # cleared, otherwise we might still be in a protected
                 # context somewhere.
+
                 self.resume()
-                if self:
-                    # An interrupt was raised.
-                    NoInterrupt._signals_raised = {}
-                    if exc_type is None and not self.ignore:
-                        raise KeyboardInterrupt()
+                last_signal = self.reset()
+                
+                if last_signal and not self.ignore:
+                    # Call original handler.
+                    signum, frame, _time = last_signal
+                    self.handle_original_signal(signum=signum, frame=frame)
 
     def __bool__(self):
         """Return True if interrupted."""
