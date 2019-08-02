@@ -272,3 +272,8 @@ class TestNoInterrupt(object):
         NoInterrupt.resume()
         with pytest.raises(KeyboardInterrupt):
             self.simulate_interrupt(signum=signal.SIGINT)
+
+    def test_unregister_context(self, NoInterrupt):
+        NoInterrupt.unregister()
+        with NoInterrupt(ignore=True) as interrupted:
+            self.simulate_interrupt(signum=signal.SIGINT)

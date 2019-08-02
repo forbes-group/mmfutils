@@ -9,6 +9,8 @@ import threading
 
 import warnings
 
+_ORIGINAL_SIGNAL = signal.signal
+
 
 def is_main_thread():
     """Return True if this is the main thread."""
@@ -249,11 +251,21 @@ class NoInterrupt(object):
         """Return True if handlers are registered."""
         with cls._lock:
             registered = bool(cls._signals.intersection(cls._original_handlers))
-            if registered:
+            if False and registered:
                 assert all([
                     signal.getsignal(_signum) == cls.handle_signal
                     for _signum in cls._original_handlers])
             return registered
+
+    @classmethod
+    def _signal(cls, signalnum, handler):
+        """Replacement for signal.signal to prevent others for
+        changing the signal handler while we are registered."""
+        if signalnum in cls._signals and cls.is_registered():
+            msg = f"Ignoring attempt to change the {signalnum} signal handler."
+            raise ValueError(msg)
+        else:
+            return _ORIGINAL_SIGNAL(signalnum, handler)
         
     @classmethod
     def register(cls):
@@ -269,17 +281,35 @@ class NoInterrupt(object):
                 cls._original_handlers = {
                     _signum: signal.signal(_signum, cls.handle_signal)
                     for _signum in cls._signals}
+                #signal.signal = cls._signal
             assert cls.is_registered()
             
     @classmethod
-    def unregister(cls):
-        """Reset handlers to the original values.  No more signal suspension."""
+    def unregister(cls, full=False):
+        """Reset handlers to the original values.  No more signal suspension.
+
+        Arguments
+        ---------
+        full : bool
+           If True, do a full reset, including counts.
+        """
         with cls._lock:
-            cls._registering_instance = None
+            #signal.signal = _ORIGINAL_SIGNAL
+            try:
+                import ipkernel.kernelbase
+                ipkernel.kernelbase.signal = _ORIGINAL_SIGNAL
+            except ImportError:
+                pass
             while cls._original_handlers:
                 _signum, _handler = cls._original_handlers.popitem()
                 signal.signal(_signum, _handler)
-            assert not cls.is_registered()
+
+            if full:
+                cls.reset()
+                cls._signal_count = {}
+                
+            if not full:
+                assert not cls.is_registered()
 
     @classmethod
     def set_signals(cls, signals):
@@ -327,10 +357,12 @@ class NoInterrupt(object):
         """Reset the signal logs and return last signal `(signum, frame, time)`.
         """
         res = None
-        if hasattr(cls, '_last_signal'):
-            res = cls._last_signal
-            del cls._last_signal
-        cls._signals_raised = {}
+        with cls._lock:
+            if hasattr(cls, '_last_signal'):
+                res = cls._last_signal
+                del cls._last_signal
+            cls._signals_raised = {}
+
         return(res)
     
     @classmethod
@@ -377,9 +409,29 @@ class NoInterrupt(object):
                     and cls.force_timeout > (signals_raised[-1][-1]
                                              - signals_raised[-cls.force_n][-1]))
 
+    #############
+    # Dummy handlers to thwart ipykernel's attempts to restore the
+    # default signal handlers.
+    # https://github.com/ipython/ipykernel/issues/328
+    @staticmethod
+    def _pre_handler_hook():
+        pass
+    
+    @staticmethod
+    def _post_handler_hook():
+        pass
+    
     def __enter__(self):
         """Enter context."""
         with self._lock:
+            try:
+                import IPython
+                kernel = IPython.get_ipython().kernel
+                kernel.pre_handler_hook = self._pre_handler_hook
+                kernel.post_handler_hook = self._post_handler_hook
+            except (ImportError, AttributeError):
+                pass
+            
             self._active = True
             self.signal_count_at_start = dict(self._signal_count)
             if is_main_thread():
@@ -416,6 +468,13 @@ class NoInterrupt(object):
                     # Call original handler.
                     signum, frame, _time = last_signal
                     self.handle_original_signal(signum=signum, frame=frame)
+            try:
+                import IPython
+                kernel = IPython.get_ipython().kernel
+                del kernel.pre_handler_hook
+                del kernel.post_handler_hook
+            except (ImportError, AttributeError):
+                pass
 
     def __bool__(self):
         """Return True if interrupted."""
