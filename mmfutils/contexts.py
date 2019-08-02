@@ -9,8 +9,6 @@ import threading
 
 import warnings
 
-_ORIGINAL_SIGNAL = signal.signal
-
 
 def is_main_thread():
     """Return True if this is the main thread."""
@@ -258,16 +256,6 @@ class NoInterrupt(object):
             return registered
 
     @classmethod
-    def _signal(cls, signalnum, handler):
-        """Replacement for signal.signal to prevent others for
-        changing the signal handler while we are registered."""
-        if signalnum in cls._signals and cls.is_registered():
-            msg = f"Ignoring attempt to change the {signalnum} signal handler."
-            raise ValueError(msg)
-        else:
-            return _ORIGINAL_SIGNAL(signalnum, handler)
-        
-    @classmethod
     def register(cls):
         """Register the handlers so that signals can be suspended."""
         if not is_main_thread():
@@ -281,7 +269,6 @@ class NoInterrupt(object):
                 cls._original_handlers = {
                     _signum: signal.signal(_signum, cls.handle_signal)
                     for _signum in cls._signals}
-                #signal.signal = cls._signal
             assert cls.is_registered()
             
     @classmethod
@@ -294,12 +281,6 @@ class NoInterrupt(object):
            If True, do a full reset, including counts.
         """
         with cls._lock:
-            #signal.signal = _ORIGINAL_SIGNAL
-            try:
-                import ipkernel.kernelbase
-                ipkernel.kernelbase.signal = _ORIGINAL_SIGNAL
-            except ImportError:
-                pass
             while cls._original_handlers:
                 _signum, _handler = cls._original_handlers.popitem()
                 signal.signal(_signum, _handler)
