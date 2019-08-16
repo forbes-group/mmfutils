@@ -3,13 +3,14 @@
 import logging
 import warnings
 
-__all__ = ['Interface', 'Attribute', 'implements', 'classImplements',
+__all__ = ['Interface', 'Attribute', 'implementer',
            'verifyObject', 'verifyClass',
            'describe_interface']
 
 try:
     import zope.interface
-    from zope.interface import (Interface, Attribute, implements, classImplements)
+    from zope.interface import (Interface, Attribute, implementer,
+                                implements, classImplements)
     from zope.interface.verify import (verifyObject, verifyClass)
 except ImportError:             # pragma: nocover
     zope = None
@@ -22,12 +23,16 @@ except ImportError:             # pragma: nocover
         def __init__(self, __name__, __doc__=''):
             pass
 
+    def implementer(*interfaces):
+        """Dummy"""
+        return lambda cls: cls
+
     def implements(*interfaces):
         """Dummy"""
 
     def classImplements(cls, *interfaces):
         """Dummy"""
-
+    
     def verifyObject(iface, candidate):
         """Dummy"""
 
