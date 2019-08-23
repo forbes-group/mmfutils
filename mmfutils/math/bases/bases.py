@@ -538,6 +538,8 @@ class CylindricalBasis(Object, BasisMixin):
        This is required for cases where y has additional dimensions.
        The default is the last two axes (best for performance).
     """
+    _d = 2                    # Dimension of spherical part (see nu())
+    
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
         self.twist = twist
@@ -733,7 +735,7 @@ class CylindricalBasis(Object, BasisMixin):
         axis = (self.axes % len(x.shape))[0]
         return ifft(x, axis=axis)
 
-    def _get_K(self):
+    def _get_K(self, l=0):
         r"""Return `(K, r1, r2, w)`: the DVR kinetic term for the radial function
         and the appropriate factors for converting to the radial coordinates.
 
@@ -749,8 +751,11 @@ class CylindricalBasis(Object, BasisMixin):
         w : array
            Quadrature integration weights.
         """
-        nu = 0.0
-        r = self.xyz[1].ravel()
+        nu = self.nu(l=l)
+        if l == 0:
+            r = self.xyz[1].ravel()
+        else:
+            r = self._r(self.Nxr[1], l=l)
         z = self._kmax * r
         n = np.arange(len(z))
         i1 = (slice(None), None)
@@ -778,10 +783,21 @@ class CylindricalBasis(Object, BasisMixin):
 
         return K, r1, r2, w
 
-    def _r(self, N, nu=0.0):
+    def nu(self, l):
+        """Return `nu = l + d/2 - 1` for the centrifugal term.
+
+        Arguments
+        ---------
+        l : int
+           Angular quantum number.
+        """
+        nu = l + self._d/2 - 1
+        return nu
+        
+    def _r(self, N, l=0):
         r"""Return the abscissa."""
         # l=0 cylindrical: nu = l + d/2 - 1
-        return bessel.j_root(nu=nu, N=N) / self._kmax
+        return bessel.j_root(nu=self.nu(l=l), N=N) / self._kmax
 
     def _F(self, n, r, d=0):
         r"""Return the dth derivative of the n'th basis function."""
