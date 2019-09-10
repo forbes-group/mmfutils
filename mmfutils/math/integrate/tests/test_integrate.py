@@ -110,4 +110,8 @@ class TestSSum(object):
         res = ssum(x)
         assert np.allclose(res[0], exact_ans)
         
-        
+    def test_broken_import(self):
+        """Test that broken import of _ssum_cython does not cause error."""
+        _ssum_cython, integrate._ssum_cython = integrate._ssum_cython, None
+        self.test_harmonic(ssum=integrate.ssum_cython)
+        integrate._ssum_cython = _ssum_cython

@@ -2,6 +2,7 @@
 """
 import itertools
 import logging
+import warnings
 
 import numpy as np
 
@@ -14,7 +15,10 @@ try:
 except ImportError:         # pragma: no cover
     pass
 
-from ._ssum import ssum as _ssum_cython
+try:
+    from ._ssum import ssum as _ssum_cython
+except ImportError:
+    _ssum_cython = None
 
 __all__ = ['quad', 'mquad', 'Richardson', 'rsum']
 
@@ -596,6 +600,11 @@ if numba:
 
 def ssum_cython(xs, _eps=_EPS):
     xs = np.asarray(xs)
+    if _ssum_cython is None:
+        warnings.warn(
+            "ImportError: Could not _ssum_cython: using slow version")
+        return ssum_python(xs)
+    
     sum = _ssum_cython(xs)
     ##if isinstance(xs.dtype, np.inexact):
     #    eps = np.finfo(xs.dtype).eps
