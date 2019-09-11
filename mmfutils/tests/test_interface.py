@@ -2,7 +2,7 @@ import pytest
 import zope.interface.document
 import zope.interface.exceptions
 
-from mmfutils.interface import (classImplements, verifyObject, verifyClass,
+from mmfutils.interface import (implementer, verifyObject, verifyClass,
                                 Interface, Attribute)
 
 
@@ -14,6 +14,7 @@ class IInterfaceTest(Interface):
         """Return a+b computed appropriately"""
 
 
+@implementer(IInterfaceTest)
 class BrokenInterfaceTest1(object):
     # Note, don't break both attribute and method interfaces at the same time
     # because the verifyObject() test relies on dictionary ordering and might
@@ -25,27 +26,20 @@ class BrokenInterfaceTest1(object):
         return a
 
 
-classImplements(BrokenInterfaceTest1, IInterfaceTest)
-
-
+@implementer(IInterfaceTest)
 class BrokenInterfaceTest2(object):
     # Missing p
     def required_method(self, a, b):
         return a + b
 
 
-classImplements(BrokenInterfaceTest2, IInterfaceTest)
-
-
+@implementer(IInterfaceTest)
 class InterfaceTest(object):
     def __init__(self, p=1.0):
         self.p = p
 
     def required_method(self, a, b):
         return (a + b)**self.p
-
-
-classImplements(InterfaceTest, IInterfaceTest)
 
 
 class TestInterfaces(object):
