@@ -6,8 +6,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.4'
+#       jupytext_version: 1.2.4
 #   kernelspec:
 #     display_name: Python [conda env:_test3]
 #     language: python
@@ -137,7 +137,7 @@ s.init()
 # Finally, we demonstrate that ``Object`` instances can be archived using the ``persist`` package:
 
 # +
-import persist.archive;reload(persist.archive)
+import persist.archive
 a = persist.archive.Archive(check_on_insert=True)
 a.insert(s=s)
 
@@ -165,26 +165,26 @@ d['s']
 from mmfutils.containers import Container
 
 c = Container(a=1, c=2, b='Hi there')
-print c
-print tuple(c)
+print(c)
+print(tuple(c))
 # -
 
 # Attributes are mutable
 c.b = 'Ho there'
-print c
+print(c)
 
 # +
 # Other attributes can be used for temporary storage but will not be pickled.
 import numpy as np
 
 c.large_temporary_array = np.ones((256,256))
-print c
-print c.large_temporary_array
+print(c)
+print(c.large_temporary_array)
 # -
 
 import pickle
 c1 = pickle.loads(pickle.dumps(c))
-print c1
+print(c1)
 c1.large_temporary_array
 
 # ## Contexts
@@ -207,14 +207,15 @@ with NoInterrupt() as interrupted:
 
 # Note: One can nest ``NoInterrupt`` contexts so that outer loops are also interrupted.  Another use-case is mapping.  See [doc/Animation.ipynb](Animation.ipynb) for more examples.
 
-NoInterrupt().map(abs, range(-100, 100))
+res = NoInterrupt().map(abs, range(-100, 100))
+np.sign(res)
 
 # ## Interfaces
 
 # The interfaces module collects some useful [zope.interface](http://docs.zope.org/zope.interface/) tools for checking interface requirements.  Interfaces provide a convenient way of communicating to a programmer what needs to be done to used your code.  This can then be checked in tests.
 
 # +
-from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implements
+from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implementer
 
 class IAdder(Interface):
     """Interface for objects that support addition."""
@@ -231,16 +232,15 @@ class IAdder(Interface):
 # Here is a broken implementation. We muck up the arguments to ``add``:
 
 # +
+@implementer(IAdder)
 class AdderBroken(object):
-    implements(IAdder)
-    
     def add(self, one, another):
         # There should only be one argument!
         return one + another
 
 try:
     verifyClass(IAdder, AdderBroken)
-except Exception, e:
+except Exception as e:
     print("{0.__class__.__name__}: {0}".format(e))
     
 # -
@@ -248,9 +248,8 @@ except Exception, e:
 # Now we get ``add`` right, but forget to define ``value``.  This is only caught when we have an object since the attribute is supposed to be defined in ``__init__()``:
 
 # +
+@implementer(IAdder)
 class AdderBroken(object):
-    implements(IAdder)
-    
     def add(self, other):
         return one + other
 
@@ -260,7 +259,7 @@ verifyClass(IAdder, AdderBroken)
 # ... but objects are missing the value Attribute
 try:
     verifyObject(IAdder, AdderBroken())
-except Exception, e:
+except Exception as e:
     print("{0.__class__.__name__}: {0}".format(e))    
 
 
@@ -269,8 +268,8 @@ except Exception, e:
 # Finally, a working instance:
 
 # +
+@implementer(IAdder)
 class Adder(object):
-    implements(IAdder)
     def __init__(self, value=0):
         self.value = value
     def add(self, other):
@@ -299,18 +298,18 @@ cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
 cluster.start()
 cluster.wait()  # Instance of IPython.parallel.Client
 view = cluster.load_balanced_view
-x = np.linspace(-6,6, 100)
+x = np.linspace(-6, 6, 100)
 y = view.map(lambda x:x**2, x)
-print np.allclose(y, x**2)
+print(np.allclose(y, x**2))
 cluster.stop()
 
 # If you only need a cluster for a single task, it can be managed with a context.  Be sure to wait for the result to be computed before exiting the context and shutting down the cluster!
 
 with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
     view = client.load_balanced_view
-    x = np.linspace(-6,6, 100)
+    x = np.linspace(-6, 6, 100)
     y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
-print np.allclose(y, x**2)
+print(np.allclose(y, x**2))
 
 # If you just need to connect to a running cluster, you can use ``parallel.get_client()``.
 
@@ -360,26 +359,29 @@ plt.subplot(144)
 from matplotlib import pyplot as plt
 import time
 import numpy as np
-from mmfutils import plot as mmfplt;reload(mmfplt)
+from mmfutils import plot as mmfplt
 x = np.linspace(-1, 1, 100)[:, None]
 y = np.linspace(-1, 1, 200)[None, :]
 z = x + 1j*y
 
 plt.figure(figsize=(9,2))
-plt.subplot(131).set_aspect(1)
-mmfplt.phase_contour(x, y, z, aspect=1, colors='k', linewidths=0.5)
+ax = plt.subplot(131)
+mmfplt.phase_contour(x, y, z, colors='k', linewidths=0.5)
+ax.set_aspect(1)
 
 # This is a little slow but allows you to vary the luminosity.
-plt.subplot(132).set_aspect(1)
-mmfplt.imcontourf(x, y, mmfplt.colors.color_complex(z), aspect=1)
-mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
+ax = plt.subplot(132)
+mmfplt.imcontourf(x, y, mmfplt.colors.color_complex(z))
+mmfplt.phase_contour(x, y, z, linewidths=0.5)
+ax.set_aspect(1)
 
 # This is faster if you just want to show the phase and allows
 # for a colorbar via a registered colormap
-plt.subplot(133).set_aspect(1)
-mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp', aspect=1)
+ax = plt.subplot(133)
+mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp')
+ax.set_aspect(1)
 plt.colorbar()
-mmfplt.phase_contour(x, y, z, aspect=1, linewidths=0.5)
+mmfplt.phase_contour(x, y, z, linewidths=0.5)
 # -
 
 # ## Debugging
@@ -429,7 +431,7 @@ print(f(2.0), x, y, z)
 
 # Here is an example:
 
-# !cd $ROOTDIR; python setup.py test
+# !cd $ROOTDIR; conda activate _test3; py.test
 
 # Complete code coverage information is provided in ``build/_coverage/index.html``.
 
@@ -590,5 +592,3 @@ HTML(coverage)
 # * Resolve issue #10: PYFFTW wrappers now support negative `axis` and `axes` arguments.
 # * Address issue #11: Preliminary version of some DVR basis classes.
 # * Resolve issue #12: Added solvers with [`uncertanties`](https://pythonhosted.org/uncertainties/) support.
-
-

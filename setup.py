@@ -48,6 +48,7 @@ test_requires = [
     "numpy",
     "numexpr",
     "uncertainties",
+    "pyfftw",
 ]
 
 extensions = [
