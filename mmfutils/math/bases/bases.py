@@ -11,8 +11,9 @@ from mmfutils.containers import Object
 from . import interface
 from .interface import (implementer, IBasis, IBasisKx, IBasisWithConvolution,
                         BasisMixin)
-from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
-                    get_xyz, get_kxyz)
+
+from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
+from .utils import (prod, dst, idst, get_xyz, get_kxyz)
 from mmfutils.math import bessel
 
 sp = scipy

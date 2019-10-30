@@ -11,9 +11,7 @@ import scipy as sp
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 
-__all__ = ('prod', 'norm', 'ndgrid',
-           'fft', 'ifft', 'fftn', 'ifftn', 'fftn', 'ifftn', 'resample',
-           'dst', 'idst', 'get_xyz')
+__all__ = ('prod', 'norm', 'ndgrid', 'dst', 'idst', 'get_xyz')
 
 
 def prod(x):

@@ -587,6 +587,7 @@ def coroutine(coroutine):
 
     You can also use this as a function (like open()) but don't forget to close
     it.
+
     >>> have_seen = get_have_seen(case_sensitive=True)
     >>> have_seen("hello")
     False
@@ -603,7 +604,6 @@ def coroutine(coroutine):
     Traceback (most recent call last):
        ...
     StopIteration
-
     """
     # @contextlib.contextmanager
     @functools.wraps(coroutine)

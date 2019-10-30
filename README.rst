@@ -385,7 +385,7 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.4.10
+4.1  REL: 0.4.13
 
 .. raw:: html
 
@@ -395,7 +395,7 @@ Table of Contents
 
    <li>
 
-4.2  REL: 0.4.9
+4.2  REL: 0.4.10
 
 .. raw:: html
 
@@ -405,7 +405,17 @@ Table of Contents
 
    <li>
 
-4.3  REL: 0.4.7
+4.3  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.4  REL: 0.4.7
 
 .. raw:: html
 
@@ -1111,7 +1121,7 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 
 
-.. image:: README_files/README_55_2.png
+.. image:: ../README_files/../README_55_2.png
 
 
 Angular Variables
@@ -1161,7 +1171,7 @@ phase of a complex wavefunction.
 
 
 
-.. image:: README_files/README_58_1.png
+.. image:: ../README_files/../README_58_1.png
 
 
 Debugging
@@ -1718,7 +1728,7 @@ To do this, we advocate the following proceedure.
 
       cd doc
       sphinx-apidoc -eTE ../mmfutils -o source
-      rm source/mmfutis.tests.*
+      rm source/mmfutils.*tests*
 
    Include any changes at the bottom of this file
    (``doc/README.ipynb``).
@@ -1815,6 +1825,20 @@ Then create this branch and commit this:
 
 Change Log
 ==========
+
+REL: 0.4.13
+-----------
+
+API changes:
+
+-  Use ``@implementer()`` class decorator rather than
+   ``classImplements`` or ``implements`` in all interfaces.
+-  Improve ``NoInterrupt`` context. Added ``NoInterrupt.unregister()``:
+   this allows ``NoInterrupt`` to work in a notebook cell even when the
+   signal handlers are reset. (But only works in that one cell.)
+-  Added Abel transform ``integrate2`` to Cylindrical bases.
+
+Issues:
 
 REL: 0.4.10
 -----------

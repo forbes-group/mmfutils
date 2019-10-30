@@ -51,6 +51,10 @@ test_requires = [
     "pyfftw",
 ]
 
+extras_require = dict(
+    doc=['sphinxcontrib.zopeext'],
+)
+
 extensions = [
     Extension(
         'mmfutils.math.integrate._ssum',
@@ -77,7 +81,7 @@ setup(name='mmfutils',
       ext_modules=extensions,
       setup_requires=setup_requires,
       install_requires=install_requires,
-      extras_require={},
+      extras_require=extras_require,
       tests_require=test_requires,
 
       # Metadata

@@ -6,11 +6,11 @@ using something like::
 
     PREFIX=/data/apps/fftw
     VER=3.3.4
-    for opt in " " "--enable-sse2 --enable-single" \
+    for opt in " " "--enable-sse2 --enable-single" \\
                "--enable-long-double" "--enable-quad-precision"; do
-      ./configure --prefix="${PREFIX}/${VER}"\
-                  --enable-threads\
-                  --enable-shared\
+      ./configure --prefix="${PREFIX}/${VER}"\\
+                  --enable-threads\\
+                  --enable-shared\\
                   $opt
       make -j8 install
     done

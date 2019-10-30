@@ -33,8 +33,9 @@ class Mock(MagicMock):
     def __getattr__(self, name):
         return Mock()
 
-MOCK_MODULES = ['matplotlib',
-                'matplotlib.cm', 'matplotlib.colors', 'matplotlib.collections',
+MOCK_MODULES = [#'matplotlib',
+                #'matplotlib.cm', 'matplotlib.colors',
+                #'matplotlib.collections',
                 #'scipy',
                 #'scipy.fftpack', 'scipy.integrate', 'scipy.interpolate',
                 #'scipy.weave', 'scipy.special', 'scipy.stats',
@@ -69,7 +70,13 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
     'sphinxcontrib.zopeext.autointerface',
+    #'matplotlib.sphinxext.only_directives',
+    'matplotlib.sphinxext.plot_directive',
+    #'IPython.sphinxext.ipython_directive',
+    #'IPython.sphinxext.ipython_console_highlighting',
+    #'sphinx.ext.inheritance_diagram',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -243,6 +250,8 @@ html_static_path = ['_static']
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'MMFUtilsdoc'
+
+# -- Options for Math -----------------------------------------------------
 
 # -- Options for LaTeX output ---------------------------------------------
 
