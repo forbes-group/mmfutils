@@ -30,6 +30,7 @@ dependencies:
   - pytest-xdist
   - scipy >=0.17.1
   - uncertainties
+  - pyfftw
     
   #- pylint
   #- mock

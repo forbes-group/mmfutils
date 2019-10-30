@@ -37,3 +37,15 @@ class TestRasterize(object):
             size_rasterized = os.stat(f.name).st_size
 
         assert size_rasterized < size_unrasterized/25
+
+
+class TestContour(object):
+    """Test bug with unequally spaced contours"""
+    def test(self):
+        x = np.array([0, 1, 3])[:, None]
+        y = np.array([0, 2, 3])[None, :]
+        z = x+1j*y
+
+        c = mmfplt.colors.color_complex(z)
+        mmfplt.imcontourf(x, y, c)
+        

@@ -20,7 +20,7 @@ from setuptools import setup, find_packages, Extension
 import mmfutils
 VERSION = mmfutils.__version__
 
-USE_CYTHON = True
+USE_CYTHON = False
 CYTHON_EXT = '.pyx' if USE_CYTHON else '.c'
 
 setup_requires = [
@@ -48,7 +48,12 @@ test_requires = [
     "numpy",
     "numexpr",
     "uncertainties",
+    "pyfftw",
 ]
+
+extras_require = dict(
+    doc=['sphinxcontrib.zopeext'],
+)
 
 extensions = [
     Extension(
@@ -76,7 +81,7 @@ setup(name='mmfutils',
       ext_modules=extensions,
       setup_requires=setup_requires,
       install_requires=install_requires,
-      extras_require={},
+      extras_require=extras_require,
       tests_require=test_requires,
 
       # Metadata

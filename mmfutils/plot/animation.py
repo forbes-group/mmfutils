@@ -38,8 +38,7 @@ class MyFuncAnimation(FuncAnimation):
         
     def to_html5_video(self, embed_limit=None,
                        filename=None, extra_args=None):
-        """
-        Convert the animation to an HTML5 ``<video>`` tag.
+        """Convert the animation to an HTML5 ``<video>`` tag.
 
         This saves the animation as an h264 video, encoded in base64
         directly into the HTML5 video tag. This respects the rc parameters
@@ -52,12 +51,9 @@ class MyFuncAnimation(FuncAnimation):
         embed_limit : float, optional
             Limit, in MB, of the returned animation. No animation is created
             if the limit is exceeded.
-            Defaults to :rc:`animation.embed_limit` = 20.0.
-
-        New Parameters
-        --------------
+            Defaults to `animation.embed_limit = 20.0`.
         filename : str, optional
-           If provided, save the movie in this file and keep it,
+           *(New)* If provided, save the movie in this file and keep it,
            otherwise the movie will be stored in a temporary directory
            and deleted after.
 

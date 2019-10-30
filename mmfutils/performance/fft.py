@@ -6,11 +6,11 @@ using something like::
 
     PREFIX=/data/apps/fftw
     VER=3.3.4
-    for opt in " " "--enable-sse2 --enable-single" \
+    for opt in " " "--enable-sse2 --enable-single" \\
                "--enable-long-double" "--enable-quad-precision"; do
-      ./configure --prefix="${PREFIX}/${VER}"\
-                  --enable-threads\
-                  --enable-shared\
+      ./configure --prefix="${PREFIX}/${VER}"\\
+                  --enable-threads\\
+                  --enable-shared\\
                   $opt
       make -j8 install
     done
@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function
 
 import functools
 import itertools
+import warnings
 
 import numpy.fft
 import numpy as np
@@ -195,6 +196,7 @@ try:                     # NOQA  This is too complex, but that is okay
     fftn = fftn_pyfftw
     ifftn = ifftn_pyfftw
 except ImportError:              # pragma: nocover
+    warnings.warn("Could not import pyfftw... falling back to numpy")
     fft = fft_numpy
     ifft = ifft_numpy
     fftn = fftn_numpy

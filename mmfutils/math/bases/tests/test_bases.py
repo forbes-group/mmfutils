@@ -515,6 +515,17 @@ class TestCylindricalBasis(LaplacianTests):
         n_1D_exact = self.exact.A**2*(np.pi*r0**2*np.exp(-x**2/r0**2)).ravel()
         assert np.allclose(n_1D, n_1D_exact)
         
+    def test_integrate2(self):
+        x, r = self.basis.xyz
+        n = abs(self.exact.y)**2
+        assert np.allclose((self.basis.metric*n).sum(), self.exact.N_3D)
+        y = np.linspace(0, r.max(), 50)[None, :]
+        n_2D = self.basis.integrate2(n, y=y)
+        r0 = self.exact.r_0
+        n_2D_exact = self.exact.A**2*(np.sqrt(np.pi)
+                                      *r0*np.exp(-(x**2+y**2)/r0**2))
+        assert np.allclose(n_2D, n_2D_exact, rtol=0.01, atol=0.01)
+
 
 class TestCoverage(object):
     """Walk down some error branches for coverage."""

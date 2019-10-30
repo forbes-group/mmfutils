@@ -40,7 +40,7 @@ class Paper(object):
     """Subclass this to generate a set of figures for a paper.
 
     Each figure should have a corresponding `fig_*` method that returns an
-    appropriate :cls:`Figure` object.  This method will generate a file
+    appropriate :py:class:`Figure` object.  This method will generate a file
     `<figdir>/*.pdf` with the same name as the method.
 
     Parameters
@@ -106,7 +106,7 @@ class Paper(object):
     def __init__(self, **kw):
         """Initialize plotting to use correct fonts and figure size.
 
-        Additional kw arguments are passed to :cls:`LaTeXPlotProperties`.
+        Additional kw arguments are passed to :py:class:`LaTeXPlotProperties`.
         """
         for _attr in ['final', 'save', 'style', 'figdir']:
             setattr(self, _attr, kw.pop(_attr, getattr(self, _attr)))
@@ -157,7 +157,7 @@ class Paper(object):
             self.draw(meth)
 
     def figure(self, num=None, **kw):
-        r"""Call this to get a new :cls:`Figure` object."""
+        r"""Call this to get a new :py:class:`Figure` object."""
         fig = Figure(num=num, plot_properties=self.plot_properties, **kw)
         return fig
 
@@ -166,7 +166,7 @@ class Defaults(object):
     r"""Default values.
 
     Change the values here to affect all plots.  (Defaults are set when
-    :cls:`Figure` instances are created.)
+    :py:class:`Figure` instances are created.)
     """
 
     rc = {'axes': dict(linewidth=0.5,
@@ -333,14 +333,13 @@ _PLOT_PROPERTIES = LaTeXPlotProperties()
 
 
 class Figure(Object):
-    r"""This class represents a single figure and allows customization
-    of properties, as well as providing plotting facilities.
+    r"""This class represents a single figure.
 
+    It allows customization of properties, as well as providing
+    plotting facilities.
 
-    Notes
-    -----
-    Units are either pts (for fonts) or inches (for linear
-    measurements).
+    .. note:: Units are either pts (for fonts) or inches (for linear
+       measurements). 
 
     Examples
     --------
@@ -355,22 +354,23 @@ class Figure(Object):
        \showthe\baselineskip
        \end{document}
 
-   This gives::
+    This gives::
 
-      > 345.0pt.
-      l.3 \showthe\textwidth
+       > 345.0pt.
+       l.3 \showthe\textwidth
 
-      ?
-      > 345.0pt.
-      l.4 \showthe\columnwidth
+       ?
+       > 345.0pt.
+       l.4 \showthe\columnwidth
 
-      ?
-      > 12.0pt.
-      l.5 \showthe\baselineskip
+       ?
+       > 12.0pt.
+       l.5 \showthe\baselineskip
 
     .. plot::
        :include-source:
 
+       from mmfutils.plot.publish import LaTeXPlotProperties, Figure
        x = np.linspace(0, 1.01, 100)
        y = np.sin(x)
        plot_prop = LaTeXPlotProperties(textwidth_pt=345.0,
@@ -409,6 +409,7 @@ class Figure(Object):
     .. plot::
        :include-source:
 
+       from mmfutils.plot.publish import LaTeXPlotProperties, Figure
        x = np.linspace(0, 1.01, 100)
        y = np.sin(x)
        plot_prop = LaTeXPlotProperties(textwidth_pt=489.0,

@@ -13,4 +13,7 @@ mmfutils.egg-info
 *.pyc
 *.pyo
 .pytest_cache/
-doc/*.ipynb     # Only store .py files by default.
+
+# Only store .py files by default: use jupytex
+doc/*.ipynb
+doc/Notes/*.ipynb

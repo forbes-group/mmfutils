@@ -28,22 +28,25 @@ _SINGULAR_TOL = 1e-6
 
 
 class DyadicSum(object):
-    r"""Represents a matrix as a sum of $n$ dyads of length $N$:
+    r"""Represents a matrix as a sum of :math:`n` dyads of length :math:`N`:
 
     .. math::
+       \newcommand{\mat}[1]{\mathbf{#1}}
+       \newcommand{\ket}[1]{\left|#1\right\rangle}
+       \newcommand{\bra}[1]{\left\langle#1\right|}
        \mat{M} = \alpha\mat{1} + \sum_{n}\ket{a_n}\sigma_n\bra{b_n}
                = \alpha\mat{1} + \ket{\mat{A}}\mat{\sigma}\bra{\mat{B}}.
 
-    The two sets of bases are stored in $N \times n$ matrices
-    $\ket{\mat{A}}$ and $\ket{\mat{B}}$ and the $n\times n$ matrix
-    $\mat{\sigma}$.
+    The two sets of bases are stored in :math:`N \times n` matrices
+    :math:`\ket{\mat{A}}` and :math:`\ket{\mat{B}}` and the :math:`n\times n` matrix
+    :math:`\mat{\sigma}`.
 
     If :attr:`use_svd` is `True`, then the singular value
-    decomposition of $\mat{\sigma}$ is used to keep $\mat{\sigma}$
+    decomposition of :math:`\mat{\sigma}` is used to keep :math:`\mat{\sigma}`
     diagonal with positive entries and only these diagonals are stored.
 
-    Limitations
-    -----------
+    Notes
+    -----
     * We assume everything is real here: no complex conjugation is performed
       with transposition.
     * We also do not explicitly support non-square matrices.  Some methods may
@@ -171,13 +174,14 @@ class DyadicSum(object):
        within this fraction of the highest.
 
     _at : (N, n) float array
-       $\ket{\mat{A}}$. We use the ket form here because that is
+       :math:`\ket{\mat{A}}`. We use the ket form here because that is
        most often used and more efficient (presently, :func:`numpy.dot` makes
        copies if the arrays are not both `C_CONTIGUOUS`
     _b : (n, N) float array
-       $\bra{\mat{B}}$
+       :math:`\bra{\mat{B}}`
     _sigma : (n, n) float array
-       $\mat{\sigma}$ or (n, ) array $\diag\mat{\sigma}$ if :attr:`use_svd`.
+       :math:`\mat{\sigma}` or `(n, )` array :math:`\diag\mat{\sigma}`
+       if :attr:`use_svd`.
     alpha : float
        Initial dyad is this factor times the identity.
     """
@@ -336,8 +340,8 @@ class DyadicSum(object):
 
         Notes
         -----
-        Let $\ket{\mat{A}} =$ :attr:`at` and $\bra{\mat{B}} =$
-        :attr:`b` and $\mat{\sigma} =$ :attr:`sigma`:
+        Let :math:`\ket{\mat{A}} =` :attr:`at` and :math:`\bra{\mat{B}} =`
+        :attr:`b` and :math:`\mat{\sigma} =` :attr:`sigma`:
 
         .. math::
            \ket{\mat{A}}\mat{\sigma}\bra{\mat{B}}
@@ -345,7 +349,7 @@ class DyadicSum(object):
            = \ket{\uvect{Q}_a}\mat{u}\mat{d}\mat{v}^T\bra{\uvect{Q}_b}
            = \ket{\uvect{A}}\mat{d}\bra{\uvect{B}}
 
-        In order to compute the QR factorization of $\ket{\mat{A}}$
+        In order to compute the QR factorization of :math:`\ket{\mat{A}}`
         without working with the large matrices, we could do a Cholesky
         decomposition on
 
@@ -367,7 +371,7 @@ class DyadicSum(object):
            \mat{B} &= \mat{Q}_{B}\mat{R}_{B}
 
         and then an SVD of the product of the R factors
-        $\mat{U}\mat{D}\mat{V}^{\dagger} = \mat{R}_{A}\mat{R}_{B}^T$
+        :math:`\mat{U}\mat{D}\mat{V}^{\dagger} = \mat{R}_{A}\mat{R}_{B}^T`
         to obtain the new basis:
 
         .. math::
@@ -438,7 +442,7 @@ class DyadicSum(object):
         dyads.  If `fr` is `None`, this is applied to the right
         (bra's), otherwise `f` is applied to both sides.
         This is equivalent to the transformation
-        `J ->I  + F*(J - I)*Fr.T`.
+        `J -> I  + F*(J - I)*Fr.T`.
 
         .. note::
            This should be modified to be done in place if possible.
@@ -649,9 +653,9 @@ class DyadicSum(object):
 class JacobianBFGS(sp.optimize.nonlin.Jacobian):
     r"""Represent a symmetric matrix by a memory-limited L-BFGS approximation.
 
-    This assumes that the Jacobian $J_{ij} = \partial_i\partial_j f(x)$ is
-    symmetric, and stores a memory-limited representation of the Hessian $H =
-    J^{-1}$.  This should be used for optimization problems minimizing $f(x)$.
+    This assumes that the Jacobian :math:`J_{ij} = \partial_i\partial_j f(x)` is
+    symmetric, and stores a memory-limited representation of the Hessian :math:`H =
+    J^{-1}`.  This should be used for optimization problems minimizing :math:`f(x)`.
 
     See Chapter 7 of [Nocedal:2006] (7.19) in particular.
 

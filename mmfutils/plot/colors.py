@@ -106,12 +106,15 @@ def color_angle(theta, map='huslp', gamma=1,
         rgb = np.asarray(to_rgb(theta/np.pi*180 % 360, saturation, lightness))
 
         # Put the rgb axis last so we can pass this to imshow
-        return np.rollaxis(rgb, 0, rgb.ndim)
+        rgb = np.rollaxis(rgb, 0, rgb.ndim)
+    else:
+        r = ((1 + np.cos(theta)) / 2.0) ** gamma
+        g = ((1 + np.cos(theta - 2*np.pi/3.0)) / 2.0) ** gamma
+        b = ((1 + np.cos(theta - 4*np.pi/3.0)) / 2.0) ** gamma
+        rgb = np.rollaxis(np.array([r, g, b]), 0, 3)
 
-    r = ((1 + np.cos(theta)) / 2.0) ** gamma
-    g = ((1 + np.cos(theta - 2*np.pi/3.0)) / 2.0) ** gamma
-    b = ((1 + np.cos(theta - 4*np.pi/3.0)) / 2.0) ** gamma
-    rgb = np.rollaxis(np.array([r, g, b]), 0, 3)
+    # Scale to range 0-1 (in case of round-off errors)
+    rgb = np.minimum(np.maximum(0.0, rgb), 1.0)
     return rgb
 
     # Need to fix broadcasting here.  Should make cmap.

@@ -9,7 +9,7 @@ __all__ = ['ellipk', 'ellipkinv']
 
 
 def ellipkinv(K, iter=4):
-    """Inverse of `K = ellipk(m) computed using a NFNI method.
+    """Inverse of `K = ellipk(m)` computed using a NFNI method.
     
     Never Failing Newton Initialization (NFNI) from
     

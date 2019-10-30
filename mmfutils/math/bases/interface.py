@@ -10,9 +10,9 @@ import functools
 
 import numpy as np
 
-from mmfutils.interface import (classImplements, Interface, Attribute)
+from mmfutils.interface import (implementer, Interface, Attribute)
 
-__all__ = ['classImplements', 'IBasis', 'BasisMixin']
+__all__ = ['implementer', 'IBasis', 'BasisMixin']
 
 
 class IBasisMinimal(Interface):

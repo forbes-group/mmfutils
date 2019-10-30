@@ -8,19 +8,23 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
-from .interface import (classImplements, IBasis, IBasisKx, IBasisWithConvolution,
+from . import interface
+from .interface import (implementer, IBasis, IBasisKx, IBasisWithConvolution,
                         BasisMixin)
-from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
-                    get_xyz, get_kxyz)
+
+from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
+from .utils import (prod, dst, idst, get_xyz, get_kxyz)
 from mmfutils.math import bessel
 
 sp = scipy
 
 _TINY = np.finfo(float).tiny
 
-__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis']
+__all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
+           'interface']
 
 
+@implementer(IBasisWithConvolution)
 class SphericalBasis(Object, BasisMixin):
     """1-dimensional basis for radial problems.
 
@@ -110,9 +114,7 @@ class SphericalBasis(Object, BasisMixin):
         return idst(Ck * dst(r*y)) / r
 
 
-classImplements(SphericalBasis, IBasisWithConvolution)
-
-
+@implementer(IBasisWithConvolution, IBasisKx)
 class PeriodicBasis(Object, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -324,9 +326,7 @@ class PeriodicBasis(Object, BasisMixin):
         return len(self.Nxyz)
 
 
-classImplements(PeriodicBasis, IBasisWithConvolution, IBasisKx)
-
-
+@implementer(IBasisWithConvolution)
 class CartesianBasis(PeriodicBasis):
     """N-dimensional periodic bases but with Coulomb convolution that does not
     use periodic images.  Use this for nuclei in free space.
@@ -509,9 +509,7 @@ class CartesianBasis(PeriodicBasis):
                 y, form_factors=form_factors, **kw)
 
 
-classImplements(CartesianBasis, IBasisWithConvolution)
-
-
+@implementer(IBasis, IBasisKx)
 class CylindricalBasis(Object, BasisMixin):
     r"""2D basis for Cylindrical coordinates via a DVR basis.
 
@@ -536,6 +534,8 @@ class CylindricalBasis(Object, BasisMixin):
        This is required for cases where y has additional dimensions.
        The default is the last two axes (best for performance).
     """
+    _d = 2                    # Dimension of spherical part (see nu())
+    
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
         self.twist = twist
@@ -731,7 +731,7 @@ class CylindricalBasis(Object, BasisMixin):
         axis = (self.axes % len(x.shape))[0]
         return ifft(x, axis=axis)
 
-    def _get_K(self):
+    def _get_K(self, l=0):
         r"""Return `(K, r1, r2, w)`: the DVR kinetic term for the radial function
         and the appropriate factors for converting to the radial coordinates.
 
@@ -747,8 +747,11 @@ class CylindricalBasis(Object, BasisMixin):
         w : array
            Quadrature integration weights.
         """
-        nu = 0.0
-        r = self.xyz[1].ravel()
+        nu = self.nu(l=l)
+        if l == 0:
+            r = self.xyz[1].ravel()
+        else:
+            r = self._r(self.Nxr[1], l=l)
         z = self._kmax * r
         n = np.arange(len(z))
         i1 = (slice(None), None)
@@ -776,10 +779,21 @@ class CylindricalBasis(Object, BasisMixin):
 
         return K, r1, r2, w
 
-    def _r(self, N, nu=0.0):
+    def nu(self, l):
+        """Return `nu = l + d/2 - 1` for the centrifugal term.
+
+        Arguments
+        ---------
+        l : int
+           Angular quantum number.
+        """
+        nu = l + self._d/2 - 1
+        return nu
+        
+    def _r(self, N, l=0):
         r"""Return the abscissa."""
         # l=0 cylindrical: nu = l + d/2 - 1
-        return bessel.j_root(nu=nu, N=N) / self._kmax
+        return bessel.j_root(nu=self.nu(l=l), N=N) / self._kmax
 
     def _F(self, n, r, d=0):
         r"""Return the dth derivative of the n'th basis function."""
@@ -861,14 +875,57 @@ class CylindricalBasis(Object, BasisMixin):
         return self.get_Psi(r)(psi)
 
     def integrate1(self, n):
-        """Perform the integral of n over y and z."""
+        """Return the integral of n over y and z."""
         n = np.asarray(n)
         x, r = self.xyz
         x_axis, r_axis = self.axes
-        shape = [None] * len(n.shape)
-        shape[x_axis] = slice(None)
-        shape[r_axis] = slice(None)
-        return ((2*np.pi*r * self.weights)[tuple(shape)] * n).sum(axis=r_axis)
+        bcast = [None] * len(n.shape)
+        bcast[x_axis] = slice(None)
+        bcast[r_axis] = slice(None)
+        return ((2*np.pi*r * self.weights)[tuple(bcast)] * n).sum(axis=r_axis)
 
+    def integrate2(self, n, y=None, Nz=100):
+        """Return the integral of n over z (line-of-sight integral) at y.
+        
+        This is an Abel transform, and is used to compute the 1D
+        line-of-sight integral as would be seen by a photographic
+        image through an axial cloud.
 
-classImplements(CylindricalBasis, IBasis, IBasisKx)
+        Arguments
+        ---------
+        n : array
+           (Nx, Nr) array of the function to be integrated tabulated
+           on the abscissa.  Note: the extrapolation assumes that `n =
+           abs(psi)**2` where `psi` is well represented in the basis.
+        y : array, None
+           Ny points at which the resulting integral should be
+           returned.  If not provided, then the function will be
+           tabulated at the radial abscissa.
+        Nz : int
+           Number of points to use in z integral.
+        """
+        n = np.asarray(n)
+        x, r = self.xyz
+        if y is None:
+            y = r
+
+        y = y.ravel()
+        Ny = len(y)
+
+        x_axis, r_axis = self.axes
+        y_axis = r_axis
+        bcast_y = [None] * len(n.shape)
+        bcast_z = [None] * len(n.shape)
+        bcast_y[y_axis] = slice(None)
+        bcast_y.append(None)
+        bcast_z.append(slice(None))
+
+        bcast_y, bcast_z = tuple(bcast_y), tuple(bcast_z)
+
+        z = np.linspace(0, r.max(), Nz)
+        shape_xyz = n.shape[:-1] + (Ny, Nz)
+        rs = np.sqrt(y.ravel()[bcast_y]**2 + z[bcast_z]**2)
+        n_xyz = (abs(self.Psi(np.sqrt(n),
+                              (x, rs.ravel())))**2).reshape(shape_xyz)
+        n_2D = 2 * np.trapz(n_xyz, z, axis=-1)
+        return n_2D
