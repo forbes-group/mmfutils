@@ -1102,26 +1102,26 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 .. parsed-literal::
 
-    CPU times: user 14.3 ms, sys: 3.7 ms, total: 18 ms
-    Wall time: 15.3 ms
-    CPU times: user 82.7 ms, sys: 3.85 ms, total: 86.6 ms
-    Wall time: 44.7 ms
-    CPU times: user 366 ms, sys: 16.4 ms, total: 382 ms
-    Wall time: 263 ms
-    CPU times: user 3.95 ms, sys: 96 µs, total: 4.04 ms
-    Wall time: 4.05 ms
+    CPU times: user 13.8 ms, sys: 2.99 ms, total: 16.8 ms
+    Wall time: 13.8 ms
+    CPU times: user 76.9 ms, sys: 2.41 ms, total: 79.3 ms
+    Wall time: 40.8 ms
+    CPU times: user 392 ms, sys: 63.2 ms, total: 456 ms
+    Wall time: 293 ms
+    CPU times: user 4.18 ms, sys: 169 µs, total: 4.35 ms
+    Wall time: 4.39 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x1a1b104a10>
+    <matplotlib.collections.QuadMesh at 0x1a21d9b0d0>
 
 
 
 
-.. image:: ../README_files/../README_55_2.png
+.. image:: README_files/README_55_2.png
 
 
 Angular Variables
@@ -1165,13 +1165,13 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet at 0x1a1b2f21d0>,
-     <matplotlib.contour.QuadContourSet at 0x1a1b2f2650>)
+    (<matplotlib.contour.QuadContourSet at 0x1a20fb1b50>,
+     <matplotlib.contour.QuadContourSet at 0x1a21041910>)
 
 
 
 
-.. image:: ../README_files/../README_58_1.png
+.. image:: README_files/README_58_1.png
 
 
 Debugging
@@ -1235,25 +1235,26 @@ This runs the following code:
 .. parsed-literal::
 
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Support files will be in README_files/
-    [NbConvertApp] Making directory doc/README_files
-    [NbConvertApp] Making directory doc/README_files
-    [NbConvertApp] Writing 33972 bytes to doc/README.rst
+    [NbConvertApp] Writing 47950 bytes to doc/README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
 fail if any of these do not pass, or if we don’t have complete code
-coverage. This uses
-`nosetests <https://nose.readthedocs.org/en/latest/>`__ and
-`flake8 <http://flake8.readthedocs.org>`__. To run individal tests do
-one of:
+coverage. We run these tests in a conda environment that can be made
+using the makefile:
 
 .. code:: bash
 
-   python setup.py nosetests
-   python setup.py flake8
-   python setup.py check
-   python setup.py test   # This runs them all using a custom command defined in setup.py
+   make envs
+   make test2   # conda run -n _test2 py.test
+   make test3   # conda run -n _test3 py.test
+
+To run these manually you could do:
+
+.. code:: bash
+
+   cond activate _test3
+   py.test
 
 Here is an example:
 
@@ -1343,11 +1344,11 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>2234</td>
-                    <td>260</td>
+                    <td>2140</td>
+                    <td>258</td>
                     <td>85</td>
     
-                    <td class="right" data-ratio="1974 2234">88%</td>
+                    <td class="right" data-ratio="1882 2140">88%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -1359,15 +1360,6 @@ Complete code coverage information is provided in
                     <td>0</td>
     
                     <td class="right" data-ratio="13 13">100%</td>
-                </tr>
-    
-                <tr class="file">
-                    <td class="name left"><a href="mmfutils_c_py.html">mmfutils/c.py</a></td>
-                    <td>95</td>
-                    <td>2</td>
-                    <td>0</td>
-    
-                    <td class="right" data-ratio="93 95">98%</td>
                 </tr>
     
                 <tr class="file">
@@ -1435,11 +1427,11 @@ Complete code coverage information is provided in
     
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
-                    <td>396</td>
+                    <td>397</td>
                     <td>47</td>
                     <td>0</td>
     
-                    <td class="right" data-ratio="349 396">88%</td>
+                    <td class="right" data-ratio="350 397">88%</td>
                 </tr>
     
                 <tr class="file">
@@ -1652,7 +1644,7 @@ Complete code coverage information is provided in
         <div class="content">
             <p>
                 <a class="nav" href="https://coverage.readthedocs.io">coverage.py v4.5.4</a>,
-                created at 2019-10-29 22:43
+                created at 2019-10-30 08:28
             </p>
         </div>
     </div>
@@ -1838,7 +1830,11 @@ API changes:
    signal handlers are reset. (But only works in that one cell.)
 -  Added Abel transform ``integrate2`` to Cylindrical bases.
 
-Issues:
+Issues: \* Resolved issue #22: Masked arrays work with ``imcontourf``
+etc. \* Resolved issue #23: ``NoInterrupt`` works well except in
+notebooks due to `ipykernel issue
+#328 <https://github.com/ipython/ipykernel/issues/328>`__. \* Resolved
+issue #24: Python 3 is now fully supported and tested.
 
 REL: 0.4.10
 -----------

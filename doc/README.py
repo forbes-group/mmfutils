@@ -420,13 +420,19 @@ print(f(2.0), x, y, z)
 
 # !cd $ROOTDIR; jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 
-# We also run a comprehensive set of tests, and the pre-commit hook will fail if any of these do not pass, or if we don't have complete code coverage.  This uses [nosetests](https://nose.readthedocs.org/en/latest/) and [flake8](http://flake8.readthedocs.org).  To run individal tests do one of:
+# We also run a comprehensive set of tests, and the pre-commit hook will fail if any of these do not pass, or if we don't have complete code coverage.  We run these tests in a conda environment that can be made using the makefile:
 #
 # ```bash
-# python setup.py nosetests
-# python setup.py flake8
-# python setup.py check
-# python setup.py test   # This runs them all using a custom command defined in setup.py
+# make envs
+# make test2   # conda run -n _test2 py.test
+# make test3   # conda run -n _test3 py.test
+# ```
+#
+# To run these manually you could do:
+#
+# ```bash
+# cond activate _test3
+# py.test
 # ```
 
 # Here is an example:
@@ -563,6 +569,9 @@ HTML(coverage)
 # * Added Abel transform `integrate2` to Cylindrical bases.
 #
 # Issues:
+# * Resolved issue #22: Masked arrays work with `imcontourf` etc.
+# * Resolved issue #23: `NoInterrupt` works well except in notebooks due to [ipykernel issue #328](https://github.com/ipython/ipykernel/issues/328).
+# * Resolved issue #24: Python 3 is now fully supported and tested.
 
 # ## REL: 0.4.10
 
