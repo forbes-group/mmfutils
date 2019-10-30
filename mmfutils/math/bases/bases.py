@@ -9,7 +9,7 @@ import scipy.fftpack
 from mmfutils.containers import Object
 
 from . import interface
-from .interface import (classImplements, IBasis, IBasisKx, IBasisWithConvolution,
+from .interface import (implementer, IBasis, IBasisKx, IBasisWithConvolution,
                         BasisMixin)
 from .utils import (prod, dst, idst, fft, ifft, fftn, ifftn, resample,
                     get_xyz, get_kxyz)
@@ -23,6 +23,7 @@ __all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
            'interface']
 
 
+@implementer(IBasisWithConvolution)
 class SphericalBasis(Object, BasisMixin):
     """1-dimensional basis for radial problems.
 
@@ -112,9 +113,7 @@ class SphericalBasis(Object, BasisMixin):
         return idst(Ck * dst(r*y)) / r
 
 
-classImplements(SphericalBasis, IBasisWithConvolution)
-
-
+@implementer(IBasisWithConvolution, IBasisKx)
 class PeriodicBasis(Object, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -326,9 +325,7 @@ class PeriodicBasis(Object, BasisMixin):
         return len(self.Nxyz)
 
 
-classImplements(PeriodicBasis, IBasisWithConvolution, IBasisKx)
-
-
+@implementer(IBasisWithConvolution)
 class CartesianBasis(PeriodicBasis):
     """N-dimensional periodic bases but with Coulomb convolution that does not
     use periodic images.  Use this for nuclei in free space.
@@ -511,9 +508,7 @@ class CartesianBasis(PeriodicBasis):
                 y, form_factors=form_factors, **kw)
 
 
-classImplements(CartesianBasis, IBasisWithConvolution)
-
-
+@implementer(IBasis, IBasisKx)
 class CylindricalBasis(Object, BasisMixin):
     r"""2D basis for Cylindrical coordinates via a DVR basis.
 
@@ -933,6 +928,3 @@ class CylindricalBasis(Object, BasisMixin):
                               (x, rs.ravel())))**2).reshape(shape_xyz)
         n_2D = 2 * np.trapz(n_xyz, z, axis=-1)
         return n_2D
-    
-
-classImplements(CylindricalBasis, IBasis, IBasisKx)

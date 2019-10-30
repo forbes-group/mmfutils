@@ -9,8 +9,7 @@ __all__ = ['Interface', 'Attribute', 'implementer',
 
 try:
     import zope.interface
-    from zope.interface import (Interface, Attribute, implementer,
-                                implements, classImplements)
+    from zope.interface import (Interface, Attribute, implementer)
     from zope.interface.verify import (verifyObject, verifyClass)
 except ImportError:             # pragma: nocover
     zope = None
@@ -27,12 +26,6 @@ except ImportError:             # pragma: nocover
         """Dummy"""
         return lambda cls: cls
 
-    def implements(*interfaces):
-        """Dummy"""
-
-    def classImplements(cls, *interfaces):
-        """Dummy"""
-    
     def verifyObject(iface, candidate):
         """Dummy"""
 
