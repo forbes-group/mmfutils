@@ -52,7 +52,9 @@ test_requires = [
 ]
 
 extras_require = dict(
-    doc=['sphinxcontrib.zopeext'],
+    doc=['sphinxcontrib.zopeext',
+         'numpy',
+         'matplotlib'],
 )
 
 extensions = [
