@@ -139,6 +139,18 @@ class PeriodicBasis(Object, BasisMixin):
     smoothing_cutoff : float
        Fraction of maximum momentum used in the function smooth().
     """
+
+    # Select operations are performed using self.xp instead of numpy.
+    # This can be replaced cupy to provide gpu support with minimal
+    # code changes.  Similarly with the fft functions and a generic
+    # function to convert an array into a numpy array on the host.
+    xp = np
+    _fft = staticmethod(fft)
+    _ifft = staticmethod(ifft)
+    _fftn = staticmethod(fftn)
+    _ifftn = staticmethod(ifftn)
+    _asnumpy = staticmethod(np.asarray)  # Convert to numpy array
+    
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
                  axes=None, boost_pxyz=None, smoothing_cutoff=0.8):
         self.symmetric_lattice = symmetric_lattice
@@ -154,10 +166,16 @@ class PeriodicBasis(Object, BasisMixin):
         Object.__init__(self)
 
     def init(self):
-        self.xyz = get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
-                           symmetric_lattice=self.symmetric_lattice)
-        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
-        self._pxyz_derivative = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+        self.xyz = tuple(map(
+            self.xp.asarray,
+            get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
+                    symmetric_lattice=self.symmetric_lattice)))
+        self._pxyz = tuple(map(
+            self.xp.asarray,
+            get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)))
+        self._pxyz_derivative = tuple(map(
+            self.xp.asarray,
+            get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)))
 
         # Zero out odd highest frequency component.
         for _N, _p in zip(self.Nxyz, self._pxyz_derivative):
@@ -165,14 +183,15 @@ class PeriodicBasis(Object, BasisMixin):
 
         # Add boosts
         self._pxyz = [_p - _b
-                      for (_p, _b) in zip(self._pxyz, self.boost_pxyz)]
+                      for (_p, _b) in zip(self._pxyz,
+                                          self.xp.asarray(self.boost_pxyz))]
         self.metric = np.prod(self.Lxyz/self.Nxyz)
-        self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
+        self.k_max = self._asnumpy([abs(_p).max() for _p in self._pxyz])
 
         p2_pc2 = sum(
             (_p/(self.smoothing_cutoff * _p).max())**2
             for _p in self._pxyz)
-        self._smoothing_factor = np.where(p2_pc2 < 1, 1, 0)
+        self._smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
         #np.exp(-p2_pc2**4)
         #self._smoothing_factor = 1.0
 
@@ -220,17 +239,20 @@ class PeriodicBasis(Object, BasisMixin):
             if kx2 is None:
                 kx2 = self.kx**2
             else:
+                kx2 = self.xp.asarray(kx2)
                 assert k2 is None
             k2 = (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
         else:
+            k2 = self.xp.asarray(k2)
             assert kx2 is None
         
         K = -factor * k2
         if exp:
-            K = np.exp(K)
+            K = self.xp.exp(K)
         if twist_phase_x is None:
             return self.ifftn(K * self.fftn(y))
         else:
+            twist_phase_x = self.xp.asarray(twist_phase_x)
             return self.ifftn(K * self.fftn(y/twist_phase_x))*twist_phase_x
 
     # We need these wrappers because the state may have additional
@@ -238,22 +260,22 @@ class PeriodicBasis(Object, BasisMixin):
     def fft(self, x, axis):
         """Perform the fft along self.axes[axis]"""
         axis = self.axes[axis] % len(x.shape)
-        return fft(x, axis=axis)
+        return self._fft(x, axis=axis)
 
     def ifft(self, x, axis):
         """Perform the ifft along self.axes[axis]"""
         axis = self.axes[axis] % len(x.shape)
-        return ifft(x, axis=axis)
+        return self._ifft(x, axis=axis)
 
     def fftn(self, x):
         """Perform the fft along spatial axes"""
         axes = self.axes % len(x.shape)
-        return fftn(x, axes=axes)
+        return self._fftn(x, axes=axes)
 
     def ifftn(self, x):
         """Perform the ifft along spatial axes"""
         axes = self.axes % len(x.shape)
-        return ifftn(x, axes=axes)
+        return self._ifftn(x, axes=axes)
 
     def smooth(self, x, frac=0.8):
         """Smooth the state by multiplying by form factor."""
