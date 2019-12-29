@@ -1,3 +1,4 @@
+
 MMF Utils
 =========
 
@@ -1286,7 +1287,7 @@ Complete code coverage information is provided in
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Coverage report</title>
         <link rel="stylesheet" href="style.css" type="text/css">
-    
+        
         <script type="text/javascript" src="jquery.min.js"></script>
         <script type="text/javascript" src="jquery.ba-throttle-debounce.min.js"></script>
         <script type="text/javascript" src="jquery.tablesorter.min.js"></script>
@@ -1321,7 +1322,7 @@ Complete code coverage information is provided in
             <span class="key">s</span>
             <span class="key">m</span>
             <span class="key">x</span>
-    
+            
             <span class="key">c</span> &nbsp; change column sorting
         </p>
         </div>
@@ -1330,308 +1331,308 @@ Complete code coverage information is provided in
     <div id="index">
         <table class="index">
             <thead>
-    
+                
                 <tr class="tablehead" title="Click to sort">
                     <th class="name left headerSortDown shortkey_n">Module</th>
                     <th class="shortkey_s">statements</th>
                     <th class="shortkey_m">missing</th>
                     <th class="shortkey_x">excluded</th>
-    
+                    
                     <th class="right shortkey_c">coverage</th>
                 </tr>
             </thead>
-    
+            
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
                     <td>2140</td>
                     <td>258</td>
                     <td>85</td>
-    
+                    
                     <td class="right" data-ratio="1882 2140">88%</td>
                 </tr>
             </tfoot>
             <tbody>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils___init___py.html">mmfutils/__init__.py</a></td>
                     <td>13</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="13 13">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_containers_py.html">mmfutils/containers.py</a></td>
                     <td>89</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="89 89">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_contexts_py.html">mmfutils/contexts.py</a></td>
                     <td>188</td>
                     <td>25</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="163 188">87%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_data_py.html">mmfutils/data.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_debugging_py.html">mmfutils/debugging.py</a></td>
                     <td>48</td>
                     <td>0</td>
                     <td>3</td>
-    
+                    
                     <td class="right" data-ratio="48 48">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_interface_py.html">mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
                     <td>15</td>
-    
+                    
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math___init___py.html">mmfutils/math/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases___init___py.html">mmfutils/math/bases/__init__.py</a></td>
                     <td>3</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="3 3">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
                     <td>397</td>
                     <td>47</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="350 397">88%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_interface_py.html">mmfutils/math/bases/interface.py</a></td>
                     <td>33</td>
                     <td>2</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="31 33">94%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_utils_py.html">mmfutils/math/bases/utils.py</a></td>
                     <td>42</td>
                     <td>11</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="31 42">74%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bessel_py.html">mmfutils/math/bessel.py</a></td>
                     <td>133</td>
                     <td>0</td>
                     <td>14</td>
-    
+                    
                     <td class="right" data-ratio="133 133">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_differentiate_py.html">mmfutils/math/differentiate.py</a></td>
                     <td>62</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="62 62">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_integrate___init___py.html">mmfutils/math/integrate/__init__.py</a></td>
                     <td>214</td>
                     <td>11</td>
                     <td>16</td>
-    
+                    
                     <td class="right" data-ratio="203 214">95%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_linalg_py.html">mmfutils/math/linalg.py</a></td>
                     <td>13</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="13 13">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_special_py.html">mmfutils/math/special.py</a></td>
                     <td>27</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="27 27">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_wigner_py.html">mmfutils/math/wigner.py</a></td>
                     <td>21</td>
                     <td>17</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="4 21">19%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_optimize_py.html">mmfutils/optimize.py</a></td>
                     <td>27</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="27 27">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_parallel_py.html">mmfutils/parallel.py</a></td>
                     <td>124</td>
                     <td>5</td>
                     <td>8</td>
-    
+                    
                     <td class="right" data-ratio="119 124">96%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance___init___py.html">mmfutils/performance/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_blas_py.html">mmfutils/performance/blas.py</a></td>
                     <td>59</td>
                     <td>0</td>
                     <td>6</td>
-    
+                    
                     <td class="right" data-ratio="59 59">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_fft_py.html">mmfutils/performance/fft.py</a></td>
                     <td>89</td>
                     <td>3</td>
                     <td>6</td>
-    
+                    
                     <td class="right" data-ratio="86 89">97%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_numexpr_py.html">mmfutils/performance/numexpr.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>7</td>
-    
+                    
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_threads_py.html">mmfutils/performance/threads.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>8</td>
-    
+                    
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot___init___py.html">mmfutils/plot/__init__.py</a></td>
                     <td>5</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="5 5">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_animation_py.html">mmfutils/plot/animation.py</a></td>
                     <td>85</td>
                     <td>70</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="15 85">18%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_cmaps_py.html">mmfutils/plot/cmaps.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_rasterize_py.html">mmfutils/plot/rasterize.py</a></td>
                     <td>29</td>
                     <td>1</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="28 29">97%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve___init___py.html">mmfutils/solve/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve_broyden_py.html">mmfutils/solve/broyden.py</a></td>
                     <td>314</td>
                     <td>64</td>
                     <td>0</td>
-    
+                    
                     <td class="right" data-ratio="250 314">80%</td>
                 </tr>
-    
+                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_testing_py.html">mmfutils/testing.py</a></td>
                     <td>18</td>
                     <td>2</td>
                     <td>2</td>
-    
+                    
                     <td class="right" data-ratio="16 18">89%</td>
                 </tr>
-    
+                
             </tbody>
         </table>
     

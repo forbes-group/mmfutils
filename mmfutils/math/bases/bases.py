@@ -195,6 +195,12 @@ class PeriodicBasis(Object, BasisMixin):
         #np.exp(-p2_pc2**4)
         #self._smoothing_factor = 1.0
 
+        # Memoize momentum sums for speed
+        _kx2 = self._pxyz[0]**2
+        _kyz2 = sum(_p**2 for _p in self._pxyz[1:])
+        _k2 = _kx2+_kyz2
+        self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
+
     @property
     def kx(self):
         return self._pxyz[0]
@@ -235,13 +241,13 @@ class PeriodicBasis(Object, BasisMixin):
         
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
+        _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
         if k2 is None:
             if kx2 is None:
-                kx2 = self.kx**2
+                k2 = _k2
             else:
                 kx2 = self.xp.asarray(kx2)
-                assert k2 is None
-            k2 = (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
+                k2 = kx2 + _kyz2
         else:
             k2 = self.xp.asarray(k2)
             assert kx2 is None
