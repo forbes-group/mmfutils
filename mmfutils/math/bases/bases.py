@@ -9,8 +9,8 @@ import scipy.fftpack
 from mmfutils.containers import Object
 
 from . import interface
-from .interface import (implementer, IBasis, IBasisKx, IBasisWithConvolution,
-                        BasisMixin)
+from .interface import (implementer, IBasis, IBasisKx, IBasisLz,
+                        IBasisWithConvolution, BasisMixin)
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 from .utils import (prod, dst, idst, get_xyz, get_kxyz)
@@ -114,7 +114,7 @@ class SphericalBasis(Object, BasisMixin):
         return idst(Ck * dst(r*y)) / r
 
 
-@implementer(IBasisWithConvolution, IBasisKx)
+@implementer(IBasisWithConvolution, IBasisKx, IBasisLz)
 class PeriodicBasis(Object, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -214,7 +214,7 @@ class PeriodicBasis(Object, BasisMixin):
         return self.Nxyz[0]
     
     def laplacian(self, y, factor=1.0, exp=False, kx2=None, k2=None,
-                  twist_phase_x=None):
+                  kwz2=0, twist_phase_x=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
@@ -225,12 +225,15 @@ class PeriodicBasis(Object, BasisMixin):
            broadcast across the components.
         exp : bool
            If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+           This is used for split evolvers. Only allowed to be `True`
+           if `kwz2 == 0`.
         kx2 : array, optional
            Replacement for the default `kx2=kx**2` used when computing the
            "laplacian".  This would allow you, for example, to implement a
            modified dispersion relationship like ``1-cos(kx)`` rather than
            ``kx**2``.
+        kwz2 : None, float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         k2 : array, optional
            Replacement for `k2 = kx**2 + ky**2 + kz**2`.
         twist_phase_x : array, optional
@@ -254,13 +257,33 @@ class PeriodicBasis(Object, BasisMixin):
         
         K = -factor * k2
         if exp:
+            if kwz2 != 0:
+                raise NotImplementedError(
+                   f"Cannot exponential the laplacian if kwz2 != 0 (got {kwz2}).")
             K = self.xp.exp(K)
-        if twist_phase_x is None:
-            return self.ifftn(K * self.fftn(y))
-        else:
+            
+        if twist_phase_x is not None:
             twist_phase_x = self.xp.asarray(twist_phase_x)
-            return self.ifftn(K * self.fftn(y/twist_phase_x))*twist_phase_x
+            y = y/twist_phase_x
+            
+        yt = self.fftn(y)
+        laplacian_y = self.ifftn(K * yt)
 
+        if kwz2 != 0:
+            laplacian_y += 2*kwz2*factor * self.apply_Lz_hbar(y, yt=yt)
+
+        if twist_phase_x is not None:
+            laplacian_y *= twist_phase_x
+        return laplacian_y
+            
+    def apply_Lz_hbar(self, y, yt=None):
+        """Apply `Lz/hbar` to `y`."""
+        if yt is None:
+            yt = self.fftn(y)
+        x, y = self.xyz[:2]
+        kx, ky = self._pxyz[:2]
+        return x*self.ifftn(ky*yt) - y*self.ifftn(kx*yt)
+        
     # We need these wrappers because the state may have additional
     # indices for components etc. in front.
     def fft(self, x, axis):
@@ -637,7 +660,8 @@ class CylindricalBasis(Object, BasisMixin):
 
     ######################################################################
     # IBasisMinimal: Required methods
-    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(self, y, factor=1.0, exp=False, kx2=None,
+                  twist_phase_x=None):
         r"""Return the laplacian of y.
 
         Arguments
@@ -648,12 +672,15 @@ class CylindricalBasis(Object, BasisMixin):
            broadcast across the components.
         exp : bool
            If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+           This is used for split evolvers. Only allowed to be `True`
+           if `kwz2 == 0`.
         kx2 : array, optional
            Replacement for the default `kx2=kx**2` used when computing the
            "laplacian".  This would allow you, for example, to implement a
            modified dispersion relationship like ``1-cos(kx)`` rather than
            ``kx**2``.
+        kwz2 : float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use

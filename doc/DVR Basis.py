@@ -7,11 +7,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.4'
-#       jupytext_version: 1.1.3
+#       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Python [conda env:_test3]
+#     display_name: Python [conda env:work3]
 #     language: python
-#     name: conda-env-_test3-py
+#     name: conda-env-work3-py
 # ---
 
 # + {"init_cell": true}
@@ -24,6 +24,7 @@ import mmf_setup;mmf_setup.nbinit()
 # Here are the properties of the basis, including abscissa, basis functions, integration weights, and some quantities that appear in the DVR literature.  The general idea of a DVR basis is to introduce a set of basis functions $F_n(x) = \braket{x|F_n}$ and an associated set of abscissa $x_n$ such that:
 #
 # \begin{gather}
+#   \newcommand{\vect}[1]{\vec{#1}}
 #   F_{m}(x_n) \propto \delta_{mn}. \tag{locality}
 # \end{gather}
 #
@@ -796,3 +797,172 @@ assert np.allclose(1, (q*metric).sum())
 #   = \frac{2\pi}{R} \int_{0}^{\infty}\d{r}\; rn(r) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
 #   = \frac{\pi}{R} \int_{-\infty}^{\infty}\d{r}\; rn(\abs{r}) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
 # $$
+
+# ## Bessel Function DVR
+
+# To implement the spherical and cylindrical DVR bases, we need some numerical code for evaluating Bessel functions.  These are provided by the module `mmfutils.math.bessel`, some of which we describe here.
+
+# ### `J_sqrt_pole`
+
+# For evaluating the basis functions, we need the function $F(z)$:
+#
+# $$
+#   F(z) = \frac{f(z)}{z - z_n}  = \frac{\sqrt{z}J_{\nu}(z)}{z - z_n},\qquad
+#   F'(z) = \frac{f'(z)}{z - z_n} - \frac{f(z)}{(z - z_n)^2}.
+# $$
+
+# +
+# %pylab inline --no-import-all
+from importlib import reload
+from mmfutils.math import bessel; reload(bessel)
+
+nu = 0.0
+n = 0
+
+zn = bessel.j_root(nu=nu, N=n+1)[n]
+zn = zn
+F = bessel.J_sqrt_pole(nu=nu, zn=zn, d=0)
+dF = bessel.J_sqrt_pole(nu=nu, zn=zn, d=1)
+z = np.linspace(zn-0.1, zn+0.1, 1000)
+plt.plot(z, F(z))
+
+zn
+# -
+
+# # Transformations
+
+# We allow for some transformations of our bases.
+
+# ## Translations
+
+# We start with a wavefunction $\psi(x, t) = f(x-vt)$ that has a constant shape moving to the right at speed $v$.  To simplify the description of this solution, we might want to work with coordinates $X_v \equiv X = x - vt$ where the wavefunction has the simpler form
+#
+# $$
+#   \psi_v(X, t) = f(X) = \psi(x, t) = f(x-vt).
+# $$
+#
+# In otherwise, the wavefunction is the same, but the coordinates are different.
+#
+# This is what we mean by formulating the problem **in a frame moving with velocity $v$ to the right**.  The moving wave is simpler in such a co-moving frame:
+#
+# $$
+#   \psi(x, t) = f(x-vt), \qquad
+#   \psi_v(X, t) = f(X).
+# $$
+#
+# This transformation is effected by the active translation operator:
+#
+# $$
+#   \op{T}_\lambda = \exp\bigl\{\lambda \overbrace{\frac{\op{p}_x}{\I\hbar}}^{-\partial_x}\bigr\}, \qquad
+#   \psi(x, t) = \op{T}_{vt}\psi_v(x, t) = \psi_v(x-vt, t), \qquad
+#   \psi_v(x, t) = \overbrace{\op{T}_{-vt}}^{\op{T}_{vt}^{-1}}\psi(x, t).
+# $$
+#
+# This follows from the expansion of the exponential which generates the Taylor expansion of $\psi_v(x-vt, t)$ in terms of $\lambda = vt$.
+#
+# To derive the equations of motion for the wavefunction $\psi_v$ in the moving frame, we apply the Hamiltonian:
+#
+# $$
+#   \I\hbar \partial_t \psi(x, t) = \op{H}\psi(x, t), \qquad
+#   \I\hbar \partial_t \bigl(\op{T}_{vt}\psi_v(x, t)\bigr) = \op{H}\op{T}_{vt}\psi_v(x, t),\\
+#   \I\hbar\dot{\psi}_v(x, t) = 
+#   \overbrace{\op{T}^{-1}_{vt}\bigl(\op{H}\op{T}_{vt} - \I\hbar\dot{\op{T}}_{vt}\bigr)}^{\op{H}_v}\psi_v(x, t).
+# $$
+
+# Explicitly, for translations, we have $\I\hbar\dot{\op{T}}_{vt} = v\op{T}_{vt}\op{p}_x$, so:
+#
+# $$
+#   \op{H}_{v} = \frac{\op{p}^2}{2m} - v\op{p}_{x} 
+#   + \overbrace{\op{T}^{-1}_{vt}\op{V}\op{T}_{vt}}^{V(\op{x}+vt)}.
+# $$
+#
+# Boosting shifts the dispersion by $-v\op{p}_x$ and moves the potential.  This is a partial Galilean transform.  To obtain a full Galilean transformation that restores the form of $\op{H}$ one needs to include a phase redefinition as [discussed on my website](http://swan.physics.wsu.edu/forbes/public/student_resources/galilean-covariance/).
+
+# ## Rotations
+
+# $\newcommand{\vect}[1]{\vec{#1}}$One can work analogously with rotations specified by a vector $\vect{\theta}$ representing a rotation by angle $\theta = \norm{\vect{\theta}}_2$ about the axis along $\vect{\theta}$.  In cartesian coordinates, the active transformation is effected through the following rotation matrix:
+#
+# $$
+#   \mat{R}_\vect{\theta} = e^{\vect{\theta}\times}, \qquad
+#   \vect{x} = \mat{R}_\vect{\theta}\vect{X}.
+# $$
+
+# *To check our sign, consider rotating about the $z$ axis so that $\vect{\theta} = \theta \uvect{z}$.  As an active rotation, the rotation matrix should take the point $\uvect{x} = (1, 0)$ to the point $(\cos\theta, \sin\theta) \approx (1, \theta) = \uvect{x} + \theta\uvect{y}$ for small $\theta$.  Now recall that $\uvect{x}\times\uvect{y} = \uvect{z}$ and cyclic permutations, so $\uvect{z}\times\uvect{x} = \uvect{y}$.  Hence:*
+#
+# $$
+#   \mat{R} = \mat{1} + \vect{\theta}\times + \order(\theta^2)
+#     \approx \mat{1} + \theta\uvect{z}\times,\qquad
+#   \mat{R}\cdot\uvect{x} \approx 
+#   \uvect{x} + \theta\uvect{z}\times\uvect{x}
+#   = \uvect{x} + \theta\uvect{y}.
+# $$
+
+# $\newcommand{\vect}[1]{\vec{#1}}$For a rotating frame, one has $\vect{\theta} = \vect{\omega} t$ which we shall restrict here to $\vect{\omega} = \omega \uvect{z}$.  The equivalent transformation on a wavefunction is:
+#
+# $$
+#   \op{R}_{\vect{\theta}} = \exp\Bigl\{\vect{\theta}\cdot\frac{\vect{\op{L}}}{\I\hbar}\Bigr\}, \qquad
+#   \psi(\vect{x}, t) = \op{R}_{\omega t}\psi_{\omega t}(\vect{x}, t) = \psi_{\omega t}(\mat{R}_{\omega t}^{-1}\cdot\vect{x}, t).
+# $$
+
+# Explicitly for a rotating frame, $\I\hbar\dot{\op{R}}_{\vect{\omega} t} = \op{R}_{\vect{\omega} t}\vect{\omega}\cdot\vect{\op{L}}$ so
+#
+# $$
+#   \op{H}_{\vect{\omega}} = \frac{\op{p}^2}{2m} - \vect{\omega}\cdot\vect{\op{L}} 
+#   + \overbrace{\op{R}^{-1}_{\vect{\omega} t}\op{V}\op{R}_{\vect{\omega} t}}^{V(\mat{R}_{\vect{\omega}t}^{-1}\cdot\vect{x})}.
+# $$
+
+# $$
+#   \op{L}_z = \op{x}\op{p}_y - \op{y}\op{p}_x = \hbar(\op{x}\op{k}_y - \op{y}\op{k}_x), \qquad
+#   -\frac{\hbar^2}{2m}\left(\nabla^2 + \frac{2m}{\hbar}\omega_z
+#   \bigl(\op{x}(\overbrace{-\I\nabla_y}^{k_y})-\op{y}(\overbrace{-\I\nabla_x}^{k_x})\bigr)\right)
+# $$
+
+# ### Test
+
+# As a simple test, we compute the laplacian  in a stationary and a rotating frame:
+#
+# $$
+#   f(x, y) = (x+\I y)e^{-x^2-y^2} = re^{-r^2}e^{\I\theta}, \qquad
+#   \nabla^2f = \bigl(4(x^2+y^2) - 8\bigr)f, \qquad
+#   \frac{\op{L}_z}{\hbar}f = f.
+# $$
+
+# +
+from importlib import reload
+from mmfutils.math.bases import bases; reload(bases)
+from mmfutils.plot import imcontourf
+N = 32*2
+L = 14.0
+eps = np.finfo(float).eps
+b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L))
+x, y = b.xyz
+kx, ky = b._pxyz
+f = (x+1j*y)*np.exp(-x**2-y**2)
+nabla_f = (4*(x**2+y**2)-8)*f
+Lz_f = f
+ax = plt.subplot(211)
+plt.semilogy(x.ravel(), abs(f)[:, N//2])
+ax.set(xlabel='x', ylim=(eps, 1))
+ax = plt.subplot(212)
+ft = np.fft.fftshift(b.fftn(f))
+plt.semilogy(np.fft.fftshift(kx), (abs(ft)/abs(ft).max())[:, N//2])
+ax.set(xlabel='y', ylim=(eps, 1))
+
+assert np.allclose(nabla_f, b.laplacian(f))
+assert np.allclose(Lz_f, b.apply_Lz_hbar(f))
+m = 1.1
+hbar = 2.2
+wz = 3.3
+kwz2 = m*wz/hbar
+factor = -hbar**2/2/m
+assert np.allclose(factor*nabla_f - wz*hbar*Lz_f, 
+                   b.laplacian(f, factor=factor, kwz2=kwz2))
+# -
+
+np.allclose(b.laplacian(f, factor=factor, kwz2=kwz2)/b.laplacian(f), factor)
+
+plt.plot(x.ravel(), 
+         ((factor*nabla_f - b.laplacian(f, factor=factor, kwz2=-1))/Lz_f)[:, N//2])
+plt.ylim(-3,3)
+
+

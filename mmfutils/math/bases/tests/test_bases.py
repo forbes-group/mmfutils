@@ -18,7 +18,8 @@ import pytest
 
 from mmfutils.interface import verifyObject, verifyClass
 from mmfutils.math.bases import bases
-from mmfutils.math.bases.interface import IBasis, IBasisWithConvolution
+from mmfutils.math.bases.interface import (
+    IBasis, IBasisWithConvolution, IBasisKx, IBasisLz)
 
 del scipy
 
@@ -263,6 +264,11 @@ class TestPeriodicBasis(ConvolutionTests):
             r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q/8.0/np.pi**(3./2.))
         cls.Mi = -1.747564594633182190636212
 
+    def test_interface(self):
+        super().test_interface()
+        assert verifyClass(IBasisKx, self.Basis)
+        assert verifyObject(IBasisLz, self.basis)
+
     def test_coulomb(self):
         """Test computation of the coulomb potential.
 
@@ -321,6 +327,29 @@ class TestPeriodicBasis(ConvolutionTests):
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
+
+    def test_Lz(self):
+        """Test Lz"""
+        N = 64
+        L = 14.0
+        b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L))
+        x, y = b.xyz[:2]
+        kx, ky = b._pxyz
+
+        # Exact solutions for a Gaussian with phase
+        f = (x+1j*y)*np.exp(-x**2-y**2)
+        nabla_f = (4*(x**2+y**2)-8)*f
+        Lz_f = f
+        
+        assert np.allclose(nabla_f, b.laplacian(f))
+        assert np.allclose(Lz_f, b.apply_Lz_hbar(f))
+        m = 1.1
+        hbar = 2.2
+        wz = 3.3
+        kwz2 = m*wz/hbar
+        factor = -hbar**2/2/m
+        assert np.allclose(factor*nabla_f - wz*hbar*Lz_f, 
+                           b.laplacian(f, factor=factor, kwz2=kwz2))        
 
 
 class TestCartesianBasis(ConvolutionTests):

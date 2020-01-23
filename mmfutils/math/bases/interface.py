@@ -12,7 +12,8 @@ import numpy as np
 
 from mmfutils.interface import (implementer, Interface, Attribute)
 
-__all__ = ['implementer', 'IBasis', 'BasisMixin']
+__all__ = ['implementer', 'IBasis', 'IBasisKx', 'IBasisLz',
+           'IBasisWithConvolution', 'BasisMixin']
 
 
 class IBasisMinimal(Interface):
@@ -116,6 +117,31 @@ class IBasisKx(IBasis):
            compensate, the momenta should be shifted as well::
         
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+        """
+
+
+class IBasisLz(IBasis):
+    """Extension of IBasis that allows the angular momentum along the
+    z-axis to be applied.  Useful for implementing rotating frames.
+    """
+    def apply_Lz_hbar(y):
+        """Apply `Lz/hbar` to `y`."""
+        
+    def laplacian(y, factor=1.0, exp=False, kwz2=0):
+        """Return the laplacian of `y` times `factor` or the exponential of this.
+
+        Parameters
+        ----------
+        factor : float
+           Additional factor (mostly used with `exp=True`).  The
+           implementation must be careful to allow the factor to
+           broadcast across the components.
+        exp : bool
+           If `True`, then compute the exponential of the laplacian.
+           This is used for split evolvers.  Only allowed to be `True`
+           if `kwz2 == 0`.
+        kwz2 : None, float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
 
 

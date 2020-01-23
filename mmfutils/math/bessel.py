@@ -435,14 +435,14 @@ def J_sqrt_pole(nu, zn, d=0):
         return J(z)/2/np.sqrt(z) + np.sqrt(z)*dJ(z)
 
     if 0 == d:
-        def F(z, zn=zn, delta_c=delta_c, f=f, a_F=a_F):
+        def F(z):
             denom = z - zn
             return np.where(abs(denom) > delta_c,
                             np.divide(f(z), denom + _TINY),
                             _Horner(a_F, denom))
         return F
     elif 1 == d:
-        def dF(z, zn=zn, ddelta_c=ddelta_c, f=f, df=df, a_dF=a_dF):
+        def dF(z):
             denom = z - zn
             return np.where(abs(denom) > ddelta_c,
                             np.divide(df(z) - np.divide(f(z), denom),
