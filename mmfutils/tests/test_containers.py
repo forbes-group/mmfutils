@@ -2,6 +2,8 @@ import pickle
 
 from mmfutils.containers import Object, Container, ContainerList, ContainerDict
 
+import pytest
+
 
 class TestContainer(object):
     def test_container_persist(self):
@@ -26,7 +28,7 @@ class TestContainer(object):
     def test_preserve_order_of_picklable_attributes(self):
         """Check that the order of attributes defined by
         picklable_attributes is preserved"""
-        c = Container(a=1, b=2, picklable_attributes=['b', 'a'])
+        c = Container(a=1, b=2, c=3, picklable_attributes=['b', 'a'])
         assert repr(c) == "Container(b=2, a=1)"
         c.picklable_attributes = ['a', 'b']
         assert repr(c) == "Container(a=1, b=2)"
@@ -112,6 +114,10 @@ class MyDefaultObject(Object):
     """Has default attributes."""
     x = 5
 
+    def d(self):
+        return 5
+
+
 
 class TestObject(object):
     def test_object_persist(self):
@@ -134,8 +140,9 @@ class TestObject(object):
 
     def test_strict(self):
         o = MyStrictObject(c=[1, 2, 3], a=1, b="b")
-        o.dont_store_this = "BAD"
-        
+        with pytest.raises(AttributeError):
+            o.dont_store_this = "BAD"
+
     def test_defaults(self):
         o = MyDefaultObject()
         assert o.x == 5
@@ -148,7 +155,24 @@ class TestObject(object):
         o2 = pickle.loads(pickle.dumps(o))
         assert o2.x == 6
         assert not o1.picklable_attributes
-        
+
+    def test_default_1(self):
+        """Check that setting methods does not muck up picklable_attrs."""
+        o = MyDefaultObject()
+        assert not o.picklable_attributes
+        o.x = 6
+        assert o.picklable_attributes == ['x']
+
+        o.y = 6
+        assert 'y' not in o.picklable_attributes
+
+        # This is a tricky "corner case".  Here we set an attribute
+        # that is a method.  This should probably not be set as a
+        # picklable attribute, but it is hard to check.
+        o.d = 6
+        assert o.d == 6
+        assert 'd' in o.picklable_attributes
+
 
 class TestPersist(object):
     def test_archive(self):

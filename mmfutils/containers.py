@@ -6,6 +6,7 @@ package (though use of that package is optional and it is not a dependency).
 
 import collections
 from collections import abc
+import pickle
 
 __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 
@@ -66,14 +67,26 @@ class Object(object):
 
     .. note:: Do not use any of the following variables:
 
-          * `_empty_state`: reserved for objects without any state
-          * `_independent_attributes`, `_dependent_attributes`,
-            `initialized`: Used to flag if attributes have been
-            changed but without `init()` being called.  (See below.)
-          * `_strict`: if `True`, then only picklable attributes will
-            be settable through `__setattr__()`.
-          * `_reserved_attributes`: List of special attributes that
-            should be excluded from processing.
+          * `picklable_attributes:
+             Reserved for the list of attributes that will be
+             pickled.  If this has been stored in `self.__dict__` then
+             the constructor chain has finished processing.
+          * `_empty_state`:
+             Reserved for objects without any state
+          * `_independent_attributes`:
+          * `_dependent_attributes`:
+          * `initialized`:
+             Used to flag if attributes have been changed but without
+             `init()` being called.  (See below.)
+          * `_strict`:
+             If `True`, then only picklable attributes will be
+             settable through `__setattr__()`.
+          * `_check`:
+             If `True`, check that objects are actually picklable when
+             they are set.
+          * `_reserved_attributes`:
+             List of special attributes that should be excluded from
+             processing.
 
     By default setting any attribute in `picklable_attributes` will
     set the `initialized` flag to `False`.  This will be set to `True`
@@ -86,6 +99,10 @@ class Object(object):
     .. note:: This redefines `__setattr__` to provide the behaviour,
        but does not overload `__getattr__` or `__getattribute__` so as
        to have no performance hit on these.
+
+    Invariants:
+    
+    * No 'picklable_attributes' in `self.__dict__` Prior to the call to init(), 
 
     Examples
     --------
@@ -116,19 +133,19 @@ class Object(object):
     """
     # Assure that this is always defined.
     initialized = False
-    picklable_attributes = ()  # Tuple so it is immutable
     _independent_attributes = ()
     _dependent_attributes = ()
     _strict = False
+    _check = True
     _reserved_attributes = [
         'initialized',
         'picklable_attributes',
         '_independent_attributes',
         '_dependent_attributes',
-        '_strict',
+        '_strict', '_check',
         '_reserved_attributes']
 
-    def __init__(self, **kw):
+    def __init__(self, picklable_attributes=None, **kw):
         # Set all known kwargs
         unknown_args = [_k for _k in kw if not hasattr(self, _k)]
         if unknown_args:
@@ -138,9 +155,17 @@ class Object(object):
         for _k in kw:
             setattr(self, _k, kw[_k])
 
-        # Record picklable_attributes
-        if 'picklable_attributes' not in self.__dict__:
-            self.picklable_attributes = sorted(_k for _k in self.__dict__)
+        # Record picklable_attributes.  Note, if the user specifies
+        # this, then we respect that, otherwise we set it ourselves.
+        if picklable_attributes is None:
+            picklable_attributes = getattr(
+                self, 'picklable_attributes',
+                sorted(_k for _k in self.__dict__))
+        self.picklable_attributes = picklable_attributes
+
+        # Check for bad attributes
+        for key in self.picklable_attributes:
+            self._check_picklable(key, getattr(self, key))
 
         self.init()
 
@@ -212,21 +237,54 @@ class Object(object):
                 and (key in self._dependent_attributes
                      or key in self.picklable_attributes))
 
+    @staticmethod
+    def _is_picklable(obj):
+        """Return `True` if obj is picklable."""
+        try:
+            pickle.dumps(obj)
+            return True
+        except pickle.PicklingError:
+            return False
+
+    def _check_picklable(self, key, obj):
+        """Raise ValueError if obj is not picklable and self._check."""
+        if self._check and not self._is_picklable(obj):
+            raise ValueError("Attribute {key}={value} not picklable.")
+
     def __setattr__(self, key, value):
         """Sets the `initialized` flag to `False` if any picklable
         attribute is changed.
         """
-        if self._is_dependent_attribute(key):
-            self.__dict__['initialized'] = False
-        elif (key not in self._reserved_attributes
-              and key not in self.__dict__
-              and 'picklable_attributes' in self.__dict__
-              and hasattr(self.picklable_attributes, 'append')
-              and hasattr(self, key)):
-            # Setting a variable that has a default value.
-            self.picklable_attributes.append(key)
-            self.__dict__['initialized'] = False
+        if not hasattr(self, 'picklable_attributes'):
+            # Constructor not finished... allow attributes to be set
+            object.__setattr__(self, key, value)
+            return
+        if self._strict and (key not in self.picklable_attributes
+                             and key not in self._independent_attributes
+                             and key not in self._reserved_attributes
+                             and key not in self._dependent_attributes):
+            raise AttributeError(
+                f"Cannot set attribute `{key}` in `_strict` object.")
 
+        picklable_attr = False
+        if self._is_dependent_attribute(key):
+            picklable_attr = True
+        elif (not self._strict
+              and key not in self._independent_attributes
+              and key not in self._reserved_attributes
+              and key not in self._dependent_attributes
+              and key not in self.picklable_attributes
+              and hasattr(self, key)
+              and hasattr(self.picklable_attributes, 'append')
+              and (not self._check
+                   or self._is_picklable(getattr(self, key)))):
+            # Setting a new picklable_attribute
+            self.picklable_attributes.append(key)
+            picklable_attr = True
+
+        if picklable_attr:
+            self.__dict__['initialized'] = False
+            self._check_picklable(key, value)
         object.__setattr__(self, key, value)
 
 
