@@ -1,8 +1,9 @@
-name: _test3
+name: _mmfutils
 channels:
   - defaults
   - conda-forge
 dependencies:
+  - python=3.7
   - cython >=0.28.4
   - docutils
   - ipyparallel

@@ -20,13 +20,15 @@ channel:
   - conda-forge
   
 requirements:
+  build:
+    - python {{ python }}
   host:
+    - python {{ python }}
     - setuptools >=18.0      # automatically handles Cython extensions
     - cython >=0.28.4
     - numba
-    - python
   run:
-    - python
+    - python {{ python }}
     - zope.interface >=3.8.0
     - husl
     - pathlib
@@ -49,8 +51,7 @@ test:
     - ipython >=4.0
     - ipyparallel
     - matplotlib
-    - persist <3.0           # [py2k]
-    - persist >=3.0          # [py3k]
+    - persist >=3.0
     - numba
     - numpy >=1.15.4
     - numexpr

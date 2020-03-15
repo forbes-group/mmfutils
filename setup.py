@@ -29,7 +29,7 @@ setup_requires = [
 ]
 
 install_requires = [
-    "zope.interface>=3.8.0",
+    'zope.interface>=3.8.0',
     'husl',
     'pathlib',
     'backports.tempfile',
@@ -77,6 +77,9 @@ if USE_CYTHON:
 
 
 setup(name='mmfutils',
+      # Python 3.8 does not work yet with ipyparallel
+      # https://github.com/ipython/ipyparallel/issues/396
+      python_requires='>2,<3.8',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
 
@@ -111,7 +114,6 @@ setup(name='mmfutils',
 
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.7',
       ],
       )
