@@ -1,4 +1,3 @@
-
 MMF Utils
 =========
 
@@ -386,7 +385,7 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.4.13
+4.1  REL: 0.5.0
 
 .. raw:: html
 
@@ -396,7 +395,7 @@ Table of Contents
 
    <li>
 
-4.2  REL: 0.4.10
+4.2  REL: 0.4.13
 
 .. raw:: html
 
@@ -406,7 +405,7 @@ Table of Contents
 
    <li>
 
-4.3  REL: 0.4.9
+4.3  REL: 0.4.10
 
 .. raw:: html
 
@@ -416,7 +415,17 @@ Table of Contents
 
    <li>
 
-4.4  REL: 0.4.7
+4.4  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.5  REL: 0.4.7
 
 .. raw:: html
 
@@ -494,6 +503,12 @@ after restoring a pickle. A further use-case is to allow one to change
 many parameters, then reinitialize the object once with an explicit call
 to ``init()``.
 
+**Simplified default attributes:** The ``Object.__init__()`` method
+accepts ``kwargs``. These will be used to set known attributes *(i.e.
+``hasattr(self, kw)``)*, raising an error. This allows default values
+for attributes to be set as class-variables, removing the need for
+``self.x = x`` lines in the constructor.
+
 Object Example
 ^^^^^^^^^^^^^^
 
@@ -508,15 +523,15 @@ Object Example
     from mmfutils.containers import Object
     
     class State(Object):
-        def __init__(self, N, L=1.0):
-            """This method should set all of the picklable
-            parameters, in this case, N and L."""
+        L = 1.0    # Default attribute
+        
+        def __init__(self, N, **kw):
+            """Set all of the picklable parameters, in this case, N and L."""
             print("__init__() called")
-            self.N = N
-            self.L = L
+            self.N = N  # Required attributes still need this.
             
             # Now register these and call init()
-            Object.__init__(self)
+            super().__init__(**kw)
             
         def init(self):
             """All additional initializations"""
@@ -529,27 +544,34 @@ Object Example
             # avoid rapid oscillations
             if self.N % 2 == 0:
                 self.k[self.N//2] = 0.0
+    
+            # Calls base class which sets self.initialized
+            super().init()
                 
         def compute_derivative(self, f):
             """Return the derivative of f."""        
             return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
     
     s = State(256)
-    s
+    print(s)  # No default value for L
 
 
 .. parsed-literal::
 
     __init__() called
     init() called
+    State(N=256)
 
 
+.. code:: ipython3
+
+    s.L = 2.0
+    print(s)  # Now has L
 
 
 .. parsed-literal::
 
-    State(L=1.0, N=256)
-
+    State(N=256, L=2.0)
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
@@ -560,6 +582,34 @@ let’s do a calculation:
     f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
     df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
     np.allclose(s.compute_derivative(f), df)
+
+
+
+
+.. parsed-literal::
+
+    False
+
+
+
+Oops! We forgot to reinitialize the object… (The formula is correct, but
+the lattice is no longer commensurate so the FFT derivative has huge
+errors).
+
+.. code:: ipython3
+
+    print(s.initialized)
+    s.init()
+    assert s.initialized
+    f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
+    df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+    np.allclose(s.compute_derivative(f), df)
+
+
+.. parsed-literal::
+
+    False
+    init() called
 
 
 
@@ -742,7 +792,7 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-9-bd53d5116502> in <module>
+    <ipython-input-11-bd53d5116502> in <module>
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print(c1)
     ----> 4 c1.large_temporary_array
@@ -918,7 +968,7 @@ to provide a mechanism for documentating interfaces in a notebook.
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="generator" content="Docutils 0.15.2: http://docutils.sourceforge.net/" />
+    <meta name="generator" content="Docutils 0.16: http://docutils.sourceforge.net/" />
     <title>&lt;string&gt;</title>
     
     <div class="document">
@@ -1103,26 +1153,26 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 .. parsed-literal::
 
-    CPU times: user 13.8 ms, sys: 2.99 ms, total: 16.8 ms
-    Wall time: 13.8 ms
-    CPU times: user 76.9 ms, sys: 2.41 ms, total: 79.3 ms
-    Wall time: 40.8 ms
-    CPU times: user 392 ms, sys: 63.2 ms, total: 456 ms
-    Wall time: 293 ms
-    CPU times: user 4.18 ms, sys: 169 µs, total: 4.35 ms
-    Wall time: 4.39 ms
+    CPU times: user 11 ms, sys: 3.21 ms, total: 14.2 ms
+    Wall time: 14.2 ms
+    CPU times: user 40.4 ms, sys: 1.32 ms, total: 41.7 ms
+    Wall time: 42.9 ms
+    CPU times: user 237 ms, sys: 14.9 ms, total: 252 ms
+    Wall time: 246 ms
+    CPU times: user 3.48 ms, sys: 171 µs, total: 3.65 ms
+    Wall time: 3.65 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x1a21d9b0d0>
+    <matplotlib.collections.QuadMesh at 0x10b6613d0>
 
 
 
 
-.. image:: README_files/README_55_2.png
+.. image:: README_files/README_58_2.png
 
 
 Angular Variables
@@ -1166,13 +1216,13 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet at 0x1a20fb1b50>,
-     <matplotlib.contour.QuadContourSet at 0x1a21041910>)
+    (<matplotlib.contour.QuadContourSet at 0x1a1f6af150>,
+     <matplotlib.contour.QuadContourSet at 0x1a1f6af510>)
 
 
 
 
-.. image:: README_files/README_58_1.png
+.. image:: README_files/README_61_1.png
 
 
 Debugging
@@ -1236,7 +1286,10 @@ This runs the following code:
 .. parsed-literal::
 
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Writing 47950 bytes to doc/README.rst
+    [NbConvertApp] Support files will be in README_files/
+    [NbConvertApp] Making directory doc/README_files
+    [NbConvertApp] Making directory doc/README_files
+    [NbConvertApp] Writing 49074 bytes to doc/README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -1247,21 +1300,20 @@ using the makefile:
 .. code:: bash
 
    make envs
-   make test2   # conda run -n _test2 py.test
-   make test3   # conda run -n _test3 py.test
+   make test   # conda run -n _mmfutils pytest
 
 To run these manually you could do:
 
 .. code:: bash
 
-   cond activate _test3
-   py.test
+   cond activate _mmfutils
+   pytest
 
 Here is an example:
 
 .. code:: ipython3
 
-    !cd $ROOTDIR; conda activate _test3; py.test
+    !cd $ROOTDIR; conda activate _mmfutils; pytest
 
 Complete code coverage information is provided in
 ``build/_coverage/index.html``.
@@ -1278,16 +1330,12 @@ Complete code coverage information is provided in
 
 .. raw:: html
 
-    
-    
-    
     <!DOCTYPE html>
     <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Coverage report</title>
         <link rel="stylesheet" href="style.css" type="text/css">
-        
         <script type="text/javascript" src="jquery.min.js"></script>
         <script type="text/javascript" src="jquery.ba-throttle-debounce.min.js"></script>
         <script type="text/javascript" src="jquery.tablesorter.min.js"></script>
@@ -1298,21 +1346,17 @@ Complete code coverage information is provided in
         </script>
     </head>
     <body class="indexfile">
-    
     <div id="header">
         <div class="content">
             <h1>Coverage report:
-                <span class="pc_cov">88%</span>
+                <span class="pc_cov">90%</span>
             </h1>
-    
             <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
-    
             <form id="filter_container">
                 <input id="filter" type="text" value="" placeholder="filter..." />
             </form>
         </div>
     </div>
-    
     <div class="help_panel">
         <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
         <p class="legend">Hot-keys on this page</p>
@@ -1322,334 +1366,262 @@ Complete code coverage information is provided in
             <span class="key">s</span>
             <span class="key">m</span>
             <span class="key">x</span>
-            
             <span class="key">c</span> &nbsp; change column sorting
         </p>
         </div>
     </div>
-    
     <div id="index">
         <table class="index">
             <thead>
-                
                 <tr class="tablehead" title="Click to sort">
                     <th class="name left headerSortDown shortkey_n">Module</th>
                     <th class="shortkey_s">statements</th>
                     <th class="shortkey_m">missing</th>
                     <th class="shortkey_x">excluded</th>
-                    
                     <th class="right shortkey_c">coverage</th>
                 </tr>
             </thead>
-            
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>2140</td>
-                    <td>258</td>
+                    <td>2155</td>
+                    <td>208</td>
                     <td>85</td>
-                    
-                    <td class="right" data-ratio="1882 2140">88%</td>
+                    <td class="right" data-ratio="1947 2155">90%</td>
                 </tr>
             </tfoot>
             <tbody>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils___init___py.html">mmfutils/__init__.py</a></td>
                     <td>13</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="13 13">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_containers_py.html">mmfutils/containers.py</a></td>
-                    <td>89</td>
+                    <td>96</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="89 89">100%</td>
+                    <td class="right" data-ratio="96 96">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_contexts_py.html">mmfutils/contexts.py</a></td>
                     <td>188</td>
                     <td>25</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="163 188">87%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_data_py.html">mmfutils/data.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_debugging_py.html">mmfutils/debugging.py</a></td>
-                    <td>48</td>
+                    <td>47</td>
                     <td>0</td>
                     <td>3</td>
-                    
-                    <td class="right" data-ratio="48 48">100%</td>
+                    <td class="right" data-ratio="47 47">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_interface_py.html">mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
                     <td>15</td>
-                    
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math___init___py.html">mmfutils/math/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases___init___py.html">mmfutils/math/bases/__init__.py</a></td>
-                    <td>3</td>
-                    <td>0</td>
-                    <td>0</td>
-                    
-                    <td class="right" data-ratio="3 3">100%</td>
-                </tr>
-                
-                <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
-                    <td>397</td>
-                    <td>47</td>
-                    <td>0</td>
-                    
-                    <td class="right" data-ratio="350 397">88%</td>
-                </tr>
-                
-                <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases_interface_py.html">mmfutils/math/bases/interface.py</a></td>
-                    <td>33</td>
                     <td>2</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="31 33">94%</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="2 2">100%</td>
                 </tr>
-                
+                <tr class="file">
+                    <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
+                    <td>423</td>
+                    <td>52</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="371 423">88%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="mmfutils_math_bases_interfaces_py.html">mmfutils/math/bases/interfaces.py</a></td>
+                    <td>35</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="35 35">100%</td>
+                </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_utils_py.html">mmfutils/math/bases/utils.py</a></td>
-                    <td>42</td>
+                    <td>41</td>
                     <td>11</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="31 42">74%</td>
+                    <td class="right" data-ratio="30 41">73%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bessel_py.html">mmfutils/math/bessel.py</a></td>
-                    <td>133</td>
+                    <td>132</td>
                     <td>0</td>
                     <td>14</td>
-                    
-                    <td class="right" data-ratio="133 133">100%</td>
+                    <td class="right" data-ratio="132 132">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_differentiate_py.html">mmfutils/math/differentiate.py</a></td>
-                    <td>62</td>
+                    <td>61</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="62 62">100%</td>
+                    <td class="right" data-ratio="61 61">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_integrate___init___py.html">mmfutils/math/integrate/__init__.py</a></td>
                     <td>214</td>
                     <td>11</td>
                     <td>16</td>
-                    
                     <td class="right" data-ratio="203 214">95%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_linalg_py.html">mmfutils/math/linalg.py</a></td>
-                    <td>13</td>
+                    <td>12</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="13 13">100%</td>
+                    <td class="right" data-ratio="12 12">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_special_py.html">mmfutils/math/special.py</a></td>
-                    <td>27</td>
+                    <td>26</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="27 27">100%</td>
+                    <td class="right" data-ratio="26 26">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_wigner_py.html">mmfutils/math/wigner.py</a></td>
-                    <td>21</td>
+                    <td>20</td>
                     <td>17</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="4 21">19%</td>
+                    <td class="right" data-ratio="3 20">15%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_optimize_py.html">mmfutils/optimize.py</a></td>
-                    <td>27</td>
+                    <td>26</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="27 27">100%</td>
+                    <td class="right" data-ratio="26 26">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_parallel_py.html">mmfutils/parallel.py</a></td>
                     <td>124</td>
                     <td>5</td>
                     <td>8</td>
-                    
                     <td class="right" data-ratio="119 124">96%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance___init___py.html">mmfutils/performance/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_blas_py.html">mmfutils/performance/blas.py</a></td>
-                    <td>59</td>
+                    <td>58</td>
                     <td>0</td>
                     <td>6</td>
-                    
-                    <td class="right" data-ratio="59 59">100%</td>
+                    <td class="right" data-ratio="58 58">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_fft_py.html">mmfutils/performance/fft.py</a></td>
-                    <td>89</td>
+                    <td>88</td>
                     <td>3</td>
                     <td>6</td>
-                    
-                    <td class="right" data-ratio="86 89">97%</td>
+                    <td class="right" data-ratio="85 88">97%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_numexpr_py.html">mmfutils/performance/numexpr.py</a></td>
-                    <td>10</td>
+                    <td>9</td>
                     <td>0</td>
                     <td>7</td>
-                    
-                    <td class="right" data-ratio="10 10">100%</td>
+                    <td class="right" data-ratio="9 9">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_threads_py.html">mmfutils/performance/threads.py</a></td>
-                    <td>10</td>
+                    <td>9</td>
                     <td>0</td>
                     <td>8</td>
-                    
-                    <td class="right" data-ratio="10 10">100%</td>
+                    <td class="right" data-ratio="9 9">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot___init___py.html">mmfutils/plot/__init__.py</a></td>
-                    <td>5</td>
+                    <td>4</td>
                     <td>0</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="5 5">100%</td>
+                    <td class="right" data-ratio="4 4">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_animation_py.html">mmfutils/plot/animation.py</a></td>
-                    <td>85</td>
-                    <td>70</td>
+                    <td>81</td>
+                    <td>17</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="15 85">18%</td>
+                    <td class="right" data-ratio="64 81">79%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_cmaps_py.html">mmfutils/plot/cmaps.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_rasterize_py.html">mmfutils/plot/rasterize.py</a></td>
-                    <td>29</td>
+                    <td>28</td>
                     <td>1</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="28 29">97%</td>
+                    <td class="right" data-ratio="27 28">96%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve___init___py.html">mmfutils/solve/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
-                    
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve_broyden_py.html">mmfutils/solve/broyden.py</a></td>
-                    <td>314</td>
+                    <td>313</td>
                     <td>64</td>
                     <td>0</td>
-                    
-                    <td class="right" data-ratio="250 314">80%</td>
+                    <td class="right" data-ratio="249 313">80%</td>
                 </tr>
-                
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_testing_py.html">mmfutils/testing.py</a></td>
                     <td>18</td>
                     <td>2</td>
                     <td>2</td>
-                    
                     <td class="right" data-ratio="16 18">89%</td>
                 </tr>
-                
             </tbody>
         </table>
-    
         <p id="no_rows">
             No items found using the specified filter.
         </p>
     </div>
-    
     <div id="footer">
         <div class="content">
             <p>
-                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v4.5.4</a>,
-                created at 2019-10-30 08:28
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.0</a>,
+                created at 2020-03-15 01:54
             </p>
         </div>
     </div>
-    
     </body>
     </html>
 
@@ -1705,10 +1677,8 @@ To do this, we advocate the following proceedure.
 
    .. code:: bash
 
-      conda env update --file environment._test2.yml  # If needed
-      conda env update --file environment._test3.yml  # If needed
-      conda activate _test2; py.test
-      conda activate _test3; py.test
+      conda env update --file environment.yml
+      conda activate _mmfutils; pytest
 
    (``hg com`` will automatically run tests after pip-installing
    everything in ``setup.py`` if you have linked the ``.hgrc`` file as
@@ -1818,6 +1788,19 @@ Then create this branch and commit this:
 
 Change Log
 ==========
+
+REL: 0.5.0
+----------
+
+API changes: \* Python 3 support only. \*
+``mmfutils.math.bases.interface`` renamed to
+``mmfutils.math.bases.interfaces``. \* Added default class-variable
+attribute support to e\ ``mmfutils.containers.Object``. \* Minor
+enhancements to ``mmfutils.math.bases.PeriodicBasis`` to enhance GPU
+support. \* Added ``mmfutils.math.bases.interfaces.IBasisLz`` and
+support in ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating
+frames. \* Cleanup of build environment and tests. \* Single environment
+``_mmfutils`` now used for testing and documentation.
 
 REL: 0.4.13
 -----------

@@ -1,16 +1,17 @@
 # ---
 # jupyter:
 #   jupytext:
+#     cell_metadata_json: true
 #     formats: ipynb,py
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:_test2]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-_test2-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # # Performance
@@ -172,8 +173,6 @@ assert np.allclose(ssum_cython2(l)[0], ans)
 
 # ## Numba
 
-
-
 import numba
 numba.__version__
 
@@ -222,23 +221,3 @@ print("cython:")
 # %timeit ssum_cython2(l)
 print("numba:")
 # %timeit ssum_numba1(l)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

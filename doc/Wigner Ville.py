@@ -1,16 +1,17 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,py
+#     cell_metadata_json: true
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:_test2]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-_test2-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # + {"hide_input": true, "hide_output": true, "init_cell": true, "run_control": {"marked": true}}
@@ -107,7 +108,6 @@ import mmf_setup;res = mmf_setup.nbinit()
 
 # +
 # %pylab inline --no-import-all
-from __future__ import division
 import numpy as np
 
 from mmfutils.plot import imcontourf

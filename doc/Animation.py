@@ -5,12 +5,12 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:_test3]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-_test3-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # # Animation with IPython Notebooks
@@ -85,7 +85,6 @@ def get_data():
         y = np.sin(2*np.pi*t*x)
         yield t, x, y
         t += 0.1
-
 
 
 # -
@@ -196,6 +195,3 @@ with open(filename, 'rb') as f:
     video = encodebytes(f.read()).decode('ascii')
 display(HTML(FILE_VIDEO_TAG.format(filename)),
         HTML(EMBEDED_VIDEO_TAG.format(video)))
-# -
-
-

@@ -2,16 +2,17 @@
 # ---
 # jupyter:
 #   jupytext:
+#     cell_metadata_json: true
 #     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.4
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:work3]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-work3-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # + {"init_cell": true}
@@ -693,7 +694,7 @@ N = 32
 R = 5.0
 dx = R/N
 r = (1.0 + np.arange(N)) * dx 
-rr = np.linspace(0,R,100.0)
+rr = np.linspace(0,R,100)
 k = np.pi * (0.5 + np.arange(N))/R
 
 a = 0.5
