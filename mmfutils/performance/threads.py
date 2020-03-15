@@ -7,8 +7,6 @@ particular part of the system.
 
 Use `set_num_threads(nthreads)` to call all of these hooks.
 """
-from __future__ import absolute_import
-
 SET_THREAD_HOOKS = set()
 
 

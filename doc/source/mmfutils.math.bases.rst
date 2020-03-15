@@ -3,7 +3,7 @@ mmfutils.math.bases
 
 .. toctree::
 
-    mmfutils.math.bases.interface
+    mmfutils.math.bases.interfaces
     mmfutils.math.bases.bases
     mmfutils.math.bases.utils
 

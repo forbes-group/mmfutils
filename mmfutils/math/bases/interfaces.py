@@ -4,15 +4,14 @@ The interface here provides a way to represent functions in a variety
 of spaces, such as in periodic boxes, or in cylindrical or spherical
 symmetry.
 """
-from __future__ import absolute_import, division, print_function
-
 import functools
 
 import numpy as np
 
 from mmfutils.interface import (implementer, Interface, Attribute)
 
-__all__ = ['implementer', 'IBasis', 'BasisMixin']
+__all__ = ['implementer', 'IBasis', 'IBasisKx', 'IBasisLz',
+           'IBasisWithConvolution', 'BasisMixin']
 
 
 class IBasisMinimal(Interface):
@@ -78,7 +77,7 @@ class IBasisExtended(IBasis):
     def get_laplacian(qns):
         """Return the matrix representation of the laplacian for the
         specified quantum numbers.
-        
+
         This should be a 2-dimensional array (matrix) whose indices can
         be reshaped if needed.
         """
@@ -89,7 +88,9 @@ class IBasisKx(IBasis):
     the user to access the quasi-momenta `kx` in this direction and to
     manipulate the form of the laplacian.  The allows one to implement, for
     example, modified dispersion relations in the x direction such as might
-    arise with artificial gauge fields (Spin-Orbit Coupled BEC's for example)."""
+    arise with artificial gauge fields (Spin-Orbit Coupled BEC's for
+    example).
+    """
     kx = Attribute("Momenta in x direction")
     Lx = Attribute("Length of box in x direction")
     Nx = Attribute("Number of abscissa in x direction")
@@ -114,8 +115,33 @@ class IBasisKx(IBasis):
            overall phase from the wavefunction rendering it periodic for use
            the the FFT.  This the the phase that should be removed.  Note: to
            compensate, the momenta should be shifted as well::
-        
+
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+        """
+
+
+class IBasisLz(IBasis):
+    """Extension of IBasis that allows the angular momentum along the
+    z-axis to be applied.  Useful for implementing rotating frames.
+    """
+    def apply_Lz_hbar(y):
+        """Apply `Lz/hbar` to `y`."""
+
+    def laplacian(y, factor=1.0, exp=False, kwz2=0):
+        """Return the laplacian of `y` times `factor` or the exponential of this.
+
+        Parameters
+        ----------
+        factor : float
+           Additional factor (mostly used with `exp=True`).  The
+           implementation must be careful to allow the factor to
+           broadcast across the components.
+        exp : bool
+           If `True`, then compute the exponential of the laplacian.
+           This is used for split evolvers.  Only allowed to be `True`
+           if `kwz2 == 0`.
+        kwz2 : None, float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
 
 
@@ -124,10 +150,7 @@ class BasisMixin(object):
     IBasisMinimal
     """
     def grad_dot_grad(self, a, b):
-        """Return the grad(a).dot(grad(b)).
-
-        I.e. laplacian(y) = grad_dot_grad(y, y)
-        """
+        """Return the grad(a).dot(grad(b))."""
         laplacian = self.laplacian
         return (laplacian(a*b) - laplacian(a)*b - a*laplacian(b))/2.0
 

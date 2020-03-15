@@ -9,9 +9,6 @@ This includes the following features:
 * Automation of figure generation and saving for use in manuscript.
 
 """
-from __future__ import (absolute_import, division, print_function)
-
-import copy
 import inspect
 import logging
 import os.path
@@ -19,7 +16,6 @@ import os.path
 import numpy as np
 import scipy.stats
 import scipy.interpolate
-import scipy as sp
 import matplotlib.collections
 import matplotlib.artist
 import matplotlib.colors

@@ -1,6 +1,4 @@
 """Linear Algebra Routines"""
-from __future__ import division
-
 __all__ = ['block_diag']
 
 import numpy as np

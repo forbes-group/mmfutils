@@ -7,8 +7,6 @@ is enabled but cannot be found.  Just go:
 >>> from mmfutils.performance.numexpr import numexpr
 
 """
-from __future__ import absolute_import
-
 __all__ = ['numexpr']
 
 numexpr = False

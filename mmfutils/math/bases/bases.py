@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division
-
 import itertools
 import math
 
@@ -8,9 +6,9 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
-from . import interface
-from .interface import (implementer, IBasis, IBasisKx, IBasisWithConvolution,
-                        BasisMixin)
+from . import interfaces
+from .interfaces import (implementer, IBasis, IBasisKx, IBasisLz,
+                         IBasisWithConvolution, BasisMixin)
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 from .utils import (prod, dst, idst, get_xyz, get_kxyz)
@@ -21,7 +19,7 @@ sp = scipy
 _TINY = np.finfo(float).tiny
 
 __all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
-           'interface']
+           'interfaces']
 
 
 @implementer(IBasisWithConvolution)
@@ -114,7 +112,7 @@ class SphericalBasis(Object, BasisMixin):
         return idst(Ck * dst(r*y)) / r
 
 
-@implementer(IBasisWithConvolution, IBasisKx)
+@implementer(IBasisWithConvolution, IBasisKx, IBasisLz)
 class PeriodicBasis(Object, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -139,6 +137,18 @@ class PeriodicBasis(Object, BasisMixin):
     smoothing_cutoff : float
        Fraction of maximum momentum used in the function smooth().
     """
+
+    # Select operations are performed using self.xp instead of numpy.
+    # This can be replaced cupy to provide gpu support with minimal
+    # code changes.  Similarly with the fft functions and a generic
+    # function to convert an array into a numpy array on the host.
+    xp = np
+    _fft = staticmethod(fft)
+    _ifft = staticmethod(ifft)
+    _fftn = staticmethod(fftn)
+    _ifftn = staticmethod(ifftn)
+    _asnumpy = staticmethod(np.asarray)  # Convert to numpy array
+
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
                  axes=None, boost_pxyz=None, smoothing_cutoff=0.8):
         self.symmetric_lattice = symmetric_lattice
@@ -154,10 +164,16 @@ class PeriodicBasis(Object, BasisMixin):
         Object.__init__(self)
 
     def init(self):
-        self.xyz = get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
-                           symmetric_lattice=self.symmetric_lattice)
-        self._pxyz = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
-        self._pxyz_derivative = get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)
+        self.xyz = tuple(map(
+            self.xp.asarray,
+            get_xyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz,
+                    symmetric_lattice=self.symmetric_lattice)))
+        self._pxyz = tuple(map(
+            self.xp.asarray,
+            get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)))
+        self._pxyz_derivative = tuple(map(
+            self.xp.asarray,
+            get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz)))
 
         # Zero out odd highest frequency component.
         for _N, _p in zip(self.Nxyz, self._pxyz_derivative):
@@ -165,16 +181,23 @@ class PeriodicBasis(Object, BasisMixin):
 
         # Add boosts
         self._pxyz = [_p - _b
-                      for (_p, _b) in zip(self._pxyz, self.boost_pxyz)]
+                      for (_p, _b) in zip(self._pxyz,
+                                          self.xp.asarray(self.boost_pxyz))]
         self.metric = np.prod(self.Lxyz/self.Nxyz)
-        self.k_max = np.array([abs(_p).max() for _p in self._pxyz])
+        self.k_max = self._asnumpy([abs(_p).max() for _p in self._pxyz])
 
         p2_pc2 = sum(
             (_p/(self.smoothing_cutoff * _p).max())**2
             for _p in self._pxyz)
-        self._smoothing_factor = np.where(p2_pc2 < 1, 1, 0)
+        self._smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
         #np.exp(-p2_pc2**4)
         #self._smoothing_factor = 1.0
+
+        # Memoize momentum sums for speed
+        _kx2 = self._pxyz[0]**2
+        _kyz2 = sum(_p**2 for _p in self._pxyz[1:])
+        _k2 = _kx2+_kyz2
+        self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
 
     @property
     def kx(self):
@@ -187,9 +210,9 @@ class PeriodicBasis(Object, BasisMixin):
     @property
     def Nx(self):
         return self.Nxyz[0]
-    
+
     def laplacian(self, y, factor=1.0, exp=False, kx2=None, k2=None,
-                  twist_phase_x=None):
+                  kwz2=0, twist_phase_x=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
@@ -200,12 +223,15 @@ class PeriodicBasis(Object, BasisMixin):
            broadcast across the components.
         exp : bool
            If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+           This is used for split evolvers. Only allowed to be `True`
+           if `kwz2 == 0`.
         kx2 : array, optional
            Replacement for the default `kx2=kx**2` used when computing the
            "laplacian".  This would allow you, for example, to implement a
            modified dispersion relationship like ``1-cos(kx)`` rather than
            ``kx**2``.
+        kwz2 : None, float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         k2 : array, optional
            Replacement for `k2 = kx**2 + ky**2 + kz**2`.
         twist_phase_x : array, optional
@@ -213,47 +239,70 @@ class PeriodicBasis(Object, BasisMixin):
            overall phase from the wavefunction rendering it periodic for use
            the the FFT.  This the the phase that should be removed.  Note: to
            compensate, the momenta should be shifted as well::
-        
+
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
+        _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
         if k2 is None:
             if kx2 is None:
-                kx2 = self.kx**2
+                k2 = _k2
             else:
-                assert k2 is None
-            k2 = (kx2 + sum(_p**2 for _p in self._pxyz[1:]))
+                kx2 = self.xp.asarray(kx2)
+                k2 = kx2 + _kyz2
         else:
+            k2 = self.xp.asarray(k2)
             assert kx2 is None
-        
+
         K = -factor * k2
         if exp:
-            K = np.exp(K)
-        if twist_phase_x is None:
-            return self.ifftn(K * self.fftn(y))
-        else:
-            return self.ifftn(K * self.fftn(y/twist_phase_x))*twist_phase_x
+            if kwz2 != 0:
+                raise NotImplementedError(
+                    f"Cannot use exp=True if kwz2 != 0 (got {kwz2}).")
+            K = self.xp.exp(K)
+            
+        if twist_phase_x is not None:
+            twist_phase_x = self.xp.asarray(twist_phase_x)
+            y = y/twist_phase_x
+            
+        yt = self.fftn(y)
+        laplacian_y = self.ifftn(K * yt)
+
+        if kwz2 != 0:
+            laplacian_y += 2*kwz2*factor * self.apply_Lz_hbar(y, yt=yt)
+
+        if twist_phase_x is not None:
+            laplacian_y *= twist_phase_x
+        return laplacian_y
+
+    def apply_Lz_hbar(self, y, yt=None):
+        """Apply `Lz/hbar` to `y`."""
+        if yt is None:
+            yt = self.fftn(y)
+        x, y = self.xyz[:2]
+        kx, ky = self._pxyz[:2]
+        return x*self.ifftn(ky*yt) - y*self.ifftn(kx*yt)
 
     # We need these wrappers because the state may have additional
     # indices for components etc. in front.
     def fft(self, x, axis):
         """Perform the fft along self.axes[axis]"""
         axis = self.axes[axis] % len(x.shape)
-        return fft(x, axis=axis)
+        return self._fft(x, axis=axis)
 
     def ifft(self, x, axis):
         """Perform the ifft along self.axes[axis]"""
         axis = self.axes[axis] % len(x.shape)
-        return ifft(x, axis=axis)
+        return self._ifft(x, axis=axis)
 
     def fftn(self, x):
         """Perform the fft along spatial axes"""
         axes = self.axes % len(x.shape)
-        return fftn(x, axes=axes)
+        return self._fftn(x, axes=axes)
 
     def ifftn(self, x):
         """Perform the ifft along spatial axes"""
         axes = self.axes % len(x.shape)
-        return ifftn(x, axes=axes)
+        return self._ifftn(x, axes=axes)
 
     def smooth(self, x, frac=0.8):
         """Smooth the state by multiplying by form factor."""
@@ -609,7 +658,8 @@ class CylindricalBasis(Object, BasisMixin):
 
     ######################################################################
     # IBasisMinimal: Required methods
-    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(self, y, factor=1.0, exp=False, kx2=None,
+                  twist_phase_x=None):
         r"""Return the laplacian of y.
 
         Arguments
@@ -620,12 +670,15 @@ class CylindricalBasis(Object, BasisMixin):
            broadcast across the components.
         exp : bool
            If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+           This is used for split evolvers. Only allowed to be `True`
+           if `kwz2 == 0`.
         kx2 : array, optional
            Replacement for the default `kx2=kx**2` used when computing the
            "laplacian".  This would allow you, for example, to implement a
            modified dispersion relationship like ``1-cos(kx)`` rather than
            ``kx**2``.
+        kwz2 : float
+           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
@@ -835,7 +888,7 @@ class CylindricalBasis(Object, BasisMixin):
         return self.get_F(r)(u)
 
     def get_Psi(self, r, return_matrix=False):
-        """Return a function that can extrapolate a wavefunction to a
+        r"""Return a function that can extrapolate a wavefunction to a
         new set of abscissa (x, r).
 
         This includes the factor of $\sqrt{r}$ that converts the
@@ -886,7 +939,7 @@ class CylindricalBasis(Object, BasisMixin):
 
     def integrate2(self, n, y=None, Nz=100):
         """Return the integral of n over z (line-of-sight integral) at y.
-        
+
         This is an Abel transform, and is used to compute the 1D
         line-of-sight integral as would be seen by a photographic
         image through an axial cloud.

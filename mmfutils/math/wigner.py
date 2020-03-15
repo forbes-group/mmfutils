@@ -3,8 +3,6 @@
 This module contains some FFT-based routines for computing the
 Wigner-Ville distribution.
 """
-from __future__ import division
-
 import numpy as np
 
 from mmfutils.performance.fft import fft, ifft

@@ -3,8 +3,6 @@
 This module contains several different minimizers and root finders that
 implement Broyden's method.
 """
-from __future__ import division, print_function, absolute_import
-
 import copy
 
 import numpy as np

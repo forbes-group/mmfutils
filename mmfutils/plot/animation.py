@@ -1,7 +1,4 @@
 """Tools for creating animations and movies."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 import base64
 
 import sys
@@ -11,14 +8,9 @@ from pathlib import Path
 from matplotlib.animation import (FuncAnimation, _log, writers, rcParams)
 from matplotlib import pyplot as plt
 
-# Python 2-3 compatibility.
-if sys.version_info < (3, 0):
-    encodebytes = base64.encodestring
-    from backports.tempfile import TemporaryDirectory
-else:
-    encodebytes = base64.encodebytes
-    from tempfile import TemporaryDirectory
-    
+encodebytes = base64.encodebytes
+from tempfile import TemporaryDirectory
+
 
 class MyFuncAnimation(FuncAnimation):
     """Refactoring of the FuncAnimation class to do the following:
@@ -35,7 +27,7 @@ class MyFuncAnimation(FuncAnimation):
             if self.interrupted:
                 break
             yield frame
-        
+
     def to_html5_video(self, embed_limit=None,
                        filename=None, extra_args=None):
         """Convert the animation to an HTML5 ``<video>`` tag.
@@ -78,9 +70,9 @@ class MyFuncAnimation(FuncAnimation):
             # Convert from MB to bytes
             embed_limit *= 1024 * 1024
 
-            ######################################################################
+            ########################################################
             # Modified code here to allow saving to filename instead
-            
+
             # We create a writer manually so that we can get the
             # appropriate size for the tag
             Writer = writers[rcParams['animation.writer']]
@@ -108,7 +100,7 @@ class MyFuncAnimation(FuncAnimation):
                 # vid64 = encodebytes(path.read_bytes())
 
             # End of modifications
-            ######################################################################
+            ########################################################
             vid_len = len(vid64)
             if vid_len >= embed_limit:
                 _log.warning(

@@ -1,5 +1,3 @@
-from __future__ import division
-
 import pickle
 
 from mmfutils.containers import Object, Container, ContainerList, ContainerDict
@@ -97,13 +95,22 @@ class MyObject(Object):
         self.a = a
         self.b = b
         self.c = c
-        Object.__init__(self)
+        super().__init__()
+
+
+class MyStrictObject(MyObject):
+    _strict = True
 
 
 class MyEmptyObject(Object):
     """Has no attributes, but should have init() called"""
     def init(self):
         self.x = 5
+
+
+class MyDefaultObject(Object):
+    """Has default attributes."""
+    x = 5
 
 
 class TestObject(object):
@@ -125,6 +132,23 @@ class TestObject(object):
         assert o1.x == 5
         assert not o1.picklable_attributes
 
+    def test_strict(self):
+        o = MyStrictObject(c=[1, 2, 3], a=1, b="b")
+        o.dont_store_this = "BAD"
+        
+    def test_defaults(self):
+        o = MyDefaultObject()
+        assert o.x == 5
+        o1 = pickle.loads(pickle.dumps(o))
+        assert o1.x == 5
+        assert not o1.picklable_attributes
+
+        o.x = 6
+        assert o.x == 6
+        o2 = pickle.loads(pickle.dumps(o))
+        assert o2.x == 6
+        assert not o1.picklable_attributes
+        
 
 class TestPersist(object):
     def test_archive(self):

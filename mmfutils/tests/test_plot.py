@@ -48,4 +48,3 @@ class TestContour(object):
 
         c = mmfplt.colors.color_complex(z)
         mmfplt.imcontourf(x, y, c)
-        

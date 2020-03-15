@@ -18,8 +18,6 @@ using something like::
 Note: The FFTW library does not work with negative indices for axis.
 Indices should first be normalized by ``inds % len(shape)``.
 """
-from __future__ import absolute_import, division, print_function
-
 import functools
 import itertools
 import warnings

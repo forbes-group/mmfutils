@@ -1,6 +1,4 @@
-"""Optimization tools.
-"""
-from __future__ import division, absolute_import
+"""Optimization tools."""
 
 
 def bracket_monotonic(f, x0=0.0, x1=1.0, factor=2.0):

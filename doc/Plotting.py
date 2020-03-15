@@ -1,16 +1,17 @@
 # ---
 # jupyter:
 #   jupytext:
+#     cell_metadata_json: true
 #     formats: ipynb,py
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 1.0.5
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:work3]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-work3-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # Here we discuss some tools for making publication quality plots with Matplotib.
@@ -18,10 +19,17 @@
 # + {"init_cell": true}
 # %pylab inline --no-import-all
 inline_rc = plt.rcParams.copy()   # Store a copy for later
+deprecated_keys = ['examples.directory', 'text.latex.unicode', 
+                   'savefig.frameon', 'verbose.fileo', 'verbose.level']
+for key in deprecated_keys:
+    inline_rc.pop(key)
+
 # Work in a temporary directory
 import os, tempfile; DIR = tempfile.TemporaryDirectory(); os.chdir(DIR.name)
 DIR.name
 # -
+
+plt.rcParams.update(inline_rc)
 
 # # Styles
 
@@ -40,6 +48,8 @@ axes.edgecolor : grey
 axes.grid : True
 axes.axisbelow : True
 
+figure.frameon : False
+    
 grid.linestyle : -
 grid.linewidth : 0.8
 grid.color : WhiteSmoke
@@ -59,11 +69,13 @@ ytick.color : k
     
 font.family         : serif
 font.size           : 10.0
-#font.serif          : DejaVu Serif, Bitstream Vera Serif, Computer Modern Roman, New Century Schoolbook, Century Schoolbook L, Utopia, ITC Bookman, Bookman, Nimbus Roman No9 L, Times New Roman, Times, Palatino, Charter, serif
-#font.sans-serif     : DejaVu Sans, Bitstream Vera Sans, Computer Modern Sans Serif, Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica, Avant Garde, sans-serif
+#font.sans-serif     : DejaVu Sans, Bitstream Vera Sans, Computer Modern Sans Serif,
+#                      Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica,
+#                      Avant Garde, sans-serif
 #font.cursive        : Apple Chancery, Textile, Zapf Chancery, Sand, Script MT, Felipa, cursive
 #font.fantasy        : Comic Sans MS, Chicago, Charcoal, ImpactWestern, Humor Sans, xkcd, fantasy
-#font.monospace      : DejaVu Sans Mono, Bitstream Vera Sans Mono, Computer Modern Typewriter, Andale Mono, Nimbus Mono L, Courier New, Courier, Fixed, Terminal, monospace
+#font.monospace      : DejaVu Sans Mono, Bitstream Vera Sans Mono, Computer Modern Typewriter,
+#                      Andale Mono, Nimbus Mono L, Courier New, Courier, Fixed, Terminal, monospace
 
 #### LaTeX customizations. See http://wiki.scipy.org/Cookbook/Matplotlib/UsingTex
 #text.usetex         : False  ## use latex for all text handling. The following fonts
@@ -88,21 +100,21 @@ font.size           : 10.0
                             ## may also be loaded, depending on your font settings
 #text.latex.preview : False
 
-#text.hinting : auto   ## May be one of the following:
-                       ##   none: Perform no hinting
-                       ##   auto: Use FreeType's autohinter
-                       ##   native: Use the hinting information in the
-                       #              font file, if available, and if your
-                       #              FreeType library supports it
-                       ##   either: Use the native hinting information,
-                       #              or the autohinter if none is available.
-                       ## For backward compatibility, this value may also be
-                       ## True === 'auto' or False === 'none'.
-#text.hinting_factor : 8 ## Specifies the amount of softness for hinting in the
-                         ## horizontal direction.  A value of 1 will hint to full
-                         ## pixels.  A value of 2 will hint to half pixels etc.
-#text.antialiased : True ## If True (default), the text will be antialiased.
-                         ## This only affects the Agg backend.
+text.hinting : auto   ## May be one of the following:
+                      ##   none: Perform no hinting
+                      ##   auto: Use FreeType's autohinter
+                      ##   native: Use the hinting information in the
+                      #              font file, if available, and if your
+                      #              FreeType library supports it
+                      ##   either: Use the native hinting information,
+                      #              or the autohinter if none is available.
+                      ## For backward compatibility, this value may also be
+                      ## True === 'auto' or False === 'none'.
+text.hinting_factor : 8 ## Specifies the amount of softness for hinting in the
+                        ## horizontal direction.  A value of 1 will hint to full
+                        ## pixels.  A value of 2 will hint to half pixels etc.
+text.antialiased : True ## If True (default), the text will be antialiased.
+                        ## This only affects the Agg backend.
 
 ## The following settings allow you to select the fonts in math mode.
 ## They map from a TeX font name to a fontconfig font pattern.
@@ -131,13 +143,14 @@ font.size           : 10.0
 def eg():
     plt.clf()
     fig = plt.gcf()
+    ax = plt.gca()
     x = np.linspace(0,1,100)
     for n in range(1, 5):
-        plt.plot(x, x**n, label=f'$n={n}$')
+        ax.plot(x, x**n, label=f'$n={n}$')
     plt.legend()
-    plt.xlabel('$x$\nThe abscissa.')
-    plt.ylabel('$y=x^n$')
-    plt.title("Figure with $\\mathtt{a\_title}$")
+    ax.set(xlabel='$x$\nThe abscissa.',
+           ylabel='$y=x^n$',
+           title="Figure with $\\mathtt{a\_title}$")
     return fig
 
 plt.rcParams.update(inline_rc)
@@ -279,8 +292,6 @@ for fname in matplotlib.font_manager.get_fontconfig_fonts():
         print(f"{fname} Failed!")
 #[n for n in names if 'STIX' in n]
 [n for n in names if 'TeX' in n]
-
-#
 
 # ## Neo Euler
 
@@ -523,4 +534,4 @@ matplotlib.font_manager._rebuild()
 #
 # Here are some examples.
 
-https://matplotlib.org/tutorials/text/mathtext.html
+# https://matplotlib.org/tutorials/text/mathtext.html
