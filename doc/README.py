@@ -468,7 +468,7 @@ HTML(coverage)
 # We try to keep the repository clean with the following properties:
 #
 # 1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the latest stable release.
-# 2. Each release has its own named branch so that e.g. `hg up 0.4.6` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
+# 2. Each release has its own named branch so that e.g. `hg up 0.5.0` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
 #
 # To do this, we advocate the following proceedure.
 #
@@ -541,7 +541,7 @@ HTML(coverage)
 # ```
 #   
 # 5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
-# 6. **Release**: First edit `mmfutils/__init__.py` and update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
+# 6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
 #
 #    ```bash
 #    hg com -m "REL: <version>"
@@ -561,17 +561,26 @@ HTML(coverage)
 #    twine upload dist/*
 #    ```
 #
-# 9. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
+# 9. **Build Conda Package**: This will run all the tests in a fresh environment as specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`, `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to be built is specified in `conda_build_config.yaml`.
 #
-#        __version__ = '0.4.7dev'
+#    ```bash
+#    conda build .
+#    conda build . --output   # Use this below
+#    anaconda login
+#    anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
+#    ```
+#    
+# 10. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
+#
+#        __version__ = '0.5.1dev'
 #        
 #   Then create this branch and commit this:
 #   
-#        hg branch "0.4.7"
-#        hg com -m "BRN: Started branch 0.4.7"
-# 10. Update [MyPI](https://bitbucket.org/mforbes/mypi) index.
+#        hg branch "0.5.1"
+#        hg com -m "BRN: Started branch 0.5.1"
+# 11. Update [MyPI](https://bitbucket.org/mforbes/mypi) index.
 #
-# 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
+# 12. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
 # # Change Log
 
