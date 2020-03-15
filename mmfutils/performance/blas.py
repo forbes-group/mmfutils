@@ -4,8 +4,6 @@ These functions provide access to BLAS routines from scipy which can improve
 performance.  This modules is woefully incomplete - it only contains functions
 that I routinely used.  It should give you an idea about how to add your own.
 """
-from __future__ import absolute_import, division, print_function
-
 import numpy.linalg
 import numpy as np
 from scipy.linalg import get_blas_funcs

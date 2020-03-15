@@ -571,7 +571,7 @@ if numba:
         method for floating point numbers.  (Numba version.)
 
         >>> N = 10000
-        >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
+        >>> l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
         >>> ans = 250.0*((N + 1.0)*N)**2
         >>> (ssum_numba(l)[0] - ans, sum(l) - ans)
         (0.0, -5632.0)

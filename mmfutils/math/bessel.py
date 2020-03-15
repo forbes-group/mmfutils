@@ -1,7 +1,5 @@
 r"""Some utilities for computing properties of the Bessel functions for the DVR
 basis."""
-from __future__ import division
-
 from warnings import warn
 
 import numpy as np

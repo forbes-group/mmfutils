@@ -18,7 +18,7 @@ import pytest
 
 from mmfutils.interface import verifyObject, verifyClass
 from mmfutils.math.bases import bases
-from mmfutils.math.bases.interface import (
+from mmfutils.math.bases.interfaces import (
     IBasis, IBasisWithConvolution, IBasisKx, IBasisLz)
 
 del scipy
@@ -30,7 +30,7 @@ del scipy
 
 
 class ExactGaussian(object):
-    def __init__(self, r, A=1.1, factor=1.0, r_0=1.0, d=1.0):
+    def __init__(self, r, A=1.1, factor=1.0, r_0=1.0, d=1):
         self.r = r
         self.A = A
         self.factor = factor
@@ -55,12 +55,17 @@ class ExactGaussian(object):
     def N_3D(self):
         """Exact total particle number in 3D."""
         return self.r_0**3 * np.pi**(3./2.) * self.A**2
-    
+
     @property
     def d2y(self):
         """Exact Laplacian with factor"""
         return (self.factor * self.y
                 * (self.r**2 - self.d*self.r_0**2)/self.r_0**4)
+
+    @property
+    def grad_dot_grad(self):
+        """Exact grad_dot_grad."""
+        return self.r**2/self.r_0**4 * self.y**2
 
     def get_dy(self, x):
         """Exact gradient along x direction"""
@@ -176,6 +181,14 @@ class LaplacianTests(object):
 
                 exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
                 assert np.allclose(exp_ddy, exact.exp_d2y)
+
+    def test_grad_dot_grad(self):
+        """Test grad_dot_grad function."""
+        grad_dot_grad = self.basis.grad_dot_grad
+        exact = self.exact
+        dydy = grad_dot_grad(exact.y, exact.y)
+        # Lower atol since y^2 lies outside of the basis.
+        assert np.allclose(dydy, exact.grad_dot_grad, atol=1e-5)
 
     def test_apply_K(self):
         """Test the application of K."""

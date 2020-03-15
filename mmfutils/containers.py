@@ -5,10 +5,7 @@ package (though use of that package is optional and it is not a dependency).
 """
 
 import collections
-try:                            # Python 3
-    from collections import abc
-except ImportError:             # Python 2
-    import collections as abc
+from collections import abc
 
 __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 

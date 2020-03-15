@@ -1,5 +1,3 @@
-from __future__ import division
-
 import pickle
 
 from mmfutils.containers import Object, Container, ContainerList, ContainerDict

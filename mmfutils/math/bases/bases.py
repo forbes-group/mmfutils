@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division
-
 import itertools
 import math
 
@@ -8,9 +6,9 @@ import scipy.fftpack
 
 from mmfutils.containers import Object
 
-from . import interface
-from .interface import (implementer, IBasis, IBasisKx, IBasisLz,
-                        IBasisWithConvolution, BasisMixin)
+from . import interfaces
+from .interfaces import (implementer, IBasis, IBasisKx, IBasisLz,
+                         IBasisWithConvolution, BasisMixin)
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 from .utils import (prod, dst, idst, get_xyz, get_kxyz)
@@ -21,7 +19,7 @@ sp = scipy
 _TINY = np.finfo(float).tiny
 
 __all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
-           'interface']
+           'interfaces']
 
 
 @implementer(IBasisWithConvolution)
@@ -150,7 +148,7 @@ class PeriodicBasis(Object, BasisMixin):
     _fftn = staticmethod(fftn)
     _ifftn = staticmethod(ifftn)
     _asnumpy = staticmethod(np.asarray)  # Convert to numpy array
-    
+
     def __init__(self, Nxyz, Lxyz, symmetric_lattice=False,
                  axes=None, boost_pxyz=None, smoothing_cutoff=0.8):
         self.symmetric_lattice = symmetric_lattice
@@ -212,7 +210,7 @@ class PeriodicBasis(Object, BasisMixin):
     @property
     def Nx(self):
         return self.Nxyz[0]
-    
+
     def laplacian(self, y, factor=1.0, exp=False, kx2=None, k2=None,
                   kwz2=0, twist_phase_x=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
@@ -241,7 +239,7 @@ class PeriodicBasis(Object, BasisMixin):
            overall phase from the wavefunction rendering it periodic for use
            the the FFT.  This the the phase that should be removed.  Note: to
            compensate, the momenta should be shifted as well::
-        
+
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
         _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
@@ -254,12 +252,12 @@ class PeriodicBasis(Object, BasisMixin):
         else:
             k2 = self.xp.asarray(k2)
             assert kx2 is None
-        
+
         K = -factor * k2
         if exp:
             if kwz2 != 0:
                 raise NotImplementedError(
-                   f"Cannot exponential the laplacian if kwz2 != 0 (got {kwz2}).")
+                    f"Cannot use exp=True if kwz2 != 0 (got {kwz2}).")
             K = self.xp.exp(K)
             
         if twist_phase_x is not None:
@@ -275,7 +273,7 @@ class PeriodicBasis(Object, BasisMixin):
         if twist_phase_x is not None:
             laplacian_y *= twist_phase_x
         return laplacian_y
-            
+
     def apply_Lz_hbar(self, y, yt=None):
         """Apply `Lz/hbar` to `y`."""
         if yt is None:
@@ -283,7 +281,7 @@ class PeriodicBasis(Object, BasisMixin):
         x, y = self.xyz[:2]
         kx, ky = self._pxyz[:2]
         return x*self.ifftn(ky*yt) - y*self.ifftn(kx*yt)
-        
+
     # We need these wrappers because the state may have additional
     # indices for components etc. in front.
     def fft(self, x, axis):
@@ -890,7 +888,7 @@ class CylindricalBasis(Object, BasisMixin):
         return self.get_F(r)(u)
 
     def get_Psi(self, r, return_matrix=False):
-        """Return a function that can extrapolate a wavefunction to a
+        r"""Return a function that can extrapolate a wavefunction to a
         new set of abscissa (x, r).
 
         This includes the factor of $\sqrt{r}$ that converts the
@@ -941,7 +939,7 @@ class CylindricalBasis(Object, BasisMixin):
 
     def integrate2(self, n, y=None, Nz=100):
         """Return the integral of n over z (line-of-sight integral) at y.
-        
+
         This is an Abel transform, and is used to compute the 1D
         line-of-sight integral as would be seen by a photographic
         image through an axial cloud.

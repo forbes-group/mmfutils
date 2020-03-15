@@ -4,8 +4,6 @@ Some plots - especially contour plots - can become extremely large when stored
 as vector graphics files (i.e. PDF).  These tools allow parts of these figures
 to be rasterized so that file sizes can be kept manageable.
 """
-from __future__ import absolute_import, division, print_function
-
 import matplotlib.collections
 from matplotlib import pyplot as plt
 

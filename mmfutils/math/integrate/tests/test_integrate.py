@@ -69,7 +69,7 @@ def dtype(request):
 class TestSSum(object):
     def test_1(self, ssum):
         N = 10000
-        l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
+        l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
         ans = 250.0*((N + 1.0)*N)**2
         assert np.allclose(ssum(l)[0]-ans, 0)
         assert not np.allclose(sum(l)-ans, 0)
@@ -100,16 +100,16 @@ class TestSSum(object):
         err *= 3987.0
         exact_err = abs(float(int(ans) - exact_ans))
         assert exact_err < err
-        assert not exact_err < err/1000.0    
+        assert not exact_err < err/1000.0
 
     def test_types(self, ssum, dtype):
         N = 10
-        l = [(10*n)**3 for n in reversed(range(N+1))]
+        l = np.array([(10*n)**3 for n in reversed(range(N+1))])
         exact_ans = sum(l)
         x = np.asarray(l, dtype=dtype)
         res = ssum(x)
         assert np.allclose(res[0], exact_ans)
-        
+
     def test_broken_import(self):
         """Test that broken import of _ssum_cython does not cause error."""
         _ssum_cython, integrate._ssum_cython = integrate._ssum_cython, None

@@ -2,7 +2,6 @@
 
 Most of these are implemented as decorators.
 """
-from __future__ import absolute_import, division, print_function
 import sys
 
 from six import reraise as raise_
