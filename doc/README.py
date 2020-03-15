@@ -491,7 +491,7 @@ HTML(coverage)
 #    * `REL`: Release (see below).
 #    * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is useful when testing things like the rendering of documentation on bitbucket etc. where you need to push an incomplete set of files.  Please collapse and strip these eventually when you get things working.
 #    * `CHK`: Checkpoints.  These should not be pushed to bitbucket!
-# 3. **Tests**: Make sure the tests pass.  Do do this you should run the tests in both the `_test2` and `_test3` environments:
+# 3. **Tests**: Make sure the tests pass.
 #    
 #    ```bash
 #    conda env update --file environment.yml

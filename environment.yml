@@ -49,3 +49,7 @@ dependencies:
   - mmf_setup>=0.1.11
   - persist >=3.0
   - husl
+
+  - pip
+  - pip:
+    - sphinxcontrib-zopeext

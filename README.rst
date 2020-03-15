@@ -792,7 +792,7 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-11-bd53d5116502> in <module>
+    <ipython-input-9-bd53d5116502> in <module>
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print(c1)
     ----> 4 c1.large_temporary_array
@@ -1172,7 +1172,7 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 
 
-.. image:: README_files/README_58_2.png
+.. image:: ../README_files/../README_58_2.png
 
 
 Angular Variables
@@ -1222,7 +1222,7 @@ phase of a complex wavefunction.
 
 
 
-.. image:: README_files/README_61_1.png
+.. image:: ../README_files/../README_61_1.png
 
 
 Debugging
@@ -1672,8 +1672,7 @@ To do this, we advocate the following proceedure.
       eventually when you get things working.
    -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
-3. **Tests**: Make sure the tests pass. Do do this you should run the
-   tests in both the ``_test2`` and ``_test3`` environments:
+3. **Tests**: Make sure the tests pass.
 
    .. code:: bash
 

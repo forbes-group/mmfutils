@@ -15,15 +15,15 @@ __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 class Object(object):
     """General base class with a few convenience methods.
 
-    Summary
-    -------
+    Summary:
+
     * Default values specified as class variables.
     * `__init__()` sets parameters and calls `init()`
     * `init()` calculates all other parameters.
     * Instances can be pickle and archived.
 
-    Motivation
-    ----------
+    Motivation:
+
     The motivation is objects intended to be used in computationally
     demanding settings.  The idea is that the `init()` method will be
     called before starting a computation, ensuring that the object is
@@ -38,8 +38,8 @@ class Object(object):
     from the developer and become very complicated when properties
     depend on each other.
 
-    Details
-    -------
+    Details:
+
     * Default values can be  values can be specified as class
       variables.  The `__init__()` method will take any `kwargs` and
       use them to set instance variables that hide these defaults.
