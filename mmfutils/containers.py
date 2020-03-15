@@ -16,16 +16,56 @@ __all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
 ######################################################################
 # General utilities
 class Object(object):
-    r"""General base class with a few convenience methods.
+    """General base class with a few convenience methods.
 
-    Constructors: The `__init__` method should simply be used to set variables,
-    all initialization that computes attributes etc. should be done in `init()`
-    which will be called at the end of `__init__`.
+    Summary
+    -------
+    * Default values specified as class variables.
+    * `__init__()` sets parameters and calls `init()`
+    * `init()` calculates all other parameters.
+    * Instances can be pickle and archived.
 
-    This aids pickling which will save only those variables defined when the
-    base `__init__` is finished, and will call `init()` upon unpickling,
-    thereby allowing unpicklable objects to be used (in particular function
-    instances).
+    Motivation
+    ----------
+    The motivation is objects intended to be used in computationally
+    demanding settings.  The idea is that the `init()` method will be
+    called before starting a computation, ensuring that the object is
+    up-to-date, and performing any expensive calculations.  Then the
+    object can be used in a computationally demanding setting.
+
+    I have been using this approach for some time and am generally
+    happy with how it works.  Some care is needed nesting calls to
+    `init()` in derived classes, but I have found these cases easy to
+    deal with.  Other approaches such as using properties can carry a
+    performance hit.  Writing setters can work well, but demands a lot
+    from the developer and become very complicated when properties
+    depend on each other.
+
+    Details
+    -------
+    * Default values can be  values can be specified as class
+      variables.  The `__init__()` method will take any `kwargs` and
+      use them to set instance variables that hide these defaults.
+      Only existing variables will be set this way - any `kwarg` for
+      which `hasattr(self, kw)` fails will not be set.
+
+      Note: Be careful using class-variables that are mutable.
+
+    * The constructor `__init__()` should only be used to set
+      variables in `self`.  The reason is that the code here uses the
+      variables set in the constructor to determine which attributes
+      need to be pickled.  Initialization of computed attributes
+      should instead be done in the `init()` method .
+
+    * The `init()` method should make sure that the object ends in a
+      consistent state so that further computations (without users
+      setting attributes) can be computed efficiently.  If the user
+      sets attributes, `init()` should be called again.
+
+    * Pickling will save only those variables defined when the base
+      `__init__` is finished, and will call `init()` upon unpickling,
+      thereby allowing unpicklable objects to be used (in particular
+      function instances).
 
     .. note:: Do not use any of the following variables:
 
@@ -33,6 +73,10 @@ class Object(object):
           * `_independent_attributes`, `_dependent_attributes`,
             `initialized`: Used to flag if attributes have been
             changed but without `init()` being called.  (See below.)
+          * `_strict`: if `True`, then only picklable attributes will
+            be settable through `__setattr__()`.
+          * `_reserved_attributes`: List of special attributes that
+            should be excluded from processing.
 
     By default setting any attribute in `picklable_attributes` will
     set the `initialized` flag to `False`.  This will be set to `True`
@@ -42,14 +86,14 @@ class Object(object):
     To allow for some variables to be set without invalidating the
     object we also check the set of names `_independent_attributes`.
 
-    .. note:: This redefines __setattr__ to provide the behaviour.
+    .. note:: This redefines `__setattr__` to provide the behaviour,
+       but does not overload `__getattr__` or `__getattribute__` so as
+       to have no performance hit on these.
 
     Examples
     --------
     >>> class A(Object):
-    ...     def __init__(self, x=0):
-    ...         self.x = x
-    ...         Object.__init__(self)
+    ...     x = 0
     ...     def init(self):
     ...         self.x1 = self.x + 1   # A dependent variable
     ...         Object.init(self)
@@ -68,16 +112,39 @@ class Object(object):
     >>> a.init()
     >>> a.check()
     True
+    >>> A(y=1)
+    Traceback (most recent call last):
+    ...
+    ValueError: Class A passed unknown arguments ['y'].
     """
     # Assure that this is always defined.
     initialized = False
     picklable_attributes = ()  # Tuple so it is immutable
     _independent_attributes = ()
     _dependent_attributes = ()
+    _strict = False
+    _reserved_attributes = [
+        'initialized',
+        'picklable_attributes',
+        '_independent_attributes',
+        '_dependent_attributes',
+        '_strict',
+        '_reserved_attributes']
 
-    def __init__(self):
+    def __init__(self, **kw):
+        # Set all known kwargs
+        unknown_args = [_k for _k in kw if not hasattr(self, _k)]
+        if unknown_args:
+            raise ValueError(
+                "Class {} passed unknown arguments {}."
+                .format(self.__class__.__name__, unknown_args))
+        for _k in kw:
+            setattr(self, _k, kw[_k])
+
+        # Record picklable_attributes
         if 'picklable_attributes' not in self.__dict__:
             self.picklable_attributes = sorted(_k for _k in self.__dict__)
+
         self.init()
 
     def init(self):
@@ -144,6 +211,7 @@ class Object(object):
 
     def _is_dependent_attribute(self, key):
         return (key not in self._independent_attributes
+                and key not in self._reserved_attributes
                 and (key in self._dependent_attributes
                      or key in self.picklable_attributes))
 
@@ -153,6 +221,15 @@ class Object(object):
         """
         if self._is_dependent_attribute(key):
             self.__dict__['initialized'] = False
+        elif (key not in self._reserved_attributes
+              and key not in self.__dict__
+              and 'picklable_attributes' in self.__dict__
+              and hasattr(self.picklable_attributes, 'append')
+              and hasattr(self, key)):
+            # Setting a variable that has a default value.
+            self.picklable_attributes.append(key)
+            self.__dict__['initialized'] = False
+
         object.__setattr__(self, key, value)
 
 

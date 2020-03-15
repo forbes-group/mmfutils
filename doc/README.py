@@ -2,16 +2,17 @@
 # ---
 # jupyter:
 #   jupytext:
+#     cell_metadata_json: true
 #     formats: ipynb,py
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.4
+#       format_version: '1.5'
+#       jupytext_version: 1.4.0
 #   kernelspec:
-#     display_name: Python [conda env:_test3]
+#     display_name: Python [conda env:_mmfutils]
 #     language: python
-#     name: conda-env-_test3-py
+#     name: conda-env-_mmfutils-py
 # ---
 
 # # MMF Utils
@@ -46,7 +47,7 @@
 # [mmfutils Build Status]: https://drone.io/bitbucket.org/mforbes/mmfutils/status.png
 # [mmfutils-fork Build Status]: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/status.png
 
-# + {"toc": "true", "cell_type": "markdown"}
+# + [markdown] {"toc": "true"}
 # <h1>Table of Contents<span class="tocSkip"></span></h1>
 # <div class="toc"><ul class="toc-item"><li><span><a href="#MMF-Utils" data-toc-modified-id="MMF-Utils-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>MMF Utils</a></span><ul class="toc-item"><li><span><a href="#Installing" data-toc-modified-id="Installing-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Installing</a></span></li></ul></li><li><span><a href="#Usage" data-toc-modified-id="Usage-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Usage</a></span><ul class="toc-item"><li><span><a href="#Containers" data-toc-modified-id="Containers-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Containers</a></span><ul class="toc-item"><li><span><a href="#Object" data-toc-modified-id="Object-2.1.1"><span class="toc-item-num">2.1.1&nbsp;&nbsp;</span>Object</a></span><ul class="toc-item"><li><span><a href="#Object-Example" data-toc-modified-id="Object-Example-2.1.1.1"><span class="toc-item-num">2.1.1.1&nbsp;&nbsp;</span>Object Example</a></span></li></ul></li><li><span><a href="#Container" data-toc-modified-id="Container-2.1.2"><span class="toc-item-num">2.1.2&nbsp;&nbsp;</span>Container</a></span><ul class="toc-item"><li><span><a href="#Container-Examples" data-toc-modified-id="Container-Examples-2.1.2.1"><span class="toc-item-num">2.1.2.1&nbsp;&nbsp;</span>Container Examples</a></span></li></ul></li></ul></li><li><span><a href="#Contexts" data-toc-modified-id="Contexts-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Contexts</a></span></li><li><span><a href="#Interfaces" data-toc-modified-id="Interfaces-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Interfaces</a></span><ul class="toc-item"><li><span><a href="#Interface-Documentation" data-toc-modified-id="Interface-Documentation-2.3.1"><span class="toc-item-num">2.3.1&nbsp;&nbsp;</span>Interface Documentation</a></span></li></ul></li><li><span><a href="#Parallel" data-toc-modified-id="Parallel-2.4"><span class="toc-item-num">2.4&nbsp;&nbsp;</span>Parallel</a></span></li><li><span><a href="#Performance" data-toc-modified-id="Performance-2.5"><span class="toc-item-num">2.5&nbsp;&nbsp;</span>Performance</a></span></li><li><span><a href="#Plotting" data-toc-modified-id="Plotting-2.6"><span class="toc-item-num">2.6&nbsp;&nbsp;</span>Plotting</a></span><ul class="toc-item"><li><span><a href="#Fast-Filled-Contour-Plots" data-toc-modified-id="Fast-Filled-Contour-Plots-2.6.1"><span class="toc-item-num">2.6.1&nbsp;&nbsp;</span>Fast Filled Contour Plots</a></span></li></ul></li><li><span><a href="#Angular-Variables" data-toc-modified-id="Angular-Variables-2.7"><span class="toc-item-num">2.7&nbsp;&nbsp;</span>Angular Variables</a></span></li><li><span><a href="#Debugging" data-toc-modified-id="Debugging-2.8"><span class="toc-item-num">2.8&nbsp;&nbsp;</span>Debugging</a></span></li><li><span><a href="#Mathematics" data-toc-modified-id="Mathematics-2.9"><span class="toc-item-num">2.9&nbsp;&nbsp;</span>Mathematics</a></span></li></ul></li><li><span><a href="#Developer-Instructions" data-toc-modified-id="Developer-Instructions-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Developer Instructions</a></span><ul class="toc-item"><li><span><a href="#Releases" data-toc-modified-id="Releases-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Releases</a></span></li></ul></li><li><span><a href="#Change-Log" data-toc-modified-id="Change-Log-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Change Log</a></span><ul class="toc-item"><li><span><a href="#REL:-0.4.13" data-toc-modified-id="REL:-0.4.13-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>REL: 0.4.13</a></span></li><li><span><a href="#REL:-0.4.10" data-toc-modified-id="REL:-0.4.10-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>REL: 0.4.10</a></span></li><li><span><a href="#REL:-0.4.9" data-toc-modified-id="REL:-0.4.9-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>REL: 0.4.9</a></span></li><li><span><a href="#REL:-0.4.7" data-toc-modified-id="REL:-0.4.7-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>REL: 0.4.7</a></span></li></ul></li></ul></div>
 # -
@@ -72,6 +73,8 @@
 # The intended use is for subclasses to set and defined all attributes that should be pickled in the ``__init__()`` method, then call ``Object.__init__(self)``.  Any additional initialization can be done after this call, or in the ``init()`` method (see below) and attributes defined after this point will be treated as temporary.  Note, however, that unpickling an object will not call ``__init__()`` so any additional initialization required should be included in the ``init()`` method.
 #
 # **Deferred initialization via the ``init()`` method:** The idea here is to defer any expensive initialization – especially that which creates large temporary data that should not be pickled – until later.  This method is automatically called at the end of ``Object.__init__()`` and after restoring a pickle.  A further use-case is to allow one to change many parameters, then reinitialize the object once with an explicit call to ``init()``.
+#
+# **Simplified default attributes:** The ``Object.__init__()`` method accepts `kwargs`.  These will be used to set known attributes *(i.e. `hasattr(self, kw)`)*, raising an error.  This allows default values for attributes to be set as class-variables, removing the need for `self.x = x` lines in the constructor.
 
 # #### Object Example
 
@@ -85,15 +88,15 @@ import numpy as np
 from mmfutils.containers import Object
 
 class State(Object):
-    def __init__(self, N, L=1.0):
-        """This method should set all of the picklable
-        parameters, in this case, N and L."""
+    L = 1.0    # Default attribute
+    
+    def __init__(self, N, **kw):
+        """Set all of the picklable parameters, in this case, N and L."""
         print("__init__() called")
-        self.N = N
-        self.L = L
+        self.N = N  # Required attributes still need this.
         
         # Now register these and call init()
-        Object.__init__(self)
+        super().__init__(**kw)
         
     def init(self):
         """All additional initializations"""
@@ -106,17 +109,32 @@ class State(Object):
         # avoid rapid oscillations
         if self.N % 2 == 0:
             self.k[self.N//2] = 0.0
+
+        # Calls base class which sets self.initialized
+        super().init()
             
     def compute_derivative(self, f):
         """Return the derivative of f."""        
         return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
 
 s = State(256)
-s
+print(s)  # No default value for L
 # -
+
+s.L = 2.0
+print(s)  # Now has L
 
 # One feature is that a nice ``repr()`` of the object is produced.  Now let's do a calculation:
 
+f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
+df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+np.allclose(s.compute_derivative(f), df)
+
+# Oops!  We forgot to reinitialize the object... (The formula is correct, but the lattice is no longer commensurate so the FFT derivative has huge errors).
+
+print(s.initialized)
+s.init()
+assert s.initialized
 f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
 df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
 np.allclose(s.compute_derivative(f), df)
