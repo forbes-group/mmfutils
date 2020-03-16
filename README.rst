@@ -159,7 +159,7 @@ Table of Contents
 
    <li>
 
-2.1.1  Object
+2.1.1  ObjectBase and Object
 
 .. raw:: html
 
@@ -385,7 +385,7 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.5.0
+4.1  REL: 0.5.1
 
 .. raw:: html
 
@@ -395,7 +395,7 @@ Table of Contents
 
    <li>
 
-4.2  REL: 0.4.13
+4.2  REL: 0.5.0
 
 .. raw:: html
 
@@ -405,7 +405,7 @@ Table of Contents
 
    <li>
 
-4.3  REL: 0.4.10
+4.3  REL: 0.4.13
 
 .. raw:: html
 
@@ -415,7 +415,7 @@ Table of Contents
 
    <li>
 
-4.4  REL: 0.4.9
+4.4  REL: 0.4.10
 
 .. raw:: html
 
@@ -425,7 +425,17 @@ Table of Contents
 
    <li>
 
-4.5  REL: 0.4.7
+4.5  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.6  REL: 0.4.7
 
 .. raw:: html
 
@@ -463,51 +473,62 @@ Usage
 Containers
 ----------
 
-Object
-~~~~~~
+ObjectBase and Object
+~~~~~~~~~~~~~~~~~~~~~
 
-The ``Object`` object provides a base class to satisfy the following
-use-case.
+The ``ObjectBase`` and ``Object`` classes provide some useful features
+described below. Consider a problem where a class is defined through a
+few parameters, but requires extensive initialization before it can be
+properly used. An example is a numerical simulation where one passes the
+number of grid points :math:`N` and a length :math:`L`, but the
+initialization must generate large grids for efficient use later on.
+These grids should be generated before computations begin, but should
+not be re-generated every time needed. They also should not be pickled
+when saved to disk.
 
-**Serialization and Deferred Initialization:** Consider a problem where
-a class is defined through a few parameters, but requires extensive
-initialization before it can be properly used. An example is a numerical
-simulation where one passes the number of grid points :math:`N` and a
-length :math:`L`, but the initialization must generate large grids for
-efficient use later on. These grids should not be pickled when the
-object is serialized: instead, they should be generated at the end of
-initialization. By default, everything in ``__dict__`` will be pickled,
-leading to bloated pickles. The solution here is to split initialization
-into two steps: ``__init__()`` should initialize everything that is
-picklable, then ``init()`` should do any further initialization,
-defining the grid points based on the values of the picklable
-attributes. To do this, the semantics of the ``__init__()`` method are
-changed slightly here. ``Object.__init__()`` registers all keys in
-``__dict__`` as ``self.picklable_attributes``. These and only these
-attributes will be pickled (through the provided ``__getstate__`` and
-``__setstate__`` methods).
+**Deferred initialization via the ``init()`` method:** The idea here
+changes the semantics of ``__init__()`` slightly by deferring any
+expensive initialization to ``init()``. Under this scheme,
+``__init__()`` should only set and check what we call picklable
+attributes: these are parameters that define the object (they will be
+pickled in ``Object`` below) and will be stored in a list
+``self.picklable_attributes`` which is computed at the end of
+``ObjectBase.__init__()`` as the list of all keys in ``__dict__``. Then,
+``ObjectBase.__init__()`` will call ``init()`` where all remaining
+attributes should be calculated.
 
-The intended use is for subclasses to set and defined all attributes
-that should be pickled in the ``__init__()`` method, then call
-``Object.__init__(self)``. Any additional initialization can be done
-after this call, or in the ``init()`` method (see below) and attributes
-defined after this point will be treated as temporary. Note, however,
-that unpickling an object will not call ``__init__()`` so any additional
-initialization required should be included in the ``init()`` method.
+This allows users to change various attributes, then reinitialize the
+object once with an explicit call to ``init()`` before performing
+expensive computations. This is an alternative to providing complete
+properties (getters and setters) for objects that need to trigger
+computation. The use of setters is safer, but requires more work on the
+side of the developer and can lead to complex code when different
+properties depend on each other. The approach here puts all computations
+in a single place. Of course, the user must remember to call ``init()``
+before working with the object.
 
-**Deferred initialization via the ``init()`` method:** The idea here is
-to defer any expensive initialization – especially that which creates
-large temporary data that should not be pickled – until later. This
-method is automatically called at the end of ``Object.__init__()`` and
-after restoring a pickle. A further use-case is to allow one to change
-many parameters, then reinitialize the object once with an explicit call
-to ``init()``.
+To facilitate this, we provide a mild check in the form of an
+``initialized`` flag that is set to ``True`` at the end of the base
+``init()`` chain, and set to ``False`` if any variables are in
+``pickleable_attributes`` are set.
 
-**Simplified default attributes:** The ``Object.__init__()`` method
-accepts ``kwargs``. These will be used to set known attributes *(i.e.
-``hasattr(self, kw)``)*, raising an error. This allows default values
-for attributes to be set as class-variables, removing the need for
-``self.x = x`` lines in the constructor.
+**Serialization and Deferred Initialization:** The base class
+``ObjectBase`` does not provide any pickling services but does provide a
+nice representation. Additional functionality is provided by ``Object``
+which uses the features of ``ObjectBase`` to define ``__getstate__()``
+and ``__setstate__()`` methods for pickling which pickle only the
+``picklable_attributes``. Note: unpickling an object will **not** call
+``__init__()`` but will call ``init()`` giving objects a chance to
+restore the computed attributes from pickles.
+
+-  **Note:** *Before using, consider if these features are really needed
+   – with all such added functionality comes additional potential
+   failure modes from side-interactions. The ``ObjectBase`` class is
+   quite simple, and therefore quite safe, while ``Object`` adds
+   additional functionality with potential side-effects. For example, a
+   side-effect of support for pickles is that ``copy.copy()`` will also
+   invoke ``init()`` when copying might instead be much faster. Thus, we
+   recommend only using ``ObjectBase`` for efficient code.*
 
 Object Example
 ^^^^^^^^^^^^^^
@@ -520,22 +541,24 @@ Object Example
     
     import numpy as np
     
-    from mmfutils.containers import Object
+    from mmfutils.containers import ObjectBase, ObjectMixin
     
-    class State(Object):
-        L = 1.0    # Default attribute
-        
-        def __init__(self, N, **kw):
+    class State(ObjectBase):  
+        _quiet = False
+        def __init__(self, N, L=1.0, **kw):
             """Set all of the picklable parameters, in this case, N and L."""
-            print("__init__() called")
-            self.N = N  # Required attributes still need this.
+            self.N = N
+            self.L = L
             
             # Now register these and call init()
             super().__init__(**kw)
+            if not self._quiet:
+                print("__init__() called")
             
         def init(self):
             """All additional initializations"""
-            print("init() called")
+            if not self._quiet:
+                print("init() called")
             dx = self.L / self.N
             self.x = np.arange(self.N, dtype=float) * dx - self.L/2.0
             self.k = 2*np.pi * np.fft.fftfreq(self.N, dx)
@@ -558,20 +581,20 @@ Object Example
 
 .. parsed-literal::
 
-    __init__() called
     init() called
-    State(N=256)
+    __init__() called
+    State(L=1.0, N=256)
 
 
 .. code:: ipython3
 
     s.L = 2.0
-    print(s)  # Now has L
+    print(s)
 
 
 .. parsed-literal::
 
-    State(N=256, L=2.0)
+    State(L=2.0, N=256)
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
@@ -620,22 +643,47 @@ errors).
 
 
 
-Here we demonstrate pickling. Note that the pickle is very small, and
-when unpickled, ``init()`` is called to re-establish ``s.x`` and
-``s.k``.
+Here we demonstrate pickling. Note that using ``Object`` makes the
+pickles very small, and when unpickled, ``init()`` is called to
+re-establish ``s.x`` and ``s.k``. Generally one would inherit from
+``Object``, but since we already have a class, we can provide pickling
+functionality with ``ObjectMixin``:
 
 .. code:: ipython3
 
-    import pickle
+    class State1(ObjectMixin, State):
+        pass
+    
+    s = State(N=256, _quiet=True)
+    s1 = State1(N=256, _quiet=True)
+
+.. code:: ipython3
+
+    import pickle, copy
     s_repr = pickle.dumps(s)
-    print(len(s_repr))
-    s1 = pickle.loads(s_repr)
+    s1_repr = pickle.dumps(s1)
+    print(f"ObjectBase pickle:  {len(s_repr)} bytes")
+    print(f"ObjectMixin pickle: {len(s1_repr)} bytes")
 
 
 .. parsed-literal::
 
-    87
-    init() called
+    ObjectBase pickle:  4438 bytes
+    ObjectMixin pickle: 102 bytes
+
+
+Note, however, that the speed of copying is significantly impacted:
+
+.. code:: ipython3
+
+    %timeit copy.copy(s)
+    %timeit copy.copy(s1)
+
+
+.. parsed-literal::
+
+    3.55 µs ± 669 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+    43.9 µs ± 4.95 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -650,12 +698,6 @@ the object is brought up to date before the computation.
     s.N = 64
     s.L = 2.0
     s.init()
-
-
-.. parsed-literal::
-
-    init() called
-
 
 Finally, we demonstrate that ``Object`` instances can be archived using
 the ``persist`` package:
@@ -672,17 +714,11 @@ the ``persist`` package:
     d['s']
 
 
-.. parsed-literal::
-
-    __init__() called
-    init() called
-
-
 
 
 .. parsed-literal::
 
-    State(L=2.0, N=64)
+    State(L=2.0, N=64, _quiet=True)
 
 
 
@@ -792,7 +828,7 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-9-bd53d5116502> in <module>
+    <ipython-input-13-bd53d5116502> in <module>
           2 c1 = pickle.loads(pickle.dumps(c))
           3 print(c1)
     ----> 4 c1.large_temporary_array
@@ -1153,26 +1189,26 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 .. parsed-literal::
 
-    CPU times: user 11 ms, sys: 3.21 ms, total: 14.2 ms
-    Wall time: 14.2 ms
-    CPU times: user 40.4 ms, sys: 1.32 ms, total: 41.7 ms
-    Wall time: 42.9 ms
-    CPU times: user 237 ms, sys: 14.9 ms, total: 252 ms
-    Wall time: 246 ms
-    CPU times: user 3.48 ms, sys: 171 µs, total: 3.65 ms
-    Wall time: 3.65 ms
+    CPU times: user 9.53 ms, sys: 2.13 ms, total: 11.7 ms
+    Wall time: 11.7 ms
+    CPU times: user 36.1 ms, sys: 771 µs, total: 36.8 ms
+    Wall time: 37.1 ms
+    CPU times: user 251 ms, sys: 34 ms, total: 285 ms
+    Wall time: 265 ms
+    CPU times: user 3.6 ms, sys: 119 µs, total: 3.72 ms
+    Wall time: 3.73 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x10b6613d0>
+    <matplotlib.collections.QuadMesh at 0x104a8e850>
 
 
 
 
-.. image:: ../README_files/../README_58_2.png
+.. image:: README_files/README_61_2.png
 
 
 Angular Variables
@@ -1216,13 +1252,13 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet at 0x1a1f6af150>,
-     <matplotlib.contour.QuadContourSet at 0x1a1f6af510>)
+    (<matplotlib.contour.QuadContourSet at 0x1a19181690>,
+     <matplotlib.contour.QuadContourSet at 0x1a19181ad0>)
 
 
 
 
-.. image:: ../README_files/../README_61_1.png
+.. image:: README_files/README_64_1.png
 
 
 Debugging
@@ -1286,10 +1322,7 @@ This runs the following code:
 .. parsed-literal::
 
     [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Support files will be in README_files/
-    [NbConvertApp] Making directory doc/README_files
-    [NbConvertApp] Making directory doc/README_files
-    [NbConvertApp] Writing 49074 bytes to doc/README.rst
+    [NbConvertApp] Writing 36253 bytes to doc/README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -1313,7 +1346,7 @@ Here is an example:
 
 .. code:: ipython3
 
-    !cd $ROOTDIR; conda activate _mmfutils; pytest
+    !cd $ROOTDIR; conda activate _mmfutils; pytest -n4
 
 Complete code coverage information is provided in
 ``build/_coverage/index.html``.
@@ -1384,10 +1417,10 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>2155</td>
-                    <td>208</td>
+                    <td>2172</td>
+                    <td>210</td>
                     <td>85</td>
-                    <td class="right" data-ratio="1947 2155">90%</td>
+                    <td class="right" data-ratio="1962 2172">90%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -1400,10 +1433,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_containers_py.html">mmfutils/containers.py</a></td>
-                    <td>96</td>
+                    <td>113</td>
+                    <td>2</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="96 96">100%</td>
+                    <td class="right" data-ratio="111 113">98%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_contexts_py.html">mmfutils/contexts.py</a></td>
@@ -1618,7 +1651,7 @@ Complete code coverage information is provided in
         <div class="content">
             <p>
                 <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.0</a>,
-                created at 2020-03-15 01:54
+                created at 2020-03-16 04:03
             </p>
         </div>
     </div>
@@ -1635,7 +1668,7 @@ We try to keep the repository clean with the following properties:
 
 1. The default branch is stable: i.e. if someone runs ``hg clone``, this
    will pull the latest stable release.
-2. Each release has its own named branch so that e.g. ``hg up 0.4.6``
+2. Each release has its own named branch so that e.g. ``hg up 0.5.0``
    will get the right thing. Note: this should update to the development
    branch, *not* the default branch so that any work committed will not
    pollute the development branch (which would violate the previous
@@ -1692,8 +1725,11 @@ To do this, we advocate the following proceedure.
       sphinx-apidoc -eTE ../mmfutils -o source
       rm source/mmfutils.*tests*
 
-   Include any changes at the bottom of this file
-   (``doc/README.ipynb``).
+   -  Include any changes at the bottom of this file
+      (``doc/README.ipynb``).
+   -  You may need to copy new figures to ``README_files/`` if the
+      figure numbers have changed, and then ``hg add`` these while
+      ``hg rm`` the old ones.
 
    Edit any new files created (titles often need to be added) and check
    that this looks good with
@@ -1733,60 +1769,78 @@ To do this, we advocate the following proceedure.
           :undoc-members:
           :show-inheritance:
 
-5. **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
-   ``hg strip`` as needed to clean up the repo before you push. Branches
-   should generally be linear unless there is an exceptional reason to
-   split development.
-6. **Release**: First edit ``mmfutils/__init__.py`` and update the
-   version number by removing the ``dev`` part of the version number.
-   Commit only this change and then push only the branch you are working
-   on:
+5.  **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
+    ``hg strip`` as needed to clean up the repo before you push.
+    Branches should generally be linear unless there is an exceptional
+    reason to split development.
+6.  **Release**: First edit ``mmfutils/__init__.py`` to update the
+    version number by removing the ``dev`` part of the version number.
+    Commit only this change and then push only the branch you are
+    working on:
 
-   .. code:: bash
+    .. code:: bash
 
-      hg com -m "REL: <version>"
-      hg push -b .
+       hg com -m "REL: <version>"
+       hg push -b .
 
-7. **Pull Request**: Create a pull request on the development fork from
-   your branch to ``default`` on the release project bitbucket. Review
-   it, fix anything, then accept the PR and close the branch.
-8. **Publish on PyPI**: Publish the released version on
-   `PyPI <https://pypi.org/project/mmfutils/>`__ using
-   `twine <https://pypi.org/project/twine/>`__
+7.  **Pull Request**: Create a pull request on the development fork from
+    your branch to ``default`` on the release project bitbucket. Review
+    it, fix anything, then accept the PR and close the branch.
+8.  **Publish on PyPI**: Publish the released version on
+    `PyPI <https://pypi.org/project/mmfutils/>`__ using
+    `twine <https://pypi.org/project/twine/>`__
 
-   .. code:: bash
+    .. code:: bash
 
-      # Build the package.
-      python setup.py sdist bdist_wheel
+       # Build the package.
+       python setup.py sdist bdist_wheel
 
-      # Test that everything looks right:
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+       # Test that everything looks right:
+       twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
-      # Upload to PyPI
-      twine upload dist/*
+       # Upload to PyPI
+       twine upload dist/*
 
-9. **Start new branch**: On the same development branch (not
-   ``default``), increase the version number in ``mmfutils/__init__.py``
-   and add ``dev``: i.e.:
+9.  **Build Conda Package**: This will run all the tests in a fresh
+    environment as specified by ``meta.yaml``. Make sure that the
+    dependencies in ``meta.yaml``, ``environment.yml``, and ``setup.py``
+    are consistent. Note that the list of versions to be built is
+    specified in ``conda_build_config.yaml``.
 
-   ::
+    .. code:: bash
 
-      __version__ = '0.4.7dev'
+       conda build .
+       conda build . --output   # Use this below
+       anaconda login
+       anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
+
+10. **Start new branch**: On the same development branch (not
+    ``default``), increase the version number in
+    ``mmfutils/__init__.py`` and add ``dev``: i.e.:
+
+    **version** = ‘0.5.1dev’
 
 Then create this branch and commit this:
 
 ::
 
-      hg branch "0.4.7"
-      hg com -m "BRN: Started branch 0.4.7"
+      hg branch "0.5.1"
+      hg com -m "BRN: Started branch 0.5.1"
 
-10. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
+11. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
 
-11. Optional: Update any ``setup.py`` files that depend on your new
+12. Optional: Update any ``setup.py`` files that depend on your new
     features/fixes etc.
 
 Change Log
 ==========
+
+REL: 0.5.1
+----------
+
+API changes: \* Split ``mmfutils.containers.Object`` into ``ObjectBase``
+which is simple and ``ObjectMixin`` which provides the picking support.
+Demonstrate in docs how the pickling can be useful, but slows copying.
 
 REL: 0.5.0
 ----------
