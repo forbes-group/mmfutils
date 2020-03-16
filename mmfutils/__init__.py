@@ -1,4 +1,4 @@
-__version__ = '0.5.1dev'
+__version__ = '0.5.1'
 
 
 def unique_list(l, preserve_order=True):
