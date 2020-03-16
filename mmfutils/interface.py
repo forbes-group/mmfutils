@@ -37,10 +37,10 @@ if zope:
     # reStructuredText so I can use it in documentation like README.rst etc.
 
     import zope.interface.document
-    
+
     if hasattr(zope.interface.document, 'asReStructuredText'):
         del zope.interface.document.asReStructuredText
-        
+
     if not hasattr(zope.interface.document, 'asReStructuredText'):
         from zope.interface.document import (_justify_and_indent, _trim_doc_string)
 
@@ -105,11 +105,11 @@ if zope:
                     outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
 
             return "\n\n".join(r) + "\n\n"
-        
+
         logging.info(
             "Patching zope.interface.document.asReStructuredText to format code")
         zope.interface.document.asReStructuredText = asReStructuredText
-    
+
 
 def describe_interface(interface, format='ipython'):
     """Return an HTML object for Jupyter notebooks that describes the

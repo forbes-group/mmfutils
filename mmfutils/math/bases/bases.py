@@ -4,7 +4,7 @@ import math
 import numpy as np
 import scipy.fftpack
 
-from mmfutils.containers import Object
+from mmfutils.containers import ObjectBase
 
 from . import interfaces
 from .interfaces import (implementer, IBasis, IBasisKx, IBasisLz,
@@ -23,7 +23,7 @@ __all__ = ['SphericalBasis', 'PeriodicBasis', 'CartesianBasis',
 
 
 @implementer(IBasisWithConvolution)
-class SphericalBasis(Object, BasisMixin):
+class SphericalBasis(ObjectBase, BasisMixin):
     """1-dimensional basis for radial problems.
 
     We represent exactly `N` positive abscissa, excluding the origin and use
@@ -35,7 +35,7 @@ class SphericalBasis(Object, BasisMixin):
     def __init__(self, N, R):
         self.N = N
         self.R = R
-        Object.__init__(self)
+        super().__init__()
 
     def init(self):
         dx = self.R/self.N
@@ -113,7 +113,7 @@ class SphericalBasis(Object, BasisMixin):
 
 
 @implementer(IBasisWithConvolution, IBasisKx, IBasisLz)
-class PeriodicBasis(Object, BasisMixin):
+class PeriodicBasis(ObjectBase, BasisMixin):
     """dim-dimensional periodic bases.
 
     Parameters
@@ -161,7 +161,7 @@ class PeriodicBasis(Object, BasisMixin):
         if axes is None:
             axes = np.arange(-self.dim, 0)
         self.axes = np.asarray(axes)
-        Object.__init__(self)
+        super().__init__()
 
     def init(self):
         self.xyz = tuple(map(
@@ -259,11 +259,11 @@ class PeriodicBasis(Object, BasisMixin):
                 raise NotImplementedError(
                     f"Cannot use exp=True if kwz2 != 0 (got {kwz2}).")
             K = self.xp.exp(K)
-            
+
         if twist_phase_x is not None:
             twist_phase_x = self.xp.asarray(twist_phase_x)
             y = y/twist_phase_x
-            
+
         yt = self.fftn(y)
         laplacian_y = self.ifftn(K * yt)
 
@@ -559,7 +559,7 @@ class CartesianBasis(PeriodicBasis):
 
 
 @implementer(IBasis, IBasisKx)
-class CylindricalBasis(Object, BasisMixin):
+class CylindricalBasis(ObjectBase, BasisMixin):
     r"""2D basis for Cylindrical coordinates via a DVR basis.
 
     This represents 3-dimensional problems with axial symmetry, but only has
@@ -584,7 +584,7 @@ class CylindricalBasis(Object, BasisMixin):
        The default is the last two axes (best for performance).
     """
     _d = 2                    # Dimension of spherical part (see nu())
-    
+
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0,
                  axes=(-2, -1), symmetric_x=True):
         self.twist = twist
@@ -593,7 +593,7 @@ class CylindricalBasis(Object, BasisMixin):
         self.Lxr = np.asarray(Lxr)
         self.symmetric_x = symmetric_x
         self.axes = np.asarray(axes)
-        Object.__init__(self)
+        super().__init__()
 
     def init(self):
         Lx, R = self.Lxr
@@ -651,7 +651,7 @@ class CylindricalBasis(Object, BasisMixin):
     @property
     def Lx(self):
         return self.Lxr[0]
-    
+
     @property
     def Nx(self):
         return self.Nxr[0]
@@ -684,7 +684,7 @@ class CylindricalBasis(Object, BasisMixin):
            overall phase from the wavefunction rendering it periodic for use
            the the FFT.  This the the phase that should be removed.  Note: to
            compensate, the momenta should be shifted as well::
-        
+
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
         if not exp:
@@ -842,7 +842,7 @@ class CylindricalBasis(Object, BasisMixin):
         """
         nu = l + self._d/2 - 1
         return nu
-        
+
     def _r(self, N, l=0):
         r"""Return the abscissa."""
         # l=0 cylindrical: nu = l + d/2 - 1

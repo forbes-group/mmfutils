@@ -1,6 +1,9 @@
 import pickle
 
-from mmfutils.containers import Object, Container, ContainerList, ContainerDict
+from mmfutils.containers import (Object,
+                                 Container, ContainerList, ContainerDict)
+
+import pytest
 
 
 class TestContainer(object):
@@ -26,7 +29,7 @@ class TestContainer(object):
     def test_preserve_order_of_picklable_attributes(self):
         """Check that the order of attributes defined by
         picklable_attributes is preserved"""
-        c = Container(a=1, b=2, picklable_attributes=['b', 'a'])
+        c = Container(a=1, b=2, c=3, picklable_attributes=['b', 'a'])
         assert repr(c) == "Container(b=2, a=1)"
         c.picklable_attributes = ['a', 'b']
         assert repr(c) == "Container(a=1, b=2)"
@@ -98,10 +101,6 @@ class MyObject(Object):
         super().__init__()
 
 
-class MyStrictObject(MyObject):
-    _strict = True
-
-
 class MyEmptyObject(Object):
     """Has no attributes, but should have init() called"""
     def init(self):
@@ -111,6 +110,13 @@ class MyEmptyObject(Object):
 class MyDefaultObject(Object):
     """Has default attributes."""
     x = 5
+
+    def d(self):
+        return 5
+
+
+class MyStrictObject(MyObject):
+    _strict = True
 
 
 class TestObject(object):
@@ -134,8 +140,9 @@ class TestObject(object):
 
     def test_strict(self):
         o = MyStrictObject(c=[1, 2, 3], a=1, b="b")
-        o.dont_store_this = "BAD"
-        
+        with pytest.raises(AttributeError):
+            o.dont_store_this = "BAD"
+
     def test_defaults(self):
         o = MyDefaultObject()
         assert o.x == 5
@@ -143,12 +150,24 @@ class TestObject(object):
         assert o1.x == 5
         assert not o1.picklable_attributes
 
+        # This is not picklable so does not get stored
         o.x = 6
         assert o.x == 6
         o2 = pickle.loads(pickle.dumps(o))
-        assert o2.x == 6
+        assert o2.x == 5
         assert not o1.picklable_attributes
-        
+
+        # Strict guards against this
+        o = MyDefaultObject(_strict=True)
+        with pytest.raises(AttributeError):
+            o.x = 6
+
+        # and you can set it in the constructor
+        o = MyDefaultObject(x=6)
+        assert o.x == 6
+        o1 = pickle.loads(pickle.dumps(o))
+        assert o1.x == 6
+
 
 class TestPersist(object):
     def test_archive(self):
@@ -194,24 +213,24 @@ class Issue4(ContainerDict):
     def __init__(self, **kw):
         self.a = 1.0
         self.b = None  # By default, compute b.
-        ContainerDict.__init__(self)
+        super().__init__()
         self.update(kw)
 
-    def __getstate__(self):
+    def _getstate(self):
         # Return the real state as in __dict__.
-        state = ContainerDict.__getstate__(self)
+        state = super()._getstate()
         for key in state:
             state[key] = self.__dict__[key]
         return state
 
     def __getattribute__(self, key):
         if key not in set(['a', 'b']):
-            return ContainerDict.__getattribute__(self, key)
+            return super().__getattribute__(key)
 
         # Specialized access for these to enforce computation
         res = {}
-        a = res['a'] = ContainerDict.__getattribute__(self, 'a')
-        b = res['b'] = ContainerDict.__getattribute__(self, 'b')
+        a = res['a'] = super().__getattribute__('a')
+        b = res['b'] = super().__getattribute__('b')
         if a is None:
             res['a'] = 2*b
         if b is None:

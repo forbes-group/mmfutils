@@ -1,9 +1,8 @@
 {% set name = "mmfutils" %}
-{% set version = "0.4.13" %}
 
 package:
   name: "{{ name|lower }}"
-  version: "{{ version }}"
+  version: "{{ load_setup_py_data().version }}"
 
 source:
   path: .
@@ -58,7 +57,7 @@ test:
     - uncertainties
     - scipy
   commands:
-    - py.test
+    - pytest -n4
 
 about:
   home: https://bitbucket.org/mforbes/mmfutils

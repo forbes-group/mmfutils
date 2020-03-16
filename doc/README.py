@@ -49,7 +49,7 @@
 
 # + [markdown] {"toc": "true"}
 # <h1>Table of Contents<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#MMF-Utils" data-toc-modified-id="MMF-Utils-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>MMF Utils</a></span><ul class="toc-item"><li><span><a href="#Installing" data-toc-modified-id="Installing-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Installing</a></span></li></ul></li><li><span><a href="#Usage" data-toc-modified-id="Usage-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Usage</a></span><ul class="toc-item"><li><span><a href="#Containers" data-toc-modified-id="Containers-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Containers</a></span><ul class="toc-item"><li><span><a href="#Object" data-toc-modified-id="Object-2.1.1"><span class="toc-item-num">2.1.1&nbsp;&nbsp;</span>Object</a></span><ul class="toc-item"><li><span><a href="#Object-Example" data-toc-modified-id="Object-Example-2.1.1.1"><span class="toc-item-num">2.1.1.1&nbsp;&nbsp;</span>Object Example</a></span></li></ul></li><li><span><a href="#Container" data-toc-modified-id="Container-2.1.2"><span class="toc-item-num">2.1.2&nbsp;&nbsp;</span>Container</a></span><ul class="toc-item"><li><span><a href="#Container-Examples" data-toc-modified-id="Container-Examples-2.1.2.1"><span class="toc-item-num">2.1.2.1&nbsp;&nbsp;</span>Container Examples</a></span></li></ul></li></ul></li><li><span><a href="#Contexts" data-toc-modified-id="Contexts-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Contexts</a></span></li><li><span><a href="#Interfaces" data-toc-modified-id="Interfaces-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Interfaces</a></span><ul class="toc-item"><li><span><a href="#Interface-Documentation" data-toc-modified-id="Interface-Documentation-2.3.1"><span class="toc-item-num">2.3.1&nbsp;&nbsp;</span>Interface Documentation</a></span></li></ul></li><li><span><a href="#Parallel" data-toc-modified-id="Parallel-2.4"><span class="toc-item-num">2.4&nbsp;&nbsp;</span>Parallel</a></span></li><li><span><a href="#Performance" data-toc-modified-id="Performance-2.5"><span class="toc-item-num">2.5&nbsp;&nbsp;</span>Performance</a></span></li><li><span><a href="#Plotting" data-toc-modified-id="Plotting-2.6"><span class="toc-item-num">2.6&nbsp;&nbsp;</span>Plotting</a></span><ul class="toc-item"><li><span><a href="#Fast-Filled-Contour-Plots" data-toc-modified-id="Fast-Filled-Contour-Plots-2.6.1"><span class="toc-item-num">2.6.1&nbsp;&nbsp;</span>Fast Filled Contour Plots</a></span></li></ul></li><li><span><a href="#Angular-Variables" data-toc-modified-id="Angular-Variables-2.7"><span class="toc-item-num">2.7&nbsp;&nbsp;</span>Angular Variables</a></span></li><li><span><a href="#Debugging" data-toc-modified-id="Debugging-2.8"><span class="toc-item-num">2.8&nbsp;&nbsp;</span>Debugging</a></span></li><li><span><a href="#Mathematics" data-toc-modified-id="Mathematics-2.9"><span class="toc-item-num">2.9&nbsp;&nbsp;</span>Mathematics</a></span></li></ul></li><li><span><a href="#Developer-Instructions" data-toc-modified-id="Developer-Instructions-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Developer Instructions</a></span><ul class="toc-item"><li><span><a href="#Releases" data-toc-modified-id="Releases-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Releases</a></span></li></ul></li><li><span><a href="#Change-Log" data-toc-modified-id="Change-Log-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Change Log</a></span><ul class="toc-item"><li><span><a href="#REL:-0.5.0" data-toc-modified-id="REL:-0.5.0-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>REL: 0.5.0</a></span></li><li><span><a href="#REL:-0.4.13" data-toc-modified-id="REL:-0.4.13-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>REL: 0.4.13</a></span></li><li><span><a href="#REL:-0.4.10" data-toc-modified-id="REL:-0.4.10-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>REL: 0.4.10</a></span></li><li><span><a href="#REL:-0.4.9" data-toc-modified-id="REL:-0.4.9-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>REL: 0.4.9</a></span></li><li><span><a href="#REL:-0.4.7" data-toc-modified-id="REL:-0.4.7-4.5"><span class="toc-item-num">4.5&nbsp;&nbsp;</span>REL: 0.4.7</a></span></li></ul></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><span><a href="#MMF-Utils" data-toc-modified-id="MMF-Utils-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>MMF Utils</a></span><ul class="toc-item"><li><span><a href="#Installing" data-toc-modified-id="Installing-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Installing</a></span></li></ul></li><li><span><a href="#Usage" data-toc-modified-id="Usage-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Usage</a></span><ul class="toc-item"><li><span><a href="#Containers" data-toc-modified-id="Containers-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Containers</a></span><ul class="toc-item"><li><span><a href="#ObjectBase-and-Object" data-toc-modified-id="ObjectBase-and-Object-2.1.1"><span class="toc-item-num">2.1.1&nbsp;&nbsp;</span>ObjectBase and Object</a></span><ul class="toc-item"><li><span><a href="#Object-Example" data-toc-modified-id="Object-Example-2.1.1.1"><span class="toc-item-num">2.1.1.1&nbsp;&nbsp;</span>Object Example</a></span></li></ul></li><li><span><a href="#Container" data-toc-modified-id="Container-2.1.2"><span class="toc-item-num">2.1.2&nbsp;&nbsp;</span>Container</a></span><ul class="toc-item"><li><span><a href="#Container-Examples" data-toc-modified-id="Container-Examples-2.1.2.1"><span class="toc-item-num">2.1.2.1&nbsp;&nbsp;</span>Container Examples</a></span></li></ul></li></ul></li><li><span><a href="#Contexts" data-toc-modified-id="Contexts-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Contexts</a></span></li><li><span><a href="#Interfaces" data-toc-modified-id="Interfaces-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Interfaces</a></span><ul class="toc-item"><li><span><a href="#Interface-Documentation" data-toc-modified-id="Interface-Documentation-2.3.1"><span class="toc-item-num">2.3.1&nbsp;&nbsp;</span>Interface Documentation</a></span></li></ul></li><li><span><a href="#Parallel" data-toc-modified-id="Parallel-2.4"><span class="toc-item-num">2.4&nbsp;&nbsp;</span>Parallel</a></span></li><li><span><a href="#Performance" data-toc-modified-id="Performance-2.5"><span class="toc-item-num">2.5&nbsp;&nbsp;</span>Performance</a></span></li><li><span><a href="#Plotting" data-toc-modified-id="Plotting-2.6"><span class="toc-item-num">2.6&nbsp;&nbsp;</span>Plotting</a></span><ul class="toc-item"><li><span><a href="#Fast-Filled-Contour-Plots" data-toc-modified-id="Fast-Filled-Contour-Plots-2.6.1"><span class="toc-item-num">2.6.1&nbsp;&nbsp;</span>Fast Filled Contour Plots</a></span></li></ul></li><li><span><a href="#Angular-Variables" data-toc-modified-id="Angular-Variables-2.7"><span class="toc-item-num">2.7&nbsp;&nbsp;</span>Angular Variables</a></span></li><li><span><a href="#Debugging" data-toc-modified-id="Debugging-2.8"><span class="toc-item-num">2.8&nbsp;&nbsp;</span>Debugging</a></span></li><li><span><a href="#Mathematics" data-toc-modified-id="Mathematics-2.9"><span class="toc-item-num">2.9&nbsp;&nbsp;</span>Mathematics</a></span></li></ul></li><li><span><a href="#Developer-Instructions" data-toc-modified-id="Developer-Instructions-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Developer Instructions</a></span><ul class="toc-item"><li><span><a href="#Releases" data-toc-modified-id="Releases-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Releases</a></span></li></ul></li><li><span><a href="#Change-Log" data-toc-modified-id="Change-Log-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Change Log</a></span><ul class="toc-item"><li><span><a href="#REL:-0.5.1" data-toc-modified-id="REL:-0.5.1-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>REL: 0.5.1</a></span></li><li><span><a href="#REL:-0.5.0" data-toc-modified-id="REL:-0.5.0-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>REL: 0.5.0</a></span></li><li><span><a href="#REL:-0.4.13" data-toc-modified-id="REL:-0.4.13-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>REL: 0.4.13</a></span></li><li><span><a href="#REL:-0.4.10" data-toc-modified-id="REL:-0.4.10-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>REL: 0.4.10</a></span></li><li><span><a href="#REL:-0.4.9" data-toc-modified-id="REL:-0.4.9-4.5"><span class="toc-item-num">4.5&nbsp;&nbsp;</span>REL: 0.4.9</a></span></li><li><span><a href="#REL:-0.4.7" data-toc-modified-id="REL:-0.4.7-4.6"><span class="toc-item-num">4.6&nbsp;&nbsp;</span>REL: 0.4.7</a></span></li></ul></li></ul></div>
 # -
 
 # ## Installing
@@ -64,17 +64,20 @@
 
 # ## Containers
 
-# ### Object
+# ### ObjectBase and Object
 
-# The ``Object`` object provides a base class to satisfy the following use-case.
+# The `ObjectBase` and `Object` classes provide some useful features described below. Consider a problem where a class is defined through a few parameters, but requires extensive initialization before it can be properly used.  An example is a numerical simulation where one passes the number of grid points $N$ and a length $L$, but the initialization must generate large grids for efficient use later on.  These grids should be generated before computations begin, but should not be re-generated every time needed.  They also should not be pickled when saved to disk.
 #
-# **Serialization and Deferred Initialization:**  Consider a problem where a class is defined through a few parameters, but requires extensive initialization before it can be properly used.  An example is a numerical simulation where one passes the number of grid points $N$ and a length $L$, but the initialization must generate large grids for efficient use later on. These grids should not be pickled when the object is serialized: instead, they should be generated at the end of initialization.  By default, everything in ``__dict__`` will be pickled, leading to bloated pickles.  The solution here is to split initialization into two steps: ``__init__()`` should initialize everything that is picklable, then ``init()`` should do any further initialization, defining the grid points based on the values of the picklable attributes.  To do this, the semantics of the ``__init__()`` method are changed slightly here.  ``Object.__init__()`` registers all keys in ``__dict__`` as ``self.picklable_attributes``.  These and only these attributes will be pickled (through the provided ``__getstate__`` and ``__setstate__`` methods).  
+# **Deferred initialization via the `init()` method:** The idea here changes the semantics of `__init__()` slightly by deferring any expensive initialization to `init()`.  Under this scheme, `__init__()` should only set and check what we call picklable attributes: these are parameters that define the object (they will be pickled in `Object` below) and will be stored in a list `self.picklable_attributes` which is computed at the end of `ObjectBase.__init__()` as the list of all keys in `__dict__`.  Then, `ObjectBase.__init__()` will call `init()` where all remaining attributes should be calculated.  
 #
-# The intended use is for subclasses to set and defined all attributes that should be pickled in the ``__init__()`` method, then call ``Object.__init__(self)``.  Any additional initialization can be done after this call, or in the ``init()`` method (see below) and attributes defined after this point will be treated as temporary.  Note, however, that unpickling an object will not call ``__init__()`` so any additional initialization required should be included in the ``init()`` method.
+# This allows users to change various attributes, then reinitialize the object once with an explicit call to `init()` before performing expensive computations.  This is an alternative to providing complete properties (getters and setters) for objects that need to trigger computation.  The use of setters is safer, but requires more work on the side of the developer and can lead to complex code when different properties depend on each other.  The approach here puts all computations in a single place.  Of course, the user must remember to call `init()` before working with the object.
 #
-# **Deferred initialization via the ``init()`` method:** The idea here is to defer any expensive initialization – especially that which creates large temporary data that should not be pickled – until later.  This method is automatically called at the end of ``Object.__init__()`` and after restoring a pickle.  A further use-case is to allow one to change many parameters, then reinitialize the object once with an explicit call to ``init()``.
+# To facilitate this, we provide a mild check in the form of an `initialized` flag that is set to `True` at the end of the base `init()` chain, and set to `False` if any variables are in `pickleable_attributes` are set.
 #
-# **Simplified default attributes:** The ``Object.__init__()`` method accepts `kwargs`.  These will be used to set known attributes *(i.e. `hasattr(self, kw)`)*, raising an error.  This allows default values for attributes to be set as class-variables, removing the need for `self.x = x` lines in the constructor.
+# **Serialization and Deferred Initialization:** 
+# The base class `ObjectBase` does not provide any pickling services but does provide a nice representation.  Additional functionality is provided by `Object` which uses the features of `ObjectBase` to define `__getstate__()` and `__setstate__()` methods for pickling which pickle only the `picklable_attributes`.  Note: unpickling an object will **not** call `__init__()` but will call `init()` giving objects a chance to restore the computed attributes from pickles.
+#
+# * **Note:** *Before using, consider if these features are really needed – with all such added functionality comes additional potential failure modes from side-interactions. The `ObjectBase` class is quite simple, and therefore quite safe, while `Object` adds additional functionality with potential side-effects.  For example, a side-effect of support for pickles is that `copy.copy()` will also invoke `init()` when copying might instead be much faster.  Thus, we recommend only using `ObjectBase` for efficient code.*
 
 # #### Object Example
 
@@ -85,22 +88,24 @@ import sys;sys.path.insert(0, ROOTDIR)
 
 import numpy as np
 
-from mmfutils.containers import Object
+from mmfutils.containers import ObjectBase, ObjectMixin
 
-class State(Object):
-    L = 1.0    # Default attribute
-    
-    def __init__(self, N, **kw):
+class State(ObjectBase):  
+    _quiet = False
+    def __init__(self, N, L=1.0, **kw):
         """Set all of the picklable parameters, in this case, N and L."""
-        print("__init__() called")
-        self.N = N  # Required attributes still need this.
+        self.N = N
+        self.L = L
         
         # Now register these and call init()
         super().__init__(**kw)
+        if not self._quiet:
+            print("__init__() called")
         
     def init(self):
         """All additional initializations"""
-        print("init() called")
+        if not self._quiet:
+            print("init() called")
         dx = self.L / self.N
         self.x = np.arange(self.N, dtype=float) * dx - self.L/2.0
         self.k = 2*np.pi * np.fft.fftfreq(self.N, dx)
@@ -122,7 +127,7 @@ print(s)  # No default value for L
 # -
 
 s.L = 2.0
-print(s)  # Now has L
+print(s)
 
 # One feature is that a nice ``repr()`` of the object is produced.  Now let's do a calculation:
 
@@ -139,12 +144,27 @@ f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
 df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
 np.allclose(s.compute_derivative(f), df)
 
-# Here we demonstrate pickling.  Note that the pickle is very small, and when unpickled, ``init()`` is called to re-establish ``s.x`` and ``s.k``.
 
-import pickle
+# Here we demonstrate pickling.  Note that using `Object` makes the pickles very small, and when unpickled, ``init()`` is called to re-establish ``s.x`` and ``s.k``.  Generally one would inherit from `Object`, but since we already have a class, we can provide pickling functionality with `ObjectMixin`:
+
+# +
+class State1(ObjectMixin, State):
+    pass
+
+s = State(N=256, _quiet=True)
+s1 = State1(N=256, _quiet=True)
+# -
+
+import pickle, copy
 s_repr = pickle.dumps(s)
-print(len(s_repr))
-s1 = pickle.loads(s_repr)
+s1_repr = pickle.dumps(s1)
+print(f"ObjectBase pickle:  {len(s_repr)} bytes")
+print(f"ObjectMixin pickle: {len(s1_repr)} bytes")
+
+# Note, however, that the speed of copying is significantly impacted:
+
+# %timeit copy.copy(s)
+# %timeit copy.copy(s1)
 
 # Another use case applies when ``init()`` is expensive.  If $x$ and $k$ were computed in ``__init__()``, then using properties to change both $N$ and $L$ would trigger two updates.  Here we do the updates, then call ``init()``.  Good practice is to call ``init()`` automatically before any serious calculation to ensure that the object is brought up to date before the computation.
 
@@ -454,7 +474,7 @@ print(f(2.0), x, y, z)
 
 # Here is an example:
 
-# !cd $ROOTDIR; conda activate _mmfutils; pytest
+# !cd $ROOTDIR; conda activate _mmfutils; pytest -n4
 
 # Complete code coverage information is provided in ``build/_coverage/index.html``.
 
@@ -468,7 +488,7 @@ HTML(coverage)
 # We try to keep the repository clean with the following properties:
 #
 # 1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the latest stable release.
-# 2. Each release has its own named branch so that e.g. `hg up 0.4.6` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
+# 2. Each release has its own named branch so that e.g. `hg up 0.5.0` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
 #
 # To do this, we advocate the following proceedure.
 #
@@ -507,7 +527,8 @@ HTML(coverage)
 #    rm source/mmfutils.*tests*
 #    ```
 #    
-#    Include any changes at the bottom of this file (`doc/README.ipynb`).
+#    * Include any changes at the bottom of this file (`doc/README.ipynb`).
+#    * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
 #    
 #    Edit any new files created (titles often need to be added) and check that this looks good with
 #   
@@ -541,7 +562,7 @@ HTML(coverage)
 # ```
 #   
 # 5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
-# 6. **Release**: First edit `mmfutils/__init__.py` and update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
+# 6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
 #
 #    ```bash
 #    hg com -m "REL: <version>"
@@ -561,19 +582,33 @@ HTML(coverage)
 #    twine upload dist/*
 #    ```
 #
-# 9. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
+# 9. **Build Conda Package**: This will run all the tests in a fresh environment as specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`, `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to be built is specified in `conda_build_config.yaml`.
 #
-#        __version__ = '0.4.7dev'
+#    ```bash
+#    conda build .
+#    conda build . --output   # Use this below
+#    anaconda login
+#    anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
+#    ```
+#    
+# 10. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
+#
+#        __version__ = '0.5.1dev'
 #        
 #   Then create this branch and commit this:
 #   
-#        hg branch "0.4.7"
-#        hg com -m "BRN: Started branch 0.4.7"
-# 10. Update [MyPI](https://bitbucket.org/mforbes/mypi) index.
+#        hg branch "0.5.1"
+#        hg com -m "BRN: Started branch 0.5.1"
+# 11. Update [MyPI](https://bitbucket.org/mforbes/mypi) index.
 #
-# 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
+# 12. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
 # # Change Log
+
+# ## REL: 0.5.1
+
+# API changes:
+# * Split `mmfutils.containers.Object` into `ObjectBase` which is simple and `ObjectMixin` which provides the picking support.  Demonstrate in docs how the pickling can be useful, but slows copying.
 
 # ## REL: 0.5.0
 
