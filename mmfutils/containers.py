@@ -8,20 +8,19 @@ import collections
 from collections import abc
 import pickle
 
-__all__ = ['Object', 'Container', 'ContainerList', 'ContainerDict']
+__all__ = ['ObjectBase', 'Object',
+           'Container', 'ContainerList', 'ContainerDict']
 
 
 ######################################################################
 # General utilities
-class Object(object):
+class ObjectBase(object):
     """General base class with a few convenience methods.
 
     Summary:
 
-    * Default values specified as class variables.
     * `__init__()` sets parameters and calls `init()`
     * `init()` calculates all other parameters.
-    * Instances can be pickle and archived.
 
     Motivation:
 
@@ -41,29 +40,27 @@ class Object(object):
 
     Details:
 
-    * Default values can be  values can be specified as class
-      variables.  The `__init__()` method will take any `kwargs` and
-      use them to set instance variables that hide these defaults.
-      Only existing variables will be set this way - any `kwarg` for
-      which `hasattr(self, kw)` fails will not be set.
-
-      Note: Be careful using class-variables that are mutable.
-
     * The constructor `__init__()` should only be used to set
       variables in `self`.  The reason is that the code here uses the
       variables set in the constructor to determine which attributes
       need to be pickled.  Initialization of computed attributes
       should instead be done in the `init()` method .
 
+    * The constructor `__init__()` takes `kwargs` and will set these.
+      This allows using `super().__init__()`.  See e.g.:
+
+          https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
+
+    * The constructor will store all assigned variables (in
+      `__dict__()`) to a list `picklable_attributes` which can then be
+      used by the `Object` to provide pickling services.  Here
+      we simply use this to set an `initialized` flag to note the user
+      that the object might be invalid and need `init()` called again.
+
     * The `init()` method should make sure that the object ends in a
       consistent state so that further computations (without users
       setting attributes) can be computed efficiently.  If the user
       sets attributes, `init()` should be called again.
-
-    * Pickling will save only those variables defined when the base
-      `__init__` is finished, and will call `init()` upon unpickling,
-      thereby allowing unpicklable objects to be used (in particular
-      function instances).
 
     .. note:: Do not use any of the following variables:
 
@@ -71,46 +68,25 @@ class Object(object):
              Reserved for the list of attributes that will be
              pickled.  If this has been stored in `self.__dict__` then
              the constructor chain has finished processing.
-          * `_empty_state`:
-             Reserved for objects without any state
-          * `_independent_attributes`:
-          * `_dependent_attributes`:
           * `initialized`:
              Used to flag if attributes have been changed but without
-             `init()` being called.  (See below.)
-          * `_strict`:
-             If `True`, then only picklable attributes will be
-             settable through `__setattr__()`.
-          * `_check`:
-             If `True`, check that objects are actually picklable when
-             they are set.
-          * `_reserved_attributes`:
-             List of special attributes that should be excluded from
-             processing.
+             `init()` being called.
 
     By default setting any attribute in `picklable_attributes` will
     set the `initialized` flag to `False`.  This will be set to `True`
     when `init()` is called. Objects can then include an `assert
     self.initialized` in the appropriate places.
 
-    To allow for some variables to be set without invalidating the
-    object we also check the set of names `_independent_attributes`.
-
-    .. note:: This redefines `__setattr__` to provide the behaviour,
-       but does not overload `__getattr__` or `__getattribute__` so as
-       to have no performance hit on these.
-
-    Invariants:
-    
-    * No 'picklable_attributes' in `self.__dict__` Prior to the call to init(), 
+    .. note:: This redefines __setattr__ to provide the behaviour.
 
     Examples
     --------
-    >>> class A(Object):
-    ...     x = 0
+    >>> class A(ObjectBase):
+    ...     def __init__(self, x=0):
+    ...         super().__init__(x=x)
     ...     def init(self):
     ...         self.x1 = self.x + 1   # A dependent variable
-    ...         Object.init(self)
+    ...         super().init()
     ...     def check(self):
     ...         if not self.initialized:
     ...             raise AssertionError("Please call init()!")
@@ -126,59 +102,143 @@ class Object(object):
     >>> a.init()
     >>> a.check()
     True
-    >>> A(y=1)
+    """
+    initialized = False         # Assure that this is always defined.
+    picklable_attributes = ()   # Tuple so it is immutable
+
+    def __init__(self, **kw):
+        for _k in kw:
+            setattr(self, _k, kw[_k])
+        if 'picklable_attributes' not in self.__dict__:
+            self.picklable_attributes = sorted(_k for _k in self.__dict__)
+        self.init()
+
+    def init(self):
+        """Initialize Object."""
+        # Define any computed attributes here.
+        # Don't forget to call `super().init()` in your code!
+        self.initialized = True
+
+    def _check_attribute(self, key, value=None):
+        """Return True if attribute is pickable.
+
+        Can be overloaded to perform more comprehensive checks.
+        """
+        return key in self.picklable_attributes
+
+    def _getstate(self):
+        """Return and OrderedDict of picklable attributes."""
+        return collections.OrderedDict((_k, getattr(self, _k))
+                                       for _k in self.picklable_attributes)
+
+    def get_persistent_rep(self, env):
+        """Return `(rep, args, imports)`.
+
+        Define a persistent representation `rep` of the instance self where
+        the instance can be reconstructed from the string rep evaluated in the
+        context of dict args with the specified imports = list of `(module,
+        iname, uiname)` where one has either `import module as uiname`, `from
+        module import iname` or `from module import iname as uiname`.
+
+        This satisfies the `IArchivable` interface for the `persist`
+        package.
+        """
+        # Implementation taken from
+        # persist.objects.Archivable.get_persistent_rep()
+        args = self._getstate()
+        module = self.__class__.__module__
+        name = self.__class__.__name__
+        imports = [(module, name, name)]
+
+        keyvals = ["=".join((k, k)) for k in args]
+        rep = "{0}({1})".format(name, ", ".join(keyvals))
+        return (rep, args, imports)
+
+    def __repr__(self):
+        state = self._getstate()
+        args = ", ".join("=".join((_k, repr(state[_k]))) for _k in state)
+        return "{0}({1})".format(self.__class__.__name__, args)
+
+    def __setattr__(self, key, value):
+        """Sets the `initialized` flag to `False` if any picklable
+        attribute is changed.
+        """
+        if self._check_attribute(key, value):
+            self.__dict__['initialized'] = False
+        super().__setattr__(key, value)
+
+
+class ObjectMixin(object):
+    """Mixin for ObjectBase that provides pickling support.
+
+    Pickling will save only those variables defined in
+    `picklable_attributes` which is usually defined when the base
+    `__init__` is finished.  The `init()` method will be called upon
+    unpickling, thereby allowing unpicklable objects to be used (in
+    particular function instances).
+
+    .. note:: Do not use any of the following variables:
+
+          * `_empty_state`:
+             Reserved for objects without any state
+          * `_independent_attributes`:
+          * `_dependent_attributes`:
+          * `_strict`:
+             If `True`, then only picklable attributes will be
+             settable through `__setattr__()`.
+          * `_check`:
+             If `True`, check that objects are actually picklable when
+             they are set.
+          * `_reserved_attributes`:
+             List of special attributes that should be excluded from
+             processing.
+
+    To allow for some variables to be set without invalidating the
+    object we also check the set of names `_independent_attributes`.
+
+    Examples
+    --------
+    >>> class A(ObjectMixin, ObjectBase):
+    ...     def __init__(self, x=0):
+    ...         self.x = x
+    ...         super().__init__()
+    ...     def init(self):
+    ...         self.x1 = self.x + 1   # A dependent variable
+    ...         super().init()
+    ...     def check(self):
+    ...         if not self.initialized:
+    ...             raise AssertionError("Please call init()!")
+    ...         return self.x1 == self.x + 1
+    >>> a = A(x=0)
+    >>> a.check()
+    True
+    >>> a.x = 2.0
+    >>> a.check()
     Traceback (most recent call last):
     ...
-    ValueError: Class A passed unknown arguments ['y'].
+    AssertionError: Please call init()!
+    >>> a.init()
+    >>> a.check()
+    True
     """
-    # Assure that this is always defined.
-    initialized = False
+    _check = True
+    _strict = False
     _independent_attributes = ()
     _dependent_attributes = ()
-    _strict = False
-    _check = True
-    _reserved_attributes = [
+    _reserved_attributes = (
         'initialized',
         'picklable_attributes',
         '_independent_attributes',
         '_dependent_attributes',
         '_strict', '_check',
-        '_reserved_attributes']
+        '_reserved_attributes')
 
-    def __init__(self, picklable_attributes=None, **kw):
-        # Set all known kwargs
-        unknown_args = [_k for _k in kw if not hasattr(self, _k)]
-        if unknown_args:
-            raise ValueError(
-                "Class {} passed unknown arguments {}."
-                .format(self.__class__.__name__, unknown_args))
-        for _k in kw:
-            setattr(self, _k, kw[_k])
-
-        # Record picklable_attributes.  Note, if the user specifies
-        # this, then we respect that, otherwise we set it ourselves.
-        if picklable_attributes is None:
-            picklable_attributes = getattr(
-                self, 'picklable_attributes',
-                sorted(_k for _k in self.__dict__))
-        self.picklable_attributes = picklable_attributes
-
-        # Check for bad attributes
-        for key in self.picklable_attributes:
-            self._check_picklable(key, getattr(self, key))
-
-        self.init()
-
-    def init(self):
-        r"""Define any computed attributes here.
-
-        Don't forget to call `Object.init()`
-        """
-        self.initialized = True
-
+    ######################################################################
+    # Python pickle and copy interface
+    # https://docs.python.org/3/library/copy.html
+    # https://docs.python.org/3/library/pickle.html
     def __getstate__(self):
-        state = collections.OrderedDict((_k, getattr(self, _k))
-                                        for _k in self.picklable_attributes)
+        state = self._getstate()
 
         # From the docs:
         # "For new-style classes, if __getstate__() returns a false value,
@@ -203,89 +263,97 @@ class Object(object):
         # the variables from the pickle.
         self.__dict__.update(state)
 
-    def get_persistent_rep(self, env):
-        """Return `(rep, args, imports)`.
-
-        Define a persistent representation `rep` of the instance self where
-        the instance can be reconstructed from the string rep evaluated in the
-        context of dict args with the specified imports = list of `(module,
-        iname, uiname)` where one has either `import module as uiname`, `from
-        module import iname` or `from module import iname as uiname`.
-
-        This satisfies the ``IArchivable`` interface for the ``persist``
-        package.
-        """
-        # Implementation taken from
-        # persist.objects.Archivable.get_persistent_rep()
-        args = self.__getstate__()
-        module = self.__class__.__module__
-        name = self.__class__.__name__
-        imports = [(module, name, name)]
-
-        keyvals = ["=".join((k, k)) for k in args]
-        rep = "{0}({1})".format(name, ", ".join(keyvals))
-        return (rep, args, imports)
-
-    def __repr__(self):
-        state = self.__getstate__()
-        args = ", ".join("=".join((_k, repr(state[_k]))) for _k in state)
-        return "{0}({1})".format(self.__class__.__name__, args)
-
-    def _is_dependent_attribute(self, key):
-        return (key not in self._independent_attributes
-                and key not in self._reserved_attributes
-                and (key in self._dependent_attributes
-                     or key in self.picklable_attributes))
-
-    @staticmethod
-    def _is_picklable(obj):
-        """Return `True` if obj is picklable."""
+    ######################################################################
+    # More comprehensive checks
+    def _check_picklable(self, key, value):
+        """Raise ValueError if obj is not picklable."""
         try:
-            pickle.dumps(obj)
-            return True
+            pickle.dumps(value)
         except pickle.PicklingError:
-            return False
+            raise ValueError(f"Attribute {key}={value} not picklable.")
 
-    def _check_picklable(self, key, obj):
-        """Raise ValueError if obj is not picklable and self._check."""
-        if self._check and not self._is_picklable(obj):
-            raise ValueError("Attribute {key}={value} not picklable.")
-
-    def __setattr__(self, key, value):
-        """Sets the `initialized` flag to `False` if any picklable
-        attribute is changed.
+    def _check_attribute(self, key, value=None):
+        """Expended version that looks at exclusion lists and checks
+        if value is picklable.  Raises AttributeError if _strict and
+        attribute is not picklable.
         """
-        if not hasattr(self, 'picklable_attributes'):
-            # Constructor not finished... allow attributes to be set
-            object.__setattr__(self, key, value)
-            return
-        if self._strict and (key not in self.picklable_attributes
-                             and key not in self._independent_attributes
-                             and key not in self._reserved_attributes
-                             and key not in self._dependent_attributes):
-            raise AttributeError(
-                f"Cannot set attribute `{key}` in `_strict` object.")
-
-        picklable_attr = False
-        if self._is_dependent_attribute(key):
-            picklable_attr = True
-        elif (not self._strict
+        if (key not in self._independent_attributes
+            and (key in self._dependent_attributes
+                 or key in self.picklable_attributes)):
+            if self._check:
+                self._check_picklable(key=key, value=value)
+            return True
+        elif (self._strict
+              and 'picklable_attributes' in self.__dict__
+              and key not in self.picklable_attributes
               and key not in self._independent_attributes
               and key not in self._reserved_attributes
-              and key not in self._dependent_attributes
-              and key not in self.picklable_attributes
-              and hasattr(self, key)
-              and hasattr(self.picklable_attributes, 'append')
-              and (not self._check
-                   or self._is_picklable(getattr(self, key)))):
-            # Setting a new picklable_attribute
-            self.picklable_attributes.append(key)
-            picklable_attr = True
+              and key not in self._dependent_attributes):
+            raise AttributeError(
+                f"Cannot set attribute `{key}` in `_strict` object.")
+        return False
 
-        if picklable_attr:
-            self.__dict__['initialized'] = False
-            self._check_picklable(key, value)
-        object.__setattr__(self, key, value)
+
+class Object(ObjectMixin, ObjectBase):
+    """Extension of Object with pickling support.
+
+    Pickling will save only those variables defined in
+    `picklable_attributes` which is usually defined when the base
+    `__init__` is finished.  The `init()` method will be called upon
+    unpickling, thereby allowing unpicklable objects to be used (in
+    particular function instances).
+
+    .. note:: Do not use any of the following variables:
+
+          * `_empty_state`:
+             Reserved for objects without any state
+          * `_independent_attributes`:
+          * `_dependent_attributes`:
+          * `_strict`:
+             If `True`, then only picklable attributes will be
+             settable through `__setattr__()`.
+          * `_check`:
+             If `True`, check that objects are actually picklable when
+             they are set.
+          * `_reserved_attributes`:
+             List of special attributes that should be excluded from
+             processing.
+
+    To allow for some variables to be set without invalidating the
+    object we also check the set of names `_independent_attributes`.
+
+    Examples
+    --------
+    >>> class A(Object):
+    ...     def __init__(self, x=0):
+    ...         self.x = x
+    ...         super().__init__()
+    ...     def init(self):
+    ...         self.x1 = self.x + 1   # A dependent variable
+    ...         super().init()
+    ...     def check(self):
+    ...         if not self.initialized:
+    ...             raise AssertionError("Please call init()!")
+    ...         return self.x1 == self.x + 1
+    >>> a = A(x=0)
+    >>> a.check()
+    True
+    >>> a.x = 2.0
+    >>> a.check()
+    Traceback (most recent call last):
+    ...
+    AssertionError: Please call init()!
+    >>> a.init()
+    >>> a.check()
+    True
+    """
+    def __init__(self, **kw):
+        super().__init__(**kw)
+
+        # Check for bad attributes
+        if self._check:
+            for key in self.picklable_attributes:
+                self._check_picklable(key, getattr(self, key))
 
 
 class Container(Object, abc.Sized, abc.Iterable, abc.Container):
@@ -337,8 +405,7 @@ class Container(Object, abc.Sized, abc.Iterable, abc.Container):
                     self.picklable_attributes.extend(
                         _k for _k in kw if _k not in self.__dict__)
 
-        self.__dict__.update(kw)
-        Object.__init__(self)
+        super().__init__(**kw)
 
     # Methods required by abc.Container
     def __contains__(self, key):
