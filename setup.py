@@ -43,8 +43,8 @@ test_requires = [
     'coverage',
     'flake8',
     "ipython>=4.0",
-    "ipyparallel",
-    "persist",
+    "ipyparallel>=6.2.5",
+    "persist>=3.0",
     "numpy",
     "numexpr",
     "uncertainties",
@@ -52,9 +52,14 @@ test_requires = [
 ]
 
 extras_require = dict(
-    doc=['sphinxcontrib.zopeext',
-         'numpy',
-         'matplotlib'],
+    doc=['sphinx',
+         'mock',
+         'sphinx_rtd_theme',
+         'sphinxcontrib.zopeext',
+         'numpy>=1.15.4',
+         'matplotlib>=1.5',
+         'mmf_setup>=0.1.11',
+    ],
 )
 
 extensions = [
@@ -77,9 +82,7 @@ if USE_CYTHON:
 
 
 setup(name='mmfutils',
-      # Python 3.8 does not work yet with ipyparallel
-      # https://github.com/ipython/ipyparallel/issues/396
-      python_requires='>2,<3.8',
+      python_requires='>3',
       version=VERSION,
       packages=find_packages(exclude=['tests']),
 
@@ -115,5 +118,6 @@ setup(name='mmfutils',
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
       ],
       )
