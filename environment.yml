@@ -6,7 +6,7 @@ dependencies:
   - python=3
   - cython >=0.28.4
   - docutils
-  - ipyparallel >= 6.2.5  # Needed for python 3.8 support
+  - ipyparallel >=6.2.5  # Needed for python 3.8 support
   - ipython >=4.0
   - matplotlib>=1.5
   - numba
