@@ -48,7 +48,7 @@ test:
     - coverage
     - flake8
     - ipython >=4.0
-    - ipyparallel
+    - ipyparallel >= 6.2.5
     - matplotlib
     - persist >=3.0
     - numba
