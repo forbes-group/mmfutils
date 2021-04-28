@@ -3,7 +3,7 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_json: true
-#     formats: ipynb,py
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
@@ -438,6 +438,8 @@ print(f(2.0), x, y, z)
 # We include a few mathematical tools here too.  In particular, numerical integration and differentiation.  Check the API documentation for details.
 
 # # Developer Instructions
+
+# For Developer Notes, please see [Notes.md](../Notes.md).
 
 # Complete code coverage information is provided in ``build/_coverage/index.html``.
 

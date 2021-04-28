@@ -1,6 +1,55 @@
 Developer Notes
 ===============
 
+## Repositories
+
+Currently the main repository is on our own [Heptapod] server, but I have enabled 
+`Settings/Repository/Mirroring repositories` to push to a public GitHub mirror
+https://github.com/forbes-group/mmfutils/.  This required getting a personal token from GitHub
+as [described
+here](https://hg.iscimath.org/help/user/project/repository/repository_mirroring#setting-up-a-push-mirror-from-gitlab-to-github).
+I chose to `Mirror only protected branches` to keep things clean, but this means that
+we should either make all release branches protected, or be careful to tag the releases.
+
+I don't want to use GitHub for managing issues or pull-requests, so instead, I also
+maintain a development fork (under my personal GitHub account) which I can use for code
+reviews.  For this one, I mirror everything.
+
+> Note: Do not actually fork the project - just push from Heptapod.  (LGTM will not analyze forks).
+
+Summary:
+
+* https://hg.iscimath.org/forbes-group/mmfutils: Main development repository (Mercurial)
+  running on our hosted [Heptapod] server.  This is where
+  [Issues](https://hg.iscimath.org/forbes-group/mmfutils/-issues), [Merge
+  Requests](https://hg.iscimath.org/forbes-group/mmfutils/-/merge_requests) etc. should
+  be reported here.
+* https://github.com/forbes-group/mmfutils: Main public mirror (Git) for releases.  Protected
+  branches are automatically pushed here.  No development work should be done here: this
+  is just for public access, and to use GitHub's CI tools.
+* https://github.com/mforbes/mmfutils-fork: My development fork (Git).  Everything is
+  pushed here to use GitHub's CI tools during development.  Should not be used for
+  anything else.
+  
+## Badges
+
+With CI setup, we have the following badges:
+
+* Documentation at [Read the Docs](https://readthedocs.org):
+
+    [![Documentation
+Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
+
+* Testing at [DroneIO](https://cloud.drone.io):
+    
+    [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils)
+  
+* Code quality testing at [lgtm](https://lgtm.com):
+   
+    [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/forbes-group/mmfutils.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/forbes-group/mmfutils/context:python)
+    [![Language grade:
+    Python](https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/forbes-group/mmfutils/context:python) 
+  
 ## Testing
 
 Testing is now done using [Nox] as configured in `noxfile.py`.  This allows for testing
@@ -262,5 +311,5 @@ make: *** [python.exe] Error 1
 [`pyenv`]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [Conda]: <https://docs.conda.io> "Conda"
-
+[Heptapod]: <https://heptapod.net> "Heptapod website"
 

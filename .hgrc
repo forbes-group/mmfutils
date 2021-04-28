@@ -5,5 +5,5 @@ default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
 qcom = commit
 
 [hooks]
-pre-commit = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
-pre-commit.runtests = python -O setup.py test
+#pre-commit = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
+#pre-commit.runtests = python -O setup.py test
