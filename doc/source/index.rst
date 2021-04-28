@@ -13,7 +13,7 @@ Contents:
 
    mmfutils
 
-.. include:: ../../README.rst
+.. include:: ../README.rst
 
 Indices and tables
 ==================

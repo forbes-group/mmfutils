@@ -1,6 +1,5 @@
 [paths]
-default = ssh://hg@bitbucket.org/mforbes/mmfutils-fork
-pristine = ssh://hg@bitbucket.org/mforbes/mmfutils
+default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
 
 [alias]
 qcom = commit

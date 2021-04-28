@@ -2,14 +2,17 @@
 # platform independent.  These are included here simply as a
 # convenience.
 
-test: envs
-	conda run -n _mmfutils pytest
-
-envs:
-	conda env update -f environment.yml
+test:
+	nox
 
 README.rst: doc/README.ipynb
 	jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
+
+%.html: %.rst
+	rst2html5.py $< > $@
+
+%.html: %.md
+	pandoc -o $@ $< 
 
 clean:
 	-find . -name "*.pyc" -delete
@@ -18,7 +21,8 @@ clean:
 	-find . -name "__pycache__" -exec rm -r "{}" \;
 	-rm -r build
 	-rm -r mmfutils.egg-info
+	-rm -r .nox
+	-rm -r doc/README_files/
+	-rm *.html
 
-.PHONY: test envs clean
-
-
+.PHONY: test clean

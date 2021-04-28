@@ -8,8 +8,7 @@ import collections
 from collections import abc
 import pickle
 
-__all__ = ['ObjectBase', 'Object',
-           'Container', 'ContainerList', 'ContainerDict']
+__all__ = ["ObjectBase", "Object", "Container", "ContainerList", "ContainerDict"]
 
 
 ######################################################################
@@ -64,7 +63,7 @@ class ObjectBase(object):
 
     .. note:: Do not use any of the following variables:
 
-          * `picklable_attributes:
+          * `picklable_attributes`:
              Reserved for the list of attributes that will be
              pickled.  If this has been stored in `self.__dict__` then
              the constructor chain has finished processing.
@@ -103,13 +102,14 @@ class ObjectBase(object):
     >>> a.check()
     True
     """
-    initialized = False         # Assure that this is always defined.
-    picklable_attributes = ()   # Tuple so it is immutable
+
+    initialized = False  # Assure that this is always defined.
+    picklable_attributes = ()  # Tuple so it is immutable
 
     def __init__(self, **kw):
         for _k in kw:
             setattr(self, _k, kw[_k])
-        if 'picklable_attributes' not in self.__dict__:
+        if "picklable_attributes" not in self.__dict__:
             self.picklable_attributes = sorted(_k for _k in self.__dict__)
         self.init()
 
@@ -128,8 +128,9 @@ class ObjectBase(object):
 
     def _getstate(self):
         """Return and OrderedDict of picklable attributes."""
-        return collections.OrderedDict((_k, getattr(self, _k))
-                                       for _k in self.picklable_attributes)
+        return collections.OrderedDict(
+            (_k, getattr(self, _k)) for _k in self.picklable_attributes
+        )
 
     def get_persistent_rep(self, env):
         """Return `(rep, args, imports)`.
@@ -164,7 +165,7 @@ class ObjectBase(object):
         attribute is changed.
         """
         if self._check_attribute(key, value):
-            self.__dict__['initialized'] = False
+            self.__dict__["initialized"] = False
         super().__setattr__(key, value)
 
 
@@ -221,17 +222,20 @@ class ObjectMixin(object):
     >>> a.check()
     True
     """
+
     _check = True
     _strict = False
     _independent_attributes = ()
     _dependent_attributes = ()
     _reserved_attributes = (
-        'initialized',
-        'picklable_attributes',
-        '_independent_attributes',
-        '_dependent_attributes',
-        '_strict', '_check',
-        '_reserved_attributes')
+        "initialized",
+        "picklable_attributes",
+        "_independent_attributes",
+        "_dependent_attributes",
+        "_strict",
+        "_check",
+        "_reserved_attributes",
+    )
 
     ######################################################################
     # Python pickle and copy interface
@@ -249,11 +253,11 @@ class ObjectMixin(object):
         return state
 
     def __setstate__(self, state):
-        if '_empty_state' in state:
-            state.pop('_empty_state')
+        if "_empty_state" in state:
+            state.pop("_empty_state")
 
-        if 'picklable_attributes' not in state:
-            state['picklable_attributes'] = sorted(state)
+        if "picklable_attributes" not in state:
+            state["picklable_attributes"] = sorted(state)
 
         self.__dict__.update(state)
 
@@ -277,20 +281,21 @@ class ObjectMixin(object):
         if value is picklable.  Raises AttributeError if _strict and
         attribute is not picklable.
         """
-        if (key not in self._independent_attributes
-            and (key in self._dependent_attributes
-                 or key in self.picklable_attributes)):
+        if key not in self._independent_attributes and (
+            key in self._dependent_attributes or key in self.picklable_attributes
+        ):
             if self._check:
                 self._check_picklable(key=key, value=value)
             return True
-        elif (self._strict
-              and 'picklable_attributes' in self.__dict__
-              and key not in self.picklable_attributes
-              and key not in self._independent_attributes
-              and key not in self._reserved_attributes
-              and key not in self._dependent_attributes):
-            raise AttributeError(
-                f"Cannot set attribute `{key}` in `_strict` object.")
+        elif (
+            self._strict
+            and "picklable_attributes" in self.__dict__
+            and key not in self.picklable_attributes
+            and key not in self._independent_attributes
+            and key not in self._reserved_attributes
+            and key not in self._dependent_attributes
+        ):
+            raise AttributeError(f"Cannot set attribute `{key}` in `_strict` object.")
         return False
 
 
@@ -347,6 +352,7 @@ class Object(ObjectMixin, ObjectBase):
     >>> a.check()
     True
     """
+
     def __init__(self, **kw):
         super().__init__(**kw)
 
@@ -391,6 +397,7 @@ class Container(Object, abc.Sized, abc.Iterable, abc.Container):
     ...
     AttributeError: 'Container' object has no attribute 'x'
     """
+
     def __init__(self, *argv, **kw):
         if 1 == len(argv):
             # Copy construct
@@ -403,7 +410,8 @@ class Container(Object, abc.Sized, abc.Iterable, abc.Container):
                 if isinstance(obj, abc.Sequence):
                     self.picklable_attributes = list(list(zip(*obj))[0])
                     self.picklable_attributes.extend(
-                        _k for _k in kw if _k not in self.__dict__)
+                        _k for _k in kw if _k not in self.__dict__
+                    )
 
         super().__init__(**kw)
 
@@ -441,6 +449,7 @@ class ContainerList(Container, abc.Sequence):
     >>> tuple(c)                # Order is lexicographic
     (2, 'Hi')
     """
+
     # Methods required by abc.Sequence
     def __getitem__(self, i):
         key = self.picklable_attributes[i]
@@ -478,6 +487,7 @@ class ContainerDict(Container, abc.MutableMapping):
     >>> OrderedDict(c)
     OrderedDict([('a', 2), ('b', 'Hi')])
     """
+
     # Methods required by abc.Iterable
     def __iter__(self):
         return self.picklable_attributes.__iter__()

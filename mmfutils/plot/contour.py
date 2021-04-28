@@ -97,7 +97,7 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     return img
 
 
-def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, **kw):
+def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, ax=None, **kw):
     r"""Specialized contour plot for plotting the contours of constant
     phase for the complex variable z.  Plots `4*N` contours in total.
     Note: two sets of contours are returned, and, due to processing,
@@ -119,10 +119,12 @@ def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, **kw):
     args.update(kw)
     levels = 0.5*np.pi*(0.5 + (np.arange(N) + 0.5)/N)
     _z = np.rollaxis(z, 0, 2)
-    c1 = plt.contour(x, y, abs(np.angle(_z)),
-                     levels=levels, **args)
-    c2 = plt.contour(x, y, abs(np.angle(_z*np.exp(0.5j*np.pi))),
-                     levels=levels, **args)
+    if ax is None:
+        ax = plt.gca()
+    c1 = ax.contour(x, y, abs(np.angle(_z)),
+                    levels=levels, **args)
+    c2 = ax.contour(x, y, abs(np.angle(_z*np.exp(0.5j*np.pi))),
+                    levels=levels, **args)
     c2.levels = np.add(c2.levels, 0.5*np.pi)
     c2.levels = np.where(c2.levels <= np.pi,
                          c2.levels,
