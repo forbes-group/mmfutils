@@ -3,53 +3,13 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3
-  - cython >=0.28.4
-  - docutils
-  - ipyparallel >=6.2.5  # Needed for python 3.8 support
-  - ipython >=4.0
-  - matplotlib>=1.5
-  - numba
-  - numexpr
+  - python>=3.6,<3.9
+
+  # Better to install these from conda for performance.
   - numpy >=1.15.4
-  - pathlib
-  - python >=3.0
-  - uncertainties
-  - zope.interface>=3.8.0
-
-  #- ipywidgets
-  #- ipykernel        # Use with nb_conda_kernels so jupyter sees this kernel
-    
-  # For testing
-  - coverage
-  - docutils
-  - flake8
-  - persist
-  - pytest
-  - pytest-cov
-  - pytest-flake8
-  - pytest-xdist
-  - scipy >=0.17.1
-  - uncertainties
+  - numba
   - pyfftw
-    
-  #- pylint
-  #- mock
-  #- pep8
-
-  # For documents
-  - sphinx
-  - mock
-  - sphinx_rtd_theme
   
-  # Needed for . mmf_setup and hg ccom
-  - notebook
-
-  # My stuff
-  - mmf_setup>=0.1.11
-  - persist >=3.0
-  - husl
-
   - pip
   - pip:
-    - sphinxcontrib-zopeext
+    - .[test,doc]

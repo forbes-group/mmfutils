@@ -14,80 +14,19 @@ in a notebook.
 
 **Documentation:** http://mmfutils.readthedocs.org
 
-**Source:** https://bitbucket.org/mforbes/mmfutils
+**Source:** \*
+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
+(will forward). \* https://hg.iscimath.org/forbes-group/mmfutils:
+Current, in case the permalink fails. \*
+https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
-**Issues:** https://bitbucket.org/mforbes/mmfutils/issues
+**Issues:**
+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
 
-**Build Status:**
+**Build Status:** |Build Status|
 
-.. raw:: html
-
-   <table>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-`Main <https://bitbucket.org/mforbes/mmfutils>`__
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-`Fork <https://bitbucket.org/mforbes/mmfutils-fork>`__
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-|mmfutils Build Status|
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-|mmfutils-fork Build Status|
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   </table>
-
-.. |mmfutils Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils/status.png
-   :target: https://drone.io/bitbucket.org/mforbes/mmfutils/latest
-.. |mmfutils-fork Build Status| image:: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/status.png
-   :target: https://drone.io/bitbucket.org/mforbes/mmfutils-fork/latest
+.. |Build Status| image:: https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg
+   :target: https://cloud.drone.io/forbes-group/mmfutils
 
 .. raw:: html
 
@@ -385,7 +324,7 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.5.1
+4.1  REL: 0.5.3
 
 .. raw:: html
 
@@ -395,7 +334,7 @@ Table of Contents
 
    <li>
 
-4.2  REL: 0.5.0
+4.2  REL: 0.5.1
 
 .. raw:: html
 
@@ -405,7 +344,7 @@ Table of Contents
 
    <li>
 
-4.3  REL: 0.4.13
+4.3  REL: 0.5.0
 
 .. raw:: html
 
@@ -415,7 +354,7 @@ Table of Contents
 
    <li>
 
-4.4  REL: 0.4.10
+4.4  REL: 0.4.13
 
 .. raw:: html
 
@@ -425,7 +364,7 @@ Table of Contents
 
    <li>
 
-4.5  REL: 0.4.9
+4.5  REL: 0.4.10
 
 .. raw:: html
 
@@ -435,7 +374,17 @@ Table of Contents
 
    <li>
 
-4.6  REL: 0.4.7
+4.6  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.7  REL: 0.4.7
 
 .. raw:: html
 
@@ -460,12 +409,20 @@ Table of Contents
 Installing
 ----------
 
-This package can be installed from `from the bitbucket
-project <https://bitbucket.org/mforbes/mmfutils>`__:
+This package can be installed from
+`PyPI <https://pypi.org/project/mmfutils/>`__:
 
 .. code:: bash
 
-   pip install hg+https://bitbucket.org/mforbes/mmfutils
+    python3 -m pip install mmfutils
+
+or, if you need to install from source, you can get it from one of the
+repositories:
+
+.. code:: bash
+
+    python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
+    python3 -m pip install git+https://github.com/forbes-group/mmfutils
 
 Usage
 =====
@@ -598,7 +555,7 @@ Object Example
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
-let’s do a calculation:
+let's do a calculation:
 
 .. code:: ipython3
 
@@ -615,8 +572,8 @@ let’s do a calculation:
 
 
 
-Oops! We forgot to reinitialize the object… (The formula is correct, but
-the lattice is no longer commensurate so the FFT derivative has huge
+Oops! We forgot to reinitialize the object... (The formula is correct,
+but the lattice is no longer commensurate so the FFT derivative has huge
 errors).
 
 .. code:: ipython3
@@ -668,8 +625,8 @@ functionality with ``ObjectMixin``:
 
 .. parsed-literal::
 
-    ObjectBase pickle:  4438 bytes
-    ObjectMixin pickle: 102 bytes
+    ObjectBase pickle:  4396 bytes
+    ObjectMixin pickle: 103 bytes
 
 
 Note, however, that the speed of copying is significantly impacted:
@@ -682,8 +639,8 @@ Note, however, that the speed of copying is significantly impacted:
 
 .. parsed-literal::
 
-    3.55 µs ± 669 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    43.9 µs ± 4.95 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    2.58 µs ± 34.3 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+    27.1 µs ± 404 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -928,9 +885,7 @@ Here is a broken implementation. We muck up the arguments to ``add``:
 
 .. parsed-literal::
 
-    BrokenMethodImplementation: The implementation of add violates its contract
-            because implementation requires too many arguments.
-            
+    BrokenMethodImplementation: The object <class '__main__.AdderBroken'> has failed to implement interface __main__.IAdder: The contract of __main__.IAdder.add(other) is violated because 'AdderBroken.add(self, one, another)' requires too many arguments.
 
 
 Now we get ``add`` right, but forget to define ``value``. This is only
@@ -956,10 +911,7 @@ defined in ``__init__()``:
 
 .. parsed-literal::
 
-    BrokenImplementation: An object has failed to implement interface <InterfaceClass __main__.IAdder>
-    
-            The value attribute was not provided.
-            
+    BrokenImplementation: The object <__main__.AdderBroken object at 0x11693cac0> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
 
 
 Finally, a working instance:
@@ -1133,7 +1085,7 @@ packages including
 `numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
 `pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
 package installed by anaconda. Some of these require building system
-libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
 various components will not be imported by default.
 
 Here is a brief description of the components:
@@ -1145,8 +1097,8 @@ Here is a brief description of the components:
    Also enables the planning cache and setting threads so you can better
    control your performance.
 -  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don’t do this carefully, it will crash
-   your program so fast you won’t even get a traceback.)
+   disabling the VML. (If you don't do this carefully, it will crash
+   your program so fast you won't even get a traceback.)
 -  ``mmfutils.performance.threads``: Provides some hooks for setting the
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
@@ -1159,10 +1111,10 @@ Several tools are provided in ``mmfutils.plot``:
 Fast Filled Contour Plots
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``mmfutils.plot.imcontourf`` is similar to matplotlib’s ``plt.contourf``
+``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
-array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
 then it will match these to the shape of ``z``). Matplotlib now provies
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
@@ -1182,28 +1134,28 @@ then it will match these to the shape of ``z``). Matplotlib now provies
     plt.subplot(142)
     %time plt.contourf(x.ravel(), y.ravel(), z.T, 50, cmap='gist_heat')
     plt.subplot(143)
-    %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat')
+    %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
     plt.subplot(144)
-    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat')
+    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
 
 
 .. parsed-literal::
 
-    CPU times: user 9.53 ms, sys: 2.13 ms, total: 11.7 ms
-    Wall time: 11.7 ms
-    CPU times: user 36.1 ms, sys: 771 µs, total: 36.8 ms
-    Wall time: 37.1 ms
-    CPU times: user 251 ms, sys: 34 ms, total: 285 ms
-    Wall time: 265 ms
-    CPU times: user 3.6 ms, sys: 119 µs, total: 3.72 ms
-    Wall time: 3.73 ms
+    CPU times: user 9.34 ms, sys: 2.07 ms, total: 11.4 ms
+    Wall time: 10.8 ms
+    CPU times: user 35.3 ms, sys: 933 µs, total: 36.2 ms
+    Wall time: 36.3 ms
+    CPU times: user 138 ms, sys: 9 ms, total: 147 ms
+    Wall time: 147 ms
+    CPU times: user 4.81 ms, sys: 365 µs, total: 5.18 ms
+    Wall time: 5.1 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x104a8e850>
+    <matplotlib.collections.QuadMesh at 0x12b57b4f0>
 
 
 
@@ -1245,20 +1197,11 @@ phase of a complex wavefunction.
     mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp')
     ax.set_aspect(1)
     plt.colorbar()
-    mmfplt.phase_contour(x, y, z, linewidths=0.5)
+    mmfplt.phase_contour(x, y, z, linewidths=0.5);
 
 
 
-
-.. parsed-literal::
-
-    (<matplotlib.contour.QuadContourSet at 0x1a19181690>,
-     <matplotlib.contour.QuadContourSet at 0x1a19181ad0>)
-
-
-
-
-.. image:: README_files/README_64_1.png
+.. image:: README_files/README_64_0.png
 
 
 Debugging
@@ -1307,7 +1250,7 @@ aware of.
 
    ::
 
-      %include ../.hgrc
+       # %include ../.hgrc
 
 **Security Warning:** if you do this, be sure to inspect the ``.hgrc``
 file carefully to make sure that no one inserts malicious code.
@@ -1321,26 +1264,32 @@ This runs the following code:
 
 .. parsed-literal::
 
-    [NbConvertApp] Converting notebook doc/README.ipynb to rst
-    [NbConvertApp] Writing 36253 bytes to doc/README.rst
+    Traceback (most recent call last):
+      File "/data/apps/conda/envs/_mmfutils/bin/jupyter", line 8, in <module>
+        sys.exit(main())
+      File "/data/apps/conda/envs/_mmfutils/lib/python3.8/site-packages/jupyter_core/command.py", line 285, in main
+        command = _jupyter_abspath(subcommand)
+      File "/data/apps/conda/envs/_mmfutils/lib/python3.8/site-packages/jupyter_core/command.py", line 124, in _jupyter_abspath
+        raise Exception(
+    Exception: Jupyter command `jupyter-nbconvert` not found.
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
-fail if any of these do not pass, or if we don’t have complete code
+fail if any of these do not pass, or if we don't have complete code
 coverage. We run these tests in a conda environment that can be made
 using the makefile:
 
 .. code:: bash
 
-   make envs
-   make test   # conda run -n _mmfutils pytest
+    make envs
+    make test   # conda run -n _mmfutils pytest
 
 To run these manually you could do:
 
 .. code:: bash
 
-   cond activate _mmfutils
-   pytest
+    cond activate _mmfutils
+    pytest
 
 Here is an example:
 
@@ -1666,7 +1615,7 @@ Releases
 
 We try to keep the repository clean with the following properties:
 
-1. The default branch is stable: i.e. if someone runs ``hg clone``, this
+1. The default branch is stable: i.e. if someone runs ``hg clone``, this
    will pull the latest stable release.
 2. Each release has its own named branch so that e.g. ``hg up 0.5.0``
    will get the right thing. Note: this should update to the development
@@ -1679,153 +1628,132 @@ To do this, we advocate the following proceedure.
 1. **Update to Correct Branch**: Make sure this is the correct
    development branch, not the default branch by explicitly updating:
 
-   .. code:: bash
+``bash    hg up <version>``
 
-      hg up <version>
+(Compare with ``hg up default`` which should take you to the default
+branch instead.) 2. **Work**: Do your work, committing as required with
+messages as shown in the repository with the following keys:
 
-   (Compare with ``hg up default`` which should take you to the default
-   branch instead.)
-2. **Work**: Do your work, committing as required with messages as shown
-   in the repository with the following keys:
-
-   -  ``DOC``: Documentation changes.
-   -  ``API``: Changes to the exising API. This could break old code.
-   -  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
-      these should not break existing codes.
-   -  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
-      etc.)
-   -  ``TST``: Update tests, code coverage, etc.
-   -  ``BUG``: Address an issue as filed on the issue tracker.
-   -  ``BRN``: Start a new branch (see below).
-   -  ``REL``: Release (see below).
-   -  ``WIP``: Work in progress. Do not depend on these! They will be
-      stripped. This is useful when testing things like the rendering of
-      documentation on bitbucket etc. where you need to push an
-      incomplete set of files. Please collapse and strip these
-      eventually when you get things working.
-   -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
+-  ``DOC``: Documentation changes.
+-  ``API``: Changes to the exising API. This could break old code.
+-  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
+   these should not break existing codes.
+-  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
+   etc.)
+-  ``TST``: Update tests, code coverage, etc.
+-  ``BUG``: Address an issue as filed on the issue tracker.
+-  ``BRN``: Start a new branch (see below).
+-  ``REL``: Release (see below).
+-  ``WIP``: Work in progress. Do not depend on these! They will be
+   stripped. This is useful when testing things like the rendering of
+   documentation on bitbucket etc. where you need to push an incomplete
+   set of files. Please collapse and strip these eventually when you get
+   things working.
+-  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
 3. **Tests**: Make sure the tests pass.
 
-   .. code:: bash
+``bash    conda env update --file environment.yml    conda activate _mmfutils; pytest``
 
-      conda env update --file environment.yml
-      conda activate _mmfutils; pytest
+(``hg com`` will automatically run tests after pip-installing everything
+in ``setup.py`` if you have linked the ``.hgrc`` file as discussed
+above, but the use of independent environments is preferred now.) 4.
+**Update Docs**: Update the documentation if needed. To generate new
+documentation run:
 
-   (``hg com`` will automatically run tests after pip-installing
-   everything in ``setup.py`` if you have linked the ``.hgrc`` file as
-   discussed above, but the use of independent environments is preferred
-   now.)
-4. **Update Docs**: Update the documentation if needed. To generate new
-   documentation run:
+``bash    cd doc    sphinx-apidoc -eTE ../mmfutils -o source    rm source/mmfutils.*tests*``
 
-   .. code:: bash
+-  Include any changes at the bottom of this file
+   (``doc/README.ipynb``).
+-  You may need to copy new figures to ``README_files/`` if the figure
+   numbers have changed, and then ``hg add`` these while ``hg rm`` the
+   old ones.
 
-      cd doc
-      sphinx-apidoc -eTE ../mmfutils -o source
-      rm source/mmfutils.*tests*
+Edit any new files created (titles often need to be added) and check
+that this looks good with
 
-   -  Include any changes at the bottom of this file
-      (``doc/README.ipynb``).
-   -  You may need to copy new figures to ``README_files/`` if the
-      figure numbers have changed, and then ``hg add`` these while
-      ``hg rm`` the old ones.
+::
 
-   Edit any new files created (titles often need to be added) and check
-   that this looks good with
+     ```bash
+     make html
+     open build/html/index.html
+     ```
+     
 
-   .. code:: bash
-
-      make html
-      open build/html/index.html
-
-   Look especially for errors of the type “WARNING: document isn’t
-   included in any toctree”. This indicates that you probably need to
-   add the module to an upper level ``.. toctree::``. Also look for
-   “WARNING: toctree contains reference to document u’…’ that doesn’t
-   have a title: no link will be generated”. This indicates you need to
-   add a title to a new file. For example, when I added the
-   ``mmf.math.optimize`` module, I needed to update the following:
+Look especially for errors of the type "WARNING: document isn't included
+in any toctree". This indicates that you probably need to add the module
+to an upper level ``.. toctree::``. Also look for "WARNING: toctree
+contains reference to document u'...' that doesn't have a title: no link
+will be generated". This indicates you need to add a title to a new
+file. For example, when I added the ``mmf.math.optimize`` module, I
+needed to update the following:
 
 .. code:: rst
 
-      .. doc/source/mmfutils.rst
-      mmfutils
-      ========
-      
-      .. toctree::
-          ...
-          mmfutils.optimize
-          ...
+       .. doc/source/mmfutils.rst
+       mmfutils
+       ========
+       
+       .. toctree::
+           ...
+           mmfutils.optimize
+           ...
 
 .. code:: rst
 
-      .. doc/source/mmfutils.optimize.rst
-      mmfutils.optimize
-      =================
-          
-      .. automodule:: mmfutils.optimize
-          :members:
-          :undoc-members:
-          :show-inheritance:
+       .. doc/source/mmfutils.optimize.rst
+       mmfutils.optimize
+       =================
+           
+       .. automodule:: mmfutils.optimize
+           :members:
+           :undoc-members:
+           :show-inheritance:
 
-5.  **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
-    ``hg strip`` as needed to clean up the repo before you push.
-    Branches should generally be linear unless there is an exceptional
-    reason to split development.
-6.  **Release**: First edit ``mmfutils/__init__.py`` to update the
-    version number by removing the ``dev`` part of the version number.
-    Commit only this change and then push only the branch you are
-    working on:
+5. **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
+   ``hg strip`` as needed to clean up the repo before you push. Branches
+   should generally be linear unless there is an exceptional reason to
+   split development.
+6. **Release**: First edit ``mmfutils/__init__.py`` to update the
+   version number by removing the ``dev`` part of the version number.
+   Commit only this change and then push only the branch you are working
+   on:
 
-    .. code:: bash
+``bash    hg com -m "REL: <version>"    hg push -b .`` 7. **Pull
+Request**: Create a pull request on the development fork from your
+branch to ``default`` on the release project bitbucket. Review it, fix
+anything, then accept the PR and close the branch. 8. **Publish on
+PyPI**: Publish the released version on
+`PyPI <https://pypi.org/project/mmfutils/>`__ using
+`twine <https://pypi.org/project/twine/>`__
 
-       hg com -m "REL: <version>"
-       hg push -b .
+\`\`\`bash # Build the package. python setup.py sdist bdist\_wheel
 
-7.  **Pull Request**: Create a pull request on the development fork from
-    your branch to ``default`` on the release project bitbucket. Review
-    it, fix anything, then accept the PR and close the branch.
-8.  **Publish on PyPI**: Publish the released version on
-    `PyPI <https://pypi.org/project/mmfutils/>`__ using
-    `twine <https://pypi.org/project/twine/>`__
+# Test that everything looks right: twine upload --repository-url
+https://test.pypi.org/legacy/ dist/\*
 
-    .. code:: bash
+# Upload to PyPI twine upload dist/\* \`\`\`
 
-       # Build the package.
-       python setup.py sdist bdist_wheel
+9. **Build Conda Package**: This will run all the tests in a fresh
+   environment as specified by ``meta.yaml``. Make sure that the
+   dependencies in ``meta.yaml``, ``environment.yml``, and ``setup.py``
+   are consistent. Note that the list of versions to be built is
+   specified in ``conda_build_config.yaml``.
 
-       # Test that everything looks right:
-       twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-
-       # Upload to PyPI
-       twine upload dist/*
-
-9.  **Build Conda Package**: This will run all the tests in a fresh
-    environment as specified by ``meta.yaml``. Make sure that the
-    dependencies in ``meta.yaml``, ``environment.yml``, and ``setup.py``
-    are consistent. Note that the list of versions to be built is
-    specified in ``conda_build_config.yaml``.
-
-    .. code:: bash
-
-       conda build .
-       conda build . --output   # Use this below
-       anaconda login
-       anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
+``bash    conda build .    conda build . --output   # Use this below    anaconda login    anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2``
 
 10. **Start new branch**: On the same development branch (not
     ``default``), increase the version number in
     ``mmfutils/__init__.py`` and add ``dev``: i.e.:
 
-    **version** = ‘0.5.1dev’
+    **version** = '0.5.1dev'
 
 Then create this branch and commit this:
 
 ::
 
-      hg branch "0.5.1"
-      hg com -m "BRN: Started branch 0.5.1"
+       hg branch "0.5.1"
+       hg com -m "BRN: Started branch 0.5.1"
 
 11. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
 
@@ -1834,6 +1762,14 @@ Then create this branch and commit this:
 
 Change Log
 ==========
+
+REL: 0.5.3
+----------
+
+Allow Python 3.8. Previous version required ``python <= 3.7`` due to an
+`issue with
+ipyparallel <https://github.com/ipython/ipyparallel/issues/396>`__. This
+has been resolved with revision 6.2.5 which is available with ``conda``.
 
 REL: 0.5.1
 ----------
