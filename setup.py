@@ -42,16 +42,21 @@ test_requires = [
     'pytest-xdist',
     'coverage',
     'flake8',
-    "ipython>=4.0",
-    "ipyparallel>=6.2.5",
-    "persist>=3.0",
-    "numpy",
-    "numexpr",
-    "uncertainties",
-    "pyfftw",
+    'ipython>=4.0',
+    'ipyparallel>=6.2.5',
+    'persist>=3.0',
+    'numpy',
+    'scipy',
+    'matplotlib',
+    'numexpr',
+    'uncertainties',
+    'pyfftw',
+    'numba',
+    'docutils',
 ]
 
 extras_require = dict(
+    test=test_requires,
     doc=['sphinx',
          'mock',
          'sphinx_rtd_theme',
@@ -117,6 +122,8 @@ setup(name='mmfutils',
 
           # Specify the Python versions you support here. In particular, ensure
           # that you indicate whether you support Python 2, Python 3 or both.
+          # 'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
       ],

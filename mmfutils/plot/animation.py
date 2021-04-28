@@ -5,7 +5,8 @@ import sys
 
 from pathlib import Path
 
-from matplotlib.animation import (FuncAnimation, _log, writers, rcParams)
+import matplotlib as mpl
+from matplotlib.animation import (FuncAnimation, _log, writers)
 from matplotlib import pyplot as plt
 
 encodebytes = base64.encodebytes
@@ -33,8 +34,8 @@ class MyFuncAnimation(FuncAnimation):
         """Convert the animation to an HTML5 ``<video>`` tag.
 
         This saves the animation as an h264 video, encoded in base64
-        directly into the HTML5 video tag. This respects the rc parameters
-        for the writer as well as the bitrate. This also makes use of the
+        directly into the HTML5 video tag. This respects :rc:`animation.writer`
+        and :rc:`animation.bitrate`. This also makes use of the
         ``interval`` to control the speed, and uses the ``repeat``
         parameter to decide whether to loop.
 
@@ -43,7 +44,7 @@ class MyFuncAnimation(FuncAnimation):
         embed_limit : float, optional
             Limit, in MB, of the returned animation. No animation is created
             if the limit is exceeded.
-            Defaults to `animation.embed_limit = 20.0`.
+            Defaults to :rc:`animation.embed_limit `= 20.0.
         filename : str, optional
            *(New)* If provided, save the movie in this file and keep it,
            otherwise the movie will be stored in a temporary directory
@@ -65,7 +66,7 @@ class MyFuncAnimation(FuncAnimation):
         if not hasattr(self, '_base64_video'):
             # Save embed limit, which is given in MB
             if embed_limit is None:
-                embed_limit = rcParams['animation.embed_limit']
+                embed_limit = mpl.rcParams['animation.embed_limit']
 
             # Convert from MB to bytes
             embed_limit *= 1024 * 1024
@@ -75,9 +76,9 @@ class MyFuncAnimation(FuncAnimation):
 
             # We create a writer manually so that we can get the
             # appropriate size for the tag
-            Writer = writers[rcParams['animation.writer']]
+            Writer = writers[mpl.rcParams['animation.writer']]
             writer = Writer(codec='h264',
-                            bitrate=rcParams['animation.bitrate'],
+                            bitrate=mpl.rcParams['animation.bitrate'],
                             fps=1000. / self._interval)
             if filename is None:
                 # Can't open a NamedTemporaryFile twice on Windows, so use a

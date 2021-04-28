@@ -4,10 +4,11 @@ syntax: glob
 .coverage*
 .eggs
 .ipynb_checkpoints
-.tox
+.nox
 build
 dist
 mmfutils.egg-info
+*.so
 *.egg
 */htmlcov
 *.pyc

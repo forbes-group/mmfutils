@@ -36,7 +36,7 @@ class TestRasterize(object):
             plt.savefig(f.name)
             size_rasterized = os.stat(f.name).st_size
 
-        assert size_rasterized < size_unrasterized/25
+        assert size_rasterized < size_unrasterized/20
 
 
 class TestContour(object):
