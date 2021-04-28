@@ -8,9 +8,9 @@ without having to introduce an additional dependence.
 **Documentation:**
   http://mmfutils.readthedocs.org
 **Source:**
-  https://bitbucket.org/mforbes/mmfutils
+  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
 **Issues:**
-  https://bitbucket.org/mforbes/mmfutils/issues
+  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
 
 """
 import sys

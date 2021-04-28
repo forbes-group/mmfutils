@@ -40,11 +40,6 @@
 # [![Documentation Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
 # [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils) 
 
-# + [markdown] {"toc": "true"}
-# <h1>Table of Contents<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#MMF-Utils" data-toc-modified-id="MMF-Utils-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>MMF Utils</a></span><ul class="toc-item"><li><span><a href="#Installing" data-toc-modified-id="Installing-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Installing</a></span></li></ul></li><li><span><a href="#Usage" data-toc-modified-id="Usage-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Usage</a></span><ul class="toc-item"><li><span><a href="#Containers" data-toc-modified-id="Containers-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Containers</a></span><ul class="toc-item"><li><span><a href="#ObjectBase-and-Object" data-toc-modified-id="ObjectBase-and-Object-2.1.1"><span class="toc-item-num">2.1.1&nbsp;&nbsp;</span>ObjectBase and Object</a></span><ul class="toc-item"><li><span><a href="#Object-Example" data-toc-modified-id="Object-Example-2.1.1.1"><span class="toc-item-num">2.1.1.1&nbsp;&nbsp;</span>Object Example</a></span></li></ul></li><li><span><a href="#Container" data-toc-modified-id="Container-2.1.2"><span class="toc-item-num">2.1.2&nbsp;&nbsp;</span>Container</a></span><ul class="toc-item"><li><span><a href="#Container-Examples" data-toc-modified-id="Container-Examples-2.1.2.1"><span class="toc-item-num">2.1.2.1&nbsp;&nbsp;</span>Container Examples</a></span></li></ul></li></ul></li><li><span><a href="#Contexts" data-toc-modified-id="Contexts-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Contexts</a></span></li><li><span><a href="#Interfaces" data-toc-modified-id="Interfaces-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Interfaces</a></span><ul class="toc-item"><li><span><a href="#Interface-Documentation" data-toc-modified-id="Interface-Documentation-2.3.1"><span class="toc-item-num">2.3.1&nbsp;&nbsp;</span>Interface Documentation</a></span></li></ul></li><li><span><a href="#Parallel" data-toc-modified-id="Parallel-2.4"><span class="toc-item-num">2.4&nbsp;&nbsp;</span>Parallel</a></span></li><li><span><a href="#Performance" data-toc-modified-id="Performance-2.5"><span class="toc-item-num">2.5&nbsp;&nbsp;</span>Performance</a></span></li><li><span><a href="#Plotting" data-toc-modified-id="Plotting-2.6"><span class="toc-item-num">2.6&nbsp;&nbsp;</span>Plotting</a></span><ul class="toc-item"><li><span><a href="#Fast-Filled-Contour-Plots" data-toc-modified-id="Fast-Filled-Contour-Plots-2.6.1"><span class="toc-item-num">2.6.1&nbsp;&nbsp;</span>Fast Filled Contour Plots</a></span></li></ul></li><li><span><a href="#Angular-Variables" data-toc-modified-id="Angular-Variables-2.7"><span class="toc-item-num">2.7&nbsp;&nbsp;</span>Angular Variables</a></span></li><li><span><a href="#Debugging" data-toc-modified-id="Debugging-2.8"><span class="toc-item-num">2.8&nbsp;&nbsp;</span>Debugging</a></span></li><li><span><a href="#Mathematics" data-toc-modified-id="Mathematics-2.9"><span class="toc-item-num">2.9&nbsp;&nbsp;</span>Mathematics</a></span></li></ul></li><li><span><a href="#Developer-Instructions" data-toc-modified-id="Developer-Instructions-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Developer Instructions</a></span><ul class="toc-item"><li><span><a href="#Releases" data-toc-modified-id="Releases-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Releases</a></span></li></ul></li><li><span><a href="#Change-Log" data-toc-modified-id="Change-Log-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Change Log</a></span><ul class="toc-item"><li><span><a href="#REL:-0.5.4" data-toc-modified-id="REL:-0.5.4-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>REL: 0.5.4</a></span></li><li><span><a href="#REL:-0.5.3" data-toc-modified-id="REL:-0.5.3-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>REL: 0.5.3</a></span></li><li><span><a href="#REL:-0.5.1" data-toc-modified-id="REL:-0.5.1-4.3"><span class="toc-item-num">4.3&nbsp;&nbsp;</span>REL: 0.5.1</a></span></li><li><span><a href="#REL:-0.5.0" data-toc-modified-id="REL:-0.5.0-4.4"><span class="toc-item-num">4.4&nbsp;&nbsp;</span>REL: 0.5.0</a></span></li><li><span><a href="#REL:-0.4.13" data-toc-modified-id="REL:-0.4.13-4.5"><span class="toc-item-num">4.5&nbsp;&nbsp;</span>REL: 0.4.13</a></span></li><li><span><a href="#REL:-0.4.10" data-toc-modified-id="REL:-0.4.10-4.6"><span class="toc-item-num">4.6&nbsp;&nbsp;</span>REL: 0.4.10</a></span></li><li><span><a href="#REL:-0.4.9" data-toc-modified-id="REL:-0.4.9-4.7"><span class="toc-item-num">4.7&nbsp;&nbsp;</span>REL: 0.4.9</a></span></li><li><span><a href="#REL:-0.4.7" data-toc-modified-id="REL:-0.4.7-4.8"><span class="toc-item-num">4.8&nbsp;&nbsp;</span>REL: 0.4.7</a></span></li></ul></li></ul></div>
-# -
-
 # ## Installing
 
 # This package can be installed from [PyPI](https://pypi.org/project/mmfutils/):
@@ -444,172 +439,12 @@ print(f(2.0), x, y, z)
 
 # # Developer Instructions
 
-# If you are a developer of this package, there are a few things to be aware of.
-#
-# 1. If you modify the notebooks in ``docs/notebooks`` then you may need to regenerate some of the ``.rst`` files and commit them so they appear on bitbucket.  This is done automatically by the ``pre-commit`` hook in ``.hgrc`` if you include this in your ``.hg/hgrc`` file with a line like:
-#
-#     ```
-#     # # %include ../.hgrc
-#     ```
-#
-# **Security Warning:** if you do this, be sure to inspect the ``.hgrc`` file carefully to make sure that no one inserts malicious code.
-#
-# This runs the following code:
-
-# !cd $ROOTDIR; jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
-
-# We also run a comprehensive set of tests, and the pre-commit hook will fail if any of these do not pass, or if we don't have complete code coverage.  We run these tests in a conda environment that can be made using the makefile:
-#
-# ```bash
-# make test   # nox
-# ```
-#
-# To run these manually in a specific environment, you could do:
-#
-# ```bash
-# cond activate _mmfutils
-# pytest
-# ```
-
-# Here is an example:
-
-# !cd $ROOTDIR; conda activate _mmfutils; pytest -n4
-
 # Complete code coverage information is provided in ``build/_coverage/index.html``.
 
 from IPython.display import HTML
 with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
     coverage = f.read()
 HTML(coverage)
-
-# ## Releases
-
-# We try to keep the repository clean with the following properties:
-#
-# 1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the latest stable release.
-# 2. Each release has its own named branch so that e.g. `hg up 0.5.0` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
-#
-# To do this, we advocate the following proceedure.
-#
-# 1. **Update to Correct Branch**: Make sure this is the correct development branch, not the default branch by explicitly updating:
-#
-#     ```bash
-#     hg up <version>
-#     ```
-#    
-#     (Compare with `hg up default` which should take you to the default branch instead.)
-# 2. **Work**: Do your work, committing as required with messages as shown in the repository with the following keys:
-#
-#     * `DOC`: Documentation changes.
-#     * `API`: Changes to the exising API.  This could break old code.
-#     * `EHN`: Enhancement or new functionality. Without an `API` tag, these should not break existing codes.
-#     * `BLD`: Build system changes (`setup.py`, `requirements.txt` etc.)
-#     * `TST`: Update tests, code coverage, etc.
-#     * `BUG`: Address an issue as filed on the issue tracker.
-#     * `BRN`: Start a new branch (see below).
-#     * `REL`: Release (see below).
-#     * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is useful when testing things like the rendering of documentation on bitbucket etc. where you need to push an incomplete set of files.  Please collapse and strip these eventually when you get things working.
-#     * `CHK`: Checkpoints.  These should not be pushed to bitbucket!
-# 3. **Tests**: Make sure the tests pass.  Comprehensive tests should be run with `nox`:
-#    
-#     ```bash
-#     nox
-#     ```
-#    
-#     Quick tests while developing can be run with the `_mmfutils` environment:
-#    
-#     ```bash
-#     conda env update --file environment.yml
-#     conda activate _mmfutils; pytest
-#     ```
-#
-#     (`hg com` will automatically run tests after pip-installing everything in `setup.py` if you have linked the `.hgrc` file as discussed above, but the use of independent environments is preferred now.)
-# 4. **Update Docs**: Update the documentation if needed.  To generate new documentation run:
-#
-#     ```bash
-#     cd doc
-#     sphinx-apidoc -eTE ../mmfutils -o source
-#     rm source/mmfutils.*tests*
-#     ```
-#    
-#     * Include any changes at the bottom of this file (`doc/README.ipynb`).
-#     * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
-#    
-#     Edit any new files created (titles often need to be added) and check that this looks good with
-#   
-#     ```bash
-#     make html
-#     open build/html/index.html
-#     ```
-#      
-#     Look especially for errors of the type "WARNING: document isn't included in any toctree".  This indicates that you probably need to add the module to an upper level `.. toctree::`.  Also look for "WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated".  This indicates you need to add a title to a new file.  For example, when I added the `mmf.math.optimize` module, I needed to update the following:
-#   
-# [comment]: # (The rst generate is mucked up by this indented code block...)
-# ```rst
-#    .. doc/source/mmfutils.rst
-#    mmfutils
-#    ========
-#    
-#    .. toctree::
-#        ...
-#        mmfutils.optimize
-#        ...
-# ```   
-# ```rst
-#    .. doc/source/mmfutils.optimize.rst
-#    mmfutils.optimize
-#    =================
-#        
-#    .. automodule:: mmfutils.optimize
-#        :members:
-#        :undoc-members:
-#        :show-inheritance:
-# ```
-#   
-# 5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
-# 6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
-#
-#     ```bash
-#     hg com -m "REL: <version>"
-#     hg push -b .
-#    ```
-# 7. **Pull Request**: Create a pull request on the development fork from your branch to `default` on the release project bitbucket. Review it, fix anything, then accept the PR and close the branch.
-# 8. **Publish on PyPI**: Publish the released version on [PyPI](https://pypi.org/project/mmfutils/) using [twine](https://pypi.org/project/twine/)
-#
-#     ```bash
-#     # Build the package.
-#     python setup.py sdist bdist_wheel
-#     
-#     # Test that everything looks right:
-#     twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-#    
-#     # Upload to PyPI
-#     twine upload dist/*
-#     ```
-#
-# 9. **Build Conda Package**: This will run all the tests in a fresh environment as specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`, `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to be built is specified in `conda_build_config.yaml`.
-#
-#     ```bash
-#     conda build .
-#     conda build . --output   # Use this below
-#     anaconda login
-#     anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
-#     ```
-#    
-# 10. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
-#
-#     ```python
-#     __version__ = '0.5.1dev'
-#     ```
-#        
-#     Then create this branch and commit this:
-#   
-#     ```bash
-#     hg branch "0.5.1"
-#     hg com -m "BRN: Started branch 0.5.1"
-#     ```
-#        
-# 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
 # # Change Log
 
@@ -693,5 +528,3 @@ HTML(coverage)
 # * Resolve issue #10: PYFFTW wrappers now support negative `axis` and `axes` arguments.
 # * Address issue #11: Preliminary version of some DVR basis classes.
 # * Resolve issue #12: Added solvers with [`uncertanties`](https://pythonhosted.org/uncertainties/) support.
-
-
