@@ -324,7 +324,7 @@ Table of Contents
 
    <li>
 
-4.1  REL: 0.5.3
+4.1  REL: 0.5.4
 
 .. raw:: html
 
@@ -334,7 +334,7 @@ Table of Contents
 
    <li>
 
-4.2  REL: 0.5.1
+4.2  REL: 0.5.3
 
 .. raw:: html
 
@@ -344,7 +344,7 @@ Table of Contents
 
    <li>
 
-4.3  REL: 0.5.0
+4.3  REL: 0.5.1
 
 .. raw:: html
 
@@ -354,7 +354,7 @@ Table of Contents
 
    <li>
 
-4.4  REL: 0.4.13
+4.4  REL: 0.5.0
 
 .. raw:: html
 
@@ -364,7 +364,7 @@ Table of Contents
 
    <li>
 
-4.5  REL: 0.4.10
+4.5  REL: 0.4.13
 
 .. raw:: html
 
@@ -374,7 +374,7 @@ Table of Contents
 
    <li>
 
-4.6  REL: 0.4.9
+4.6  REL: 0.4.10
 
 .. raw:: html
 
@@ -384,7 +384,17 @@ Table of Contents
 
    <li>
 
-4.7  REL: 0.4.7
+4.7  REL: 0.4.9
+
+.. raw:: html
+
+   </li>
+
+.. raw:: html
+
+   <li>
+
+4.8  REL: 0.4.7
 
 .. raw:: html
 
@@ -1141,21 +1151,21 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 .. parsed-literal::
 
-    CPU times: user 9.34 ms, sys: 2.07 ms, total: 11.4 ms
-    Wall time: 10.8 ms
-    CPU times: user 35.3 ms, sys: 933 µs, total: 36.2 ms
-    Wall time: 36.3 ms
-    CPU times: user 138 ms, sys: 9 ms, total: 147 ms
-    Wall time: 147 ms
-    CPU times: user 4.81 ms, sys: 365 µs, total: 5.18 ms
-    Wall time: 5.1 ms
+    CPU times: user 9.48 ms, sys: 3.72 ms, total: 13.2 ms
+    Wall time: 16.5 ms
+    CPU times: user 38.2 ms, sys: 2.97 ms, total: 41.2 ms
+    Wall time: 45 ms
+    CPU times: user 126 ms, sys: 5.86 ms, total: 132 ms
+    Wall time: 133 ms
+    CPU times: user 4.43 ms, sys: 209 µs, total: 4.64 ms
+    Wall time: 4.65 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x12b57b4f0>
+    <matplotlib.collections.QuadMesh at 0x124ec2130>
 
 
 
@@ -1264,14 +1274,11 @@ This runs the following code:
 
 .. parsed-literal::
 
-    Traceback (most recent call last):
-      File "/data/apps/conda/envs/_mmfutils/bin/jupyter", line 8, in <module>
-        sys.exit(main())
-      File "/data/apps/conda/envs/_mmfutils/lib/python3.8/site-packages/jupyter_core/command.py", line 285, in main
-        command = _jupyter_abspath(subcommand)
-      File "/data/apps/conda/envs/_mmfutils/lib/python3.8/site-packages/jupyter_core/command.py", line 124, in _jupyter_abspath
-        raise Exception(
-    Exception: Jupyter command `jupyter-nbconvert` not found.
+    [NbConvertApp] Converting notebook doc/README.ipynb to rst
+    [NbConvertApp] Support files will be in README_files/
+    [NbConvertApp] Making directory doc/README_files
+    [NbConvertApp] Making directory doc/README_files
+    [NbConvertApp] Writing 52142 bytes to doc/README.rst
 
 
 We also run a comprehensive set of tests, and the pre-commit hook will
@@ -1281,10 +1288,9 @@ using the makefile:
 
 .. code:: bash
 
-    make envs
-    make test   # conda run -n _mmfutils pytest
+    make test   # nox
 
-To run these manually you could do:
+To run these manually in a specific environment, you could do:
 
 .. code:: bash
 
@@ -1317,6 +1323,7 @@ Complete code coverage information is provided in
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Coverage report</title>
+        <link rel="icon" sizes="32x32" href="favicon_32.png">
         <link rel="stylesheet" href="style.css" type="text/css">
         <script type="text/javascript" src="jquery.min.js"></script>
         <script type="text/javascript" src="jquery.ba-throttle-debounce.min.js"></script>
@@ -1366,10 +1373,10 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>2172</td>
-                    <td>210</td>
+                    <td>2209</td>
+                    <td>213</td>
                     <td>85</td>
-                    <td class="right" data-ratio="1962 2172">90%</td>
+                    <td class="right" data-ratio="1996 2209">90%</td>
                 </tr>
             </tfoot>
             <tbody>
@@ -1389,24 +1396,17 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_contexts_py.html">mmfutils/contexts.py</a></td>
-                    <td>188</td>
+                    <td>199</td>
                     <td>25</td>
                     <td>0</td>
-                    <td class="right" data-ratio="163 188">87%</td>
-                </tr>
-                <tr class="file">
-                    <td class="name left"><a href="mmfutils_data_py.html">mmfutils/data.py</a></td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="0 0">100%</td>
+                    <td class="right" data-ratio="174 199">87%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_debugging_py.html">mmfutils/debugging.py</a></td>
-                    <td>47</td>
+                    <td>49</td>
                     <td>0</td>
                     <td>3</td>
-                    <td class="right" data-ratio="47 47">100%</td>
+                    <td class="right" data-ratio="49 49">100%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_interface_py.html">mmfutils/interface.py</a></td>
@@ -1431,17 +1431,17 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
-                    <td>423</td>
+                    <td>431</td>
                     <td>52</td>
                     <td>0</td>
-                    <td class="right" data-ratio="371 423">88%</td>
+                    <td class="right" data-ratio="379 431">88%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_interfaces_py.html">mmfutils/math/bases/interfaces.py</a></td>
-                    <td>35</td>
+                    <td>37</td>
                     <td>0</td>
                     <td>0</td>
-                    <td class="right" data-ratio="35 35">100%</td>
+                    <td class="right" data-ratio="37 37">100%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_bases_utils_py.html">mmfutils/math/bases/utils.py</a></td>
@@ -1466,10 +1466,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_integrate___init___py.html">mmfutils/math/integrate/__init__.py</a></td>
-                    <td>214</td>
-                    <td>11</td>
+                    <td>212</td>
+                    <td>12</td>
                     <td>16</td>
-                    <td class="right" data-ratio="203 214">95%</td>
+                    <td class="right" data-ratio="200 212">94%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_math_linalg_py.html">mmfutils/math/linalg.py</a></td>
@@ -1501,10 +1501,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_parallel_py.html">mmfutils/parallel.py</a></td>
-                    <td>124</td>
+                    <td>128</td>
                     <td>5</td>
                     <td>8</td>
-                    <td class="right" data-ratio="119 124">96%</td>
+                    <td class="right" data-ratio="123 128">96%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance___init___py.html">mmfutils/performance/__init__.py</a></td>
@@ -1522,10 +1522,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_fft_py.html">mmfutils/performance/fft.py</a></td>
-                    <td>88</td>
+                    <td>92</td>
                     <td>3</td>
                     <td>6</td>
-                    <td class="right" data-ratio="85 88">97%</td>
+                    <td class="right" data-ratio="89 92">97%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_performance_numexpr_py.html">mmfutils/performance/numexpr.py</a></td>
@@ -1550,10 +1550,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_animation_py.html">mmfutils/plot/animation.py</a></td>
-                    <td>81</td>
-                    <td>17</td>
+                    <td>82</td>
+                    <td>19</td>
                     <td>0</td>
-                    <td class="right" data-ratio="64 81">79%</td>
+                    <td class="right" data-ratio="63 82">77%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_cmaps_py.html">mmfutils/plot/cmaps.py</a></td>
@@ -1564,10 +1564,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_plot_rasterize_py.html">mmfutils/plot/rasterize.py</a></td>
-                    <td>28</td>
+                    <td>29</td>
                     <td>1</td>
                     <td>0</td>
-                    <td class="right" data-ratio="27 28">96%</td>
+                    <td class="right" data-ratio="28 29">97%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve___init___py.html">mmfutils/solve/__init__.py</a></td>
@@ -1578,10 +1578,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_solve_broyden_py.html">mmfutils/solve/broyden.py</a></td>
-                    <td>313</td>
+                    <td>319</td>
                     <td>64</td>
                     <td>0</td>
-                    <td class="right" data-ratio="249 313">80%</td>
+                    <td class="right" data-ratio="255 319">80%</td>
                 </tr>
                 <tr class="file">
                     <td class="name left"><a href="mmfutils_testing_py.html">mmfutils/testing.py</a></td>
@@ -1599,8 +1599,8 @@ Complete code coverage information is provided in
     <div id="footer">
         <div class="content">
             <p>
-                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.0</a>,
-                created at 2020-03-16 04:03
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.5</a>,
+                created at 2021-04-28 01:48 -0700
             </p>
         </div>
     </div>
@@ -1628,65 +1628,81 @@ To do this, we advocate the following proceedure.
 1. **Update to Correct Branch**: Make sure this is the correct
    development branch, not the default branch by explicitly updating:
 
-``bash    hg up <version>``
+   .. code:: bash
 
-(Compare with ``hg up default`` which should take you to the default
-branch instead.) 2. **Work**: Do your work, committing as required with
-messages as shown in the repository with the following keys:
+       hg up <version>
 
--  ``DOC``: Documentation changes.
--  ``API``: Changes to the exising API. This could break old code.
--  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
-   these should not break existing codes.
--  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
-   etc.)
--  ``TST``: Update tests, code coverage, etc.
--  ``BUG``: Address an issue as filed on the issue tracker.
--  ``BRN``: Start a new branch (see below).
--  ``REL``: Release (see below).
--  ``WIP``: Work in progress. Do not depend on these! They will be
-   stripped. This is useful when testing things like the rendering of
-   documentation on bitbucket etc. where you need to push an incomplete
-   set of files. Please collapse and strip these eventually when you get
-   things working.
--  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
+   (Compare with ``hg up default`` which should take you to the default
+   branch instead.)
+2. **Work**: Do your work, committing as required with messages as shown
+   in the repository with the following keys:
 
-3. **Tests**: Make sure the tests pass.
+   -  ``DOC``: Documentation changes.
+   -  ``API``: Changes to the exising API. This could break old code.
+   -  ``EHN``: Enhancement or new functionality. Without an ``API`` tag,
+      these should not break existing codes.
+   -  ``BLD``: Build system changes (``setup.py``, ``requirements.txt``
+      etc.)
+   -  ``TST``: Update tests, code coverage, etc.
+   -  ``BUG``: Address an issue as filed on the issue tracker.
+   -  ``BRN``: Start a new branch (see below).
+   -  ``REL``: Release (see below).
+   -  ``WIP``: Work in progress. Do not depend on these! They will be
+      stripped. This is useful when testing things like the rendering of
+      documentation on bitbucket etc. where you need to push an
+      incomplete set of files. Please collapse and strip these
+      eventually when you get things working.
+   -  ``CHK``: Checkpoints. These should not be pushed to bitbucket!
 
-``bash    conda env update --file environment.yml    conda activate _mmfutils; pytest``
+3. **Tests**: Make sure the tests pass. Comprehensive tests should be
+   run with ``nox``:
 
-(``hg com`` will automatically run tests after pip-installing everything
-in ``setup.py`` if you have linked the ``.hgrc`` file as discussed
-above, but the use of independent environments is preferred now.) 4.
-**Update Docs**: Update the documentation if needed. To generate new
-documentation run:
+   .. code:: bash
 
-``bash    cd doc    sphinx-apidoc -eTE ../mmfutils -o source    rm source/mmfutils.*tests*``
+       nox
 
--  Include any changes at the bottom of this file
-   (``doc/README.ipynb``).
--  You may need to copy new figures to ``README_files/`` if the figure
-   numbers have changed, and then ``hg add`` these while ``hg rm`` the
-   old ones.
+   Quick tests while developing can be run with the ``_mmfutils``
+   environment:
 
-Edit any new files created (titles often need to be added) and check
-that this looks good with
+   .. code:: bash
 
-::
+       conda env update --file environment.yml
+       conda activate _mmfutils; pytest
 
-     ```bash
-     make html
-     open build/html/index.html
-     ```
-     
+   (``hg com`` will automatically run tests after pip-installing
+   everything in ``setup.py`` if you have linked the ``.hgrc`` file as
+   discussed above, but the use of independent environments is preferred
+   now.)
+4. **Update Docs**: Update the documentation if needed. To generate new
+   documentation run:
 
-Look especially for errors of the type "WARNING: document isn't included
-in any toctree". This indicates that you probably need to add the module
-to an upper level ``.. toctree::``. Also look for "WARNING: toctree
-contains reference to document u'...' that doesn't have a title: no link
-will be generated". This indicates you need to add a title to a new
-file. For example, when I added the ``mmf.math.optimize`` module, I
-needed to update the following:
+   .. code:: bash
+
+       cd doc
+       sphinx-apidoc -eTE ../mmfutils -o source
+       rm source/mmfutils.*tests*
+
+   -  Include any changes at the bottom of this file
+      (``doc/README.ipynb``).
+   -  You may need to copy new figures to ``README_files/`` if the
+      figure numbers have changed, and then ``hg add`` these while
+      ``hg rm`` the old ones.
+
+   Edit any new files created (titles often need to be added) and check
+   that this looks good with
+
+   .. code:: bash
+
+       make html
+       open build/html/index.html
+
+   Look especially for errors of the type "WARNING: document isn't
+   included in any toctree". This indicates that you probably need to
+   add the module to an upper level ``.. toctree::``. Also look for
+   "WARNING: toctree contains reference to document u'...' that doesn't
+   have a title: no link will be generated". This indicates you need to
+   add a title to a new file. For example, when I added the
+   ``mmf.math.optimize`` module, I needed to update the following:
 
 .. code:: rst
 
@@ -1710,58 +1726,74 @@ needed to update the following:
            :undoc-members:
            :show-inheritance:
 
-5. **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
-   ``hg strip`` as needed to clean up the repo before you push. Branches
-   should generally be linear unless there is an exceptional reason to
-   split development.
-6. **Release**: First edit ``mmfutils/__init__.py`` to update the
-   version number by removing the ``dev`` part of the version number.
-   Commit only this change and then push only the branch you are working
-   on:
+5.  **Clean up History**: Run ``hg histedit``, ``hg rebase``, or
+    ``hg strip`` as needed to clean up the repo before you push.
+    Branches should generally be linear unless there is an exceptional
+    reason to split development.
+6.  **Release**: First edit ``mmfutils/__init__.py`` to update the
+    version number by removing the ``dev`` part of the version number.
+    Commit only this change and then push only the branch you are
+    working on:
 
-``bash    hg com -m "REL: <version>"    hg push -b .`` 7. **Pull
-Request**: Create a pull request on the development fork from your
-branch to ``default`` on the release project bitbucket. Review it, fix
-anything, then accept the PR and close the branch. 8. **Publish on
-PyPI**: Publish the released version on
-`PyPI <https://pypi.org/project/mmfutils/>`__ using
-`twine <https://pypi.org/project/twine/>`__
+    ``bash hg com -m "REL: <version>" hg push -b .``
+7.  **Pull Request**: Create a pull request on the development fork from
+    your branch to ``default`` on the release project bitbucket. Review
+    it, fix anything, then accept the PR and close the branch.
+8.  **Publish on PyPI**: Publish the released version on
+    `PyPI <https://pypi.org/project/mmfutils/>`__ using
+    `twine <https://pypi.org/project/twine/>`__
 
-\`\`\`bash # Build the package. python setup.py sdist bdist\_wheel
+    .. code:: bash
 
-# Test that everything looks right: twine upload --repository-url
-https://test.pypi.org/legacy/ dist/\*
+        # Build the package.
+        python setup.py sdist bdist_wheel
 
-# Upload to PyPI twine upload dist/\* \`\`\`
+        # Test that everything looks right:
+        twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
-9. **Build Conda Package**: This will run all the tests in a fresh
-   environment as specified by ``meta.yaml``. Make sure that the
-   dependencies in ``meta.yaml``, ``environment.yml``, and ``setup.py``
-   are consistent. Note that the list of versions to be built is
-   specified in ``conda_build_config.yaml``.
+        # Upload to PyPI
+        twine upload dist/*
 
-``bash    conda build .    conda build . --output   # Use this below    anaconda login    anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2``
+9.  **Build Conda Package**: This will run all the tests in a fresh
+    environment as specified by ``meta.yaml``. Make sure that the
+    dependencies in ``meta.yaml``, ``environment.yml``, and ``setup.py``
+    are consistent. Note that the list of versions to be built is
+    specified in ``conda_build_config.yaml``.
+
+    .. code:: bash
+
+        conda build .
+        conda build . --output   # Use this below
+        anaconda login
+        anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
 
 10. **Start new branch**: On the same development branch (not
     ``default``), increase the version number in
     ``mmfutils/__init__.py`` and add ``dev``: i.e.:
 
-    **version** = '0.5.1dev'
+    .. code:: python
 
-Then create this branch and commit this:
+        __version__ = '0.5.1dev'
 
-::
+    Then create this branch and commit this:
 
-       hg branch "0.5.1"
-       hg com -m "BRN: Started branch 0.5.1"
+    .. code:: bash
 
-11. Update `MyPI <https://bitbucket.org/mforbes/mypi>`__ index.
+        hg branch "0.5.1"
+        hg com -m "BRN: Started branch 0.5.1"
 
-12. Optional: Update any ``setup.py`` files that depend on your new
+11. Optional: Update any ``setup.py`` files that depend on your new
     features/fixes etc.
 
 Change Log
 ==========
+
+REL: 0.5.4
+----------
+
+-  Drop support for Python 3.5.
+-  Use `Nox <https://nox.thea.codes>`__ for testing (see
+   `Notes.md <../Notes.md>`__)
 
 REL: 0.5.3
 ----------
@@ -1774,22 +1806,30 @@ has been resolved with revision 6.2.5 which is available with ``conda``.
 REL: 0.5.1
 ----------
 
-API changes: \* Split ``mmfutils.containers.Object`` into ``ObjectBase``
-which is simple and ``ObjectMixin`` which provides the picking support.
-Demonstrate in docs how the pickling can be useful, but slows copying.
+API changes:
+
+-  Split ``mmfutils.containers.Object`` into ``ObjectBase`` which is
+   simple and ``ObjectMixin`` which provides the picking support.
+   Demonstrate in docs how the pickling can be useful, but slows
+   copying.
 
 REL: 0.5.0
 ----------
 
-API changes: \* Python 3 support only. \*
-``mmfutils.math.bases.interface`` renamed to
-``mmfutils.math.bases.interfaces``. \* Added default class-variable
-attribute support to e\ ``mmfutils.containers.Object``. \* Minor
-enhancements to ``mmfutils.math.bases.PeriodicBasis`` to enhance GPU
-support. \* Added ``mmfutils.math.bases.interfaces.IBasisLz`` and
-support in ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating
-frames. \* Cleanup of build environment and tests. \* Single environment
-``_mmfutils`` now used for testing and documentation.
+API changes:
+
+-  Python 3 support only.
+-  ``mmfutils.math.bases.interface`` renamed to
+   ``mmfutils.math.bases.interfaces``.
+-  Added default class-variable attribute support to
+   e\ ``mmfutils.containers.Object``.
+-  Minor enhancements to ``mmfutils.math.bases.PeriodicBasis`` to
+   enhance GPU support.
+-  Added ``mmfutils.math.bases.interfaces.IBasisLz`` and support in
+   ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating frames.
+-  Cleanup of build environment and tests.
+-  Single environment ``_mmfutils`` now used for testing and
+   documentation.
 
 REL: 0.4.13
 -----------
@@ -1803,11 +1843,13 @@ API changes:
    signal handlers are reset. (But only works in that one cell.)
 -  Added Abel transform ``integrate2`` to Cylindrical bases.
 
-Issues: \* Resolved issue #22: Masked arrays work with ``imcontourf``
-etc. \* Resolved issue #23: ``NoInterrupt`` works well except in
-notebooks due to `ipykernel issue
-#328 <https://github.com/ipython/ipykernel/issues/328>`__. \* Resolved
-issue #24: Python 3 is now fully supported and tested.
+Issues:
+
+-  Resolved issue #22: Masked arrays work with ``imcontourf`` etc.
+-  Resolved issue #23: ``NoInterrupt`` works well except in notebooks
+   due to `ipykernel issue
+   #328 <https://github.com/ipython/ipykernel/issues/328>`__.
+-  Resolved issue #24: Python 3 is now fully supported and tested.
 
 REL: 0.4.10
 -----------
@@ -1863,3 +1905,4 @@ Issues:
 -  Resolve issue #12: Added solvers with
    ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
    support.
+

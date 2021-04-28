@@ -489,50 +489,56 @@ HTML(coverage)
 #
 # 1. **Update to Correct Branch**: Make sure this is the correct development branch, not the default branch by explicitly updating:
 #
-#    ```bash
-#    hg up <version>
-#    ```
+#     ```bash
+#     hg up <version>
+#     ```
 #    
-#    (Compare with `hg up default` which should take you to the default branch instead.)
+#     (Compare with `hg up default` which should take you to the default branch instead.)
 # 2. **Work**: Do your work, committing as required with messages as shown in the repository with the following keys:
 #
-#    * `DOC`: Documentation changes.
-#    * `API`: Changes to the exising API.  This could break old code.
-#    * `EHN`: Enhancement or new functionality. Without an `API` tag, these should not break existing codes.
-#    * `BLD`: Build system changes (`setup.py`, `requirements.txt` etc.)
-#    * `TST`: Update tests, code coverage, etc.
-#    * `BUG`: Address an issue as filed on the issue tracker.
-#    * `BRN`: Start a new branch (see below).
-#    * `REL`: Release (see below).
-#    * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is useful when testing things like the rendering of documentation on bitbucket etc. where you need to push an incomplete set of files.  Please collapse and strip these eventually when you get things working.
-#    * `CHK`: Checkpoints.  These should not be pushed to bitbucket!
-# 3. **Tests**: Make sure the tests pass.
+#     * `DOC`: Documentation changes.
+#     * `API`: Changes to the exising API.  This could break old code.
+#     * `EHN`: Enhancement or new functionality. Without an `API` tag, these should not break existing codes.
+#     * `BLD`: Build system changes (`setup.py`, `requirements.txt` etc.)
+#     * `TST`: Update tests, code coverage, etc.
+#     * `BUG`: Address an issue as filed on the issue tracker.
+#     * `BRN`: Start a new branch (see below).
+#     * `REL`: Release (see below).
+#     * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is useful when testing things like the rendering of documentation on bitbucket etc. where you need to push an incomplete set of files.  Please collapse and strip these eventually when you get things working.
+#     * `CHK`: Checkpoints.  These should not be pushed to bitbucket!
+# 3. **Tests**: Make sure the tests pass.  Comprehensive tests should be run with `nox`:
 #    
-#    ```bash
-#    conda env update --file environment.yml
-#    conda activate _mmfutils; pytest
-#    ```
+#     ```bash
+#     nox
+#     ```
+#    
+#     Quick tests while developing can be run with the `_mmfutils` environment:
+#    
+#     ```bash
+#     conda env update --file environment.yml
+#     conda activate _mmfutils; pytest
+#     ```
 #
-#    (`hg com` will automatically run tests after pip-installing everything in `setup.py` if you have linked the `.hgrc` file as discussed above, but the use of independent environments is preferred now.)
+#     (`hg com` will automatically run tests after pip-installing everything in `setup.py` if you have linked the `.hgrc` file as discussed above, but the use of independent environments is preferred now.)
 # 4. **Update Docs**: Update the documentation if needed.  To generate new documentation run:
 #
-#    ```bash
-#    cd doc
-#    sphinx-apidoc -eTE ../mmfutils -o source
-#    rm source/mmfutils.*tests*
-#    ```
+#     ```bash
+#     cd doc
+#     sphinx-apidoc -eTE ../mmfutils -o source
+#     rm source/mmfutils.*tests*
+#     ```
 #    
-#    * Include any changes at the bottom of this file (`doc/README.ipynb`).
-#    * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
+#     * Include any changes at the bottom of this file (`doc/README.ipynb`).
+#     * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
 #    
-#    Edit any new files created (titles often need to be added) and check that this looks good with
+#     Edit any new files created (titles often need to be added) and check that this looks good with
 #   
-#      ```bash
-#      make html
-#      open build/html/index.html
-#      ```
+#     ```bash
+#     make html
+#     open build/html/index.html
+#     ```
 #      
-#    Look especially for errors of the type "WARNING: document isn't included in any toctree".  This indicates that you probably need to add the module to an upper level `.. toctree::`.  Also look for "WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated".  This indicates you need to add a title to a new file.  For example, when I added the `mmf.math.optimize` module, I needed to update the following:
+#     Look especially for errors of the type "WARNING: document isn't included in any toctree".  This indicates that you probably need to add the module to an upper level `.. toctree::`.  Also look for "WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated".  This indicates you need to add a title to a new file.  For example, when I added the `mmf.math.optimize` module, I needed to update the following:
 #   
 # [comment]: # (The rst generate is mucked up by this indented code block...)
 # ```rst
@@ -559,51 +565,54 @@ HTML(coverage)
 # 5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
 # 6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
 #
-#    ```bash
-#    hg com -m "REL: <version>"
-#    hg push -b .
+#     ```bash
+#     hg com -m "REL: <version>"
+#     hg push -b .
 #    ```
 # 7. **Pull Request**: Create a pull request on the development fork from your branch to `default` on the release project bitbucket. Review it, fix anything, then accept the PR and close the branch.
 # 8. **Publish on PyPI**: Publish the released version on [PyPI](https://pypi.org/project/mmfutils/) using [twine](https://pypi.org/project/twine/)
 #
-#    ```bash
-#    # Build the package.
-#    python setup.py sdist bdist_wheel
+#     ```bash
+#     # Build the package.
+#     python setup.py sdist bdist_wheel
+#     
+#     # Test that everything looks right:
+#     twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 #    
-#    # Test that everything looks right:
-#    twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-#    
-#    # Upload to PyPI
-#    twine upload dist/*
-#    ```
+#     # Upload to PyPI
+#     twine upload dist/*
+#     ```
 #
 # 9. **Build Conda Package**: This will run all the tests in a fresh environment as specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`, `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to be built is specified in `conda_build_config.yaml`.
 #
-#    ```bash
-#    conda build .
-#    conda build . --output   # Use this below
-#    anaconda login
-#    anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
-#    ```
+#     ```bash
+#     conda build .
+#     conda build . --output   # Use this below
+#     anaconda login
+#     anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
+#     ```
 #    
 # 10. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
 #
-#        __version__ = '0.5.1dev'
+#     ```python
+#     __version__ = '0.5.1dev'
+#     ```
 #        
-#   Then create this branch and commit this:
+#     Then create this branch and commit this:
 #   
-#        hg branch "0.5.1"
-#        hg com -m "BRN: Started branch 0.5.1"
-# 11. Update [MyPI](https://bitbucket.org/mforbes/mypi) index.
-#
-# 12. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
+#     ```bash
+#     hg branch "0.5.1"
+#     hg com -m "BRN: Started branch 0.5.1"
+#     ```
+#        
+# 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
 # # Change Log
 
 # ## REL: 0.5.4
 
 # * Drop support for Python 3.5.
-# * Use [Nox]() for testing (see [Notes.md](../Notes.md))
+# * Use [Nox](https://nox.thea.codes) for testing (see [Notes.md](../Notes.md))
 
 # ## REL: 0.5.3
 
@@ -613,11 +622,13 @@ HTML(coverage)
 # ## REL: 0.5.1
 
 # API changes:
+#
 # * Split `mmfutils.containers.Object` into `ObjectBase` which is simple and `ObjectMixin` which provides the picking support.  Demonstrate in docs how the pickling can be useful, but slows copying.
 
 # ## REL: 0.5.0
 
 # API changes:
+#
 # * Python 3 support only.
 # * `mmfutils.math.bases.interface` renamed to `mmfutils.math.bases.interfaces`.
 # * Added default class-variable attribute support to e`mmfutils.containers.Object`.
@@ -635,6 +646,7 @@ HTML(coverage)
 # * Added Abel transform `integrate2` to Cylindrical bases.
 #
 # Issues:
+#
 # * Resolved issue #22: Masked arrays work with `imcontourf` etc.
 # * Resolved issue #23: `NoInterrupt` works well except in notebooks due to [ipykernel issue #328](https://github.com/ipython/ipykernel/issues/328).
 # * Resolved issue #24: Python 3 is now fully supported and tested.
@@ -677,3 +689,5 @@ HTML(coverage)
 # * Resolve issue #10: PYFFTW wrappers now support negative `axis` and `axes` arguments.
 # * Address issue #11: Preliminary version of some DVR basis classes.
 # * Resolve issue #12: Added solvers with [`uncertanties`](https://pythonhosted.org/uncertainties/) support.
+
+

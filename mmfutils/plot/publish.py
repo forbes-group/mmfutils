@@ -22,11 +22,12 @@ import matplotlib.colors
 import matplotlib.pyplot as plt
 
 from mmfutils.containers import Object
+
 # import mmf.utils.mac
 
 del scipy
 
-__all__ = ['Paper', 'Figure']
+__all__ = ["Paper", "Figure"]
 
 _FINFO = np.finfo(float)
 _EPS = _FINFO.eps
@@ -81,20 +82,21 @@ class Paper(object):
     True
     >>> shutil.rmtree(paper.figdir)
     """
+
     figdir = "./_build/figures/{style:s}"
-    style = 'arXiv'
+    style = "arXiv"
     final = True
     save = True
 
     def _fig_template(self):
         r"""Sample figure.  Use this template as a model."""
         fig = self.figure(
-            num=1,                # If you want to redraw in the same window
-            width='columnwidth',  # For two-column documents, vs. 'textwidth'
+            num=1,  # If you want to redraw in the same window
+            width="columnwidth",  # For two-column documents, vs. 'textwidth'
         )
         x = np.linspace(-1, 1, 100)
-        y = np.sin(4*np.pi*x)
-        plt.plot(x, y, '-')
+        y = np.sin(4 * np.pi * x)
+        plt.plot(x, y, "-")
         plt.xlabel("$x$")
         plt.ylabel("$y$")
         return fig
@@ -104,7 +106,7 @@ class Paper(object):
 
         Additional kw arguments are passed to :py:class:`LaTeXPlotProperties`.
         """
-        for _attr in ['final', 'save', 'style', 'figdir']:
+        for _attr in ["final", "save", "style", "figdir"]:
             setattr(self, _attr, kw.pop(_attr, getattr(self, _attr)))
         self.plot_properties = LaTeXPlotProperties(style=self.style, **kw)
 
@@ -117,11 +119,9 @@ class Paper(object):
 
             filename = fig.filename
             if filename is None:
-                if _meth_name.startswith('fig_'):
+                if _meth_name.startswith("fig_"):
                     _meth_name = _meth_name[4:]
-                filename = (_meth_name
-                            + (("_%idpi" % (dpi,)) if dpi else "")
-                            + ".pdf")
+                filename = _meth_name + (("_%idpi" % (dpi,)) if dpi else "") + ".pdf"
             filename = os.path.join(dir, filename)
             fig.savefig(filename, dpi=dpi, **kw)
 
@@ -146,10 +146,12 @@ class Paper(object):
         r"""Draw (and save) all figures."""
         # Close all plots so that the figures can be opened at the appropriate
         # size.
-        plt.close('all')
-        for meth in [_meth
-                     for _name, _meth in inspect.getmembers(self)
-                     if _name.startswith('fig_') and inspect.ismethod(_meth)]:
+        plt.close("all")
+        for meth in [
+            _meth
+            for _name, _meth in inspect.getmembers(self)
+            if _name.startswith("fig_") and inspect.ismethod(_meth)
+        ]:
             self.draw(meth)
 
     def figure(self, num=None, **kw):
@@ -165,22 +167,18 @@ class Defaults(object):
     :py:class:`Figure` instances are created.)
     """
 
-    rc = {'axes': dict(linewidth=0.5,
-                       edgecolor='grey',
-                       grid=True,
-                       axisbelow=True),
-          'grid': dict(ls='-',
-                       lw=1.0,
-                       c='WhiteSmoke'),
-          'ytick': dict(direction='out'),
-          'xtick': dict(direction='out'),
-          'xtick.major': dict(size=2),
-          'xtick.minor': dict(size=1),
-          'ytick.major': dict(size=2),
-          'ytick.minor': dict(size=1),
-          # 'xtick': dict(color='k'),
-          # 'ytick': dict(color='k'),
-          }
+    rc = {
+        "axes": dict(linewidth=0.5, edgecolor="grey", grid=True, axisbelow=True),
+        "grid": dict(ls="-", lw=1.0, c="WhiteSmoke"),
+        "ytick": dict(direction="out"),
+        "xtick": dict(direction="out"),
+        "xtick.major": dict(size=2),
+        "xtick.minor": dict(size=1),
+        "ytick.major": dict(size=2),
+        "ytick.minor": dict(size=1),
+        # 'xtick': dict(color='k'),
+        # 'ytick': dict(color='k'),
+    }
 
     @classmethod
     def set_rc(cls, **kw):
@@ -205,11 +203,11 @@ class LaTeXPlotProperties(Object):
     .. note:: We assume that the document is typeset using the
        Computer Modern fonts.
     """
-    textwidth_pt = 332.89723        # From LaTeX \showthe\textwidth
-    textheight_pt = 332.89723       # From LaTeX \showthe\textheight
-    columnwidth_pt = 332.89723      # From LaTeX \showthe\columnwidth
-    baselineskip_pt = 12.0          # From LaTeX \showthe\baselineskip
-    tick_fontsize = 'footnotesize'  # Ticks etc. will be typeset in this font
+    textwidth_pt = 332.89723  # From LaTeX \showthe\textwidth
+    textheight_pt = 332.89723  # From LaTeX \showthe\textheight
+    columnwidth_pt = 332.89723  # From LaTeX \showthe\columnwidth
+    baselineskip_pt = 12.0  # From LaTeX \showthe\baselineskip
+    tick_fontsize = "footnotesize"  # Ticks etc. will be typeset in this font
 
     usetex = True
     # If `True`, then LaTeX will be used to typeset labels
@@ -220,27 +218,34 @@ class LaTeXPlotProperties(Object):
     # As of matplotlib version 1.0.1, psfrag replacements do not
     # work, so the default is now to use LaTeX.
 
-    style = None                    # Pick a style.  One of 'aps', or 'arXiv'
-    grid = True                     # Draw gridlines.  Turn this off for PRC
+    style = None  # Pick a style.  One of 'aps', or 'arXiv'
+    grid = True  # Draw gridlines.  Turn this off for PRC
 
     # The following are "constants" that you should typically not
     # have to adjust unless you use a different font package.
     font_info = {
-        'times': ('ptm', r'\usepackage{mathptm}'),
-        'euler': ('zeur',
-                  r'\usepackage[sc, osf]{mathpazo}' +
-                  r'\usepackage[euler-digits, small]{eulervm}')}
-    font = {'family': 'serif',
-            'serif': ['computer modern roman'],
-            'sans-serif': ['computer modern sans serif'],
-            'monospace': ['computer modern typewriter']}
-    font = {'family': 'serif',
-            'serif': ['euler'],
-            'sans-serif': ['bera sans serif'],
-            'monospace': ['computer modern typewriter']}
+        "times": ("ptm", r"\usepackage{mathptm}"),
+        "euler": (
+            "zeur",
+            r"\usepackage[sc, osf]{mathpazo}"
+            + r"\usepackage[euler-digits, small]{eulervm}",
+        ),
+    }
+    font = {
+        "family": "serif",
+        "serif": ["computer modern roman"],
+        "sans-serif": ["computer modern sans serif"],
+        "monospace": ["computer modern typewriter"],
+    }
+    font = {
+        "family": "serif",
+        "serif": ["euler"],
+        "sans-serif": ["bera sans serif"],
+        "monospace": ["computer modern typewriter"],
+    }
 
-    latex_preamble = [r"\usepackage{mmfmath}\usepackage{amsmath}"]
-    latex_preamble = [r"\usepackage{amsmath}"]
+    latex_preamble = r"\usepackage{mmfmath}\usepackage{amsmath}"
+    latex_preamble = r"\usepackage{amsmath}"
     # List of strings to add to LaTeX preamble.  Add any
     # ``\usepackage{}`` commands here.
     #
@@ -248,15 +253,15 @@ class LaTeXPlotProperties(Object):
     #           escaping of characters.  Thus use something like the
     #           default value: `[r"\usepackage{amsmath}"]`"""),
 
-    latex_preview = True  # If `True`, use LaTeX preview package
-    golden_mean = (np.sqrt(5) - 1)/2
+    golden_mean = (np.sqrt(5) - 1) / 2
     font_size_pt = 10
-    font_factors = {            # Font size reduction factors for latex fonts.
-        'small': 9/10,
-        'footnotesize': 8/10}
+    font_factors = {  # Font size reduction factors for latex fonts.
+        "small": 9 / 10,
+        "footnotesize": 8 / 10,
+    }
 
     # Some units.  These can appear in expressions.
-    inches_per_pt = 1.0/72.27
+    inches_per_pt = 1.0 / 72.27
     inches = 1.0
     pt = inches_per_pt
 
@@ -265,64 +270,72 @@ class LaTeXPlotProperties(Object):
         Object.__init__(self)
 
     def init(self):
-        self.textwidth = self.textwidth_pt*self.inches_per_pt
-        self.textheight = self.textheight_pt*self.inches_per_pt
-        self.columnwidth = self.columnwidth_pt*self.inches_per_pt
-        self.baselineskip = self.baselineskip_pt*self.inches_per_pt
-        self.tick_font = self.font_size_pt*self.font_factors[self.tick_fontsize]
+        self.textwidth = self.textwidth_pt * self.inches_per_pt
+        self.textheight = self.textheight_pt * self.inches_per_pt
+        self.columnwidth = self.columnwidth_pt * self.inches_per_pt
+        self.baselineskip = self.baselineskip_pt * self.inches_per_pt
+        self.tick_font = self.font_size_pt * self.font_factors[self.tick_fontsize]
 
     def initialize_matplotlib(self):
         r""":class:`Figure` calls this."""
-        if 'aps' == self.style:
+        if "aps" == self.style:
             # For APS journals: use times and no smallcaps!
-            self.font = {'family': 'serif',
-                         'serif': ['times'],
-                         'sans-serif': ['computer modern sans serif'],
-                         'monospace': ['computer modern typewriter']}
-            self.latex_preamble.extend([
-                r"\usepackage{amsmath}",
-                r"\usepackage{siunitx}",
-                r"\let\textsc\MakeUppercase"])
+            self.font = {
+                "family": "serif",
+                "serif": ["times"],
+                "sans-serif": ["computer modern sans serif"],
+                "monospace": ["computer modern typewriter"],
+            }
+            self.latex_preamble = (
+                self.latex_preamble
+                + r"\usepackage{amsmath}"
+                + r"\usepackage{siunitx}"
+                + r"\let\textsc\MakeUppercase"
+            )
             self.textwidth_pt = 510.0
             self.textheight_pt = 672.0
             self.columnwidth_pt = 246.0
             self.font_size_pt = 10.0
             self.baselineskip_pt = 12.0
 
-        elif 'arXiv' == self.style:
+        elif "arXiv" == self.style:
             # My style for the arXiv.  Use Palatino and Euler.
-            self.font = {'family': 'serif',
-                         'serif': ['euler'],
-                         'sans-serif': ['computer modern sans serif'],
-                         'monospace': ['computer modern typewriter']}
-            self.latex_preamble.extend(
-                [r"\usepackage{amsmath}",
-                 r"\usepackage{siunitx}",
-                 r"\usepackage[sc,osf]{mathpazo}",
-                 r"\usepackage[euler-digits,small]{eulervm}",
-                 r"\sisetup{mode=math, math-rm=\usefont{U}{zeur}{m}{n}{}"
-                 + r"\selectfont}",
-                 ])
+            self.font = {
+                "family": "serif",
+                "serif": ["euler"],
+                "sans-serif": ["computer modern sans serif"],
+                "monospace": ["computer modern typewriter"],
+            }
+            self.latex_preamble = (
+                self.latex_preamble
+                + r"\usepackage{amsmath}"
+                + r"\usepackage{siunitx}"
+                + r"\usepackage[sc,osf]{mathpazo}"
+                + r"\usepackage[euler-digits,small]{eulervm}"
+                + r"\sisetup{mode=math, math-rm=\usefont{U}{zeur}{m}{n}{}"
+                + r"\selectfont}"
+            )
             self.textwidth_pt = 510.0
             self.textheight_pt = 672.0
             self.columnwidth_pt = 246.0
             self.font_size_pt = 10.0
             self.baselineskip_pt = 12.0
 
-        matplotlib.rc('text', usetex=self.usetex)
-        matplotlib.rc('font', **self.font)
-        matplotlib.rc('text.latex',
-                      preamble=self.latex_preamble,
-                      preview=self.latex_preview,
-                      )
-        matplotlib.rc('font', size=self.font_size_pt)
+        matplotlib.rc("text", usetex=self.usetex)
+        matplotlib.rc("font", **self.font)
+        matplotlib.rc(
+            "text.latex",
+            preamble=self.latex_preamble,
+        )
+        matplotlib.rc("font", size=self.font_size_pt)
         # Use TT fonts
-        matplotlib.rc('ps', fonttype=42)
+        matplotlib.rc("ps", fonttype=42)
 
         if not self.grid:
             # Disable grid-lines.  This only disables major gridlines: the minor
             # gridlines must be controlled separately... see Figure.__init__()
-            matplotlib.rc('axes', grid=False)
+            matplotlib.rc("axes", grid=False)
+
 
 # Default global instance.
 _PLOT_PROPERTIES = LaTeXPlotProperties()
@@ -335,7 +348,7 @@ class Figure(Object):
     plotting facilities.
 
     .. note:: Units are either pts (for fonts) or inches (for linear
-       measurements). 
+       measurements).
 
     Examples
     --------
@@ -420,47 +433,45 @@ class Figure(Object):
        #fig.savefig()
 
     """
-    num = None             # Figure number
-    filename = None        # Filename for figure.
-    width = 'columnwidth'  # Expression involving 'columnwidth' and/or 'textwidth'
-    height = 1.0           # Fraction of `golden_mean*width`
+    num = None  # Figure number
+    filename = None  # Filename for figure.
+    width = "columnwidth"  # Expression involving 'columnwidth' and/or 'textwidth'
+    height = 1.0  # Fraction of `golden_mean*width`
     plot_properties = None
-    axes_dict = dict(labelsize='medium')
-    tick_dict = dict(labelsize='small')
-    legend_dict = dict(fontsize='medium',
-                       handlelength=4.0,
-                       frameon=True,
-                       #lw=0.5, c='k'
+    axes_dict = dict(labelsize="medium")
+    tick_dict = dict(labelsize="small")
+    legend_dict = dict(
+        fontsize="medium",
+        handlelength=4.0,
+        frameon=True,
+        # lw=0.5, c='k'
     )
     tight_layout = False
 
     # I cannot figure out how to set the size of the axes and allow
     # tight_layout() to work.  If you want tight_layout() to work, then you
     # should set this to be `True` and do not provide `margin_factors`.
-    margin_factors = dict(      # These allocate extra space for labels etc.
-        top=0.5,
-        left=2.8,
-        bot=3,
-        right=0.5)
+    margin_factors = dict(  # These allocate extra space for labels etc.
+        top=0.5, left=2.8, bot=3, right=0.5
+    )
 
     autoadjust = False
     # Attempt to autoadjust for labels, otherwise you can do this manually by
     # calling :meth:`adjust`.
 
-    figures = {}                # Dictonary of computed figures.
-    on_draw_id = None           # Id associated with 'on_draw' event
-    dpi = 600                   # Resolution for saved figure (affects images)
+    figures = {}  # Dictonary of computed figures.
+    on_draw_id = None  # Id associated with 'on_draw' event
+    dpi = 600  # Resolution for saved figure (affects images)
 
     def __init__(self, **kw):
         self._kw = kw
         for _key in kw:
             if not hasattr(self, _key):
-                raise AttributeError("Figure has no attribute '{}'"
-                                     .format(_key))
-        if 'margin_factors' in kw:
+                raise AttributeError("Figure has no attribute '{}'".format(_key))
+        if "margin_factors" in kw:
             margin_factors = dict(self.margin_factors)
-            margin_factors.update(kw['margin_factors'])
-            kw['margin_factors'] = margin_factors
+            margin_factors.update(kw["margin_factors"])
+            kw["margin_factors"] = margin_factors
         self.__dict__.update(**kw)
         Object.__init__(self)
 
@@ -471,45 +482,45 @@ class Figure(Object):
         pp.initialize_matplotlib()
         self._inset_axes = set()
         for _size in pp.font_factors:
-            self._size = pp.font_size_pt*pp.font_factors[_size]
+            self._size = pp.font_size_pt * pp.font_factors[_size]
 
-        if 'num' in self._kw or 'filename' in self._kw:
+        if "num" in self._kw or "filename" in self._kw:
             width = eval(self.width, pp.__dict__)
             if isinstance(self.height, str):
                 height = eval(self.height, pp.__dict__)
             else:
-                height = self.height*width*pp.golden_mean
+                height = self.height * width * pp.golden_mean
 
             fig_width = width
             fig_height = height
 
-            size = pp.font_size_pt*pp.inches_per_pt
+            size = pp.font_size_pt * pp.inches_per_pt
 
             # top space = 1/2 font
-            space_top = self.margin_factors['top']*size
-            space_left = self.margin_factors['left']*size
-            space_bottom = self.margin_factors['bot']*size
-            space_right = self.margin_factors['right']*size
+            space_top = self.margin_factors["top"] * size
+            space_left = self.margin_factors["left"] * size
+            space_bottom = self.margin_factors["bot"] * size
+            space_right = self.margin_factors["right"] * size
 
             # Compute axes size:
-            axes_left = space_left/fig_width
-            axes_bottom = space_bottom/fig_height
-            axes_width = 1.0 - (space_left + space_right)/fig_width
-            axes_height = 1.0 - (space_bottom + space_top)/fig_height
+            axes_left = space_left / fig_width
+            axes_bottom = space_bottom / fig_height
+            axes_width = 1.0 - (space_left + space_right) / fig_width
+            axes_height = 1.0 - (space_bottom + space_top) / fig_height
 
-            axes_size = [axes_left, axes_bottom,
-                         axes_width, axes_height]
+            axes_size = [axes_left, axes_bottom, axes_width, axes_height]
 
-            Defaults.set_rc(**{
-                'font': dict(size=pp.font_size_pt),
-                'axes': self.axes_dict,
-                'xtick': self.tick_dict,
-                'ytick': self.tick_dict,
-                'legend': self.legend_dict})
+            Defaults.set_rc(
+                **{
+                    "font": dict(size=pp.font_size_pt),
+                    "axes": self.axes_dict,
+                    "xtick": self.tick_dict,
+                    "ytick": self.tick_dict,
+                    "legend": self.legend_dict,
+                }
+            )
 
-            plt.figure(
-                num=self.num,
-                figsize=(fig_width, fig_height))
+            plt.figure(num=self.num, figsize=(fig_width, fig_height))
 
             self.figure_manager = plt.get_current_fig_manager()
 
@@ -536,10 +547,10 @@ class Figure(Object):
                 ax = plt.axes(axes_size)
 
             if pp.grid:
-                ax.grid(True, which='both')
+                ax.grid(True, which="both")
                 ax.set_axisbelow(True)
-                ax.xaxis.grid(True, 'minor', lw=0.2)
-                ax.yaxis.grid(True, 'minor', lw=0.2)
+                ax.xaxis.grid(True, "minor", lw=0.2)
+                ax.yaxis.grid(True, "minor", lw=0.2)
 
         if self.autoadjust and False:
             # This makes the axis full frame.  Use adjust to shrink.
@@ -555,7 +566,8 @@ class Figure(Object):
         if self.on_draw_id:
             self.figure_manager.canvas.mpl_disconnect(self.on_draw_id)
         self.on_draw_id = self.figure_manager.canvas.mpl_connect(
-            'draw_event', self.on_draw)
+            "draw_event", self.on_draw
+        )
 
     def stop_adjusting(self):
         if self.on_draw_id:
@@ -591,8 +603,7 @@ class Figure(Object):
         for _a in fig.axes:
             _a.axis(*v, **kw)
 
-    def adjust(self, full=True,
-               padding=0.05):
+    def adjust(self, full=True, padding=0.05):
         r"""Adjust the axes so that all text lies withing the figure.
         Optionally, add some padding."""
         plt.ioff()
@@ -602,8 +613,7 @@ class Figure(Object):
             fig = self.figure_manager.canvas.figure
             for _a in fig.axes:
                 _a.set_position([0, 0, 1, 1])
-        on_draw_id = self.figure_manager.canvas.mpl_connect(
-            'draw_event', self.on_draw)
+        on_draw_id = self.figure_manager.canvas.mpl_connect("draw_event", self.on_draw)
         try:
             plt.ion()
             plt.draw()
@@ -613,14 +623,13 @@ class Figure(Object):
             pass
         self.figure_manager.canvas.mpl_disconnect(on_draw_id)
 
-        adjustable_axes = [_a for _a in fig.axes
-                           if _a not in self._inset_axes]
+        adjustable_axes = [_a for _a in fig.axes if _a not in self._inset_axes]
 
         if 0 < padding:
             for _a in adjustable_axes:
                 bb_a = _a.get_position()
-                dx = bb_a.width*padding/2
-                dy = bb_a.height*padding/2
+                dx = bb_a.width * padding / 2
+                dy = bb_a.height * padding / 2
                 bb_a.x0 += dx
                 bb_a.x1 -= dx
                 bb_a.y0 += dy
@@ -632,20 +641,18 @@ class Figure(Object):
         r"""Shrink the bounding box bb by factor in order to prevent unneeded
         work due to rounding."""
         p = bb.get_points()
-        p += factor*(np.diff(p)*np.array([1, -1])).T
+        p += factor * (np.diff(p) * np.array([1, -1])).T
         bb.set_points(p)
         return bb
 
-    def _adjust(self,
-                logger=logging.getLogger("mmf.utils.mmf_plot.Figure._adjust")):
+    def _adjust(self, logger=logging.getLogger("mmf.utils.mmf_plot.Figure._adjust")):
         r"""Adjust the axes to make sure all text is inside the box."""
         fig = self.figure_manager.canvas.figure
         bb_f = fig.get_window_extent().inverse_transformed(fig.transFigure)
-        logger.debug("Fig  bb %s" % (" ".join(str(bb_f).split()), ))
+        logger.debug("Fig  bb %s" % (" ".join(str(bb_f).split()),))
 
         texts = []
-        adjustable_axes = [_a for _a in fig.axes
-                           if _a not in self._inset_axes]
+        adjustable_axes = [_a for _a in fig.axes if _a not in self._inset_axes]
         for _a in adjustable_axes:
             texts.extend(_a.texts)
             texts.append(_a.title)
@@ -673,16 +680,13 @@ class Figure(Object):
             # Adjust axes position
             for _a in adjustable_axes:
                 bb_a = _a.get_position()
-                logger.debug("Text bb   %s"
-                             % (" ".join(str(bbox).split()), ))
-                logger.debug("Axis bb   %s"
-                             % (" ".join(str(bb_a).split()), ))
+                logger.debug("Text bb   %s" % (" ".join(str(bbox).split()),))
+                logger.debug("Axis bb   %s" % (" ".join(str(bb_a).split()),))
                 bb_a.x0 += max(0, bb_f.xmin - bbox.xmin)
                 bb_a.x1 += min(0, bb_f.xmax - bbox.xmax)
                 bb_a.y0 += max(0, bb_f.ymin - bbox.ymin)
                 bb_a.y1 += min(0, bb_f.ymax - bbox.ymax)
-                logger.debug("New  bb   %s"
-                             % (" ".join(str(bb_a).split()), ))
+                logger.debug("New  bb   %s" % (" ".join(str(bb_a).split()),))
                 _a.set_position(bb_a)
             adjusted = True
         return adjusted
@@ -699,7 +703,9 @@ class Figure(Object):
 
         if event is None:
             # If called interactively...
-            import pdb;pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
         _adjusting[0] = True
 
         try:
@@ -713,14 +719,20 @@ class Figure(Object):
                     break
             if adjusted:
                 # Even after _max_adjust steps we still needed adjusting:
-                logger.warn("Still need adjustment after %i steps"
-                            % (_max_adjust, ))
+                logger.warn("Still need adjustment after %i steps" % (_max_adjust,))
         finally:
             _adjusting[0] = False
 
-    def adjust_axis(self, extents=None,
-                    xl=None, xh=None, yl=None, yh=None,
-                    extend_x=0.0, extend_y=0.0):
+    def adjust_axis(
+        self,
+        extents=None,
+        xl=None,
+        xh=None,
+        yl=None,
+        yh=None,
+        extend_x=0.0,
+        extend_y=0.0,
+    ):
         if extents is not None:
             plt.axis(extents)
         xl_, xh_, yl_, yh_ = plt.axis()
@@ -733,22 +745,21 @@ class Figure(Object):
         if yh is not None:
             yh_ = yh
         plt.axis([xl_, xh_, yl_, yh_])
-        dx = extend_x*(xh_ - xl_)
-        dy = extend_y*(yh_ - yl_)
-        return plt.axis([xl_ - dx, xh_ + dx,
-                         yl_ - dy, yh_ + dy])
+        dx = extend_x * (xh_ - xl_)
+        dy = extend_y * (yh_ - yl_)
+        return plt.axis([xl_ - dx, xh_ + dx, yl_ - dy, yh_ + dy])
 
     def savefig(self, filename=None, dpi=None):
         if not filename:
             filename = self.filename
-        print("Saving plot as %r..."%(filename, ))
+        print("Saving plot as %r..." % (filename,))
         plt.figure(self.num)
-        plt.ion()               # Do this to ensure autoadjustments
-        plt.draw()              # are made!
+        plt.ion()  # Do this to ensure autoadjustments
+        plt.draw()  # are made!
         if dpi is None:
             dpi = self.dpi
         plt.savefig(filename, dpi=dpi)
-        print("Saving plot as %r. Done."%(filename, ))
+        print("Saving plot as %r. Done." % (filename,))
 
     def __del__(self):
         """Destructor: make sure we unregister the autoadjustor."""
