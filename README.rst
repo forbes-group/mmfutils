@@ -14,17 +14,23 @@ in a notebook.
 
 **Documentation:** http://mmfutils.readthedocs.org
 
-**Source:** \*
-https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
-(will forward). \* https://hg.iscimath.org/forbes-group/mmfutils:
-Current, in case the permalink fails. \*
-https://github.com/forbes-group/mmfutils: Public read-only mirror.
+**Source:**
+
+-  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
+   (will forward).
+-  https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the
+   permalink fails.
+-  https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
 **Issues:**
 https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
 
-**Build Status:** |Build Status|
+**Build Status**
 
+|Documentation Status| |Build Status|
+
+.. |Documentation Status| image:: https://readthedocs.org/projects/mmfutils/badge/?version=latest
+   :target: https://mmfutils.readthedocs.io/en/latest/?badge=latest
 .. |Build Status| image:: https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg
    :target: https://cloud.drone.io/forbes-group/mmfutils
 

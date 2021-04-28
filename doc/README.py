@@ -27,6 +27,7 @@
 #    http://mmfutils.readthedocs.org
 #
 # **Source:**
+#
 #  * https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink (will forward).
 #  * https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the permalink fails.
 #  * https://github.com/forbes-group/mmfutils: Public read-only mirror.
@@ -34,7 +35,10 @@
 # **Issues:**
 #  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
 #   
-# **Build Status:** [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils)
+# **Build Status**
+#
+# [![Documentation Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
+# [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils) 
 
 # + [markdown] {"toc": "true"}
 # <h1>Table of Contents<span class="tocSkip"></span></h1>
