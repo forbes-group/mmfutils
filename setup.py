@@ -17,10 +17,6 @@ import sys
 
 from setuptools import setup, find_packages, Extension
 
-import mmfutils
-
-VERSION = mmfutils.__version__
-
 USE_CYTHON = False
 CYTHON_EXT = ".pyx" if USE_CYTHON else ".c"
 
@@ -30,6 +26,7 @@ setup_requires = [
 ]
 
 install_requires = [
+    'importlib-metadata >= 1.0 ; python_version < "3.8"',
     "zope.interface>=3.8.0",
     "husl",
     "pathlib",
@@ -73,29 +70,21 @@ extras_require = dict(
 extensions = [
     Extension(
         "mmfutils.math.integrate._ssum",
-        ["mmfutils/math/integrate/_ssum_cython" + CYTHON_EXT],
+        ["src/mmfutils/math/integrate/_ssum_cython" + CYTHON_EXT],
     )
 ]
-
-# Remove mmfutils so that it gets properly covered in tests. See
-# http://stackoverflow.com/questions/11279096
-for mod in list(sys.modules.keys()):
-    if mod.startswith("mmfutils"):
-        del sys.modules[mod]
-del mod
-
 
 if USE_CYTHON:
     from Cython.Build import cythonize
 
     extensions = cythonize(extensions)
 
-
 setup(
     name="mmfutils",
     python_requires=">=3.6",
-    version=VERSION,
-    packages=find_packages(exclude=["tests"]),
+    version="0.6.0.dev0",
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
     ext_modules=extensions,
     setup_requires=setup_requires,
     install_requires=install_requires,

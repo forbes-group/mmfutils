@@ -1,4 +1,9 @@
-__version__ = "0.6.0dev"
+try:
+    from importlib import metadata
+except ImportError:
+    import importlib_metadata as metadata
+
+__version__ = metadata.version(__name__)
 
 
 def unique_list(l, preserve_order=True):

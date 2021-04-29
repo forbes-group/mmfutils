@@ -12,16 +12,16 @@ README.rst: doc/README.ipynb
 	rst2html5.py $< > $@
 
 %.html: %.md
-	pandoc -o $@ $< 
+	pandoc $< -o $@ --standalone 
 
 clean:
+	-rm -r .nox
 	-find . -name "*.pyc" -delete
 	-find . -name "*.pyo" -delete
 	-find . -name "htmlcov" -type d -exec rm -r "{}" \;
 	-find . -name "__pycache__" -exec rm -r "{}" \;
 	-rm -r build
-	-rm -r mmfutils.egg-info
-	-rm -r .nox
+	-rm -r src/mmfutils.egg-info
 	-rm -r doc/README_files/
 	-rm *.html
 

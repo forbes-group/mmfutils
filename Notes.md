@@ -1,5 +1,77 @@
+% Developer Notes
+
 Developer Notes
 ===============
+
+These are some notes for developers and a general discussion about the design choices I
+have made regarding things such as file hierarchy, packaging tools etc.  I intend for
+this file to document my choices and discussions about these issues for all projects.
+(Other projects should refer here for this discussion.)
+
+## Packaging
+
+Starting with version 0.6.0, we reorganized the repository as follows (modified from the
+output of `tree -L 2`:
+
+```bash
+$ tree -L 2
+.
+|-- doc
+|   |-- README.py        # Front page as a notebook.
+|   |-- README.ipynb     # Front page as a notebook with output for display on repos.
+|   ...                  # (We don't commit other .ipynb's)
+|   `-- source           # Sphinx documentation
+...
+|-- Makefile             # Record instructions here, like how to test, or build docs.
+|-- Notes.md             # Developer notes
+|-- README.rst           # Generated from doc/README.ipynb for display on repos.
+...
+|-- environment.yml      # Useful development environment... not formal part of package.
+|-- meta.yaml
+`-- src
+|   `-- mmfutils         # This is the main package.
+|       |-- __init__.py  # Required for packages
+|       ...
+|       |-- math
+|       |   |-- __init__.py
+|       |   |-- bases
+|       |   |   |-- __init__.py
+|       |   |   ...
+|       |   |   `-- tests                # Tests for mmfutils.math.bases
+|       |   |       `-- test_bases.py
+|       |   ...
+|       |   `-- tests                    # Tests for mmfutils.math
+|       |       |-- test_bessel.py
+|       |       ...
+|       |       `-- test_special.py
+|       ...
+|       `-- tests                        # Tests for mmfutils
+|           |-- test_containers.py
+|           |-- test_context.py
+|           ...
+|-- noxfile.py
+|-- pytest.ini
+|-- requirements.txt
+|-- setup.cfg
+|-- setup.py
+`-- setup_tests
+    `-- drone.io.sh
+
+|-- noxfile.py
+|-- pytest.ini
+|-- requirements.txt
+|-- setup.cfg
+|-- setup.py
+`-- setup_tests
+    `-- drone.io.sh
+```
+
+## Version Number
+
+There should be one definitive place for the version number.  Options are discussed
+here: [Single-sourcing the package
+version](https://packaging.python.org/guides/single-sourcing-package-version).  I am
+going with option 5, which uses `importlib.metadata`.
 
 ## Repositories
 
@@ -16,6 +88,7 @@ maintain a development fork (under my personal GitHub account) which I can use f
 reviews.  For this one, I mirror everything.
 
 > Note: Do not actually fork the project - just push from Heptapod.  (LGTM will not analyze forks).
+
 
 Summary:
 
@@ -51,6 +124,56 @@ Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https:
     Python](https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/forbes-group/mmfutils/context:python) 
   
 ## Testing
+
+There are [two
+conventions](https://docs.pytest.org/en/latest/explanation/goodpractices.html#choosing-a-test-layout-import-rules)
+for locating tests: outside of the application code, or with the application code.  Some
+advantages of the former are [discussed by Ionel Cristian
+Mărieș](https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure).  He gives
+four main points which we discuss here:
+
+> Module discovery tools will trip over your test modules.  Strange things usually
+> happen in test module. The help builtin does module discovery. E.g.:
+>
+> ```python
+> >>> help('modules')
+> Please wait a moment while I gather a list of all available modules...
+>
+> __future__          antigravity         html                select
+> ...
+> ```
+
+I need to play with this a bit later... might still be an issue.
+
+> Tests usually require additional dependencies to run, so they aren't useful by their
+> own - you can't run them directly.
+
+I provide a `[test]` extra, so users can get all the dependencies with `python3 -m pip
+install .[test]`.
+
+> Tests are concerned with development, not usage.
+
+and 
+
+> It's extremely unlikely that the user of the library will run the tests instead of the
+> library's developer. E.g.: you don't run the tests for Django while testing your
+> apps - Django is already tested.
+
+Both these assumptions are not valid for research code: here the tests often provide useful
+examples for the users about how things can be done.  Also, the users are often the
+developers.
+
+### `tests/__init__.py`
+
+Should the `tests` directories be importable modules as signified by having
+`__init__.py` files?  In our case, yes, because several of them have associated modules
+needed for testing (in particular `src/mmfutils/tests/parallel_module.py`) and not
+having `__init__.py` files creates a problem for which I do not have an easy solution.
+This may also help with potential name classes as discussed in the [pytest
+documentation](https://docs.pytest.org/en/stable/goodpractices.html#tests-outside-application-code).
+
+
+### Nox
 
 Testing is now done using [Nox] as configured in `noxfile.py`.  This allows for testing
 against multiple versions of python (similar to [Tox]) but I find that it is simpler to

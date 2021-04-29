@@ -5,11 +5,10 @@ import nox
 # desired.
 nox.options.sessions = ["test_conda"]
 
-
 @nox.session(python=["3.6", "3.7", "3.8"])
 def test(session):
     session.install(".[test]")
-    session.run("pytest")
+    session.run("pytest", "-n", "4")
 
 
 @nox.session(venv_backend="conda", python=["3.6", "3.7", "3.8"])
@@ -18,4 +17,4 @@ def test_conda(session):
     # session.conda("env", "update", "--f", "environment.yml",
     #              conda="mamba", external=True)
     session.install(".[test]")
-    session.run("pytest")
+    session.run("pytest", "-n", "4")
