@@ -87,7 +87,11 @@ I don't want to use GitHub for managing issues or pull-requests, so instead, I a
 maintain a development fork (under my personal GitHub account) which I can use for code
 reviews.  For this one, I mirror everything.
 
-> Note: Do not actually fork the project - just push from Heptapod.  (LGTM will not analyze forks).
+> Notes:
+> 
+> * Do not actually fork the project - just push from Heptapod.  (LGTM will not analyze forks).
+> * If you want to be able to update GitHub workflows, you must grant `workflow`
+>   permission for the token.  Doing this will not invalidate the token.
 
 
 Summary:
@@ -393,6 +397,14 @@ To do this, we advocate the following proceedure.
        
 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
+
+GitHub
+======
+
+We mirror our repos to GitHub to take advantage of continuous integration.
+
+* https://cjolowicz.github.io/posts/hypermodern-python-06-ci-cd/
+* https://docs.github.com/en/actions/guides/setting-up-continuous-integration-using-workflow-templates
 
 # Odds and Ends
 
