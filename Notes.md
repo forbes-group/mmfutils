@@ -125,6 +125,15 @@ Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https:
   
 ## Testing
 
+We use [pytest] for testing, running the tests with [Nox] for multiple versions of
+python.  If you have multiple cores, you can run tests in parallel by passing the number
+with `PYTEST_ADDPOPTS`:
+
+```bash
+export PYTEST_ADDOPTS="-n 8"    # Use 8 processes for testing in parallel
+nox
+```
+
 There are [two
 conventions](https://docs.pytest.org/en/latest/explanation/goodpractices.html#choosing-a-test-layout-import-rules)
 for locating tests: outside of the application code, or with the application code.  Some
@@ -435,4 +444,4 @@ make: *** [python.exe] Error 1
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [Conda]: <https://docs.conda.io> "Conda"
 [Heptapod]: <https://heptapod.net> "Heptapod website"
-
+[pytest]: <https://docs.pytest.org> "pytest"

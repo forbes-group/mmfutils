@@ -1,6 +1,7 @@
 [run]
+source=
+   src/mmfutils
 omit=
-   .nox/*
    */tests/*
 [html]
 directory = build/_coverage

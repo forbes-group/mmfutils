@@ -8,12 +8,12 @@ import pytest
 class Test_BLAS(object):
     @classmethod
     def setup_class(cls):
-        np.random.seed(1)
+        np.random.seed(10)
 
     def rand(self, shape, complex=True):
         X = np.random.random(shape) - 0.5
         if complex:
-            X = X + 1j*(np.random.random(shape) - 0.5)
+            X = X + 1j * (np.random.random(shape) - 0.5)
         return X
 
     def test_zdotc(self):
@@ -32,9 +32,8 @@ class Test_BLAS(object):
         y = self.rand(shape)
 
         t1 = timeit.repeat(lambda: blas._zdotc(x, y), number=100)
-        t2 = timeit.repeat(lambda: np.dot(x.conj().ravel(), y.ravel()),
-                           number=100)
-        assert min(t1) < min(t2)/2
+        t2 = timeit.repeat(lambda: np.dot(x.conj().ravel(), y.ravel()), number=100)
+        assert min(t1) < min(t2) / 2
 
     def test_ddot(self):
         shape = (100, 10)
@@ -53,7 +52,7 @@ class Test_BLAS(object):
 
         t1 = timeit.repeat(lambda: blas._ddot(x, y), number=100)
         t2 = timeit.repeat(lambda: blas._zdotc(x, y), number=100)
-        assert min(t1) < min(t2)/2
+        assert min(t1) < min(t2) / 2
 
     def test_zaxpy(self):
         shape = (10, 10, 10)
@@ -62,7 +61,7 @@ class Test_BLAS(object):
         y2 = y1.copy()
         a = self.rand(1)
 
-        exact = (y1 + a * x)
+        exact = y1 + a * x
         r1 = blas._zaxpy(y1, x, a)
         r2 = blas._zaxpy_no_blas(y2, x, a)
         assert np.allclose(r1, exact)
@@ -80,7 +79,7 @@ class Test_BLAS(object):
 
         t1 = timeit.repeat(lambda: blas._zaxpy(y1, x, a), number=100)
         t2 = timeit.repeat(lambda: blas._zaxpy_no_blas(y2, x, a), number=100)
-        assert min(t1) < min(t2)/2
+        assert min(t1) < min(t2) / 2
 
     def test_daxpy(self):
         shape = (10, 10, 10)
@@ -88,7 +87,7 @@ class Test_BLAS(object):
         y1 = self.rand(shape, complex=False)
         a = self.rand(1, complex=False)
 
-        exact = (y1 + a * x)
+        exact = y1 + a * x
         r1 = blas._daxpy(y1, x, a)
         assert np.allclose(r1, exact)
         assert np.allclose(y1, exact)
@@ -105,13 +104,13 @@ class Test_BLAS(object):
 
         t1 = timeit.repeat(lambda: blas._daxpy(y1, x1, a1), number=100)
         t2 = timeit.repeat(lambda: blas._zaxpy(y2, x2, a2), number=100)
-        assert min(t1) < min(t2)/2
+        assert min(t1) < min(t2) / 2
 
     def test_znorm(self):
         shape = (100, 10)
         x = self.rand(shape)
 
-        exact = np.sqrt((abs(x.ravel())**2).sum())
+        exact = np.sqrt((abs(x.ravel()) ** 2).sum())
         assert np.allclose(blas._znorm(x), exact)
         assert np.allclose(blas._norm_no_blas(x), exact)
 
@@ -119,7 +118,7 @@ class Test_BLAS(object):
         shape = (100, 10)
         x = self.rand(shape, complex=False)
 
-        exact = np.sqrt((abs(x.ravel())**2).sum())
+        exact = np.sqrt((abs(x.ravel()) ** 2).sum())
         assert np.allclose(blas._dnorm(x), exact)
         assert np.allclose(blas._norm_no_blas(x), exact)
 
@@ -131,8 +130,7 @@ class Test_BLAS(object):
         x = self.rand(shape)
 
         t1 = timeit.repeat(lambda: blas._znorm(x), number=100)
-        t2 = timeit.repeat(lambda: np.linalg.norm(x.ravel()),
-                           number=100)
+        t2 = timeit.repeat(lambda: np.linalg.norm(x.ravel()), number=100)
         assert min(t1) < min(t2)
 
     @pytest.mark.bench

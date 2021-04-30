@@ -42,15 +42,15 @@ This package can be installed from
 
 .. code:: bash
 
-    python3 -m pip install mmfutils
+   python3 -m pip install mmfutils
 
 or, if you need to install from source, you can get it from one of the
 repositories:
 
 .. code:: bash
 
-    python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
-    python3 -m pip install git+https://github.com/forbes-group/mmfutils
+   python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
+   python3 -m pip install git+https://github.com/forbes-group/mmfutils
 
 Usage
 =====
@@ -183,7 +183,7 @@ Object Example
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
-let's do a calculation:
+let’s do a calculation:
 
 .. code:: ipython3
 
@@ -200,8 +200,8 @@ let's do a calculation:
 
 
 
-Oops! We forgot to reinitialize the object... (The formula is correct,
-but the lattice is no longer commensurate so the FFT derivative has huge
+Oops! We forgot to reinitialize the object… (The formula is correct, but
+the lattice is no longer commensurate so the FFT derivative has huge
 errors).
 
 .. code:: ipython3
@@ -713,7 +713,7 @@ packages including
 `numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
 `pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
 package installed by anaconda. Some of these require building system
-libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
 various components will not be imported by default.
 
 Here is a brief description of the components:
@@ -725,8 +725,8 @@ Here is a brief description of the components:
    Also enables the planning cache and setting threads so you can better
    control your performance.
 -  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don't do this carefully, it will crash
-   your program so fast you won't even get a traceback.)
+   disabling the VML. (If you don’t do this carefully, it will crash
+   your program so fast you won’t even get a traceback.)
 -  ``mmfutils.performance.threads``: Provides some hooks for setting the
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
@@ -739,10 +739,10 @@ Several tools are provided in ``mmfutils.plot``:
 Fast Filled Contour Plots
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
+``mmfutils.plot.imcontourf`` is similar to matplotlib’s ``plt.contourf``
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
-array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
 then it will match these to the shape of ``z``). Matplotlib now provies
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
@@ -1217,8 +1217,9 @@ API changes:
 -  Added ``mmfutils.math.bases.interfaces.IBasisLz`` and support in
    ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating frames.
 -  Cleanup of build environment and tests.
--  Single environment ``_mmfutils`` now used for testing and
-   documentation.
+
+   -  Single environment ``_mmfutils`` now used for testing and
+      documentation.
 
 REL: 0.4.13
 -----------
