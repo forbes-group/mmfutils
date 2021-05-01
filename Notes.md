@@ -3,6 +3,12 @@
 Developer Notes
 ===============
 
+[![Documentation Status][rtd_badge]][rtd]
+[![Tests][ci_badge]][ci]
+[![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
+[![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
+[![Code style: black][black_img]][black]
+
 These are some notes for developers and a general discussion about the design choices I
 have made regarding things such as file hierarchy, packaging tools etc.  I intend for
 this file to document my choices and discussions about these issues for all projects.
@@ -114,19 +120,42 @@ With CI setup, we have the following badges:
 
 * Documentation at [Read the Docs](https://readthedocs.org):
 
-    [![Documentation
-Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
+    [![Documentation Status][rtd_badge]][rtd]
 
-* Testing at [DroneIO](https://cloud.drone.io):
+* Testing at [DroneIO](https://cloud.drone.io) and with GitHub actions:
     
-    [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils)
-  
+    [![DroneIO Build Status][drone_badge]][drone]
+    [![Tests][ci_badge]][ci]
+
 * Code quality testing at [lgtm](https://lgtm.com):
-   
-    [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/forbes-group/mmfutils.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/forbes-group/mmfutils/context:python)
-    [![Language grade:
-    Python](https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/forbes-group/mmfutils/context:python) 
-  
+
+    [![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
+    [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
+
+* Style:
+
+    [![Code style: black][black_img]][black]
+
+
+[rtd_badge]: <https://readthedocs.org/projects/mmfutils/badge/?version=latest>
+[rtd]: <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
+
+
+[drone_badge]: <https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg>
+[drone]: https://cloud.drone.io/forbes-group/mmfutils
+[ci_badge]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml/badge.svg?branch=topic%2F0.6.0%2Fgithub_ci>
+[ci]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml>
+
+[black]: https://github.com/psf/black
+[black_img]: https://img.shields.io/badge/code%20style-black-000000.svg
+
+
+[lgtm_mmfutils]: <https://lgtm.com/projects/g/forbes-group/mmfutils/context:python>
+[lgtm_mmfutils_badge]: <https://img.shields.io/lgtm/grade/python/g/forbes-group/mmfutils.svg?logo=lgtm&logoWidth=18>
+
+[lgtm_mmfutils_fork]: <https://lgtm.com/projects/g/forbes-group/mmfutils/context:python>
+[lgtm_mmfutils_fork_badge]: <https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18> 
+
 ## Testing
 
 We use [pytest] for testing, running the tests with [Nox] for multiple versions of
@@ -248,6 +277,25 @@ or using the environment defined in `environment.yml`:
 cond activate _mmfutils
 pytest
 ```
+
+### Continuous Integration (CI)
+
+As mentioned above, by providing
+[`.github/workflows/tests.yml`](.github/workflows/tests.yml), we can engage a [GitHub
+action for continuous
+integration](https://docs.github.com/en/actions/guides/about-continuous-integration).
+This can be configure to run the tests automatically on pushes, the results of which are
+displayed in the appropriate badges.
+
+The main difficulty I had was a need for a full LaTeX installation.  This is now
+working with `apt-get texlive-full`, but could probably be simplified, just updating the
+packages we really need for testing ([`mathpazo`], [`siunitx`], and [`type1cm`] were
+issues when just using the smaller `texlive` package.)
+
+[`mathpazo`]: <https://ctan.org/pkg/mathpazo> "mathpazo – Fonts to typeset mathematics to match Palatino"
+[`siunitx`]: <https://ctan.org/pkg/siunitx> "siunitx – A comprehensive (SI) units package"
+[`type1cm`]: <https://ctan.org/pkg/type1cm> "type1cm – Arbitrary size font selection in LaTeX"
+
 
 ## Documentation
 
