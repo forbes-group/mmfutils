@@ -12,7 +12,9 @@ README.rst: doc/README.ipynb
 	rst2html5.py $< > $@
 
 %.html: %.md
-	pandoc $< -o $@ --standalone 
+	pandoc $< -o $@ --standalone && open -g -a Safari $@
+	fswatch -e ".*\.html" -o . | while read num ; do pandoc $< -o $@ --standalone && open -g -a Safari $@; done
+
 
 clean:
 	-rm -r .nox
@@ -25,4 +27,4 @@ clean:
 	-rm -r doc/README_files/
 	-rm *.html
 
-.PHONY: test clean
+.PHONY: test clean auto

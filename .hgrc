@@ -14,7 +14,7 @@ qcom = commit
 
 [hooks]
 pre-commit.readme = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
-pre-commit.black = hg status -m -a | grep ".py$" | while read status file; do black "$file"; done
+pre-commit.black = hg status -ma | cut -c3- | grep ".py$" | while read f; do black "$f"; done
 #pre-commit.runtests = python -O setup.py test
 
 [commands]

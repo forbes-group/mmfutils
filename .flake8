@@ -1,3 +1,4 @@
+[flake8]
 # E221 Spaces before operators (x = 4  + 4)
 # E225 Requires space arround *all* operators (I like compact x**2 for example.)
 # E226 Requires whitespace around arithmetic operators
