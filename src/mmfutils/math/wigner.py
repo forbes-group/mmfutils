@@ -8,8 +8,7 @@ import numpy as np
 from mmfutils.performance.fft import fft, ifft
 
 
-def wigner_ville(psi, dt=1, make_analytic=False, skip=1,
-                 pad=True):
+def wigner_ville(psi, dt=1, make_analytic=False, skip=1, pad=True):
     """Return `(ws, P)` where `P` is the Wigner Ville quasi-distribution for psi.
 
     Assumes that psi is periodic.  Note: the frequencies at which `P`
@@ -36,11 +35,11 @@ def wigner_ville(psi, dt=1, make_analytic=False, skip=1,
     if make_analytic:
         # Make signal analytic
         # See https://en.wikipedia.org/wiki/Analytic_signal
-        psi = ifft((np.sign(ws)+1)*fft(psi))
+        psi = ifft((np.sign(ws) + 1) * fft(psi))
 
     if pad:
         psi = np.hstack([psi, np.zeros_like(psi)])
-        Npad = N*2
+        Npad = N * 2
     else:
         Npad = N
 
@@ -48,8 +47,8 @@ def wigner_ville(psi, dt=1, make_analytic=False, skip=1,
     j = np.arange(N)[None, :]
     i_ = (i + j) % Npad
     j_ = (i - j) % Npad
-    Psi = psi[i_]*psi[j_].conj()
-    P = 2*fft(Psi, axis=-1).real[:N, :] * dt
+    Psi = psi[i_] * psi[j_].conj()
+    P = 2 * fft(Psi, axis=-1).real[:N, :] * dt
     P = np.fft.fftshift(P, axes=-1)
     ws = np.fft.fftshift(ws)
-    return ws, P*dt
+    return ws, P * dt

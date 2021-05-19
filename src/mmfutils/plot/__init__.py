@@ -5,6 +5,12 @@ from .errors import plot_errorbars, plot_err, error_line
 from .colors import MidpointNormalize, cm
 
 __all__ = [
-    'contourf', 'imcontourf', 'phase_contour',
-    'plot_errorbars', 'plot_err', 'error_line',
-    'MidpointNormalize', 'cm']
+    "contourf",
+    "imcontourf",
+    "phase_contour",
+    "plot_errorbars",
+    "plot_err",
+    "error_line",
+    "MidpointNormalize",
+    "cm",
+]

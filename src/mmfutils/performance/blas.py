@@ -10,14 +10,14 @@ from scipy.linalg import get_blas_funcs
 
 del numpy
 
-__all__ = ['daxpy', 'zaxpy']
+__all__ = ["daxpy", "zaxpy"]
 
 _BLAS = True
 
 
 def _norm_no_blas(x):
     r"""Return `norm(x)` using numpy."""
-    return np.linalg.norm(x.ravel(order='K'))
+    return np.linalg.norm(x.ravel(order="K"))
 
 
 def _zdotc_no_blas(a, b):
@@ -36,53 +36,78 @@ def _ddot_no_blas(a, b):
     return np.dot(a.ravel(), b.ravel())
 
 
-def _znorm(x, _znrm2=get_blas_funcs(['nrm2'],
-                                    [np.zeros(2, dtype=complex)])[0]):
+def _znorm(x, _znrm2=get_blas_funcs(["nrm2"], [np.zeros(2, dtype=complex)])[0]):
     r"""Return `norm(x)` using BLAS for complex arrays.
 
     Warning: This can be substantially slower than `np.linalg.norm` on account
     of it doing scaling to ensure accuracy.
     """
     assert x.flags.c_contiguous
-    assert _znrm2 is get_blas_funcs(['nrm2'], [x.ravel()])[0]
-    return _znrm2(x.ravel(order='K'))
+    assert _znrm2 is get_blas_funcs(["nrm2"], [x.ravel()])[0]
+    return _znrm2(x.ravel(order="K"))
 
 
-def _dnorm(x, _dnrm2=get_blas_funcs(['nrm2'],
-                                    [np.zeros(2, dtype=float)])[0]):
+def _dnorm(x, _dnrm2=get_blas_funcs(["nrm2"], [np.zeros(2, dtype=float)])[0]):
     r"""Return `norm(x)` using BLAS for real arrays.
 
     Warning: This can be substantially slower than `np.linalg.norm` on account
     of it doing scaling to ensure accuracy.
     """
     assert x.flags.c_contiguous
-    assert _dnrm2 is get_blas_funcs(['nrm2'], [x.ravel()])[0]
-    return _dnrm2(x.ravel(order='K'))
+    assert _dnrm2 is get_blas_funcs(["nrm2"], [x.ravel()])[0]
+    return _dnrm2(x.ravel(order="K"))
 
 
-def _zdotc(a, b, _zdotc=get_blas_funcs(['dotc'],
-                                       [np.zeros(2, dtype=complex), ] * 2)[0]):
+def _zdotc(
+    a,
+    b,
+    _zdotc=get_blas_funcs(
+        ["dotc"],
+        [
+            np.zeros(2, dtype=complex),
+        ]
+        * 2,
+    )[0],
+):
     a = a.ravel()
     b = b.ravel()
     assert a.flags.f_contiguous
     assert a.flags.c_contiguous
-    assert _zdotc is get_blas_funcs(['dotc'], [a, b])[0]
+    assert _zdotc is get_blas_funcs(["dotc"], [a, b])[0]
     return _zdotc(a, b)
 
 
-def _ddot(a, b, _ddot=get_blas_funcs(['dot'],
-                                     [np.zeros(2, dtype=float), ] * 2)[0]):
+def _ddot(
+    a,
+    b,
+    _ddot=get_blas_funcs(
+        ["dot"],
+        [
+            np.zeros(2, dtype=float),
+        ]
+        * 2,
+    )[0],
+):
     a = a.ravel()
     b = b.ravel()
     assert a.flags.f_contiguous
     assert a.flags.c_contiguous
-    assert _ddot is get_blas_funcs(['dot'], [a, b])[0]
+    assert _ddot is get_blas_funcs(["dot"], [a, b])[0]
     return _ddot(a, b)
 
 
-def _zaxpy(y, x, a=1.0,
-           _axpy=get_blas_funcs(['axpy'],
-                                [np.zeros(2, dtype=complex), ] * 2)[0]):
+def _zaxpy(
+    y,
+    x,
+    a=1.0,
+    _axpy=get_blas_funcs(
+        ["axpy"],
+        [
+            np.zeros(2, dtype=complex),
+        ]
+        * 2,
+    )[0],
+):
     r"""Performs ``y += a*x`` inplace using the BLAS axpy command.  This is
     significantly faster than using generic expressions that make temporary
     copies etc.
@@ -97,13 +122,22 @@ def _zaxpy(y, x, a=1.0,
     x = x.ravel()
     y = y.ravel()
     assert y.flags.c_contiguous
-    assert _axpy is get_blas_funcs(['axpy'], [x, y])[0]
+    assert _axpy is get_blas_funcs(["axpy"], [x, y])[0]
     return _axpy(x=x, y=y, n=x.size, a=a).reshape(shape)
 
 
-def _daxpy(y, x, a=1.0,
-           _axpy=get_blas_funcs(['axpy'],
-                                [np.zeros(2, dtype=float), ] * 2)[0]):
+def _daxpy(
+    y,
+    x,
+    a=1.0,
+    _axpy=get_blas_funcs(
+        ["axpy"],
+        [
+            np.zeros(2, dtype=float),
+        ]
+        * 2,
+    )[0],
+):
     r"""Performs ``y += a*x`` inplace using the BLAS axpy command.  This is
     significantly faster than using generic expressions that make temporary
     copies etc.
@@ -118,7 +152,7 @@ def _daxpy(y, x, a=1.0,
     x = x.ravel()
     y = y.ravel()
     assert y.flags.c_contiguous
-    assert _axpy is get_blas_funcs(['axpy'], [x, y])[0]
+    assert _axpy is get_blas_funcs(["axpy"], [x, y])[0]
     return _axpy(x=x, y=y, n=x.size, a=a).reshape(shape)
 
 
@@ -129,7 +163,7 @@ if _BLAS:
     ddot = _ddot
     zaxpy = _zaxpy
     daxpy = _daxpy
-else:                 # pragma: nocover
+else:  # pragma: nocover
     znorm = dnorm = _norm_no_blas
     ddot = _ddot_no_blas
     zdotc = _zdotc_no_blas

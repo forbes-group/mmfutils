@@ -9,7 +9,7 @@ import scipy as sp
 
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 
-__all__ = ('prod', 'norm', 'ndgrid', 'dst', 'idst', 'get_xyz')
+__all__ = ("prod", "norm", "ndgrid", "dst", "idst", "get_xyz")
 
 
 def prod(x):
@@ -32,7 +32,7 @@ def ndgrid(*v):
     if len(v) == 1:
         return v
     else:
-        return np.meshgrid(*v, sparse=True, indexing='ij')
+        return np.meshgrid(*v, sparse=True, indexing="ij")
 
 
 def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
@@ -53,8 +53,12 @@ def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
     xyz = []
     # Special case for N = 1 should also always be centered
     _offsets = [0.5 if symmetric_lattice or _N == 1 else 0 for _N in Nxyz]
-    xyz = ndgrid(*[_l/_n * (np.arange(-_n/2, _n/2) + _offset)
-                   for _n, _l, _offset in zip(Nxyz, Lxyz, _offsets)])
+    xyz = ndgrid(
+        *[
+            _l / _n * (np.arange(-_n / 2, _n / 2) + _offset)
+            for _n, _l, _offset in zip(Nxyz, Lxyz, _offsets)
+        ]
+    )
     return xyz
 
 
@@ -70,8 +74,9 @@ def get_kxyz(Nxyz, Lxyz):
     """
     # Note: Do not kill the single highest momenta... this leads to bad
     # scaling of high-frequency errors.
-    kxyz = ndgrid(*[2.0 * np.pi * np.fft.fftfreq(_n, _l/_n)
-                    for _n, _l in zip(Nxyz, Lxyz)])
+    kxyz = ndgrid(
+        *[2.0 * np.pi * np.fft.fftfreq(_n, _l / _n) for _n, _l in zip(Nxyz, Lxyz)]
+    )
     return kxyz
 
 
@@ -87,10 +92,10 @@ def idst(F, axis=-1):
     """Return the Inverse Discrete Sine Transform (DST II) of `f`"""
     N = F.shape[-1]
     args = dict(type=2, axis=axis)
-    return sp.fftpack.dst(F, **args)/(2.0*N)
+    return sp.fftpack.dst(F, **args) / (2.0 * N)
 
 
-if StrictVersion(sp.__version__) < StrictVersion('0.16.0'):
+if StrictVersion(sp.__version__) < StrictVersion("0.16.0"):
     # Scipy pre 0.16.0 cannot handle complex inputs.
     dst_real, idst_real = dst, idst
 
@@ -98,12 +103,12 @@ if StrictVersion(sp.__version__) < StrictVersion('0.16.0'):
         """Return the Discrete Sine Transform (DST III) of `f`"""
         res = dst_real(f.real)
         if np.iscomplexobj(f):
-            res = res + 1j*dst_real(f.imag)
+            res = res + 1j * dst_real(f.imag)
         return res
 
     def idst(F, axis=-1):
         """Return the Inverse Discrete Sine Transform (DST II) of `f`"""
         res = idst_real(F.real)
         if np.iscomplexobj(F):
-            res = res + 1j*idst_real(F.imag)
+            res = res + 1j * idst_real(F.imag)
         return res

@@ -13,7 +13,9 @@
 #     name: conda-env-_test3-py
 # ---
 
-import mmf_setup;mmf_setup.nbinit()
+import mmf_setup
+
+mmf_setup.nbinit()
 
 # # Table of Contents
 # * [1. Numerical Optimization](#1.-Numerical-Optimization)
@@ -38,7 +40,7 @@ import mmf_setup;mmf_setup.nbinit()
 #   \ket{\text{descent}} = -\frac{\ket{J}\braket{J|J}}{\braket{J|\mat{H}|J}}, \qquad
 #   \delta f = \frac{-\braket{J|J}^2}{2\braket{J|\mat{H}|J}}\\
 #   \ket{\text{Newton}} = -\braket{\mat{H}^{-1}|J}, \qquad
-#   \delta f = \frac{\braket{J|\mat{H}^{-1}|J}}{2}\\  
+#   \delta f = \frac{\braket{J|\mat{H}^{-1}|J}}{2}\\
 # $$
 #
 #
@@ -56,8 +58,11 @@ import mmf_setup;mmf_setup.nbinit()
 # Test above formulae numerically
 # %pylab inline --no-import-all
 from importlib import reload
-import optimization_notes;reload(optimization_notes)
+import optimization_notes
+
+reload(optimization_notes)
 from optimization_notes import crand, braket, QuadraticProblem
+
 np.random.seed(1)
 N = 3
 p = QuadraticProblem(N=N)
@@ -70,23 +75,25 @@ f_min = f(p.x0)
 x = crand(N)  # Starting point
 J = df(x)
 H = ddf(x)
-dx_downhill = -J*braket(J, J) / braket(J, H.dot(J))
+dx_downhill = -J * braket(J, J) / braket(J, H.dot(J))
 dx_newton = -np.linalg.solve(ddf(x), J)
-df_downhill = -(braket(J,J)**2/braket(J,H.dot(J))/2.0).real
-df_newton = -(braket(J,np.linalg.solve(H, J))/2.0).real
+df_downhill = -(braket(J, J) ** 2 / braket(J, H.dot(J)) / 2.0).real
+df_newton = -(braket(J, np.linalg.solve(H, J)) / 2.0).real
 
 # Check formulae
 alphas = np.linspace(-2, 2, 21)
-compare = np.array([
-    (df_downhill, f(x + dx_downhill) - f(x)),
-    (df_newton, f(x + dx_newton) - f(x)),
-    ])
+compare = np.array(
+    [
+        (df_downhill, f(x + dx_downhill) - f(x)),
+        (df_newton, f(x + dx_newton) - f(x)),
+    ]
+)
 assert np.allclose(*residuals.T)
 
-fs = [f(x + _a*dx_downhill) for _a in alphas]
+fs = [f(x + _a * dx_downhill) for _a in alphas]
 assert np.all(f_min <= np.array(fs))
 
-fs = [f(x + _a*dx_newton) for _a in alphas]
+fs = [f(x + _a * dx_newton) for _a in alphas]
 assert np.all(f_min <= np.array(fs))
 # -
 
@@ -110,11 +117,14 @@ assert np.all(f_min <= np.array(fs))
 import numpy as np
 from scipy.optimize.lbfgsb import fmin_l_bfgs_b
 
+
 def f(x):
-    return 1e12 + np.exp((x-1.0)**2)
+    return 1e12 + np.exp((x - 1.0) ** 2)
+
 
 def df(x):
-    return np.array([2.0*(x-1.0)*np.exp((x-1.0)**2)])
+    return np.array([2.0 * (x - 1.0) * np.exp((x - 1.0) ** 2)])
+
 
 fmin_l_bfgs_b(f, x0=[0.0001], fprime=df, factr=0)
 # -
@@ -122,6 +132,5 @@ fmin_l_bfgs_b(f, x0=[0.0001], fprime=df, factr=0)
 # The function to be optimized has roundoff errors due to the large offset, so we would like to use the jacobian for convergence, but even setting `tol=0` does not permit the criterion from being satisfied. (note that `factr = tol / macheps` with SciPy's interface).  My version removes this restriction.
 
 from mmf_lbfgsb.lbfgsb import fmin_l_bfgs_b
+
 fmin_l_bfgs_b(f, x0=[0.0001], fprime=df, factr=0)
-
-

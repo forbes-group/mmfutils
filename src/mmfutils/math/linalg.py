@@ -1,5 +1,5 @@
 """Linear Algebra Routines"""
-__all__ = ['block_diag']
+__all__ = ["block_diag"]
 
 import numpy as np
 
@@ -26,7 +26,7 @@ def block_diag(arrays):
 
     r, c = 0, 0
     for i, (rr, cc) in enumerate(shapes):
-        out[r:r + rr, c:c + cc] = arrays[i]
+        out[r : r + rr, c : c + cc] = arrays[i]
         r += rr
         c += cc
     return out

@@ -22,26 +22,26 @@ class TestCluster(object):
         cmd = cmd.format(cls.ipython_dir)
         subprocess.check_call(cmd.split())
 
-        cls.cluster1 = get_cluster(profile='testing1',
-                                   ipython_dir=cls.ipython_dir)
+        cls.cluster1 = get_cluster(profile="testing1", ipython_dir=cls.ipython_dir)
         cls.cluster1.start()
 
         with tempfile.NamedTemporaryFile(delete=False) as nodefile:
-            nodefile.write(b"\n".join([b'localhost']*3))
+            nodefile.write(b"\n".join([b"localhost"] * 3))
             nodefile.close()
 
         # Now start a cluster with nodes in PBS_NODEFILE
         cls.PBS_NODEFILE = nodefile.name
-        os.environ['PBS_NODEFILE'] = nodefile.name
+        os.environ["PBS_NODEFILE"] = nodefile.name
         # We start this way for coverage
         cls.cluster_pbs = get_cluster(
-            profile='testing_pbs', ipython_dir=cls.ipython_dir)
+            profile="testing_pbs", ipython_dir=cls.ipython_dir
+        )
 
         # Wait for cluster to start
         cls.cluster1.wait(n_min=0)
 
         # This will not be started here.
-        cls.cluster3 = Cluster(profile='testing3', ipython_dir=cls.ipython_dir)
+        cls.cluster3 = Cluster(profile="testing3", ipython_dir=cls.ipython_dir)
 
     @classmethod
     def teardown_class(cls):
@@ -51,15 +51,15 @@ class TestCluster(object):
 
     def test_connect(self):
         """Simple test connecting to a cluster."""
-        cluster = get_cluster(profile='testing1',
-                              ipython_dir=self.ipython_dir)
+        cluster = get_cluster(profile="testing1", ipython_dir=self.ipython_dir)
         assert cluster is self.cluster1
         assert max(1, multiprocessing.cpu_count() - 1) == len(cluster)
 
     def test_pbs(self):
         """Test that the PBS_NODEFILE is used if defined"""
-        with get_cluster(profile='testing_pbs',
-                         ipython_dir=self.ipython_dir) as cluster:
+        with get_cluster(
+            profile="testing_pbs", ipython_dir=self.ipython_dir
+        ) as cluster:
             assert cluster is self.cluster_pbs
             assert 3 == len(cluster)
 
@@ -76,15 +76,14 @@ class TestCluster(object):
 
     def test_views(self):
         view1 = self.cluster1.direct_view
-        view1['x'] = 5.0
+        view1["x"] = 5.0
         view2 = self.cluster1.direct_view
         assert view1 is view2
-        assert sum(view2['x']) == 5*len(self.cluster1)
+        assert sum(view2["x"]) == 5 * len(self.cluster1)
 
         p = range(20)
-        res = self.cluster1.load_balanced_view.map(
-            parallel_module.exp2, p, block=True)
-        assert res == [2**_p for _p in p]
+        res = self.cluster1.load_balanced_view.map(parallel_module.exp2, p, block=True)
+        assert res == [2 ** _p for _p in p]
 
     def test_del(self):
         """Test deleting of cluster objects"""

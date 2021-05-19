@@ -16,7 +16,9 @@
 # ---
 
 # + {"init_cell": true}
-import mmf_setup;mmf_setup.nbinit()
+import mmf_setup
+
+mmf_setup.nbinit()
 # %pylab inline --no-import-all
 # -
 
@@ -33,21 +35,21 @@ import mmf_setup;mmf_setup.nbinit()
 #
 # $$
 #   \ket{F_n} \propto \ket{\Delta_n} = \op{P}_{k}\ket{x_n},
-#   \qquad \op{P}_k = \int_{p<k}\ket{p}\bra{p}, 
+#   \qquad \op{P}_k = \int_{p<k}\ket{p}\bra{p},
 #   \qquad \op{P}_k^2 = \op{P}_k.
 # $$
 #
 # A challenge is to choose a consistent set of abscissa so that these functions are orthogonal:
 #
 # $$
-#   \braket{\Delta_m|\Delta_n} = \braket{x_m|\Delta_n} = \Delta_n(x_m) 
+#   \braket{\Delta_m|\Delta_n} = \braket{x_m|\Delta_n} = \Delta_n(x_m)
 #   = \frac{\delta_{mn}}{\lambda_n}.
 # $$
 #
 # The actual basis functions differ in their normalization so that they are orthonormal:
 #
 # $$
-#   \braket{F_m|F_n} = \delta_{mn} = \lambda_n\braket{\Delta_m|\Delta_n}, 
+#   \braket{F_m|F_n} = \delta_{mn} = \lambda_n\braket{\Delta_m|\Delta_n},
 #   \qquad \ket{F_n} = \sqrt{\lambda_n}\ket{\Delta_n}, \qquad
 #   \lambda_n = \frac{1}{\braket{\Delta_n|\Delta_n}}
 #             = \frac{1}{\Delta_n(x_n)}
@@ -66,7 +68,7 @@ import mmf_setup;mmf_setup.nbinit()
 # This condition ensures that if the wavefunction $\psi(r)$ mostly lies in the subspace spanned by the basis, it can be expanded by simply evaluating it at the abscissa:
 #
 # $$
-#   \braket{F_n|\psi} = \int F_{n}^*(r) \psi(r) 
+#   \braket{F_n|\psi} = \int F_{n}^*(r) \psi(r)
 #   \approx \sum_m \sqrt{\lambda_m}\psi(r_m) \int F_{n}^*(r)F_m(r)
 #   = \sum_m \sqrt{\lambda_m}\psi(r_m) \underbrace{
 #     \sum_j \lambda_j \overbrace{F_n^*(r_j)F_m(r_j)}
@@ -96,17 +98,17 @@ import mmf_setup;mmf_setup.nbinit()
 #
 # \begin{gather}
 #   \DeclareMathOperator{\sinc}{sinc}
-#  \ket{\Delta_n} = \op{P}_k\ket{x_n}, \qquad \op{P}_k 
+#  \ket{\Delta_n} = \op{P}_k\ket{x_n}, \qquad \op{P}_k
 #  = \int_{p<k} \frac{\d{p}}{2\pi}\ket{p}\bra{p},
 #  \\
-#  \Delta_n(x) = \braket{x|\Delta_n} 
+#  \Delta_n(x) = \braket{x|\Delta_n}
 #   = \int_{-k}^{k} \frac{\d{p}}{2\pi}e^{\I p (x-x_n)}
 #   = \frac{k}{\pi}\sinc \bigl(k(x-x_n)\bigr)
 #   \\
-#   x_n = x_0 + an, \qquad z_n = kx_n = k x_0 + \pi n, \qquad a = \frac{\pi}{k} 
+#   x_n = x_0 + an, \qquad z_n = kx_n = k x_0 + \pi n, \qquad a = \frac{\pi}{k}
 #   \tag{abscissa}
 #   \\
-#   \lambda_n = \braket{\Delta_n|\Delta_n}^{-1} = \frac{1}{\Delta_n(x_n)} 
+#   \lambda_n = \braket{\Delta_n|\Delta_n}^{-1} = \frac{1}{\Delta_n(x_n)}
 #                                               = \frac{1}{F_n^2(x_n)} = a
 #   \tag{weights}
 #   \\
@@ -125,7 +127,7 @@ import mmf_setup;mmf_setup.nbinit()
 # Recall that in $d$-dimensions, [the Laplacian is](https://en.wikipedia.org/wiki/Spherical_harmonics#Higher_dimensions):
 #
 # $$
-#   \nabla^2 = \Delta^{\mathbb{R}^{d}} = r^{1-d}\pdiff{}{r}r^{d-1}\pdiff{}{r} 
+#   \nabla^2 = \Delta^{\mathbb{R}^{d}} = r^{1-d}\pdiff{}{r}r^{d-1}\pdiff{}{r}
 #   + \frac{1}{r^2}\Delta_{S^{d-1}}
 # $$
 #
@@ -144,7 +146,7 @@ import mmf_setup;mmf_setup.nbinit()
 # such that the radial wavefunction $u(r)$ satisfies:
 #
 # $$
-#   \nabla^2\psi(r, \Omega) 
+#   \nabla^2\psi(r, \Omega)
 #   = \frac{Y_l^m(\uvect{x})}{r^{(d-1)/2}}\left[
 #     \diff[2]{}{r} - \frac{\nu_{d,l}^2 - 1/4}{r^2}
 #   \right]u(r), \qquad
@@ -164,7 +166,7 @@ import mmf_setup;mmf_setup.nbinit()
 # To represent problems with cylindrical coordinates we use a periodic basis for $x$ and a Bessel-function DVR basis for the radial coordinate.  Here we describe the properties of the Bessel-function basis for the radial direction.  These are expressed in terms of the [Bessel functions](https://en.wikipedia.org/wiki/Bessel_function#Bessel's_integrals) (with $n \equiv \alpha \equiv \nu$):
 #
 # $$
-#   J_\nu(r) = \frac{1}{\pi}\int_0^{\pi}\cos(\nu\tau - r\sin\tau)\d{\tau} 
+#   J_\nu(r) = \frac{1}{\pi}\int_0^{\pi}\cos(\nu\tau - r\sin\tau)\d{\tau}
 #   - \frac{\sin \nu\pi}{\pi}\int_0^\infty e^{-r\sinh t - \nu t}\d{t},
 # $$
 #
@@ -186,42 +188,47 @@ x = 1.5
 J_alpha = bessel.J(alpha, 0)
 J_beta = bessel.J(beta, 0)
 
+
 def J(x, nu):
     """Integral definition of J_n(x)."""
+
     def integrand1(tau):
-        return np.cos(nu*tau-x*np.sin(tau))/np.pi
+        return np.cos(nu * tau - x * np.sin(tau)) / np.pi
+
     def integrand2(t):
-        return np.sin(nu*np.pi)*np.exp(-x*np.sinh(t) - nu*t)/np.pi
+        return np.sin(nu * np.pi) * np.exp(-x * np.sinh(t) - nu * t) / np.pi
 
     res1, err1 = quad(integrand1, 0, np.pi)
-    with np.errstate(over='ignore'):
+    with np.errstate(over="ignore"):
         # Ignore harmless overflow errors
         res2, err2 = quad(integrand2, 0, np.inf)
-    return res1 - res2, np.sqrt(err1**2 + err2**2)
+    return res1 - res2, np.sqrt(err1 ** 2 + err2 ** 2)
+
 
 assert np.allclose(J(x, alpha)[0], J_alpha(x))
 
+
 def i2(x):
-    return J_alpha(x)*J_beta(x)/x
+    return J_alpha(x) * J_beta(x) / x
+
 
 res, err = quad(i2, 0, np.inf, epsabs=0.001)
-exact = 2/np.pi*np.sin(np.pi/2*(alpha-beta))/(alpha**2-beta**2)
+exact = 2 / np.pi * np.sin(np.pi / 2 * (alpha - beta)) / (alpha ** 2 - beta ** 2)
 assert np.allclose(exact, res, atol=err)
 # -
 
 # %pylab inline --no-import-all
-plt.figure(figsize=(12,3))
-z = np.linspace(0, 10*np.pi, 100)
-for nu in [0,1,2,3]:
-    l, = plt.plot(z/np.pi, bessel.J(nu,d=0)(z), 
-                  label=r"$\nu={}$".format(nu))
+plt.figure(figsize=(12, 3))
+z = np.linspace(0, 10 * np.pi, 100)
+for nu in [0, 1, 2, 3]:
+    (l,) = plt.plot(z / np.pi, bessel.J(nu, d=0)(z), label=r"$\nu={}$".format(nu))
     for z0 in bessel.j_root(nu, 10):
         if z0 <= z.max():
-            plt.axvline(z0/np.pi, c=l.get_c(), ls='-', alpha=0.5)
+            plt.axvline(z0 / np.pi, c=l.get_c(), ls="-", alpha=0.5)
 plt.grid(True)
 plt.legend()
-plt.xlabel(r'$z/\pi$');
-plt.ylabel(r'$J_0(z)$');
+plt.xlabel(r"$z/\pi$")
+plt.ylabel(r"$J_0(z)$")
 
 # There is a separate basis for each value of $\nu$ which handles a different angular-momentum singularity.  Once this is fixed, the basis functions are:
 #
@@ -244,6 +251,7 @@ plt.ylabel(r'$J_0(z)$');
 # For use with wavefunctions, we must include the transformation to and from
 
 from mmfutils.math.bases import CylindricalBasis
+
 basis = CylindricalBasis(Nxr=(2, 10), Lxr=(1.0, 1.0))
 x, r = basis.xyz
 k_x, k_r = basis.k_max
@@ -272,7 +280,7 @@ k_x, k_r = basis.k_max
 # is well represented, then the integral
 #
 # $$
-#   \int_0^\infty\d{r}\; \abs{u(r)}^2 = \int_0^\infty\d{r}\; r\abs{\psi(r)}^2 = \frac{n_{1D}}{2\pi} 
+#   \int_0^\infty\d{r}\; \abs{u(r)}^2 = \int_0^\infty\d{r}\; r\abs{\psi(r)}^2 = \frac{n_{1D}}{2\pi}
 #   \approx \sum\lambda_n \abs{u(r_n)}^2
 #   = \sum\lambda_n r_nn(r_n)
 # $$
@@ -318,25 +326,38 @@ k_x, k_r = basis.k_max
 import numpy as np
 from mmfutils.math.bases import CylindricalBasis
 from mmfutils.math.bases.tests import test_bases
-basis = CylindricalBasis(Nxr=(64, 32), Lxr=(25.0,5.0))
+
+basis = CylindricalBasis(Nxr=(64, 32), Lxr=(25.0, 5.0))
 x, r = basis.xyz
 Ny = 50
 ys = np.linspace(0, r.max(), Ny)[None, :]
 r0 = 1.2
 
-n = np.exp(-(x**2+r**2)/r0**2)
-n_1D = np.pi*r0**2*np.exp(-x**2/r0**2)
-n_2D = np.sqrt(np.pi)*r0*np.exp(-(x**2+ys**2)/r0**2)
+n = np.exp(-(x ** 2 + r ** 2) / r0 ** 2)
+n_1D = np.pi * r0 ** 2 * np.exp(-(x ** 2) / r0 ** 2)
+n_2D = np.sqrt(np.pi) * r0 * np.exp(-(x ** 2 + ys ** 2) / r0 ** 2)
 
-print("{}% max error".format(
-    100 * abs(basis.integrate2(n, y=ys) - n_2D).max()/n_2D.max()))
+print(
+    "{}% max error".format(
+        100 * abs(basis.integrate2(n, y=ys) - n_2D).max() / n_2D.max()
+    )
+)
 
-n = r**2*np.exp(-(x**2+r**2)/r0**2)
-n_1D = np.pi*r0**4*np.exp(-x**2/r0**2)
-n_2D = np.sqrt(np.pi)*r0/2*(r0**2+2*ys**2)*np.exp(-(x**2+ys**2)/r0**2)
+n = r ** 2 * np.exp(-(x ** 2 + r ** 2) / r0 ** 2)
+n_1D = np.pi * r0 ** 4 * np.exp(-(x ** 2) / r0 ** 2)
+n_2D = (
+    np.sqrt(np.pi)
+    * r0
+    / 2
+    * (r0 ** 2 + 2 * ys ** 2)
+    * np.exp(-(x ** 2 + ys ** 2) / r0 ** 2)
+)
 
-print("{}% max error".format(
-    100 * abs(basis.integrate2(n, y=ys) - n_2D).max()/n_2D.max()))
+print(
+    "{}% max error".format(
+        100 * abs(basis.integrate2(n, y=ys) - n_2D).max() / n_2D.max()
+    )
+)
 # -
 
 # ### Harmonic Oscillator
@@ -357,17 +378,20 @@ print("{}% max error".format(
 
 # +
 from mmfutils.math.bases import CylindricalBasis
+
 eps = np.finfo(float).eps
 hbar = m = w = 1
-a0 = np.sqrt(hbar/m/w)
-R = np.sqrt(-2*a0**2*np.log(eps))
-k_max = np.sqrt(-np.log(eps)/a0**2)
-Nr = int(np.ceil(k_max * 2*R / np.pi))
+a0 = np.sqrt(hbar / m / w)
+R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+Nr = int(np.ceil(k_max * 2 * R / np.pi))
 
 basis = CylindricalBasis(Nxr=(1, Nr), Lxr=(1.0, R))
 
+
 def get_V(r):
-    return m*w**2*r**2/2
+    return m * w ** 2 * r ** 2 / 2
+
 
 Vs = []
 Ks = []
@@ -376,8 +400,8 @@ Es = []
 for l in range(4):
     r = basis._r(Nr, l=l)
     V = get_V(r)
-    K = basis._get_K(l=l)[0]   # Without factors of sqrt(r)
-    H = K/2 + np.diag(V)
+    K = basis._get_K(l=l)[0]  # Without factors of sqrt(r)
+    H = K / 2 + np.diag(V)
     assert np.allclose(H, H.T.conj())
     E = np.linalg.eigvalsh(H)
     Vs.append(V)
@@ -394,10 +418,10 @@ nu0 = basis.nu(l=l0)
 nu = basis.nu(l=l)
 
 r = basis._r(Nr, l=l0)
-K = basis._get_K(l=l0)[0]   # Without factors of sqrt(r)
+K = basis._get_K(l=l0)[0]  # Without factors of sqrt(r)
 
-V = get_V(r) + (nu**2 - nu0**2)/r**2 * hbar**2/2/m
-H = K/2 + np.diag(V)
+V = get_V(r) + (nu ** 2 - nu0 ** 2) / r ** 2 * hbar ** 2 / 2 / m
+H = K / 2 + np.diag(V)
 assert np.allclose(H, H.T.conj())
 E = np.linalg.eigvalsh(H)
 E
@@ -433,7 +457,7 @@ E
 # Hence, we can use the standard 1D Fourier transform of $rn(\abs{r})$.  The only subtlety is at $k=0$ where we can use:
 #
 # $$
-#   \tilde{n}(0) = \int_0^{\infty}\d{r}\; 4\pi r^2 n(r) 
+#   \tilde{n}(0) = \int_0^{\infty}\d{r}\; 4\pi r^2 n(r)
 #                = \int_{-\infty}^{\infty}\d{x}\; 2\pi x^2 n(\abs{x}).
 # $$
 #
@@ -458,52 +482,56 @@ E
 import numpy as np
 
 r_0 = 1.0
-k_0 = 1./r_0
+k_0 = 1.0 / r_0
 
 N = 64
 L = 10.0
-#L = 10.0
-dx = L/N
-dk = 2*np.pi / L
+# L = 10.0
+dx = L / N
+dk = 2 * np.pi / L
 
 
 ######## To Do: Make work with symmetric lattice!
 symmetric = True  # If True, then use a symmetric grid with no point at x=0
 symmetric = False
-x = np.arange(N)*dx - L / 2 + (dx / 2 if symmetric else 0)
-k = 2*np.pi * np.fft.fftfreq(N, dx)
+x = np.arange(N) * dx - L / 2 + (dx / 2 if symmetric else 0)
+k = 2 * np.pi * np.fft.fftfreq(N, dx)
 r = abs(x)
 
-G_r = np.exp(-r/r_0)/8/np.pi*r_0**3
-G_k = 1./(1 + k**2/k_0**2)**2
+G_r = np.exp(-r / r_0) / 8 / np.pi * r_0 ** 3
+G_k = 1.0 / (1 + k ** 2 / k_0 ** 2) ** 2
+
 
 def sft(n, dx=dx):
     """Spherical Fourier transform"""
     if symmetric:
         assert np.allclose(n, n[::-1])
-    else:        
+    else:
         assert np.allclose(n[1:], n[1:][::-1])
 
     N = len(n)
     L = dx * N
-    x = np.arange(N)*dx - L / 2.0 + (dx / 2 if symmetric else 0)
-    k = 2*np.pi * np.fft.fftfreq(N, dx)
-    _ft = np.fft.fft(np.fft.fftshift(x*n))
-    #assert np.allclose(_ft.real, 0)
-    return np.ma.divide(-2*np.pi * _ft.imag * dx, k).filled(
-        (2*np.pi * x**2 * n * dx).sum())
+    x = np.arange(N) * dx - L / 2.0 + (dx / 2 if symmetric else 0)
+    k = 2 * np.pi * np.fft.fftfreq(N, dx)
+    _ft = np.fft.fft(np.fft.fftshift(x * n))
+    # assert np.allclose(_ft.real, 0)
+    return np.ma.divide(-2 * np.pi * _ft.imag * dx, k).filled(
+        (2 * np.pi * x ** 2 * n * dx).sum()
+    )
+
 
 def isft(n, dx=dx):
     """Spherical Inverse Fourier transform"""
     N = len(n)
     L = dx * N
-    dk = 2*np.pi / L
-    x = np.arange(N)*dx - L / 2.0 + (dx / 2 if symmetric else 0)
-    k = 2*np.pi * np.fft.fftfreq(N, dx)
-    _ift = np.fft.fftshift(np.fft.ifft(k*n))
-    #assert np.allclose(_ft.real, 0)
-    return np.ma.divide(_ift.imag, 2*np.pi * dx * x).filled(
-        (2*np.pi * k**2 * n / (2*np.pi)**3).sum() * dk)
+    dk = 2 * np.pi / L
+    x = np.arange(N) * dx - L / 2.0 + (dx / 2 if symmetric else 0)
+    k = 2 * np.pi * np.fft.fftfreq(N, dx)
+    _ift = np.fft.fftshift(np.fft.ifft(k * n))
+    # assert np.allclose(_ft.real, 0)
+    return np.ma.divide(_ift.imag, 2 * np.pi * dx * x).filled(
+        (2 * np.pi * k ** 2 * n / (2 * np.pi) ** 3).sum() * dk
+    )
 
 
 # -
@@ -530,28 +558,32 @@ def isft(n, dx=dx):
 # +
 def pad(f):
     N = len(f)
-    F = np.zeros(2*N, dtype=f.dtype)
-    F[N//2:N//2+N] = f
-    F[-N//2] = f[0]
+    F = np.zeros(2 * N, dtype=f.dtype)
+    F[N // 2 : N // 2 + N] = f
+    F[-N // 2] = f[0]
     return F
 
+
 def unpad(F):
-    N = len(F)//2
-    return F[N//2:N//2+N]
+    N = len(F) // 2
+    return F[N // 2 : N // 2 + N]
 
 
 # +
 import scipy.special
+
 sp = scipy
 eps = np.finfo(float).eps
 a = 0.5
 D = L
-n_r = np.exp(-r**2/2/a**2)
-V_r = a**3/(r + eps) * np.sqrt(np.pi/2) * sp.special.erf((r + eps)/a/np.sqrt(2))
+n_r = np.exp(-(r ** 2) / 2 / a ** 2)
+V_r = (
+    a ** 3 / (r + eps) * np.sqrt(np.pi / 2) * sp.special.erf((r + eps) / a / np.sqrt(2))
+)
 
-_K = 2*np.pi * np.fft.fftfreq(2*N, dx)
-K_D = np.ma.divide(1.0 - np.cos(_K*D), _K**2).filled(D**2/2.0)
-res = unpad(isft(sft(pad(n_r))*K_D))
+_K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
+K_D = np.ma.divide(1.0 - np.cos(_K * D), _K ** 2).filled(D ** 2 / 2.0)
+res = unpad(isft(sft(pad(n_r)) * K_D))
 assert np.allclose(res, V_r)
 
 
@@ -562,19 +594,22 @@ def coulomb(n_r, dx=dx):
     L = N * dx
     D = L
 
-    X = np.arange(2*N)*dx - L
-    K = 2*np.pi * np.fft.fftfreq(2*N, dx)
+    X = np.arange(2 * N) * dx - L
+    K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
 
-    K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+    K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
     n = pad(n_r)
 
-    _ft = np.fft.fft(np.fft.fftshift(X*n))
-    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
-    _ift = np.fft.fftshift(np.fft.ifft(K*tmp))
+    _ft = np.fft.fft(np.fft.fftshift(X * n))
+    tmp = np.ma.divide(-_ft.imag, K).filled((X ** 2 * n).sum()) * K_D
+    _ift = np.fft.fftshift(np.fft.ifft(K * tmp))
     dk = np.pi / L
-    res = np.ma.divide(_ift.imag,  X).filled((K**2*tmp/(2*np.pi)).sum()*dk*dx)
+    res = np.ma.divide(_ift.imag, X).filled(
+        (K ** 2 * tmp / (2 * np.pi)).sum() * dk * dx
+    )
 
     return unpad(res)
+
 
 assert np.allclose(coulomb(n_r), V_r)
 
@@ -587,19 +622,22 @@ def coulomb(n_r, dx=dx):
     D = L
     dk = np.pi / L
 
-    X = np.arange(2*N)*dx - L
-    K = 2*np.pi * np.fft.fftfreq(2*N, dx)
+    X = np.arange(2 * N) * dx - L
+    K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
 
-    K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+    K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
     n = pad(n_r)
 
-    _ft = np.fft.fft(X*n)
-    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
-    _ift = np.fft.ifft(-_ft.imag*K_D)
-    res = np.ma.divide(_ift.imag,  X).filled(-(K**2*tmp/(2*np.pi)).sum()*dk*dx)
+    _ft = np.fft.fft(X * n)
+    tmp = np.ma.divide(-_ft.imag, K).filled((X ** 2 * n).sum()) * K_D
+    _ift = np.fft.ifft(-_ft.imag * K_D)
+    res = np.ma.divide(_ift.imag, X).filled(
+        -(K ** 2 * tmp / (2 * np.pi)).sum() * dk * dx
+    )
     # Not sure I understand the - sign needed here...
 
     return unpad(res)
+
 
 assert np.allclose(coulomb(n_r), V_r)
 # -
@@ -626,10 +664,10 @@ assert np.allclose(coulomb(n_r), V_r)
 #         = 2R\int_0^{\infty} \frac{\d{k}}{\pi} F_{k} \sin(kx),\\
 #   F_k = \overbrace{\cdots + 2\sum_x f_x \sin(kx)}^{\DST_{III}[f_x]}
 #       = \cdots + \frac{2N}{R}\int_0^{\infty} \d{x}\;f_x \sin(kx),\\
-#   \int_0^{\infty}\frac{\d{k}}{\pi} F_{k} \sin(kx) 
+#   \int_0^{\infty}\frac{\d{k}}{\pi} F_{k} \sin(kx)
 #     \equiv \frac{1}{2R}\DST_{II}[F_k]
 #     \equiv \frac{N}{R}\DST_{III}^{-1}[F_k],\\
-#   \int_0^{\infty} \d{x}\;f_x \sin(kx) 
+#   \int_0^{\infty} \d{x}\;f_x \sin(kx)
 #     \equiv \frac{R}{2N}{\DST_{III}[f_x]}.
 # $$
 #
@@ -656,8 +694,8 @@ assert np.allclose(coulomb(n_r), V_r)
 #   =
 #   \int \frac{\d^{3}\vect{k}}{(2\pi)^3}\;
 #   e^{\I \vect{k}\cdot\vect{r}}
-#   \tilde{C}_{\vect{k}} \tilde{y}_{\vect{k}},\\  
-#   \tilde{C}_{\vect{k}} 
+#   \tilde{C}_{\vect{k}} \tilde{y}_{\vect{k}},\\
+#   \tilde{C}_{\vect{k}}
 #   = \frac{4\pi}{k} \int_0^{\infty}\d{r}\; \sin(kr) rC(r)
 #   = \begin{cases}
 #     \frac{2\pi}{k} \frac{R}{N}\DST(rC) & k \neq 0\\
@@ -682,44 +720,49 @@ assert np.allclose(coulomb(n_r), V_r)
 # %pylab inline --no-import-all
 import scipy.fftpack
 import scipy as sp
+
+
 def dst(f):
     return scipy.fftpack.dst(f, type=3)
 
+
 def idst(F):
     N = len(F)
-    return scipy.fftpack.dst(F, type=2)/(2.0*N)
+    return scipy.fftpack.dst(F, type=2) / (2.0 * N)
+
 
 # Now work it for only positive abscissa
 N = 32
 R = 5.0
-dx = R/N
-r = (1.0 + np.arange(N)) * dx 
-rr = np.linspace(0,R,100)
-k = np.pi * (0.5 + np.arange(N))/R
+dx = R / N
+r = (1.0 + np.arange(N)) * dx
+rr = np.linspace(0, R, 100)
+k = np.pi * (0.5 + np.arange(N)) / R
 
 a = 0.5
 
-n_r = np.exp(-r**2/2/a**2)
-V_r = a**3/r * np.sqrt(np.pi/2) * sp.special.erf(r/a/np.sqrt(2))
+n_r = np.exp(-(r ** 2) / 2 / a ** 2)
+V_r = a ** 3 / r * np.sqrt(np.pi / 2) * sp.special.erf(r / a / np.sqrt(2))
 
-f_r = r*n_r
-f_rr = rr*np.exp(-rr**2/2/a**2)
-df_r = (1.0-(r/a)**2)*np.exp(-r**2/2/a**2)
-df_rr = (1.0-(rr/a)**2)*np.exp(-rr**2/2/a**2)
-ddf_r = (r**2-3*a**2)/a**4*f_r
-ddf_rr = (rr**2-3*a**2)/a**4*f_rr
+f_r = r * n_r
+f_rr = rr * np.exp(-(rr ** 2) / 2 / a ** 2)
+df_r = (1.0 - (r / a) ** 2) * np.exp(-(r ** 2) / 2 / a ** 2)
+df_rr = (1.0 - (rr / a) ** 2) * np.exp(-(rr ** 2) / 2 / a ** 2)
+ddf_r = (r ** 2 - 3 * a ** 2) / a ** 4 * f_r
+ddf_rr = (rr ** 2 - 3 * a ** 2) / a ** 4 * f_rr
 
-assert np.allclose(idst(-k**2*dst(f_r)), ddf_r)
+assert np.allclose(idst(-(k ** 2) * dst(f_r)), ddf_r)
 
-F_k = dst(f_r)/(2.0*N)
+F_k = dst(f_r) / (2.0 * N)
 assert np.allclose(
-    f_rr, 2*(F_k[None, :]*np.sin(k[None,:]*rr[:,None])).sum(axis=-1))
+    f_rr, 2 * (F_k[None, :] * np.sin(k[None, :] * rr[:, None])).sum(axis=-1)
+)
 # -
 
 # Finally, we compute the convolution required for the Coulomb potential.  These relationships are much simpler:
 #
 # $$
-#   k\tilde{n}(k) 
+#   k\tilde{n}(k)
 #   = 4\pi \int_0^{\infty}\d{r}\; \sin(kr) rn(r), \qquad
 #   V(r) = \frac{1}{\pi r} \int_{0}^{\infty}\frac{\d{k}}{2\pi}\;
 #           \sin(kr) k\tilde{n}(k)
@@ -739,8 +782,8 @@ assert np.allclose(
 # As a test, the convolution of this Gaussian with itself in 3D is:
 #
 # $$
-#   \int \d^{3}\vect{r}\; y(\norm{\vect{x}-\vect{r}})y(r) = 
-#   2\pi\int_0^{\infty}\d{r}\int_{-1}^{1}\d{\cos\theta}\; 
+#   \int \d^{3}\vect{r}\; y(\norm{\vect{x}-\vect{r}})y(r) =
+#   2\pi\int_0^{\infty}\d{r}\int_{-1}^{1}\d{\cos\theta}\;
 #   r^2 y\left(\sqrt{x^2 + r^2 - 2xr\cos\theta}\right)y(r)\\
 #   = A^2r_0^3 \pi^{3/2}e^{-(x/r_0)^2/4}
 # $$
@@ -748,16 +791,16 @@ assert np.allclose(
 
 # +
 # Now work it for only positive abscissa
-L = 2*R
+L = 2 * R
 D = L
 
-rN_r = np.concatenate([r*n_r, 0*n_r])
-K = np.pi * (0.5 + np.arange(2*N)) / (2*R)
+rN_r = np.concatenate([r * n_r, 0 * n_r])
+K = np.pi * (0.5 + np.arange(2 * N)) / (2 * R)
 
-K_D = np.ma.divide(1.0 - np.cos(K*D), K**2).filled(D**2/2.0)
+K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
 
 kN_k = dst(rN_r)
-V = idst(K_D * kN_k)[:N] /  r
+V = idst(K_D * kN_k)[:N] / r
 assert np.allclose(V, V_r)
 # -
 
@@ -765,36 +808,40 @@ assert np.allclose(V, V_r)
 
 # +
 import scipy.fftpack
+
+
 def dst(f):
     return scipy.fftpack.dst(f, type=3)
 
+
 def idst(F):
     N = len(F)
-    return scipy.fftpack.dst(F, type=2)/(2.0*N)
+    return scipy.fftpack.dst(F, type=2) / (2.0 * N)
+
 
 N = 32
 R = 5.0
 r0 = 0.5
 k0 = 10.0
-dx = R/N
+dx = R / N
 r = (1.0 + np.arange(N)) * dx
 k = np.pi * (0.5 + np.arange(N)) / R
 
-metric = 4*np.pi * r**2 * dx
-n = np.exp(-(r/r0)**2/2)/(r0*np.sqrt(2*np.pi))**3
-assert np.allclose(1, (n*metric).sum())
+metric = 4 * np.pi * r ** 2 * dx
+n = np.exp(-((r / r0) ** 2) / 2) / (r0 * np.sqrt(2 * np.pi)) ** 3
+assert np.allclose(1, (n * metric).sum())
 
-Gk = 1./(1 + k**2/k0**2)**2
-G = idst(Gk)/r
-q = idst(Gk * dst(r*n))/r
+Gk = 1.0 / (1 + k ** 2 / k0 ** 2) ** 2
+G = idst(Gk) / r
+q = idst(Gk * dst(r * n)) / r
 
-assert np.allclose(1, (q*metric).sum())
+assert np.allclose(1, (q * metric).sum())
 # -
 
 # Convolution proceedes as follows (let $q = \sqrt{r^2 + R^2 - 2rR\cos\theta}$ so that $q\d{q} = -rR\d(\cos\theta)$):
 #
 # $$
-#   V(R) = \int\d^{3}{r}\; n(r)f(\abs{R-r}) 
+#   V(R) = \int\d^{3}{r}\; n(r)f(\abs{R-r})
 #   = \frac{2\pi}{R} \int_{0}^{\infty}\d{r}\; rn(r) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
 #   = \frac{\pi}{R} \int_{-\infty}^{\infty}\d{r}\; rn(\abs{r}) \int_{\abs{R-r}}^{\abs{R+r}}\d{q}\; qf(q)
 # $$
@@ -815,16 +862,18 @@ assert np.allclose(1, (q*metric).sum())
 # +
 # %pylab inline --no-import-all
 from importlib import reload
-from mmfutils.math import bessel; reload(bessel)
+from mmfutils.math import bessel
+
+reload(bessel)
 
 nu = 0.0
 n = 0
 
-zn = bessel.j_root(nu=nu, N=n+1)[n]
+zn = bessel.j_root(nu=nu, N=n + 1)[n]
 zn = zn
 F = bessel.J_sqrt_pole(nu=nu, zn=zn, d=0)
 dF = bessel.J_sqrt_pole(nu=nu, zn=zn, d=1)
-z = np.linspace(zn-0.1, zn+0.1, 1000)
+z = np.linspace(zn - 0.1, zn + 0.1, 1000)
 plt.plot(z, F(z))
 
 zn
@@ -866,14 +915,14 @@ zn
 # $$
 #   \I\hbar \partial_t \psi(x, t) = \op{H}\psi(x, t), \qquad
 #   \I\hbar \partial_t \bigl(\op{T}_{vt}\psi_v(x, t)\bigr) = \op{H}\op{T}_{vt}\psi_v(x, t),\\
-#   \I\hbar\dot{\psi}_v(x, t) = 
+#   \I\hbar\dot{\psi}_v(x, t) =
 #   \overbrace{\op{T}^{-1}_{vt}\bigl(\op{H}\op{T}_{vt} - \I\hbar\dot{\op{T}}_{vt}\bigr)}^{\op{H}_v}\psi_v(x, t).
 # $$
 
 # Explicitly, for translations, we have $\I\hbar\dot{\op{T}}_{vt} = v\op{T}_{vt}\op{p}_x$, so:
 #
 # $$
-#   \op{H}_{v} = \frac{\op{p}^2}{2m} - v\op{p}_{x} 
+#   \op{H}_{v} = \frac{\op{p}^2}{2m} - v\op{p}_{x}
 #   + \overbrace{\op{T}^{-1}_{vt}\op{V}\op{T}_{vt}}^{V(\op{x}+vt)}.
 # $$
 #
@@ -893,7 +942,7 @@ zn
 # $$
 #   \mat{R} = \mat{1} + \vect{\theta}\times + \order(\theta^2)
 #     \approx \mat{1} + \theta\uvect{z}\times,\qquad
-#   \mat{R}\cdot\uvect{x} \approx 
+#   \mat{R}\cdot\uvect{x} \approx
 #   \uvect{x} + \theta\uvect{z}\times\uvect{x}
 #   = \uvect{x} + \theta\uvect{y}.
 # $$
@@ -908,7 +957,7 @@ zn
 # Explicitly for a rotating frame, $\I\hbar\dot{\op{R}}_{\vect{\omega} t} = \op{R}_{\vect{\omega} t}\vect{\omega}\cdot\vect{\op{L}}$ so
 #
 # $$
-#   \op{H}_{\vect{\omega}} = \frac{\op{p}^2}{2m} - \vect{\omega}\cdot\vect{\op{L}} 
+#   \op{H}_{\vect{\omega}} = \frac{\op{p}^2}{2m} - \vect{\omega}\cdot\vect{\op{L}}
 #   + \overbrace{\op{R}^{-1}_{\vect{\omega} t}\op{V}\op{R}_{\vect{\omega} t}}^{V(\mat{R}_{\vect{\omega}t}^{-1}\cdot\vect{x})}.
 # $$
 
@@ -930,40 +979,44 @@ zn
 
 # +
 from importlib import reload
-from mmfutils.math.bases import bases; reload(bases)
+from mmfutils.math.bases import bases
+
+reload(bases)
 from mmfutils.plot import imcontourf
-N = 32*2
+
+N = 32 * 2
 L = 14.0
 eps = np.finfo(float).eps
 b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L))
 x, y = b.xyz
 kx, ky = b._pxyz
-f = (x+1j*y)*np.exp(-x**2-y**2)
-nabla_f = (4*(x**2+y**2)-8)*f
+f = (x + 1j * y) * np.exp(-(x ** 2) - y ** 2)
+nabla_f = (4 * (x ** 2 + y ** 2) - 8) * f
 Lz_f = f
 ax = plt.subplot(211)
-plt.semilogy(x.ravel(), abs(f)[:, N//2])
-ax.set(xlabel='x', ylim=(eps, 1))
+plt.semilogy(x.ravel(), abs(f)[:, N // 2])
+ax.set(xlabel="x", ylim=(eps, 1))
 ax = plt.subplot(212)
 ft = np.fft.fftshift(b.fftn(f))
-plt.semilogy(np.fft.fftshift(kx), (abs(ft)/abs(ft).max())[:, N//2])
-ax.set(xlabel='y', ylim=(eps, 1))
+plt.semilogy(np.fft.fftshift(kx), (abs(ft) / abs(ft).max())[:, N // 2])
+ax.set(xlabel="y", ylim=(eps, 1))
 
 assert np.allclose(nabla_f, b.laplacian(f))
 assert np.allclose(Lz_f, b.apply_Lz_hbar(f))
 m = 1.1
 hbar = 2.2
 wz = 3.3
-kwz2 = m*wz/hbar
-factor = -hbar**2/2/m
-assert np.allclose(factor*nabla_f - wz*hbar*Lz_f, 
-                   b.laplacian(f, factor=factor, kwz2=kwz2))
+kwz2 = m * wz / hbar
+factor = -(hbar ** 2) / 2 / m
+assert np.allclose(
+    factor * nabla_f - wz * hbar * Lz_f, b.laplacian(f, factor=factor, kwz2=kwz2)
+)
 # -
 
-np.allclose(b.laplacian(f, factor=factor, kwz2=kwz2)/b.laplacian(f), factor)
+np.allclose(b.laplacian(f, factor=factor, kwz2=kwz2) / b.laplacian(f), factor)
 
-plt.plot(x.ravel(), 
-         ((factor*nabla_f - b.laplacian(f, factor=factor, kwz2=-1))/Lz_f)[:, N//2])
-plt.ylim(-3,3)
-
-
+plt.plot(
+    x.ravel(),
+    ((factor * nabla_f - b.laplacian(f, factor=factor, kwz2=-1)) / Lz_f)[:, N // 2],
+)
+plt.ylim(-3, 3)

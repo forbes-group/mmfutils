@@ -3,6 +3,7 @@ from mmfutils.performance import threads
 import numpy as np
 import pytest
 import timeit
+
 try:
     import numexpr
 except ImportError:
@@ -64,17 +65,15 @@ class TestThreadsBenchmarks(object):
         ts = []
         for nthreads in [1, 2]:
             threads.set_num_threads(nthreads)
-            t = timeit.repeat(lambda: numexpr.evaluate('sin(x)', {'x': x}),
-                              number=10)
+            t = timeit.repeat(lambda: numexpr.evaluate("sin(x)", {"x": x}), number=10)
             ts.append(min(t))
-        assert ts[1] < ts[0]/1.3
+        assert ts[1] < ts[0] / 1.3
 
     def test_fft(self):
         x = np.random.random((1000, 1000))
         ts = []
         for nthreads in [1, 2]:
             threads.set_num_threads(nthreads)
-            t = timeit.repeat(lambda: fft.fftn(x),
-                              number=10)
+            t = timeit.repeat(lambda: fft.fftn(x), number=10)
             ts.append(min(t))
-        assert ts[1] <ts[0]/1.3
+        assert ts[1] < ts[0] / 1.3

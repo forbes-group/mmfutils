@@ -4,8 +4,8 @@ import numpy as np
 
 
 class TestBessel(object):
-    """
-    """
+    """ """
+
     nus = [0.5, 1.0, 1.5]
 
     def test_j_root(self):
@@ -14,7 +14,7 @@ class TestBessel(object):
                 # Ensure coverage
                 j_ = bessel.j_root(nu, Nroots)
                 J = bessel.J(nu)(j_)
-                assert np.allclose(0, J/j_)
+                assert np.allclose(0, J / j_)
 
     def test_J_sqrt_pole(self):
         for nu in self.nus:
@@ -24,9 +24,7 @@ class TestBessel(object):
             for zn in bessel.j_root(nu, Nroots):
                 f = bessel.J_sqrt_pole(nu, zn, d=0)
                 df = bessel.J_sqrt_pole(nu, zn, d=1)
-                assert np.allclose(
-                    np.divide(f(z + h) - f(z-h), 2*h),
-                    df(z))
+                assert np.allclose(np.divide(f(z + h) - f(z - h), 2 * h), df(z))
 
 
 class TestBesselDoctests(object):

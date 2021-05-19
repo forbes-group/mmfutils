@@ -8,10 +8,16 @@ import functools
 
 import numpy as np
 
-from mmfutils.interface import (implementer, Interface, Attribute)
+from mmfutils.interface import implementer, Interface, Attribute
 
-__all__ = ['implementer', 'IBasis', 'IBasisKx', 'IBasisLz',
-           'IBasisWithConvolution', 'BasisMixin']
+__all__ = [
+    "implementer",
+    "IBasis",
+    "IBasisKx",
+    "IBasisLz",
+    "IBasisWithConvolution",
+    "BasisMixin",
+]
 
 
 class IBasisMinimal(Interface):
@@ -50,18 +56,19 @@ class IBasis(IBasisMinimal):
     is_metric_scalar = Attribute(
         """True if the metric is a scalar (number) that commutes with
         everything.  (Allows some algorithms to improve performance.
-        """)
+        """
+    )
 
     shape = Attribute(
         """Array shape the basis.  This is the shape of the array that would be
         formed by evaluating a function of all coordinates xyz.
-        """)
+        """
+    )
 
 
 class IBasisWithConvolution(IBasis):
     def convolve_coulomb(y, form_factors):
-        """Convolve y with the form factors without any images
-        """
+        """Convolve y with the form factors without any images"""
 
     def convolve(y, Ck):
         """Convolve y with Ck"""
@@ -70,6 +77,7 @@ class IBasisWithConvolution(IBasis):
 class IBasisExtended(IBasis):
     """Extended basis with quantum numbers etc.  Used with fermionic
     functionals where you need a complete set of states."""
+
     def get_quantum_numbers():
         """Return a set of iterators over the quantum numbers for the
         basis."""
@@ -91,6 +99,7 @@ class IBasisKx(IBasis):
     arise with artificial gauge fields (Spin-Orbit Coupled BEC's for
     example).
     """
+
     kx = Attribute("Momenta in x direction")
     Lx = Attribute("Length of box in x direction")
     Nx = Attribute("Number of abscissa in x direction")
@@ -124,6 +133,7 @@ class IBasisLz(IBasis):
     """Extension of IBasis that allows the angular momentum along the
     z-axis to be applied.  Useful for implementing rotating frames.
     """
+
     def apply_Lz_hbar(y):
         """Apply `Lz/hbar` to `y`."""
 
@@ -149,10 +159,11 @@ class BasisMixin(object):
     """Provides the methods of IBasis for a class implementing
     IBasisMinimal
     """
+
     def grad_dot_grad(self, a, b):
         """Return the grad(a).dot(grad(b))."""
         laplacian = self.laplacian
-        return (laplacian(a*b) - laplacian(a)*b - a*laplacian(b))/2.0
+        return (laplacian(a * b) - laplacian(a) * b - a * laplacian(b)) / 2.0
 
     @property
     def is_metric_scalar(self):

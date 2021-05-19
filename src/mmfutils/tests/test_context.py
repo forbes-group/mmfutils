@@ -8,13 +8,14 @@ import pytest
 
 from mmfutils import contexts
 
+
 @pytest.yield_fixture
 def NoInterrupt():
     yield contexts.NoInterrupt
     # Restore original handlers
     contexts.NoInterrupt.unregister()
 
-    
+
 class TestNoInterrupt(object):
     @staticmethod
     def simulate_interrupt(force=False, signum=signal.SIGINT):
@@ -38,11 +39,10 @@ class TestNoInterrupt(object):
                     done = True
 
         assert n == 10
-        
+
     def test_restoration_of_handlers(self, NoInterrupt):
-        original_hs = {_sig: signal.getsignal(_sig)
-                       for _sig in NoInterrupt._signals}
-        
+        original_hs = {_sig: signal.getsignal(_sig) for _sig in NoInterrupt._signals}
+
         with NoInterrupt():
             with NoInterrupt():
                 for _sig in original_hs:
@@ -52,9 +52,9 @@ class TestNoInterrupt(object):
 
         for _sig in original_hs:
             assert original_hs[_sig] is not signal.getsignal(_sig)
-            
+
         NoInterrupt.unregister()
-        
+
         for _sig in original_hs:
             assert original_hs[_sig] is signal.getsignal(_sig)
 
@@ -144,9 +144,17 @@ class TestNoInterrupt(object):
                     if a == 1 and b == 1:
                         self.simulate_interrupt()
                     completed.append((a, b))
-                    
-        assert completed == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1),
-                             (2, 0), (2, 1), (2, 2)]
+
+        assert completed == [
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (1, 0),
+            (1, 1),
+            (2, 0),
+            (2, 1),
+            (2, 2),
+        ]
 
         completed = []
         with NoInterrupt(ignore=True) as i1:
@@ -157,7 +165,7 @@ class TestNoInterrupt(object):
                     for b in range(3):
                         if i2:
                             break
-                        if a ==1 and b == 1:
+                        if a == 1 and b == 1:
                             self.simulate_interrupt()
                         completed.append((a, b))
 
@@ -172,7 +180,7 @@ class TestNoInterrupt(object):
                     for b in [0, 1, 2]:
                         if i2:
                             break
-                        if a ==1 and b == 1:
+                        if a == 1 and b == 1:
                             self.simulate_interrupt()
                         completed.append((a, b))
 
@@ -182,8 +190,7 @@ class TestNoInterrupt(object):
                             break
                         completed.append((a, b))
 
-        assert completed == [(0, 0), (0, 1), (0, 2), (0, 3),
-                             (1, 0), (1, 1), (1, 3)]
+        assert completed == [(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 3)]
 
     def test_unused_context(self, NoInterrupt):
         """Test issue 28: bare instance hides signals.
@@ -204,7 +211,7 @@ class TestNoInterrupt(object):
             with ni as interrupted:
                 self.interrupted_loop(interrupted=interrupted, force=True)
         assert np.allclose(self.n, [5, 4])
-            
+
         with ni as interrupted:
             self.interrupted_loop(interrupted=interrupted, force=False)
         assert np.allclose(self.n, [5, 5])
@@ -214,12 +221,12 @@ class TestNoInterrupt(object):
             if x == 2:
                 self.simulate_interrupt()
             values_computed.append(x)
-            return x**2
+            return x ** 2
 
         values_computed = []
         res = NoInterrupt().map(f, [1, 2, 3], values_computed=values_computed)
         assert res == [1, 4]
-        
+
         with pytest.raises(KeyboardInterrupt):
             # Signals still work.
             self.simulate_interrupt()
@@ -229,11 +236,12 @@ class TestNoInterrupt(object):
         values_computed = []
         res = []
         with pytest.raises(KeyboardInterrupt):
-            res = NoInterrupt(ignore=False).map(f, [1, 2, 3],
-                                                values_computed=values_computed)
+            res = NoInterrupt(ignore=False).map(
+                f, [1, 2, 3], values_computed=values_computed
+            )
         assert res == []
         assert values_computed == [1, 2]
-            
+
         # As opposed to a normal map:
         values_computed = []
         res = []
@@ -254,21 +262,20 @@ class TestNoInterrupt(object):
             self.simulate_interrupt(signum=signal.SIGINT)
         assert interrupted._signal_count == {signal.SIGINT: 1}
 
-        NoInterrupt.reset()     # Prevent triggering a forced interrupt
+        NoInterrupt.reset()  # Prevent triggering a forced interrupt
 
         interrupted1 = NoInterrupt()
-        assert interrupted       # Old interrupted still registers the interrupt
+        assert interrupted  # Old interrupted still registers the interrupt
         assert not interrupted1  # New interrupted does not.
 
         # reset() does not reset counts.
         assert interrupted._signal_count == {signal.SIGINT: 1}
         assert interrupted1._signal_count == {signal.SIGINT: 1}
- 
+
         NoInterrupt.suspend()
         self.simulate_interrupt(signum=signal.SIGTERM)
         self.simulate_interrupt(signum=signal.SIGTERM)
-        assert interrupted1._signal_count == {signal.SIGINT: 1,
-                                              signal.SIGTERM: 2}
+        assert interrupted1._signal_count == {signal.SIGINT: 1, signal.SIGTERM: 2}
         NoInterrupt.resume()
         with pytest.raises(KeyboardInterrupt):
             self.simulate_interrupt(signum=signal.SIGINT)

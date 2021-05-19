@@ -6,13 +6,14 @@ import numpy as np
 from numpy import pi, finfo
 
 import scipy.special
+
 sp = scipy
 
 _EPS = finfo(np.double).eps
 _TINY = finfo(np.double).tiny
 
 
-__all__ = ['sinc', 'J', 'j_root', 'J_sqrt_pole']
+__all__ = ["sinc", "J", "j_root", "J_sqrt_pole"]
 
 
 def sinc(x, d=0):
@@ -38,16 +39,17 @@ def sinc(x, d=0):
     True
     """
     if 0 == d:
-        return np.sinc(x/np.pi)
+        return np.sinc(x / np.pi)
     elif 1 == d:
-        x2 = x*x
-        with np.errstate(divide='ignore', invalid='ignore'):
-            return np.where(abs(x) < 0.01,
-                            x*(x2*(-x2/280 + 0.1) - 1.0)/3.0,
-                            (np.cos(x)-np.sinc(x/np.pi))/x)
+        x2 = x * x
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return np.where(
+                abs(x) < 0.01,
+                x * (x2 * (-x2 / 280 + 0.1) - 1.0) / 3.0,
+                (np.cos(x) - np.sinc(x / np.pi)) / x,
+            )
     else:
-        raise NotImplementedError("Only d=0 or 1 supported (got d={})."
-                                  .format(d))
+        raise NotImplementedError("Only d=0 or 1 supported (got d={}).".format(d))
 
 
 def J(nu, d=0):
@@ -71,32 +73,45 @@ def J(nu, d=0):
 
     .. todo:: Fix tolerances so that these are computed to machine precision.
     """
-    nu2 = 2*nu
+    nu2 = 2 * nu
     if 0 == d:
         if 1 == nu2:
+
             def j(z):
-                return np.sqrt(2*z/pi)*sinc(z)
+                return np.sqrt(2 * z / pi) * sinc(z)
+
         elif 3 == nu2:
+
             def j(z):
-                return np.sqrt(2/z/pi)*(sinc(z) - np.cos(z))
+                return np.sqrt(2 / z / pi) * (sinc(z) - np.cos(z))
+
         elif 5 == nu2:
+
             def j(z):
-                return np.sqrt(2/z/pi)/z*((3.0 - z*z)*sinc(z) - 3*np.cos(z))
-        elif False:                     # pragma: no cover
+                return (
+                    np.sqrt(2 / z / pi) / z * ((3.0 - z * z) * sinc(z) - 3 * np.cos(z))
+                )
+
+        elif False:  # pragma: no cover
+
             def j(z):
-                return 2*(nu - 1)/z*J(nu - 1)(z) - J(nu - 2)(z)
+                return 2 * (nu - 1) / z * J(nu - 1)(z) - J(nu - 2)(z)
+
         else:
+
             def j(z):
                 return sp.special.jn(nu, z)
+
     else:
         # Compute derivatives using recurrence relations.  Not
         # efficient for high orders!
         def j(z):
-            return (J(nu - 1, d - 1)(z) - J(nu + 1, d - 1)(z))/2.0
+            return (J(nu - 1, d - 1)(z) - J(nu + 1, d - 1)(z)) / 2.0
+
     return j
 
 
-def j_root_x(nu, x, rel_tol=2*_EPS):
+def j_root_x(nu, x, rel_tol=2 * _EPS):
     r"""Return the roots of the bessel function closest to `x` found
     by iterating a version of Newton's method.
 
@@ -117,34 +132,35 @@ def j_root_x(nu, x, rel_tol=2*_EPS):
         n_iter = 0
         while np.any(x > nu) and err > rel_tol:
             n_iter += 1
-            h = J(nu=nu)(x)/J(nu=nu-1)(x)
+            h = J(nu=nu)(x) / J(nu=nu - 1)(x)
             h = np.where(np.abs(h) > 1, np.sign(h), h)
             x_a = x
-            x = x - h/(1 + h*h)
-            x = np.where(x < 0, x_a/2, x)
+            x = x - h / (1 + h * h)
+            x = np.where(x < 0, x_a / 2, x)
             old_err = err
-            err = np.max(np.abs(h/x))
+            err = np.max(np.abs(h / x))
             if err >= old_err and n_iter > 20:  # pragma: no cover
-                warn("j_root: terminating iteration with error " +
-                     "%g < %g less that specified rel_tol"
-                     % (err, rel_tol))
+                warn(
+                    "j_root: terminating iteration with error "
+                    + "%g < %g less that specified rel_tol" % (err, rel_tol)
+                )
                 break
         x = np.where(x < nu, 0, x)
-    else:                               # pragma: no cover
+    else:  # pragma: no cover
         # Standard Newton's method
         def newton(x):
-            return x - J(x)/J(x, nu=1)
+            return x - J(x) / J(x, nu=1)
 
         x0 = x
         x = newton(x0)
-        while np.max(abs((x - x0)/x)) > rel_tol:
+        while np.max(abs((x - x0) / x)) > rel_tol:
             x0 = x
             x = newton(x0)
 
     return x
 
 
-def j_root(nu, N, rel_tol=2*_EPS):
+def j_root(nu, N, rel_tol=2 * _EPS):
     r"""Return the first N positive roots of the bessel function
     `J_nu(x)`.
 
@@ -209,28 +225,37 @@ def j_root(nu, N, rel_tol=2*_EPS):
     """
     J_ = J(nu)
 
-    nu2 = 2*nu
+    nu2 = 2 * nu
 
     if nu2 < 0:
         raise ValueError("nu must be non-negative")
     elif 1 == nu2:
         # Roots of sin(x)/x = 0:
         # x = pi*n excluding n=0
-        return pi*np.arange(1, N+1)
+        return pi * np.arange(1, N + 1)
     elif 3 == nu2:
         # Roots of sin(x)/x**2 - cos(x)/x:
         # x = tan(x) excluding x = 0
         # If n > 10 iterate x :-> n*pi + arctan(x)
         # 5 times starting with x = pi*(n+0.5)
-        x = np.array([4.4934094579090642, 7.7252518369377068,
-                      10.904121659428899, 14.066193912831473,
-                      17.220755271930770, 20.371302959287561,
-                      23.519452498689006, 26.666054258812672,
-                      29.811598790892958, 32.956389039822476])
+        x = np.array(
+            [
+                4.4934094579090642,
+                7.7252518369377068,
+                10.904121659428899,
+                14.066193912831473,
+                17.220755271930770,
+                20.371302959287561,
+                23.519452498689006,
+                26.666054258812672,
+                29.811598790892958,
+                32.956389039822476,
+            ]
+        )
         if N > 10:
-            n = np.arange(11, N+1)
-            npi = n*pi
-            x0 = (n+0.5)*pi
+            n = np.arange(11, N + 1)
+            npi = n * pi
+            x0 = (n + 0.5) * pi
             for c in range(5):
                 np.arctan(x0, x0)
                 x0 += npi
@@ -239,15 +264,15 @@ def j_root(nu, N, rel_tol=2*_EPS):
             return x[:N]
     else:
         # Find brackets.
-        x = np.empty(N+1, dtype=float)
-        Jx = np.empty(N+1, dtype=float)
+        x = np.empty(N + 1, dtype=float)
+        Jx = np.empty(N + 1, dtype=float)
 
-        x[0] = nu + nu**(1./3.)
+        x[0] = nu + nu ** (1.0 / 3.0)
         Jx[0] = J_(x[0])
-        for n in range(1, N+1):
-            x[n] = x[n-1] + pi
+        for n in range(1, N + 1):
+            x[n] = x[n - 1] + pi
             Jx[n] = J_(x[n])
-            while Jx[n]*Jx[n-1] > 0:
+            while Jx[n] * Jx[n - 1] > 0:
                 x[n] += pi
                 Jx[n] = J_(x[n])
 
@@ -259,11 +284,11 @@ def j_root(nu, N, rel_tol=2*_EPS):
         for n in range(2):
             # Invariant:
             # J0*J1 < 0 or J0 = J1 = 0 and x0 = x1
-            x_mid = (x0 + x1)/2
+            x_mid = (x0 + x1) / 2
             J_mid = J_(x_mid)
-            s0 = J_mid*J0
-            s1 = J_mid*J1
-            assert np.all(s0*s1 <= 0)
+            s0 = J_mid * J0
+            s1 = J_mid * J1
+            assert np.all(s0 * s1 <= 0)
             x0 = np.where(s0 >= 0, x_mid, x0)
             x1 = np.where(s1 >= 0, x_mid, x1)
             J0 = np.where(s0 >= 0, J_mid, J0)
@@ -274,7 +299,7 @@ def j_root(nu, N, rel_tol=2*_EPS):
             # s0 = s1 = 0: x0 = x1 = x_mid and J_mid = 0
 
         # Now form guess using secant method.
-        x = (J1*x0 - J0*x1)/(J1 - J0)
+        x = (J1 * x0 - J0 * x1) / (J1 - J0)
         return j_root_x(nu=nu, x=x, rel_tol=rel_tol)
 
 
@@ -404,52 +429,58 @@ def J_sqrt_pole(nu, zn, d=0):
     dJ = J(nu, 1)
 
     # Taylor coefficients
-    c = (nu*nu - 0.25)/zn/zn
+    c = (nu * nu - 0.25) / zn / zn
 
     fzn = np.zeros(7, dtype=object)
-    fzn[1] = np.sqrt(zn)*dJ(zn)
-    fzn[3] = (c - 1)*fzn[1]
-    fzn[4] = -4*c/zn*fzn[1]
-    fzn[5] = (18*c/zn/zn + (c-1)**2)*fzn[1]
-    fzn[6] = -12*(8/zn/zn + (c-1))*c/zn*fzn[1]
+    fzn[1] = np.sqrt(zn) * dJ(zn)
+    fzn[3] = (c - 1) * fzn[1]
+    fzn[4] = -4 * c / zn * fzn[1]
+    fzn[5] = (18 * c / zn / zn + (c - 1) ** 2) * fzn[1]
+    fzn[6] = -12 * (8 / zn / zn + (c - 1)) * c / zn * fzn[1]
 
     m = np.arange(0, len(fzn) - 1)
-    a_F = fzn[m+1]/(m+1)
+    a_F = fzn[m + 1] / (m + 1)
 
-    m = np.arange(0, len(fzn)-2)
-    a_dF = fzn[m+2]/(m+2)
+    m = np.arange(0, len(fzn) - 2)
+    a_dF = fzn[m + 2] / (m + 2)
 
     # A more complicated estimate could be made here, but one must be
     # careful about cases such as nu = 0.5 where coefficients vanish.
     f1_f6 = 1.0  # fzn[1]/fzn[6]
 
-    delta_c = np.abs(720*np.sqrt(2)*_EPS*zn*f1_f6)**(1/6)
-    ddelta_c = np.abs(144*2*_EPS*zn*f1_f6)**(1/6)
+    delta_c = np.abs(720 * np.sqrt(2) * _EPS * zn * f1_f6) ** (1 / 6)
+    ddelta_c = np.abs(144 * 2 * _EPS * zn * f1_f6) ** (1 / 6)
 
     def f(z, J=J_):
-        return np.sqrt(z)*J(z)
+        return np.sqrt(z) * J(z)
 
     def df(z, J=J_, dJ=dJ):
-        return J(z)/2/np.sqrt(z) + np.sqrt(z)*dJ(z)
+        return J(z) / 2 / np.sqrt(z) + np.sqrt(z) * dJ(z)
 
     if 0 == d:
+
         def F(z):
             denom = z - zn
-            return np.where(abs(denom) > delta_c,
-                            np.divide(f(z), denom + _TINY),
-                            _Horner(a_F, denom))
+            return np.where(
+                abs(denom) > delta_c,
+                np.divide(f(z), denom + _TINY),
+                _Horner(a_F, denom),
+            )
+
         return F
     elif 1 == d:
+
         def dF(z):
             denom = z - zn
-            return np.where(abs(denom) > ddelta_c,
-                            np.divide(df(z) - np.divide(f(z), denom),
-                                      denom),
-                            _Horner(a_dF, denom))
+            return np.where(
+                abs(denom) > ddelta_c,
+                np.divide(df(z) - np.divide(f(z), denom), denom),
+                _Horner(a_dF, denom),
+            )
+
         return dF
     else:
-        raise NotImplementedError("Only d=0 or 1 supported (got d={})."
-                                  .format(d))
+        raise NotImplementedError("Only d=0 or 1 supported (got d={}).".format(d))
 
 
 def _Horner(a, d):
@@ -464,9 +495,9 @@ def _Horner(a, d):
     31.0
     """
     d = np.asarray(d)
-    ans = 0*d
+    ans = 0 * d
     for n in reversed(range(len(a))):
         ans += a[n]
         if n > 0:
-            ans *= d/n
+            ans *= d / n
     return ans

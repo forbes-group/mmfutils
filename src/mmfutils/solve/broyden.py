@@ -16,7 +16,7 @@ import scipy as sp
 
 from ..math.linalg import block_diag
 
-__all__ = ['DyadicSum']
+__all__ = ["DyadicSum"]
 
 
 _FINFO = np.finfo(float)
@@ -102,7 +102,7 @@ class DyadicSum(object):
     >>> J @ x                                             # doctest: +SKIP
     array([[1.],
            [4.]])
-    >>> x.T @ J                                           # doctest: +SKIP 
+    >>> x.T @ J                                           # doctest: +SKIP
     array([[5., 2.]])
     >>> J.__rmatmul__(x.T)
     array([[5., 2.]])
@@ -185,12 +185,19 @@ class DyadicSum(object):
     """
     # Ensure that this has higher priority than numpy or scipy arrays
     # so that A @ B will call B.__rmatmul__ if B is a DyadicSum.
-    __array_priority__ = 100.0   # https://stackoverflow.com/questions/55879170
+    __array_priority__ = 100.0  # https://stackoverflow.com/questions/55879170
 
-    def __init__(self,
-                 at=None, b=None, sigma=None, alpha=1.0,
-                 n_max=np.inf, use_svd=True,
-                 inplace=False, dynamic_range=_EPS):
+    def __init__(
+        self,
+        at=None,
+        b=None,
+        sigma=None,
+        alpha=1.0,
+        n_max=np.inf,
+        use_svd=True,
+        inplace=False,
+        dynamic_range=_EPS,
+    ):
         self._at = np.empty((0, 0)) if at is None else np.ascontiguousarray(at)
         self._b = np.empty((0, 0)) if b is None else np.ascontiguousarray(b)
         if sigma is None:
@@ -198,22 +205,25 @@ class DyadicSum(object):
             if not len(self._at.T) == k:
                 raise ValueError(
                     "If sigma==None, a and b must have same length. "
-                    + "Got {} and {}.".format(len(self._at.T), k))
+                    + "Got {} and {}.".format(len(self._at.T), k)
+                )
             sigma = np.eye(k, k)
         self._sigma = np.asarray(sigma)
 
         self.alpha = alpha
-        
-        assert (self._at.shape[0] == self._b.shape[1])
-        assert ((self._at.shape[1], self._b.shape[0]) == self._sigma.shape or
-                (self._at.shape[1], self._b.shape[0]) == self._sigma.shape*2)
+
+        assert self._at.shape[0] == self._b.shape[1]
+        assert (self._at.shape[1], self._b.shape[0]) == self._sigma.shape or (
+            self._at.shape[1],
+            self._b.shape[0],
+        ) == self._sigma.shape * 2
 
         self.n_max = n_max
         self.use_svd = use_svd
         self.inplace = inplace
         self.dynamic_range = dynamic_range
 
-        if (not use_svd and n_max < np.inf):
+        if not use_svd and n_max < np.inf:
             raise ValueError("Finite `n_max={}` requires `svd=True`.".format(n_max))
 
         self.orthogonalize()
@@ -291,7 +301,8 @@ class DyadicSum(object):
             if not len(a) == len(b):
                 raise ValueError(
                     "If sigma==None, a and b must have same length. "
-                    + "Got {} and {}.".format(len(a), len(b)))
+                    + "Got {} and {}.".format(len(a), len(b))
+                )
             sigma = np.eye(len(a), len(b))
         else:
             sigma = np.asarray(sigma)
@@ -412,13 +423,12 @@ class DyadicSum(object):
             at = sp.linalg.cho_solve(clow=(lb, True), b=at.T).T
             b = sp.linalg.cho_solve(clow=(lb, True), b=b)
         else:
-            qa, ra = np.linalg.qr(at)      # at = qa*ra
-            qb, rb = np.linalg.qr(b.T)     # b = rb.T*qb.T
+            qa, ra = np.linalg.qr(at)  # at = qa*ra
+            qb, rb = np.linalg.qr(b.T)  # b = rb.T*qb.T
             sigma = matmul(ra, matmul(sigma, rb.T))
             if self.use_svd:
                 u, d_, vt = np.linalg.svd(sigma)
-                max_inds = np.where(d_/d_.max() >=
-                                    self.dynamic_range)[0]
+                max_inds = np.where(d_ / d_.max() >= self.dynamic_range)[0]
                 if 0 < len(max_inds):
                     max_ind = min(max_inds[-1] + 1, self.n_max)
                 else:
@@ -475,10 +485,10 @@ class DyadicSum(object):
             return np.array(self.alpha)
 
         if 1 == len(self._sigma.shape):
-            M = matmul(self._at*self._sigma, self._b)
+            M = matmul(self._at * self._sigma, self._b)
         else:
             M = matmul(self._at, matmul(self._sigma, self._b))
-        return M + self.alpha*np.eye(*M.shape)
+        return M + self.alpha * np.eye(*M.shape)
 
     def diag(self, k=0):
         r"""Return the diagonal of the matrix.
@@ -501,7 +511,7 @@ class DyadicSum(object):
         b = self._b
 
         if 1 == len(self._sigma.shape):
-            at = self._at*self._sigma
+            at = self._at * self._sigma
         else:
             at = matmul(self._at, self._sigma)
         na = at.shape[0]
@@ -509,7 +519,7 @@ class DyadicSum(object):
         ka = max(0, -k)
         kb = max(0, k)
         n = min(na - ka, nb - kb)
-        d = (at[ka:ka+n, :].T*b[:, kb:kb+n]).sum(axis=0)
+        d = (at[ka : ka + n, :].T * b[:, kb : kb + n]).sum(axis=0)
         if 0 == k:
             d += self.alpha
         return d
@@ -517,18 +527,19 @@ class DyadicSum(object):
     def __matmul__(self, x):
         r"""Matrix multiplication: Return self*x."""
         if 0 == len(self._b):
-            res = self.alpha*x
+            res = self.alpha * x
         else:
             shape = x.shape
             if 1 == len(shape):
                 x = x.reshape((len(x), 1))
             if 1 == len(self._sigma.shape):
-                res = self.alpha * x + matmul(self._at,
-                                              np.multiply(self._sigma[:, None],
-                                                          matmul(self._b, x)))
+                res = self.alpha * x + matmul(
+                    self._at, np.multiply(self._sigma[:, None], matmul(self._b, x))
+                )
             else:
-                res = self.alpha * x + matmul(self._at, matmul(self._sigma,
-                                                               matmul(self._b, x)))
+                res = self.alpha * x + matmul(
+                    self._at, matmul(self._sigma, matmul(self._b, x))
+                )
             res = res.reshape(shape)
         return res
 
@@ -542,32 +553,34 @@ class DyadicSum(object):
                 x = x.reshape((1, len(x)))
             if 1 == len(self._sigma.shape):
                 res = self.alpha * x + matmul(
-                    np.multiply(matmul(x, self._at),
-                                self._sigma[None, :]), self._b)
+                    np.multiply(matmul(x, self._at), self._sigma[None, :]), self._b
+                )
             else:
-                res = self.alpha * x + matmul(matmul(matmul(x, self._at),
-                                                     self._sigma), self._b)
+                res = self.alpha * x + matmul(
+                    matmul(matmul(x, self._at), self._sigma), self._b
+                )
             res = res.reshape(shape)
         return res
 
     def inv(self):
         """Return the inverse using the Sherman-Morrison formula."""
-        args = dict(n_max=self.n_max, use_svd=self.use_svd,
-                    inplace=self.inplace,
-                    dynamic_range=self.dynamic_range)
+        args = dict(
+            n_max=self.n_max,
+            use_svd=self.use_svd,
+            inplace=self.inplace,
+            dynamic_range=self.dynamic_range,
+        )
         U = self._at
         if 1 == len(self._sigma.shape):
-            V = self._sigma[:, None]*self._b
+            V = self._sigma[:, None] * self._b
         else:
             V = self._sigma.dot(self._b)
-        
+
         k, N = V.shape
-        b = np.linalg.solve(
-            np.eye(k) + V.dot(U)/self.alpha,
-            V/self.alpha)
-        at = -U/self.alpha
-        
-        J = DyadicSum(alpha=1./self.alpha, at=at, b=b, **args)
+        b = np.linalg.solve(np.eye(k) + V.dot(U) / self.alpha, V / self.alpha)
+        at = -U / self.alpha
+
+        J = DyadicSum(alpha=1.0 / self.alpha, at=at, b=b, **args)
         return J
 
     def dot(self, x):
@@ -609,7 +622,7 @@ class DyadicSum(object):
             if 2 < len(b.shape):
                 b = np.rollaxis(b, 0, -1)
             if 1 == len(self._sigma.shape):
-                res = matmul(at*self._sigma, b).squeeze()
+                res = matmul(at * self._sigma, b).squeeze()
             else:
                 res = matmul(at, matmul(self._sigma, b)).sqeeze()
 
@@ -621,11 +634,13 @@ class DyadicSum(object):
             res[np.where(ka[:, None] == kb[None, :])] += self.alpha
         else:
             raise ValueError(
-                "{} only supports two-dimensional indexing.  Got {}"
-                .format(self.__class__.__name__, repr(key)))
+                "{} only supports two-dimensional indexing.  Got {}".format(
+                    self.__class__.__name__, repr(key)
+                )
+            )
         return res
 
-    def update_broyden(self, dx, df, method='good'):
+    def update_broyden(self, dx, df, method="good"):
         """Add a dyad according to the Broyden update to satisfy the secant
         condition `B*dx = df`.
 
@@ -640,12 +655,12 @@ class DyadicSum(object):
            of this DyadicSum representing the inverse Jacobian.
         """
         Bdf = self.dot(df)
-        
-        if method == 'good':
-            dxB = self.__rmatmul__(np.asarray(dx))     # dx @ self
-            self.add_dyad((dx - Bdf)/dx.dot(Bdf), dxB)
+
+        if method == "good":
+            dxB = self.__rmatmul__(np.asarray(dx))  # dx @ self
+            self.add_dyad((dx - Bdf) / dx.dot(Bdf), dxB)
         else:
-            self.add_dyad((dx - Bdf)/df.dot(df), df)
+            self.add_dyad((dx - Bdf) / df.dot(df), df)
 
 
 class JacobianBFGS(sp.optimize.nonlin.Jacobian):
@@ -665,8 +680,9 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
     ----------
     _dx, _df : list
        List of the previous `k` differences.
-    
+
     """
+
     def __init__(self, alpha=1.0, n_max=20):
         self._dx = []
         self._df = []
@@ -684,7 +700,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         s, y = self._dx, self._df
 
         if len(y) >= 1:
-            return s[-1].dot(y[-1])/(y[-1].dot(y[-1]))
+            return s[-1].dot(y[-1]) / (y[-1].dot(y[-1]))
         else:
             return self._H0
 
@@ -694,7 +710,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
 
     @property
     def shape(self):
-        return (len(np.asarray(self._last_f)),)*2
+        return (len(np.asarray(self._last_f)),) * 2
 
     @property
     def _eye(self):
@@ -703,13 +719,13 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
             return np.eye(*self.shape, dtype=self.dtype)
         else:
             return np.array(1.0, dtype=self.dtype)
-        
+
     def solve(self, v):
         """Return `H.dot(v)` where `H` is the inverse Jacobian.
 
         Uses Algorithm (7.4) of [Nocedal:2006]
         """
-        if not self._dx:        # Short circuit if no updates have been given
+        if not self._dx:  # Short circuit if no updates have been given
             return self._H0 * v
         s_, y_ = self._dx, self._df
         q = np.asarray(v).copy()
@@ -721,7 +737,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         rho = np.empty(k, dtype=self.dtype)
         for i in reversed(range(k)):
             s, y = s_[i], y_[i]
-            rho[i] = 1./(y.dot(s))
+            rho[i] = 1.0 / (y.dot(s))
             alpha[i, ...] = rho[i] * (s.dot(q))
             q -= alpha[i][None, :] * y[:, None]
         q *= self.H0
@@ -729,7 +745,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         for i in range(k):
             s, y = s_[i], y_[i]
             beta = rho[i] * y.dot(r)
-            r += (alpha[i] - beta)[None, :]*s[:, None]
+            r += (alpha[i] - beta)[None, :] * s[:, None]
         return r.reshape(q_shape)
 
     def dense_H(self):
@@ -745,9 +761,9 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         I = self._eye
         H = self.H0 * I
         for s, y in zip(self._dx, self._df):
-            rho = 1./(y.dot(s))
-            V = I - rho*y[:, None]*s[None, :]
-            H = V.T.dot(H).dot(V) + rho*s[:, None]*s[None, :]
+            rho = 1.0 / (y.dot(s))
+            V = I - rho * y[:, None] * s[None, :]
+            H = V.T.dot(H).dot(V) + rho * s[:, None] * s[None, :]
         return np.asarray(H)
 
     def dense_J(self):
@@ -755,30 +771,30 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         return np.linalg.inv(self.dense_H())
 
     todense = toarray = dense_J
-        
+
     def update(self, x, f):
         if self._last_x is not None:
             dx = x - self._last_x
             df = f - self._last_f
-            if np.allclose(0, df.dot(dx), atol=_EPS**2):
-                raise np.linalg.LinAlgError(
-                    "Current step makes Jacobian singular.")
+            if np.allclose(0, df.dot(dx), atol=_EPS ** 2):
+                raise np.linalg.LinAlgError("Current step makes Jacobian singular.")
             self._dx.append(dx)
             self._df.append(df)
             if len(self._dx) > self.n_max:
-                self._dx = self._dx[-self.n_max:]
-                self._df = self._df[-self.n_max:]
+                self._dx = self._dx[-self.n_max :]
+                self._df = self._df[-self.n_max :]
         self._last_x, self._last_f = x, f
 
 
 class Jacobian(DyadicSum):
     """Provides the `scipy.optimize.nonlin.Jacobian` interface."""
-    def __init__(self, method='good', *v, **kw):
+
+    def __init__(self, method="good", *v, **kw):
         DyadicSum.__init__(self, *v, **kw)
         self.last_f = None
         self.last_x = None
         self.method = method
-        
+
     def solve(self, v):
         return self.inv().dot(v)
 
@@ -802,25 +818,23 @@ class Jacobian(DyadicSum):
 
 class L_BFGS(object):
     """Simple implementation of the L_BFGS algorithm."""
+
     def __init__(self, f, df, x0, alpha=1.0, n_max=10):
         self.f = f
         self.df = df
         self.x0 = x0
-        self.s_ = []   # Last m steps dx
-        self.y_ = []   # Last m changes in df
+        self.s_ = []  # Last m steps dx
+        self.y_ = []  # Last m changes in df
         self.B = DyadicSum(alpha=alpha, n_max=n_max)
 
     def get_search_direction(self, df):
-        """Return the search direction """
+        """Return the search direction"""
         sy = s_.T.dot(y_)
         delta = sy[-1, -1]
-        R = np.asarray(np.bmat([[delta*s_],
-                                [y_]]))
+        R = np.asarray(np.bmat([[delta * s_], [y_]]))
         L = np.tril(sy)
         D = np.diag(np.diag(sy))
-        M = np.asarray(np.bmat(
-            [[delta*s_.T.dot(s_), L],
-             [L.T, -D]]))
+        M = np.asarray(np.bmat([[delta * s_.T.dot(s_), L], [L.T, -D]]))
 
-        search_direction = -delta*df - R.dot(np.linalg.solve(M, R_.T.dot(df)))
+        search_direction = -delta * df - R.dot(np.linalg.solve(M, R_.T.dot(df)))
         return search_direction

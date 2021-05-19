@@ -7,7 +7,7 @@ is enabled but cannot be found.  Just go:
 >>> from mmfutils.performance.numexpr import numexpr
 
 """
-__all__ = ['numexpr']
+__all__ = ["numexpr"]
 
 numexpr = False
 try:
@@ -19,17 +19,18 @@ try:
     # disable the MKL.
     import multiprocessing
 
-    def check(q):               # pragma: nocover
+    def check(q):  # pragma: nocover
         import numexpr
+
         q.put(numexpr.get_vml_version())
 
     q = multiprocessing.Queue()
     _p = multiprocessing.Process(target=check, args=[q])
     _p.start()
     _p.join()
-    if q.empty():               # pragma: nocover
+    if q.empty():  # pragma: nocover
         # Fail
         numexpr.use_vml = False
 
-except ImportError:             # pragma: nocover
+except ImportError:  # pragma: nocover
     pass

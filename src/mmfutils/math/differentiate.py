@@ -5,12 +5,10 @@ import numpy as np
 
 from mmfutils.math.integrate import Richardson
 
-__all__ = ['differentiate', 'hessian']
+__all__ = ["differentiate", "hessian"]
 
 
-def differentiate(f, x=0.0, d=1, h0=1.0,
-                  l=1.4, nmax=10, dir=0,
-                  p0=1, err=[0]):
+def differentiate(f, x=0.0, d=1, h0=1.0, l=1.4, nmax=10, dir=0, p0=1, err=[0]):
     r"""Evaluate the numerical dth derivative of f(x) using a Richardson
     extrapolation of the finite difference formula.
 
@@ -132,33 +130,33 @@ def differentiate(f, x=0.0, d=1, h0=1.0,
         return f(x)
 
     if 2 < d:
+
         def df(x):
-            return differentiate(f=f, x=x, d=d-2, h0=h0, dir=dir,
-                                 l=l, nmax=nmax)
-        return differentiate(df, x=x, d=2, h0=h0, dir=dir,
-                             l=l, nmax=nmax, err=err)
+            return differentiate(f=f, x=x, d=d - 2, h0=h0, dir=dir, l=l, nmax=nmax)
+
+        return differentiate(df, x=x, d=2, h0=h0, dir=dir, l=l, nmax=nmax, err=err)
 
     def df(N, x=x, d=d, dir=dir, h0=h0):
-        h = float(h0)/N
+        h = float(h0) / N
         h = (x + h) - x
         if 1 == d:
             if dir < 0:
-                return (f(x) - f(x-h))/h
+                return (f(x) - f(x - h)) / h
             elif dir > 0:
-                return (f(x + h) - f(x))/h
+                return (f(x + h) - f(x)) / h
             else:
-                return (f(x + h) - f(x - h))/(2*h)
+                return (f(x + h) - f(x - h)) / (2 * h)
         elif 2 == d:
             if dir < 0:
-                return (f(x - 2*h) - 2*f(x - h) + f(x))/(h*h)
+                return (f(x - 2 * h) - 2 * f(x - h) + f(x)) / (h * h)
             elif dir > 0:
-                return (f(x + 2*h) - 2*f(x + h) + f(x))/(h*h)
+                return (f(x + 2 * h) - 2 * f(x + h) + f(x)) / (h * h)
             else:
-                return (f(x + h) - 2*f(x) + f(x - h))/(h*h)
+                return (f(x + h) - 2 * f(x) + f(x - h)) / (h * h)
 
     p = 2 if dir == 0 else 1
 
-    r = Richardson(df, ps=itertools.count(p*p0, p), l=l)
+    r = Richardson(df, ps=itertools.count(p * p0, p), l=l)
     next(r)
     d1 = next(r)
     d0 = next(r)
@@ -212,9 +210,9 @@ def hessian(f, x, **kw):
         r"""Shift arguments to be about zero."""
         return f(_x + x)
 
-    f0 = f(0*x)
+    f0 = f(0 * x)
     D = np.empty(N, dtype=np.dtype(f0))
-    H = np.empty((N,)*2, dtype=np.dtype(f0))
+    H = np.empty((N,) * 2, dtype=np.dtype(f0))
 
     def _f_m_n(_xm, m, _xn=None, n=None):
         r"""Return `f(x)` where `x[m,n]` are offset by `_x[m,n]`."""
@@ -227,9 +225,9 @@ def hessian(f, x, **kw):
     for m in range(len(x)):
         D[m] = differentiate(lambda _x: _f_m_n(_x, m=m), d=1, **kw)
         H[m, m] = differentiate(lambda _x: _f_m_n(_x, m=m), d=2, **kw)
-        for n in range(m+1, len(x)):
+        for n in range(m + 1, len(x)):
             H[m, n] = H[n, m] = differentiate(
-                lambda _xn: differentiate(
-                    lambda _xm: _f_m_n(_xm, m, _xn, n), **kw),
-                **kw)
+                lambda _xn: differentiate(lambda _xm: _f_m_n(_xm, m, _xn, n), **kw),
+                **kw
+            )
     return D, H

@@ -20,17 +20,19 @@ def set_num_threads(nthreads):
         set_num_threads(nthreads)
 
 
-try:             # pragma: nocover  Can't do this on public CI servers
+try:  # pragma: nocover  Can't do this on public CI servers
     import mkl
+
     MKL_NUM_THREADS = mkl.get_max_threads()
     SET_THREAD_HOOKS.add(mkl.set_num_threads)
-except ImportError:             # pragma: nocover
+except ImportError:  # pragma: nocover
     pass
 
 try:
     import numexpr
+
     if numexpr:
         SET_THREAD_HOOKS.add(numexpr.set_num_threads)
         SET_THREAD_HOOKS.add(numexpr.set_vml_num_threads)
-except ImportError:             # pragma: nocover
+except ImportError:  # pragma: nocover
     pass

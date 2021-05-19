@@ -25,8 +25,8 @@ def bracket_monotonic(f, x0=0.0, x1=1.0, factor=2.0):
     if f1 < f0:
         x0, x1 = x1, x0
         f0, f1 = f1, f0
-    while f0*f1 >= 0:
-        x0, x1 = x1, x0 - factor*(x1-x0)
+    while f0 * f1 >= 0:
+        x0, x1 = x1, x0 - factor * (x1 - x0)
         f0, f1 = f1, f(x1)
     return (x0, x1)
 
@@ -47,7 +47,8 @@ def usolve(f, a, *v, **kw):
     """
     from uncertainties.core import nominal_value, ufloat, AffineScalarFunc
     import scipy.optimize
-    solver = kw.pop('solver', scipy.optimize.brentq)
+
+    solver = kw.pop("solver", scipy.optimize.brentq)
 
     if not isinstance(f(a), AffineScalarFunc):
         # Just solve normally which is faster
@@ -57,9 +58,10 @@ def usolve(f, a, *v, **kw):
     _x = ufloat(x, 0)
     zero = f(_x)
     params = [_k for _k in zero.derivatives if _k is not _x]
-    return x - sum((_p - nominal_value(_p))
-                   *zero.derivatives[_p]/zero.derivatives[_x]
-                   for _p in params)
+    return x - sum(
+        (_p - nominal_value(_p)) * zero.derivatives[_p] / zero.derivatives[_x]
+        for _p in params
+    )
 
 
 def ubrentq(f, a, b, *v, **kw):
@@ -67,4 +69,5 @@ def ubrentq(f, a, b, *v, **kw):
     uncertainties package.
     """
     from uncertainties import nominal_value
+
     return usolve(f, nominal_value(a), nominal_value(b), *v, **kw)

@@ -31,7 +31,7 @@ class TestTesting(object):
         assert allclose(a, b, atol=0.01)
         assert allclose(a, b, use_covariance=True)
         assert not allclose(a, b)
-        
+
         b, a = ufloat(1.0, 0.02), 1.01
         assert allclose(a, b, atol=0.01)
         assert allclose(a, b, use_covariance=True)
@@ -52,6 +52,6 @@ class TestTesting(object):
             a, b = ufloat(1.0, 0.1), 1.01
             with pytest.raises(ValueError):
                 assert allclose(a, b, use_covariance=True)
-        
+
         finally:
             testing.unumpy = unumpy

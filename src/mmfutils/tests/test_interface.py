@@ -2,13 +2,19 @@ import pytest
 import zope.interface.document
 import zope.interface.exceptions
 
-from mmfutils.interface import (implementer, verifyObject, verifyClass,
-                                Interface, Attribute)
+from mmfutils.interface import (
+    implementer,
+    verifyObject,
+    verifyClass,
+    Interface,
+    Attribute,
+)
 
 
 class IInterfaceTest(Interface):
     """Dummy interface for testing"""
-    p = Attribute('p', "Power")
+
+    p = Attribute("p", "Power")
 
     def required_method(a, b):
         """Return a+b computed appropriately"""
@@ -39,14 +45,13 @@ class InterfaceTest(object):
         self.p = p
 
     def required_method(self, a, b):
-        return (a + b)**self.p
+        return (a + b) ** self.p
 
 
 class TestInterfaces(object):
     def test_verifyClass(self):
         verifyClass(IInterfaceTest, InterfaceTest)
-        with pytest.raises(
-                zope.interface.exceptions.BrokenMethodImplementation):
+        with pytest.raises(zope.interface.exceptions.BrokenMethodImplementation):
             verifyClass(IInterfaceTest, BrokenInterfaceTest1)
 
     def test_verifyObject(self):
@@ -54,13 +59,11 @@ class TestInterfaces(object):
         verifyObject(IInterfaceTest, o)
 
         o = BrokenInterfaceTest1()
-        with pytest.raises(
-                zope.interface.exceptions.BrokenMethodImplementation):
+        with pytest.raises(zope.interface.exceptions.BrokenMethodImplementation):
             verifyObject(IInterfaceTest, o)
 
         o = BrokenInterfaceTest2()
-        with pytest.raises(
-                zope.interface.exceptions.BrokenImplementation):
+        with pytest.raises(zope.interface.exceptions.BrokenImplementation):
             verifyObject(IInterfaceTest, o)
 
 

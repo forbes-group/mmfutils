@@ -1,7 +1,6 @@
 import pickle
 
-from mmfutils.containers import (Object,
-                                 Container, ContainerList, ContainerDict)
+from mmfutils.containers import Object, Container, ContainerList, ContainerDict
 
 import pytest
 
@@ -15,23 +14,23 @@ class TestContainer(object):
 
         o1 = pickle.loads(pickle.dumps(o))
         assert repr(o) == repr(o1)
-        assert hasattr(o, 'dont_store_this')
-        assert not hasattr(o1, 'dont_store_this')
+        assert hasattr(o, "dont_store_this")
+        assert not hasattr(o1, "dont_store_this")
 
     def test_container_delattr(self):
         # Not encouraged but provided
         c = Container(c=[1, 2, 3], a=1, b="b")
         del c.b
-        assert 'a' in c
-        assert 'b' not in c
-        assert 'c' in c
+        assert "a" in c
+        assert "b" not in c
+        assert "c" in c
 
     def test_preserve_order_of_picklable_attributes(self):
         """Check that the order of attributes defined by
         picklable_attributes is preserved"""
-        c = Container(a=1, b=2, c=3, picklable_attributes=['b', 'a'])
+        c = Container(a=1, b=2, c=3, picklable_attributes=["b", "a"])
         assert repr(c) == "Container(b=2, a=1)"
-        c.picklable_attributes = ['a', 'b']
+        c.picklable_attributes = ["a", "b"]
         assert repr(c) == "Container(a=1, b=2)"
 
 
@@ -40,24 +39,24 @@ class TestContainerList(object):
         # Not encouraged but provided
         c = ContainerList(c=[1, 2, 3], a=1, b="b")
         del c[1]
-        assert 'a' in c
-        assert 'b' not in c
-        assert 'c' in c
+        assert "a" in c
+        assert "b" not in c
+        assert "c" in c
 
 
 class TestContainerDict(object):
     def test_container_del(self):
         # Not encouraged but provided
         c = ContainerDict(c=[1, 2, 3], a=1, b="b")
-        del c['b']
-        assert 'a' in c
-        assert 'b' not in c
-        assert 'c' in c
+        del c["b"]
+        assert "a" in c
+        assert "b" not in c
+        assert "c" in c
 
     def test_container_setitem(self):
         # Not encouraged but provided
         c = ContainerDict(c=[1, 2, 3], a=1, b="b")
-        c['a'] = 3
+        c["a"] = 3
         assert c.a == 3
 
 
@@ -68,7 +67,7 @@ class TestContainerConversion(object):
         cls.cl = ContainerList(a=1, c=[1, 2, 3], b="b")
         cls.cd = ContainerDict(a=1, c=[1, 2, 3], b="b")
         cls.d = dict(a=1, c=[1, 2, 3], b="b")
-        cls.l = [('a', 1), ('b', "b"), ('c', [1, 2, 3])]
+        cls.l = [("a", 1), ("b", "b"), ("c", [1, 2, 3])]
 
     def check(self, c):
         assert self.c.__getstate__() == c.__getstate__()
@@ -103,12 +102,14 @@ class MyObject(Object):
 
 class MyEmptyObject(Object):
     """Has no attributes, but should have init() called"""
+
     def init(self):
         self.x = 5
 
 
 class MyDefaultObject(Object):
     """Has default attributes."""
+
     x = 5
 
     def d(self):
@@ -128,8 +129,8 @@ class TestObject(object):
 
         o1 = pickle.loads(pickle.dumps(o))
         assert repr(o) == repr(o1)
-        assert hasattr(o, 'dont_store_this')
-        assert not hasattr(o1, 'dont_store_this')
+        assert hasattr(o, "dont_store_this")
+        assert not hasattr(o1, "dont_store_this")
 
     def test_empty_object(self):
         o = MyEmptyObject()
@@ -175,16 +176,17 @@ class TestPersist(object):
         o.dont_store_this = "BAD"
 
         import persist.archive  # May not be installed
+
         a = persist.archive.Archive()
         a.insert(o=o)
 
         d = {}
         exec(str(a), d)
-        o1 = d['o']
+        o1 = d["o"]
 
         assert repr(o) == repr(o1)
-        assert hasattr(o, 'dont_store_this')
-        assert not hasattr(o1, 'dont_store_this')
+        assert hasattr(o, "dont_store_this")
+        assert not hasattr(o1, "dont_store_this")
 
 
 class Issue4(ContainerDict):
@@ -210,6 +212,7 @@ class Issue4(ContainerDict):
     >>> i
     Issue4(a=10, b=4)
     """
+
     def __init__(self, **kw):
         self.a = 1.0
         self.b = None  # By default, compute b.
@@ -224,15 +227,15 @@ class Issue4(ContainerDict):
         return state
 
     def __getattribute__(self, key):
-        if key not in set(['a', 'b']):
+        if key not in set(["a", "b"]):
             return super().__getattribute__(key)
 
         # Specialized access for these to enforce computation
         res = {}
-        a = res['a'] = super().__getattribute__('a')
-        b = res['b'] = super().__getattribute__('b')
+        a = res["a"] = super().__getattribute__("a")
+        b = res["b"] = super().__getattribute__("b")
         if a is None:
-            res['a'] = 2*b
+            res["a"] = 2 * b
         if b is None:
-            res['b'] = a/2
+            res["b"] = a / 2
         return res[key]

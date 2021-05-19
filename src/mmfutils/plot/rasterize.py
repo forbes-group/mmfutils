@@ -7,13 +7,14 @@ to be rasterized so that file sizes can be kept manageable.
 import matplotlib.collections
 from matplotlib import pyplot as plt
 
-__all__ = ['ListCollection', 'contourf']
+__all__ = ["ListCollection", "contourf"]
 
 
 class ListCollection(matplotlib.collections.Collection):
     r"""Provide a simple :class:`matplotlib.collections.Collection` of a list of
     artists.  Provided so that this collection of artists can be simultaneously
     rasterized.  Used by my custom :func:`contourf` function."""
+
     def __init__(self, collections, **kwargs):
         matplotlib.collections.Collection.__init__(self, **kwargs)
         self.set_collections(collections)
@@ -35,15 +36,13 @@ def contourf(*v, **kw):
     `rasterized` keyword."""
     was_interactive = matplotlib.is_interactive()
     matplotlib.interactive(False)
-    rasterized = kw.pop('rasterized', None)
+    rasterized = kw.pop("rasterized", None)
     contour_set = plt.contourf(*v, **kw)
     figure = plt.gcf()
     for _c in contour_set.collections:
         _c.remove()
         _c.set_figure(figure)
-    collection = ListCollection(
-        contour_set.collections,
-        rasterized=rasterized)
+    collection = ListCollection(contour_set.collections, rasterized=rasterized)
     ax = plt.gca()
     ax.add_artist(collection)
     matplotlib.interactive(was_interactive)

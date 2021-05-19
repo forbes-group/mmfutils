@@ -3,7 +3,7 @@ import numpy as np
 
 try:
     from uncertainties import unumpy
-except ImportError:             # pragma: nocover
+except ImportError:  # pragma: nocover
     unumpy = None
 
 
@@ -33,8 +33,9 @@ def allclose(a, b, use_covariance=False, **kw):
         if unumpy is None:
             raise ValueError("use_covariance requires the uncertainties package.")
         zero = abs(a - b)
-        return np.all(unumpy.nominal_values(zero)
-                      <= use_covariance*unumpy.std_devs(zero))
+        return np.all(
+            unumpy.nominal_values(zero) <= use_covariance * unumpy.std_devs(zero)
+        )
     try:
         return np.allclose(a, b, **kw)
     except TypeError:

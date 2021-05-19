@@ -15,7 +15,7 @@ try:
 except ImportError:
     from IPython import parallel as ipyparallel
 
-__all__ = ['get_cluster']
+__all__ = ["get_cluster"]
 
 
 class Cluster(object):
@@ -34,8 +34,7 @@ class Cluster(object):
     _clusters = weakref.WeakValueDictionary()
     _started_clusters = []
 
-    def __init__(self, profile='default', n=None,
-                 ipython_dir=None, sleep_time=0.1):
+    def __init__(self, profile="default", n=None, ipython_dir=None, sleep_time=0.1):
         """
         Arguments
         ---------
@@ -92,7 +91,8 @@ class Cluster(object):
         """
         try:
             client = ipyparallel.Client(
-                profile=self.profile, ipython_dir=self.ipython_dir)
+                profile=self.profile, ipython_dir=self.ipython_dir
+            )
             client.close()
             return True
         except IOError:
@@ -115,8 +115,8 @@ class Cluster(object):
         if self.running:
             return
         elif self.n is None:
-            if 'PBS_NODEFILE' in os.environ:
-                with open(os.environ['PBS_NODEFILE']) as _f:
+            if "PBS_NODEFILE" in os.environ:
+                with open(os.environ["PBS_NODEFILE"]) as _f:
                     pbs_nodes = [_n.strip() for _n in _f]
                     self.n = max(1, len(pbs_nodes))
             else:
@@ -124,18 +124,18 @@ class Cluster(object):
                 # tools etc.
                 self.n = max(1, multiprocessing.cpu_count() - 1)
 
-        cmd = 'ipcluster start --daemonize --quiet --profile={} --n={}'.format(
-            self.profile, self.n)
+        cmd = "ipcluster start --daemonize --quiet --profile={} --n={}".format(
+            self.profile, self.n
+        )
 
         if self.ipython_dir is not None:
-            cmd = " ".join([
-                cmd, '--ipython-dir="{}"'.format(self.ipython_dir)])
+            cmd = " ".join([cmd, '--ipython-dir="{}"'.format(self.ipython_dir)])
 
         logging.info("Starting cluster: {}".format(cmd))
         subprocess.check_call(cmd.split())
 
         # Who will stop the cluster?
-        if keep_alive:               # pragma: nocover
+        if keep_alive:  # pragma: nocover
             # No one here!  User is responsible for stopping the cluster.
             return
 
@@ -155,19 +155,18 @@ class Cluster(object):
 
             cmd = "ipcluster stop --profile={}".format(self.profile)
             if self.ipython_dir is not None:
-                cmd = " ".join([
-                    cmd, '--ipython-dir="{}"'.format(self.ipython_dir)])
+                cmd = " ".join([cmd, '--ipython-dir="{}"'.format(self.ipython_dir)])
 
             logging.info("Stopping cluster: {}".format(cmd))
             subprocess.check_call(cmd.split())
-            while self.running:               # pragma: nocover
+            while self.running:  # pragma: nocover
                 # Wait until cluster stops
                 time.sleep(self.sleep_time)
             Cluster._started_clusters.remove(self)
         self._load_balanced_view = None
         self._direct_view = None
 
-    def wait(self, n_min=None, timeout=5*60):
+    def wait(self, n_min=None, timeout=5 * 60):
         """Wait for n_min engines of the cluster to start."""
         tic = time.time()
         if n_min is None:
@@ -178,15 +177,16 @@ class Cluster(object):
         while True:
             if timeout < time.time() - tic:
                 raise ipyparallel.TimeoutError(
-                    "{} engines did not start in timeout={}s".format(
-                        n_min, timeout))
+                    "{} engines did not start in timeout={}s".format(n_min, timeout)
+                )
             try:
                 self.client = ipyparallel.Client(
-                    profile=self.profile, ipython_dir=self.ipython_dir)
+                    profile=self.profile, ipython_dir=self.ipython_dir
+                )
                 break
             except IOError:
                 logging.warning("No ipcontroller-client.json, waiting...")
-            except ipyparallel.TimeoutError:     # pragma: nocover
+            except ipyparallel.TimeoutError:  # pragma: nocover
                 logging.warning("No controller, waiting...")
             time.sleep(self.sleep_time)
 
@@ -197,10 +197,10 @@ class Cluster(object):
         running = len(self.client)
         logging.info("{} of {} running".format(running, n_min))
         while len(self.client) < n_min:
-            if timeout < time.time() - tic:   # pragma: nocover
+            if timeout < time.time() - tic:  # pragma: nocover
                 raise ipyparallel.TimeoutError(
-                    "{} engines did not start in timeout={}s".format(
-                        n_min, timeout))
+                    "{} engines did not start in timeout={}s".format(n_min, timeout)
+                )
             time.sleep(self.sleep_time)
             if running < len(self.client):
                 running = len(self.client)
@@ -226,8 +226,15 @@ class Cluster(object):
             c.stop()
 
     @classmethod
-    def get_cluster(cls, profile='default', n=None, ipython_dir=None,
-                    launch=True, block=True, n_min=1):
+    def get_cluster(
+        cls,
+        profile="default",
+        n=None,
+        ipython_dir=None,
+        launch=True,
+        block=True,
+        n_min=1,
+    ):
         """Return a Custer instance for the specified cluster.
 
         This will return a cluster connected to at least `N` engines,

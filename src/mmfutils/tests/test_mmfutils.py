@@ -3,6 +3,7 @@ from mmfutils import unique_list
 
 class TestUniqueList(object):
     """Test `unique_list`."""
+
     def test_1(self):
         r"""Test unique_list(hashable, preserve_order=True)"""
         l1 = [2, 1, 1, 3, 4, 2]

@@ -10,9 +10,10 @@ sp = None
 numba = None
 try:
     import scipy.integrate
+
     sp = scipy
     import numba
-except ImportError:         # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
 
 try:
@@ -20,15 +21,14 @@ try:
 except ImportError:
     _ssum_cython = None
 
-__all__ = ['quad', 'mquad', 'Richardson', 'rsum']
+__all__ = ["quad", "mquad", "Richardson", "rsum"]
 
 _ABS_TOL = 1e-12
 _REL_TOL = 1e-8
 _EPS = np.finfo(float).eps
 
 
-def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL,
-         limit=1000, points=None, **kwargs):
+def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL, limit=1000, points=None, **kwargs):
     r"""
     An improved version of integrate.quad that does some argument
     checking and deals with points properly.
@@ -53,38 +53,65 @@ def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL,
             points = None
 
     if (points is None) or (b < np.inf):
-        (y, err) = sp.integrate.quad(func=f, a=a, b=b, args=(),
-                                     full_output=0,
-                                     epsabs=epsabs, epsrel=epsrel,
-                                     limit=limit,
-                                     points=points,
-                                     **kwargs)
+        (y, err) = sp.integrate.quad(
+            func=f,
+            a=a,
+            b=b,
+            args=(),
+            full_output=0,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            limit=limit,
+            points=points,
+            **kwargs
+        )
     else:
         midp = max(points)
-        (y0, err0) = sp.integrate.quad(func=f, a=a, b=midp,
-                                       args=(), full_output=0,
-                                       epsabs=epsabs, epsrel=epsrel,
-                                       limit=limit,
-                                       points=points,
-                                       **kwargs)
+        (y0, err0) = sp.integrate.quad(
+            func=f,
+            a=a,
+            b=midp,
+            args=(),
+            full_output=0,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            limit=limit,
+            points=points,
+            **kwargs
+        )
 
-        (y1, err1) = sp.integrate.quad(func=f, a=midp, b=b,
-                                       args=(), full_output=0,
-                                       epsabs=epsabs, epsrel=epsrel,
-                                       limit=limit,
-                                       points=None,
-                                       **kwargs)
-        y = y0+y1
-        err = err0+err1
+        (y1, err1) = sp.integrate.quad(
+            func=f,
+            a=midp,
+            b=b,
+            args=(),
+            full_output=0,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            limit=limit,
+            points=None,
+            **kwargs
+        )
+        y = y0 + y1
+        err = err0 + err1
     return (y, err)
 
 
-def mquad(f, a, b, abs_tol=_ABS_TOL, verbosity=0,
-          fa=None, fb=None,
-          save_fx=False, res_dict=None,
-          max_fcnt=10000, min_step_size=None,
-          norm=lambda x: abs(np.array(x)).max(),
-          points=None):
+def mquad(
+    f,
+    a,
+    b,
+    abs_tol=_ABS_TOL,
+    verbosity=0,
+    fa=None,
+    fb=None,
+    save_fx=False,
+    res_dict=None,
+    max_fcnt=10000,
+    min_step_size=None,
+    norm=lambda x: abs(np.array(x)).max(),
+    points=None,
+):
     r"""Return (res, err) where res is the numerically evaluated
     integral using adaptive Simpson quadrature.
 
@@ -187,36 +214,38 @@ def mquad(f, a, b, abs_tol=_ABS_TOL, verbosity=0,
     if not (np.isfinite(a) and np.isfinite(b)):
         raise ValueError("Infinite endpoints not supported.")
 
-    res_dict['fcnt'] = 0
+    res_dict["fcnt"] = 0
 
     if min_step_size is None:
-        min_step_size = _EPS/1024.0*abs(b-a)
+        min_step_size = _EPS / 1024.0 * abs(b - a)
 
     # We augment and decorate the function to pass various related
     # arguments to the helpers.
     if save_fx:
-        res_dict['xy'] = []
+        res_dict["xy"] = []
 
         def f(x, f=f):
             y = f(x)
-            res_dict['xy'].append((x, y))
-            res_dict['fcnt'] += 1
-            assert not np.any(np.isnan(y)), (
-                "Nan encountered: "
-                "f({}) = {}".format(x, y))
+            res_dict["xy"].append((x, y))
+            res_dict["fcnt"] += 1
+            assert not np.any(np.isnan(y)), "Nan encountered: " "f({}) = {}".format(
+                x, y
+            )
             return y
+
     else:
+
         def f(x, f=f):
-            res_dict['fcnt'] += 1
+            res_dict["fcnt"] += 1
             y = f(x)
-            assert not np.any(np.isnan(y)), (
-                "Nan encountered: "
-                "f({}) = {}".format(x, y))
+            assert not np.any(np.isnan(y)), "Nan encountered: " "f({}) = {}".format(
+                x, y
+            )
             return y
 
-    f.__dict__['res_dict'] = res_dict
-    f.__dict__['max_fcnt'] = max_fcnt
-    f.__dict__['norm'] = norm
+    f.__dict__["res_dict"] = res_dict
+    f.__dict__["max_fcnt"] = max_fcnt
+    f.__dict__["norm"] = norm
 
     fa = f(a) if fa is None else fa
     fb = f(b) if fb is None else fb
@@ -232,13 +261,13 @@ def mquad(f, a, b, abs_tol=_ABS_TOL, verbosity=0,
     xs_ = []
     ys_ = []
     for i, a_ in enumerate(xs[:-1]):
-        b_ = xs[i+1]
+        b_ = xs[i + 1]
         fa_ = ys[i]
 
         # Subdivide each interval into three unequal segments.
-        h = 0.13579*(b_ - a_)
-        x1 = a_ + 2.0*h
-        x2 = b_ - 2.0*h
+        h = 0.13579 * (b_ - a_)
+        x1 = a_ + 2.0 * h
+        x2 = b_ - 2.0 * h
         fx1 = f(x1)
         fx2 = f(x2)
 
@@ -250,35 +279,33 @@ def mquad(f, a, b, abs_tol=_ABS_TOL, verbosity=0,
 
     # Increase the tolerance so that roundoff errors from each
     # interval will not accumulate too much.
-    abs_tol2 = abs_tol**2/float(len(xs_)-1)
+    abs_tol2 = abs_tol ** 2 / float(len(xs_) - 1)
 
     res = 0.0
     err2 = 0.0
 
     for i, a_ in enumerate(xs_[:-1]):
         # Call the recursive core integrator on each region.
-        b_ = xs_[i+1]
+        b_ = xs_[i + 1]
         fa_ = ys_[i]
-        fb_ = ys_[i+1]
+        fb_ = ys_[i + 1]
 
         # Fudge endpoints to avoid infinities.
         if f.norm(fa_) == np.inf:
-            fa_ = f(a_ + _EPS*(b_ - a_))
+            fa_ = f(a_ + _EPS * (b_ - a_))
 
         if f.norm(fb_) == np.inf:
-            fb_ = f(b_ - _EPS*(b_ - a_))
+            fb_ = f(b_ - _EPS * (b_ - a_))
 
-        r, e2 = _mquadstep(f, a_, b_, fa_, fb_, abs_tol2, min_step_size,
-                           verbosity)
+        r, e2 = _mquadstep(f, a_, b_, fa_, fb_, abs_tol2, min_step_size, verbosity)
         res += r
         err2 += e2
 
-    res_dict['err'] = np.maximum(np.sqrt(err2), abs(_EPS*res))
+    res_dict["err"] = np.maximum(np.sqrt(err2), abs(_EPS * res))
     return res
 
 
-def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
-               verbosity, fmid=None):
+def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size, verbosity, fmid=None):
     r"""Recursive core routine for function mquad.
 
     Parameters
@@ -295,52 +322,65 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
 
     # Evaluate integrand twice in interior of subinterval [a, b].
     h = b - a
-    c = (a + b)/2.0
+    c = (a + b) / 2.0
     if fmid is None:
         fc = f(c)
     else:
         fc = fmid
 
     # Three point Simpson's rule.
-    Q0 = (h/6.0)*(fa + 4.0*fc + fb)
-    err = f.norm(Q0 - (fa + fb)*h/2.0)
+    Q0 = (h / 6.0) * (fa + 4.0 * fc + fb)
+    err = f.norm(Q0 - (fa + fb) * h / 2.0)
 
-    ac = (a + c)/2.0
-    cb = (c + b)/2.0
+    ac = (a + c) / 2.0
+    cb = (c + b) / 2.0
 
-    if (abs(h) < min_step_size or ac <= a or b <= cb):
+    if abs(h) < min_step_size or ac <= a or b <= cb:
         # Minimum step size reached; singularity possible.
-        logging.warning(" ".join([
-            'mquad:MinStepSize:',
-            'Minimum step size reached.',
-            "({} < {})".format(abs(h), min_step_size),
-            'Singularity possible (err = {}).'.format(err)]))
+        logging.warning(
+            " ".join(
+                [
+                    "mquad:MinStepSize:",
+                    "Minimum step size reached.",
+                    "({} < {})".format(abs(h), min_step_size),
+                    "Singularity possible (err = {}).".format(err),
+                ]
+            )
+        )
 
-        return Q0, err*err
+        return Q0, err * err
 
-    if f.res_dict['fcnt'] > f.max_fcnt:  # pragma: no cover
-        logging.warning(" ".join([
-            'mquad:MaxFcnCount:',
-            'Maximum function count {} exceeded.'.format(f.max_fcnt),
-            'Singularity likely.']))
-        return Q0, err*err
+    if f.res_dict["fcnt"] > f.max_fcnt:  # pragma: no cover
+        logging.warning(
+            " ".join(
+                [
+                    "mquad:MaxFcnCount:",
+                    "Maximum function count {} exceeded.".format(f.max_fcnt),
+                    "Singularity likely.",
+                ]
+            )
+        )
+        return Q0, err * err
 
-    fac = f((a + c)/2.0)
-    fcb = f((c + b)/2.0)
+    fac = f((a + c) / 2.0)
+    fcb = f((c + b) / 2.0)
 
     # Five point double Simpson's rule.
-    Q1 = (h/12.0)*(fa + 4.0*fac + 2.0*fc + 4.0*fcb + fb)
+    Q1 = (h / 12.0) * (fa + 4.0 * fac + 2.0 * fc + 4.0 * fcb + fb)
 
     # One step of Romberg extrapolation.
-    Q = Q1 + (Q1 - Q0)/15.0
+    Q = Q1 + (Q1 - Q0) / 15.0
 
     # Check accuracy of integral over this subinterval.
-    err2 = f.norm(Q1 - Q)**2
+    err2 = f.norm(Q1 - Q) ** 2
 
     if not np.isfinite(f.norm(Q)):  # pragma: no cover
         # Infinite or Not-a-Number function value encountered.
-        logging.warning(" ".join(['mquad:ImproperFcnValue:',
-                               'Inf or NaN function value encountered.']))
+        logging.warning(
+            " ".join(
+                ["mquad:ImproperFcnValue:", "Inf or NaN function value encountered."]
+            )
+        )
         return Q, err2
 
     if 1 < verbosity:  # pragma: no cover
@@ -351,16 +391,16 @@ def _mquadstep(f, a, b, fa, fb, abs_tol2, min_step_size,
         pass
     else:
         # Subdivide region.
-        Qac, err_ac2 = _mquadstep(f, a, c, fa, fc, abs_tol2/2.0,
-                                  min_step_size, verbosity,
-                                  fmid=fac)
-        Qcb, err_cb2 = _mquadstep(f, c, b, fc, fb, abs_tol2/2.0,
-                                  min_step_size, verbosity,
-                                  fmid=fcb)
+        Qac, err_ac2 = _mquadstep(
+            f, a, c, fa, fc, abs_tol2 / 2.0, min_step_size, verbosity, fmid=fac
+        )
+        Qcb, err_cb2 = _mquadstep(
+            f, c, b, fc, fb, abs_tol2 / 2.0, min_step_size, verbosity, fmid=fcb
+        )
         Q = Qac + Qcb
         err2 = err_ac2 + err_cb2
 
-    return Q, np.maximum(err2, (_EPS*Q)**2)
+    return Q, np.maximum(err2, (_EPS * Q) ** 2)
 
 
 def Richardson(f, ps=None, l=2, n0=1):
@@ -446,11 +486,11 @@ def Richardson(f, ps=None, l=2, n0=1):
 
     n = 0
     f0 = f(n0)
-    if hasattr(f0, 'shape'):
+    if hasattr(f0, "shape"):
         # Allows us to deal with array valued functions
-        S = np.zeros((n+1, n+1) + f0.shape, dtype=f0.dtype)
+        S = np.zeros((n + 1, n + 1) + f0.shape, dtype=f0.dtype)
     else:
-        S = np.zeros((n+1, n+1), dtype=type(f0))
+        S = np.zeros((n + 1, n + 1), dtype=type(f0))
 
     p = []
     while True:
@@ -458,18 +498,18 @@ def Richardson(f, ps=None, l=2, n0=1):
             new_shape = np.array(S.shape)
             new_shape[:2] *= 2
             Snew = np.empty(new_shape, dtype=S.dtype)
-            Snew[0:S.shape[0], 0:S.shape[1]] = S[:, :]
+            Snew[0 : S.shape[0], 0 : S.shape[1]] = S[:, :]
             S = Snew
-        if 0 == l:              # pragma: no cover (What is this?)
+        if 0 == l:  # pragma: no cover (What is this?)
             S[n, 0] = f0
         else:
-            S[n, 0] = f(n0*l**n)
+            S[n, 0] = f(n0 * l ** n)
         p.append(next(ps))
-        for m in range(1, n+1):
-            lpm1 = float(l**p[m-1])
-            S[n, m] = (lpm1*S[n, m-1] - S[n-1, m-1])/(lpm1 - 1.0)
-        n = n+1
-        yield S[n-1, n-1]
+        for m in range(1, n + 1):
+            lpm1 = float(l ** p[m - 1])
+            S[n, m] = (lpm1 * S[n, m - 1] - S[n - 1, m - 1]) / (lpm1 - 1.0)
+        n = n + 1
+        yield S[n - 1, n - 1]
 
 
 def exact_add(a, b):
@@ -533,7 +573,7 @@ def exact_sum(xs, maxiter=5):
     max_iter = 5
     while (sum(list(reversed(err))) + ans) != ans:
         max_iter -= 1
-        if max_iter < 0:        # pragma: no cover (never get here?)
+        if max_iter < 0:  # pragma: no cover (never get here?)
             # Prevent infinite looping.
             break
         ans, err = exact_sum(err + [ans])
@@ -559,12 +599,13 @@ def ssum_python(xs):
         sum = tmp
 
     eps = np.finfo(np.double).eps
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
+    err = max(abs(2.0 * sum * eps), len(xs) * eps * eps)
 
     return (sum, err)
 
 
 if numba:
+
     @numba.jit(nopython=True)
     def ssum_numba(xs, _eps=_EPS):
         r"""Return (sum(xs), err) computed stably using Kahan's summation
@@ -594,23 +635,22 @@ if numba:
             carry = (tmp - sum) - y
             sum = tmp
 
-        err = max(abs(2.0*sum*_eps), len(xs)*_eps*_eps)
+        err = max(abs(2.0 * sum * _eps), len(xs) * _eps * _eps)
         return (sum, err)
 
 
 def ssum_cython(xs, _eps=_EPS):
     xs = np.asarray(xs)
     if _ssum_cython is None:
-        warnings.warn(
-            "ImportError: Could not _ssum_cython: using slow version")
+        warnings.warn("ImportError: Could not _ssum_cython: using slow version")
         return ssum_python(xs)
-    
+
     sum = _ssum_cython(xs)
     ##if isinstance(xs.dtype, np.inexact):
     #    eps = np.finfo(xs.dtype).eps
-    #else:
+    # else:
     #    eps = 0.0
-    err = max(abs(2.0*sum*_eps), len(xs)*_eps*_eps)
+    err = max(abs(2.0 * sum * _eps), len(xs) * _eps * _eps)
     return (sum, err)
 
 
@@ -658,9 +698,7 @@ def ssum(xs):
     return ssum_cython(xs)
 
 
-def rsum(f, N0=0, ps=None, l=2,
-         abs_tol=_ABS_TOL, rel_tol=_REL_TOL,
-         verbosity=0):
+def rsum(f, N0=0, ps=None, l=2, abs_tol=_ABS_TOL, rel_tol=_REL_TOL, verbosity=0):
     """Sum f using Richardson extrapolation.
 
     Examples
@@ -673,20 +711,22 @@ def rsum(f, N0=0, ps=None, l=2,
     >>> abs(res - np.pi**2/6.0) < err
     True
     """
+
     def F(N, f=f, fs=[0.0, 0]):
         r"""Return sum of f(n) up to f(N)."""
-        fs[0] += ssum([f(n+N0) for n in range(fs[1], N+1)])[0]
-        fs[1] = N+1
+        fs[0] += ssum([f(n + N0) for n in range(fs[1], N + 1)])[0]
+        fs[1] = N + 1
         return fs[0]
+
     r = Richardson(F, ps=ps, l=l)
     r1 = next(r)
     while True:
         r0 = r1
         r1 = next(r)
         abs_err = abs(r1 - r0)
-        rel_err = abs_err/(abs(r1)+abs_tol)
-        if (abs_err <= abs_tol or rel_err <= rel_tol):
+        rel_err = abs_err / (abs(r1) + abs_tol)
+        if abs_err <= abs_tol or rel_err <= rel_tol:
             break
-        if verbosity > 0:       # pragma: no cover
+        if verbosity > 0:  # pragma: no cover
             logging.info("{} +- {}".format(r1, abs_err))
     return r1, abs_err

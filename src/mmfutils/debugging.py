@@ -6,7 +6,7 @@ import sys
 
 from six import reraise as raise_
 
-__all__ = ['persistent_locals', 'debug']
+__all__ = ["persistent_locals", "debug"]
 
 # Default location
 _LOCALS = {}
@@ -30,13 +30,14 @@ class persistent_locals(object):
     >>> f.locals
     {}
     """
+
     def __init__(self, func):
         self._locals = {}
         self.func = func
 
     def __call__(self, *args, **kwargs):
-        def tracer(frame, event, arg):    # pragma: nocover
-            if event == 'return':
+        def tracer(frame, event, arg):  # pragma: nocover
+            if event == "return":
                 self._locals = frame.f_locals.copy()
 
         # tracer is activated on next call, return or exception
@@ -115,7 +116,7 @@ def debug(*v, **kw):
     [('x', 0), ('y', 0)]
     """
     func = None
-    env = kw.get('locals', kw.get('env', _LOCALS))
+    env = kw.get("locals", kw.get("env", _LOCALS))
 
     if len(v) == 0:
         pass

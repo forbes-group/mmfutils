@@ -13,8 +13,8 @@ from mmfutils.solve import broyden
 def alpha(request):
     yield request.param
 
-    
-@pytest.fixture(params=['good', 'bad'])
+
+@pytest.fixture(params=["good", "bad"])
 def method(request):
     yield request.param
 
@@ -26,7 +26,7 @@ def dyadic_sum(alpha):
     b = np.random.random((3, 4)) - 0.5
     B = broyden.DyadicSum(alpha=alpha, n_max=np.inf)
     B.add_dyad(a.T, b)
-    B_ = alpha*np.eye(4) + a.T.dot(b)
+    B_ = alpha * np.eye(4) + a.T.dot(b)
     yield (B, B_)
 
 
@@ -37,13 +37,13 @@ def jacobian(alpha):
     b = np.random.random((3, 4)) - 0.5
     B = broyden.Jacobian(alpha=alpha, n_max=np.inf)
     B.add_dyad(a.T, b)
-    B_ = alpha*np.eye(4) + a.T.dot(b)
+    B_ = alpha * np.eye(4) + a.T.dot(b)
     assert np.allclose(B_, B.todense())
     B_ = sp.optimize.nonlin.asjacobian(B_)
     x = np.random.random(4) - 0.5
     yield (B, B_, x)
-    
-    
+
+
 class TestDyadicSum(object):
     def test_add_dyad(self, dyadic_sum):
         B, B_ = dyadic_sum
@@ -53,35 +53,39 @@ class TestDyadicSum(object):
         B, B_ = dyadic_sum
         np.random.seed(2)
         A = np.random.random(B_.shape) - 0.5
-        
+
         assert np.allclose(B_, B.todense())
         assert np.allclose(B_.dot(A), B.dot(A))
-        
+
         if sys.version_info >= (3, 5):
             # assert np.allclose(B_ @ A, B @ A)
             # assert np.allclose(A @ B_, A @ B)
-            assert np.allclose(B_.dot(A), eval('B @ A'))
-            assert np.allclose(A.dot(B_), eval('A @ B'))
+            assert np.allclose(B_.dot(A), eval("B @ A"))
+            assert np.allclose(A.dot(B_), eval("A @ B"))
 
     def test_errors(self):
         """Test error messages"""
         with pytest.raises(ValueError) as e:
             broyden.DyadicSum(n_max=2, use_svd=False)
-        assert e.value.args[0] == 'Finite `n_max=2` requires `svd=True`.'
+        assert e.value.args[0] == "Finite `n_max=2` requires `svd=True`."
 
         s = broyden.DyadicSum()
         with pytest.raises(ValueError) as e:
-            s['x']
-        assert (e.value.args[0]
-                == "DyadicSum only supports two-dimensional indexing.  Got 'x'")
-        
+            s["x"]
+        assert (
+            e.value.args[0]
+            == "DyadicSum only supports two-dimensional indexing.  Got 'x'"
+        )
+
         a = np.random.random((4, 6))
         b = np.random.random((5, 6))
         s = broyden.DyadicSum(n_max=np.inf)
         with pytest.raises(ValueError) as e:
             s.add_dyad(a.T, b)
-        assert (e.value.args[0]
-                == "If sigma==None, a and b must have same length. Got 4 and 5.")
+        assert (
+            e.value.args[0]
+            == "If sigma==None, a and b must have same length. Got 4 and 5."
+        )
 
     def test_rectangular(self):
         """Test rectangular matrices"""
@@ -108,6 +112,7 @@ class TestDyadicSum(object):
 
 class TestJacobianBFGS(object):
     """Test the JacobianBFGS object."""
+
     def test_1(self):
         J = broyden.JacobianBFGS()
         np.random.seed(1)
@@ -120,7 +125,7 @@ class TestJacobianBFGS(object):
         v = np.random.random(N) - 0.5
         J.update(x, f)
         for dx, df in zip(dxs, dfs):
-            x, f = x+dx, f+df
+            x, f = x + dx, f + df
             J.update(x, f)
             H = J.dense_H()
             assert np.allclose(H.dot(df), dx)
@@ -129,10 +134,11 @@ class TestJacobianBFGS(object):
         H = J.dense_H()
         assert np.allclose(J.solve(v), H.dot(v))
         assert np.allclose(np.eye(*J.shape), J.solve(J.dense_J()))
-        
-    
+
+
 class TestDyadicSumJacobian(object):
     """Test the `scipy.optimize.nonlin.Jacobian` interface."""
+
     def test_1(self, jacobian):
         B, B_, x = jacobian
         assert B.dtype == B_.dtype
@@ -197,7 +203,7 @@ class TestDyadicSumDoctestPython3(object):
     array([[5., 2.]])
     """
 
-    
+
 if sys.version_info < (3, 5):
     # Delete this class and don't test if @ is not defined.
     del TestDyadicSumDoctestPython3

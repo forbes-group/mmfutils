@@ -10,7 +10,7 @@ from .colors import cm
 
 del scipy
 
-__all__ = ['contourf', 'imcontourf', 'phase_contour']
+__all__ = ["contourf", "imcontourf", "phase_contour"]
 
 
 def _fix_args(x, y, z):
@@ -23,8 +23,7 @@ def _fix_args(x, y, z):
     return x, y, z
 
 
-def imcontourf(x, y, z, interpolate=True, diverging=False,
-               *v, **kw):
+def imcontourf(x, y, z, interpolate=True, diverging=False, *v, **kw):
     r"""Like :func:`matplotlib.pyplot.contourf` but does not actually find
     contours.  Just displays `z` using
     :func:`matplotlib.pyplot.imshow` which is much faster and uses
@@ -47,21 +46,20 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     x, y, z = _fix_args(x, y, z)
 
     if interpolate and not (
-            np.allclose(np.diff(np.diff(x)), 0) and
-            np.allclose(np.diff(np.diff(y)), 0)):
+        np.allclose(np.diff(np.diff(x)), 0) and np.allclose(np.diff(np.diff(y)), 0)
+    ):
 
-        Nx = int(min(5*len(x), (x.max()-x.min()) / np.diff(sorted(x)).min()))
-        Ny = int(min(5*len(y), (y.max()-y.min()) / np.diff(sorted(y)).min()))
+        Nx = int(min(5 * len(x), (x.max() - x.min()) / np.diff(sorted(x)).min()))
+        Ny = int(min(5 * len(y), (y.max() - y.min()) / np.diff(sorted(y)).min()))
         X = np.linspace(x.min(), x.max(), Nx)
         Y = np.linspace(y.min(), y.max(), Ny)
-        
+
         # Vectorize this over last few indices of z.  This allows z to
         # be an RGB tuple for example.
         z_ = np.reshape(z, z.shape[:2] + (int(np.prod(z.shape[2:])),))
         Z = []
         for _n in range(z_.shape[-1]):
-            spl = sp.interpolate.RectBivariateSpline(
-                x, y, z_[..., _n], kx=1, ky=1, s=0)
+            spl = sp.interpolate.RectBivariateSpline(x, y, z_[..., _n], kx=1, ky=1, s=0)
             Z.append(spl(X[:, None], Y[None, :]).T)
         Z = np.transpose(Z)
         x, y, z = X, Y, np.reshape(Z, (Nx, Ny) + z.shape[2:])
@@ -69,18 +67,22 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
     assert np.allclose(np.diff(np.diff(x)), 0)
     assert np.allclose(np.diff(np.diff(y)), 0)
     kwargs = dict(**kw)
-    kwargs.setdefault('aspect', 'auto')
+    kwargs.setdefault("aspect", "auto")
     if diverging:
         z_max = abs(z).max()
-        kwargs.setdefault('vmin', -z_max)
-        kwargs.setdefault('vmax', z_max)
-        kwargs.setdefault('cmap', cm.diverging)
+        kwargs.setdefault("vmin", -z_max)
+        kwargs.setdefault("vmax", z_max)
+        kwargs.setdefault("cmap", cm.diverging)
     else:
-        kwargs.setdefault('cmap', cm.viridis)
+        kwargs.setdefault("cmap", cm.viridis)
 
     img = plt.imshow(
-        np.rollaxis(z, 0, 2), origin='lower',
-        extent=(x[0], x[-1], y[0], y[-1]), *v, **kwargs)
+        np.rollaxis(z, 0, 2),
+        origin="lower",
+        extent=(x[0], x[-1], y[0], y[-1]),
+        *v,
+        **kwargs
+    )
 
     # Provide a method for updating the data properly for quick plotting.
     def set_data(z, x=None, y=None, img=img, sd=img.set_data):
@@ -92,12 +94,12 @@ def imcontourf(x, y, z, interpolate=True, diverging=False,
             if y is not None:
                 extent[:2] = [np.ravel(y)[0], np.ravel(y)[-1]]
             img.set_extent(extent)
-            
+
     img.set_data = set_data
     return img
 
 
-def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, ax=None, **kw):
+def phase_contour(x, y, z, N=10, colors="k", linewidths=0.5, ax=None, **kw):
     r"""Specialized contour plot for plotting the contours of constant
     phase for the complex variable z.  Plots `4*N` contours in total.
     Note: two sets of contours are returned, and, due to processing,
@@ -117,16 +119,14 @@ def phase_contour(x, y, z, N=10, colors='k', linewidths=0.5, ax=None, **kw):
     x, y, z = _fix_args(x, y, z)
     args = dict(colors=colors, linewidths=linewidths)
     args.update(kw)
-    levels = 0.5*np.pi*(0.5 + (np.arange(N) + 0.5)/N)
+    levels = 0.5 * np.pi * (0.5 + (np.arange(N) + 0.5) / N)
     _z = np.rollaxis(z, 0, 2)
     if ax is None:
         ax = plt.gca()
-    c1 = ax.contour(x, y, abs(np.angle(_z)),
-                    levels=levels, **args)
-    c2 = ax.contour(x, y, abs(np.angle(_z*np.exp(0.5j*np.pi))),
-                    levels=levels, **args)
-    c2.levels = np.add(c2.levels, 0.5*np.pi)
-    c2.levels = np.where(c2.levels <= np.pi,
-                         c2.levels,
-                         c2.levels - 2.0*np.pi)
+    c1 = ax.contour(x, y, abs(np.angle(_z)), levels=levels, **args)
+    c2 = ax.contour(
+        x, y, abs(np.angle(_z * np.exp(0.5j * np.pi))), levels=levels, **args
+    )
+    c2.levels = np.add(c2.levels, 0.5 * np.pi)
+    c2.levels = np.where(c2.levels <= np.pi, c2.levels, c2.levels - 2.0 * np.pi)
     return c1, c2

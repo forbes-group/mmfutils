@@ -3,15 +3,20 @@
 import logging
 import warnings
 
-__all__ = ['Interface', 'Attribute', 'implementer',
-           'verifyObject', 'verifyClass',
-           'describe_interface']
+__all__ = [
+    "Interface",
+    "Attribute",
+    "implementer",
+    "verifyObject",
+    "verifyClass",
+    "describe_interface",
+]
 
 try:
     import zope.interface
-    from zope.interface import (Interface, Attribute, implementer)
-    from zope.interface.verify import (verifyObject, verifyClass)
-except ImportError:             # pragma: nocover
+    from zope.interface import Interface, Attribute, implementer
+    from zope.interface.verify import verifyObject, verifyClass
+except ImportError:  # pragma: nocover
     zope = None
     warnings.warn("Could not import zope.interface... using dummy stand-ins")
 
@@ -19,7 +24,8 @@ except ImportError:             # pragma: nocover
 
     class Attribute(object):
         """Dummy"""
-        def __init__(self, __name__, __doc__=''):
+
+        def __init__(self, __name__, __doc__=""):
             pass
 
     def implementer(*interfaces):
@@ -32,39 +38,42 @@ except ImportError:             # pragma: nocover
     def verifyClass(iface, candidate):
         """Dummy"""
 
+
 if zope:
     # Provides a real "asStructuredText" replacement that produces
     # reStructuredText so I can use it in documentation like README.rst etc.
 
     import zope.interface.document
 
-    if hasattr(zope.interface.document, 'asReStructuredText'):
+    if hasattr(zope.interface.document, "asReStructuredText"):
         del zope.interface.document.asReStructuredText
 
-    if not hasattr(zope.interface.document, 'asReStructuredText'):
-        from zope.interface.document import (_justify_and_indent, _trim_doc_string)
+    if not hasattr(zope.interface.document, "asReStructuredText"):
+        from zope.interface.document import _justify_and_indent, _trim_doc_string
 
         def _justify_and_indent_and_trim_doc_string(string, level=0, munge=0):
 
             # Hack to replace titles used by numpydoc...
-            for indent in [" "*4, " "*8, " "*12]:
-                for title in ['Parameters', 'Arguments']:
-                    src = "\n".join([indent + title, indent + '-'*len(title)])
+            for indent in [" " * 4, " " * 8, " " * 12]:
+                for title in ["Parameters", "Arguments"]:
+                    src = "\n".join([indent + title, indent + "-" * len(title)])
                     repl = "\n".join([indent[:-2] + title + ":", ""])
                     string = string.replace(src, repl)
 
-            return _justify_and_indent(_trim_doc_string(string),
-                                       level=level, munge=munge)
-            
+            return _justify_and_indent(
+                _trim_doc_string(string), level=level, munge=munge
+            )
+
         def asReStructuredText(I, munge=0):
-            """ Output structured text format.  Note, this will whack any existing
+            """Output structured text format.  Note, this will whack any existing
             'structured' format of the text.
             """
+
             def inline_literal(s):
                 return "``%s``" % (s,)
 
             r = [inline_literal(I.getName())]
-            #r[0] = "\n".join([r[0], "="*len(r[-1])])
+            # r[0] = "\n".join([r[0], "="*len(r[-1])])
 
             outp = r.append
             level = 1
@@ -72,10 +81,9 @@ if zope:
             if I.getDoc():
                 outp(_justify_and_indent_and_trim_doc_string(I.getDoc(), level))
 
-            bases = [base
-                     for base in I.__bases__
-                     if base is not zope.interface.Interface
-                     ]
+            bases = [
+                base for base in I.__bases__ if base is not zope.interface.Interface
+            ]
             if bases:
                 outp(_justify_and_indent("This interface extends:", level, munge))
                 level += 1
@@ -89,29 +97,34 @@ if zope:
             outp(_justify_and_indent("Attributes:", level, munge))
             level += 1
             for name, desc in namesAndDescriptions:
-                if not hasattr(desc, 'getSignatureString'):   # ugh...
-                    item = "%s -- %s" % (inline_literal(desc.getName()),
-                                         desc.getDoc() or 'no documentation')
+                if not hasattr(desc, "getSignatureString"):  # ugh...
+                    item = "%s -- %s" % (
+                        inline_literal(desc.getName()),
+                        desc.getDoc() or "no documentation",
+                    )
                     outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
             level -= 1
 
             outp(_justify_and_indent("Methods:", level, munge))
             level += 1
             for name, desc in namesAndDescriptions:
-                if hasattr(desc, 'getSignatureString'):   # ugh...
+                if hasattr(desc, "getSignatureString"):  # ugh...
                     _call = "%s%s" % (desc.getName(), desc.getSignatureString())
-                    item = "%s -- %s" % (inline_literal(_call),
-                                         desc.getDoc() or 'no documentation')
+                    item = "%s -- %s" % (
+                        inline_literal(_call),
+                        desc.getDoc() or "no documentation",
+                    )
                     outp(_justify_and_indent_and_trim_doc_string(item, level, munge))
 
             return "\n\n".join(r) + "\n\n"
 
         logging.info(
-            "Patching zope.interface.document.asReStructuredText to format code")
+            "Patching zope.interface.document.asReStructuredText to format code"
+        )
         zope.interface.document.asReStructuredText = asReStructuredText
 
 
-def describe_interface(interface, format='ipython'):
+def describe_interface(interface, format="ipython"):
     """Return an HTML object for Jupyter notebooks that describes the
     interface.
 
@@ -180,7 +193,7 @@ def describe_interface(interface, format='ipython'):
     class NoHeaderHTMLTranslator(HTMLTranslator):
         def __init__(self, document):
             HTMLTranslator.__init__(self, document)
-            self.head_prefix = ['']*5
+            self.head_prefix = [""] * 5
             self.body_prefix = []
             self.body_suffix = []
             self.stylesheet = []
@@ -188,15 +201,16 @@ def describe_interface(interface, format='ipython'):
     writer = Writer()
     writer.translator_class = NoHeaderHTMLTranslator
     rst = zope.interface.document.asReStructuredText(interface)
-    if format.lower() == 'rst':
+    if format.lower() == "rst":
         return rst
 
     html = core.publish_string(rst, writer=writer).decode()
-    if format.lower() == 'html':
+    if format.lower() == "html":
         return html
 
-    if format.lower() in ['ipython', 'jupyter']:
+    if format.lower() in ["ipython", "jupyter"]:
         import IPython.display
+
         return IPython.display.HTML(html)
 
-    raise NotImplementedError('format {} not supported'.format(format))
+    raise NotImplementedError("format {} not supported".format(format))
