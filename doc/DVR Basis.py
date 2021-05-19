@@ -8,11 +8,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.0
+#       jupytext_version: 1.11.1
 #   kernelspec:
-#     display_name: Python [conda env:_mmfutils]
+#     display_name: Python [conda env:work]
 #     language: python
-#     name: conda-env-_mmfutils-py
+#     name: conda-env-work-py
 # ---
 
 # + {"init_cell": true}
@@ -20,6 +20,45 @@ import mmf_setup
 
 mmf_setup.nbinit()
 # %pylab inline --no-import-all
+# fmt: on
+
+# # Summary
+
+# Here we discuss some of the bases provided in `mmfutils.math.bases` for representing problems with rotational symmetry such a cylindrical and spherical symmetry.  We discuss a general set of Bessel-function DVR bases for representing the radial wavefunction of "spherically" symmetric problems in $d$ spatial dimensions ($d=2$ for cylindrical symmetry and $d=3$ for spherical symmetry), as well as a simplified basis for spherically symmetric problems where we represent the radial wavefunction on a periodic lattice.  This latter basis allows us to perform operations such as convolution.
+#
+# Here is a quick demonstration, using these bases to solve for the eigenstates of the spherical harmonic oscillator:
+#
+# $$
+#   V(r) = \frac{m\omega^2r^2}{2}, \qquad E_n = \hbar\omega(n+\tfrac{d}{2}).
+# $$
+
+# ## `SphericalBasis`
+
+# $$
+#   \psi_0(r) = Ae^{-r^2/2a_0^2}, \qquad
+#   \nabla^2 \psi = \frac{1}{r^{d-1}} \pdiff{}{r}\left(r^{d-1}\pdiff{\psi(r)}{r}\right)
+#                 = \frac{r^2 - a_0^2 d}{a_0^4}\psi_0(r)
+# $$
+
+# +
+from mmfutils.math import bases
+
+eps = np.finfo(float).eps
+hbar = m = w = 1
+a0 = np.sqrt(hbar / m / w)
+R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+N = int(np.ceil(k_max * 2 * R / np.pi))
+
+d = 3
+basis = bases.SphericalBasis(N=N, R=R)
+
+r = basis.xyz[0]
+psi0 = np.exp(-((r / a0) ** 2) / 2)
+ax = plt.subplot(111)
+ax.plot(r, basis.laplacian(psi0))
+ax.plot(r, (r ** 2 - a0 ** 2 * d) / a0 ** 4 * psi0, "+")
+ax.set(xlabel="r", ylabel=r"$\psi_0(r)$")
 # -
 
 # # Background
@@ -219,8 +258,8 @@ assert np.allclose(exact, res, atol=err)
 
 # %pylab inline --no-import-all
 plt.figure(figsize=(12, 3))
-z = np.linspace(0, 10 * np.pi, 100)
-for nu in [0, 1, 2, 3]:
+z = np.linspace(1e-12, 10 * np.pi, 100)
+for nu in [0, 0.5, 1, 1.5, 2, 2.5]:
     (l,) = plt.plot(z / np.pi, bessel.J(nu, d=0)(z), label=r"$\nu={}$".format(nu))
     for z0 in bessel.j_root(nu, 10):
         if z0 <= z.max():
@@ -430,7 +469,58 @@ E
 # ## Spherical Basis
 
 # For spherically symmetric problems, one solution is to use a Bessel function DVR basis.
+
+# Here we check the basis for a 3D Harmonic oscillator.  The exact results are:
 #
+# $$
+#   E_n = \hbar \omega (n + \tfrac{3}{2}).
+# $$
+#
+# The ground state wave-function is:
+#
+# $$
+#   \psi(r) \propto e^{-r^2/2a_0^2}, \qquad
+#   \psi_k \propto e^{-k^2a_0^2}, \qquad
+#   a_0 = \sqrt{\frac{\hbar}{m\omega}}.
+# $$
+
+# +
+from mmfutils.math.bases import SphericalBasis
+
+eps = np.finfo(float).eps
+hbar = m = w = 1
+a0 = np.sqrt(hbar / m / w)
+R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+Nr = int(np.ceil(k_max * 2 * R / np.pi))
+
+basis = SphericalBasis(N=Nr, R=R)
+
+
+# +
+def get_V(r):
+    return m * w ** 2 * r ** 2 / 2
+
+
+Vs = []
+Ks = []
+Hs = []
+Es = []
+for l in range(4):
+    r = basis.xyz[0]
+    V = get_V(r)
+    K = basis._get_K(l=l)[0]  # Without factors of sqrt(r)
+    H = K / 2 + np.diag(V)
+    assert np.allclose(H, H.T.conj())
+    E = np.linalg.eigvalsh(H)
+    Vs.append(V)
+    Ks.append(K)
+    Hs.append(H)
+    Es.append(E)
+
+Es_ = sorted(sum((E.tolist() for E in Es), []))
+# -
+
 # Another possibility is to use a periodic 1D basis of odd functions.  This follows from the radial equations:
 #
 # $$
