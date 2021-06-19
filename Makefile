@@ -2,6 +2,7 @@
 # platform independent.  These are included here simply as a
 # convenience.
 
+PANDOC_FLAGS = --toc --standalone
 test:
 	nox
 
@@ -12,12 +13,12 @@ README.rst: doc/README.ipynb
 	rst2html5.py $< > $@
 
 %.html: %.md
-	pandoc $< -o $@ --standalone && open -g -a Safari $@
-	fswatch -e ".*\.html" -o . | while read num ; do pandoc $< -o $@ --standalone && open -g -a Safari $@; done
+	pandoc $(PANDOC_FLAGS) $< -o $@  && open -g -a Safari $@
+	fswatch -e ".*\.html" -o . | while read num ; do pandoc $(PANDOC_FLAGS) $< -o $@ && open -g -a Safari $@; done
 
 
 clean:
-	-rm -r .nox
+	-rm -r .nox .conda fil-result
 	-find . -name "*.pyc" -delete
 	-find . -name "*.pyo" -delete
 	-find . -name "htmlcov" -type d -exec rm -r "{}" \;

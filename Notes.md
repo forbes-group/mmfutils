@@ -1,5 +1,3 @@
-% Developer Notes
-
 Developer Notes
 ===============
 
@@ -14,7 +12,7 @@ have made regarding things such as file hierarchy, packaging tools etc.  I inten
 this file to document my choices and discussions about these issues for all projects.
 (Other projects should refer here for this discussion.)
 
-## To Do
+# To Do
 
 * Consider a two-branch model so that one can easily update to the latest development
   branch or the latest default branch.  Maybe default should be the development branch
@@ -22,7 +20,247 @@ this file to document my choices and discussions about these issues for all proj
   I have a branch for each version, but this means I need to specify the latest one each
   time.)
 
-## Distribution
+# Working Environment (Conda/pip and all that)
+
+Our goal is to be able to use [conda] for packages that might require binary installs,
+such as `mercurial`, `pyvista`, `numpy` etc., but in a way that:
+1. Allows these conda environments to be installed in a read-only environment (i.e. as a
+   separate `conda` user).
+2. Allows us to install additional project dependencies if needed.
+
+This kind of works: if you activate a conda environment that you do not have
+write-access to, then you can at least use `python -m pip install --user` to install
+additional packages, which will go in the directory
+[`site.USER_BASE`](https://docs.python.org/3/library/site.html#site.USER_BASE) which can
+be customized with the
+[`PYTHONUSERBASE`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE)
+environment variable.  Unfortunately, this approach does not allow you to install
+additional packages with [conda].
+
+## Option 1 (recommended)
+The recommended approach is to clone the environment.  For working on a specific
+project, we recommend doing this in the project root folder as follows.  In this
+example, we will clone the `work` environment:
+
+
+```bash
+cd myproject
+conda create -p ./.conda/envs/myproject --clone work   # Took 1.5m on my Mac OS X laptop
+conda install -p ./.conda/envs/myproject ipykernel     # So jupyter notebooks will find this
+conda activate ./.conda/envs/myproject
+```
+
+This gives the following:
+
+```bash
+(.../.conda) $ poetry env info
+
+Virtualenv
+Python:         3.9.4
+Implementation: CPython
+Path:           /Users/mforbes/current/research/skeleton/.conda
+Valid:          True
+...
+(.../.conda) $ poetry shell
+Virtual environment already activated: /Users/mforbes/current/research/skeleton/.conda
+$ du -sh ./.conda
+3.0G	./.conda
+$ du -sh /data/apps/conda/envs/work ./.conda
+3.0G	/data/apps/conda/envs/work
+565M	./.conda
+```
+
+Although `.conda/` looks like it takes 3GB, we see from the second command that it only
+takes about 0.5GB indicating that there is significant use of hard-links to reduce disk
+space.
+
+**To Do:** It would be nice to have a better way of activating this, or recording it so
+that just running `poetry shell` would work without having to explicitly activate the
+environment.  We could code something into the [`Makefile`](Makefile).
+
+## Option 2 (incomplete)
+
+If you do not need to install any additional packages with [conda], and cannot afford
+the disk space issues, then you can create a virtual environment [venv].  I recommend
+managing this with [Poetry]:
+
+```bash
+cd <project>
+conda activate work
+python3 -m venv --system-site-packages .venv
+poetry env info   # Should find .venv
+poetry shell
+```
+
+
+
+
+
+
+
+set `PYTHONUSERBASE`:
+
+```bash
+conda activate work
+export PYTHONUSERBASE=./.local
+export PATH="./.local/bin:$PATH"
+python3 -m pip install --user ipykernel ...
+python3 -m ipykernel install --user --name=skeleton # Goes to the wrong place...
+```
+
+This generally works, but the kernel is not going into `PYTHONUSERBASE`... not sure
+why.  Need a better solution.  Maybe look into [copip](https://github.com/fperez/copip)?
+
+
+See also: `python3 -m venv --system-site-packages .venv`
+
+
+### Testing for Option 2
+
+We will use the `mmfutil[test]` package to test this.
+
+```bash
+tmpdir="/tmp/testvenv"
+for i in {1..10}; do conda deactivate; done  # Ensure all envrionments are deactivated.
+if [ -e "$tmpdir" ]; then 
+  find "$tmpdir" -type d -exec chmod u+w {} \;
+  rm -rf "$tmpdir"
+fi
+mkdir "$tmpdir"
+cd "$tmpdir"
+conda create -y -p .conda_env python=3.8 poetry matplotlib scipy  # Use conda for these
+find .conda_env -type d -exec chmod a-w {} \;
+conda activate ./.conda_env
+poetry init --name testvenv -n
+python3 -m venv --system-site-packages .venv
+poetry add mmfutils -E test
+
+# Cleanup 
+find "$tmpdir" -type d -exec chmod u+w {} \;
+rm -rf "$tmpdir"
+```
+
+* https://github.com/python-poetry/poetry/issues/697
+
+Here is a play-by-play
+```bash
+$ conda activate ./.conda_env
+
+```
+
+
+    ```bash
+    $ poetry show -t
+    mmfutils 0.5.4 Useful Utilities
+    ├── backports.tempfile *
+    │   └── backports.weakref * 
+    ├── husl *
+    ├── pathlib *
+    └── zope.interface >=3.8.0
+    ```
+
+
+
+
+* Active conda environment to get python: poetry installs everything needed:
+
+    ```bash
+    for i in {1..10}; do conda deactivate; done  # Ensure all envrionments are deactivated.
+    mkdir /tmp/testvenv0
+    cd /tmp/testvenv0
+    conda create -y -p .conda_env python=3.8 poetry
+    conda activate ./.conda_env
+    poetry init --name testvenv -n
+    poetry config virtualenvs.in-project true --local
+    poetry env use python3
+    poetry add mmfutils
+    ```
+
+    ```bash
+    $ poetry show -t
+    mmfutils 0.5.4 Useful Utilities
+    ├── backports.tempfile *
+    │   └── backports.weakref * 
+    ├── husl *
+    ├── pathlib *
+    └── zope.interface >=3.8.0
+    ```
+
+* Here we include the `zope.interface` dependency in the conda environment: poetry
+    ignores this because it creates an isolated virtual environment.
+  
+    ```bash
+    for i in {1..10}; do conda deactivate; done  # Ensure all envrionments are deactivated.
+    mkdir /tmp/testvenv1
+    cd /tmp/testvenv1
+    conda create -y -p .conda_env python=3.8 poetry zope.interface
+    conda activate ./.conda_env
+    poetry init --name testvenv -n
+    poetry config virtualenvs.in-project true --local
+    poetry env use python3
+    poetry add mmfutils
+    ```
+
+    ```bash
+    $ poetry show -t
+    mmfutils 0.5.4 Useful Utilities
+    ├── backports.tempfile *
+    │   └── backports.weakref * 
+    ├── husl *
+    ├── pathlib *
+    └── zope.interface >=3.8.0
+    ```
+
+* Here we include the `zope.interface` dependency in the conda environment, and use our
+    approach above for sharing the `site-packages`:
+  
+    ```bash
+    for i in {1..10}; do conda deactivate; done  # Ensure all envrionments are deactivated.
+    mkdir /tmp/testvenv2
+    cd /tmp/testvenv2
+    conda create -y -p .conda_env python=3.8 poetry
+    conda activate ./.conda_env
+    pip install zope.interface
+    poetry init --name testvenv -n
+    poetry config virtualenvs.in-project true --local
+    python3 -m venv --system-site-packages .venv
+    poetry add mmfutils
+    ```
+
+    ```bash
+    $ poetry show -t
+    mmfutils 0.5.4 Useful Utilities
+    ├── backports.tempfile *
+    │   └── backports.weakref * 
+    ├── husl *
+    ├── pathlib *
+    └── zope.interface >=3.8.0
+    ```
+
+
+
+## Option 3
+For testing, however, one should instead try to rely on a more isolated procedure.  If
+your requirements can be satisfied purely by `pip` and you want to support pure `pip`
+installations, then you should test **outside of the conda environment** by creating a
+virtual environment:
+
+
+If you need to depend on `conda`, then you should at least provide an `environment.yml`
+file.
+
+```bash
+conda deactivate    # Just in case
+```
+
+## References
+
+There are several potential issues related to permissions:
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/7227)](https://github.com/conda/conda/issues/7227)
+  Write permission error with a shared package cache folder.
+
+# Distribution
 
 In general, we will try to distribute projects on [PyPI] and this will be the primary
 mode if distribution.  To use such projects in a [Conda] environment, just use `pip`:
@@ -47,7 +285,7 @@ project.  Unfortunately, until [issue
 #22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
 sites are useless for this purpose, so we rely on mirroring through GitHub.
 
-## Packaging
+# Packaging
 
 Starting with version 0.6.0, we reorganized the repository as follows (modified from the
 output of `tree -L 2`:
@@ -113,7 +351,7 @@ here: [Single-sourcing the package
 version](https://packaging.python.org/guides/single-sourcing-package-version).  I am
 going with option 5, which uses `importlib.metadata`.
 
-## Repositories
+# Repositories
 
 Currently the main repository is on our own [Heptapod] server, but I have enabled 
 `Settings/Repository/Mirroring repositories` to push to a public GitHub mirror
@@ -133,7 +371,6 @@ reviews.  For this one, I mirror everything.
 > * If you want to be able to update GitHub workflows, you must grant `workflow`
 >   permission for the token.  Doing this will not invalidate the token.
 
-
 Summary:
 
 * https://hg.iscimath.org/forbes-group/mmfutils: Main development repository (Mercurial)
@@ -147,7 +384,8 @@ Summary:
 * https://github.com/mforbes/mmfutils-fork: My development fork (Git).  Everything is
   pushed here to use GitHub's CI tools during development.  Should not be used for
   anything else.
-  
+
+
 ## Badges
 
 With CI setup, we have the following badges:
@@ -190,7 +428,29 @@ With CI setup, we have the following badges:
 [lgtm_mmfutils_fork]: <https://lgtm.com/projects/g/forbes-group/mmfutils/context:python>
 [lgtm_mmfutils_fork_badge]: <https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18> 
 
-## Testing
+## Continuous Integration (CI)
+
+As mentioned above, by providing
+[`.github/workflows/tests.yml`](.github/workflows/tests.yml), we can engage a [GitHub
+action for continuous
+integration](https://docs.github.com/en/actions/guides/about-continuous-integration).
+This can be configure to run the tests automatically on pushes, the results of which are
+displayed in the appropriate badges.
+
+The main difficulty I had was a need for a full LaTeX installation.  This is now
+working with `apt-get texlive-full`, but could probably be simplified, just updating the
+packages we really need for testing ([`mathpazo`], [`siunitx`], and [`type1cm`] were
+issues when just using the smaller `texlive` package.)
+
+[`mathpazo`]: <https://ctan.org/pkg/mathpazo> "mathpazo – Fonts to typeset mathematics to match Palatino"
+[`siunitx`]: <https://ctan.org/pkg/siunitx> "siunitx – A comprehensive (SI) units package"
+[`type1cm`]: <https://ctan.org/pkg/type1cm> "type1cm – Arbitrary size font selection in LaTeX"
+
+## References
+* https://cjolowicz.github.io/posts/hypermodern-python-06-ci-cd/
+* https://docs.github.com/en/actions/guides/setting-up-continuous-integration-using-workflow-templates
+
+# Testing
 
 We use [pytest] for testing, running the tests with [Nox] for multiple versions of
 python.  If you have multiple cores, you can run tests in parallel by passing the number
@@ -240,7 +500,7 @@ Both these assumptions are not valid for research code: here the tests often pro
 examples for the users about how things can be done.  Also, the users are often the
 developers.
 
-### `tests/__init__.py`
+## `tests/__init__.py`
 
 Should the `tests` directories be importable modules as signified by having
 `__init__.py` files?  In our case, yes, because several of them have associated modules
@@ -249,8 +509,7 @@ having `__init__.py` files creates a problem for which I do not have an easy sol
 This may also help with potential name classes as discussed in the [pytest
 documentation](https://docs.pytest.org/en/stable/goodpractices.html#tests-outside-application-code).
 
-
-### Nox
+## Nox
 
 Testing is now done using [Nox] as configured in `noxfile.py`.  This allows for testing
 against multiple versions of python (similar to [Tox]) but I find that it is simpler to
@@ -313,25 +572,6 @@ cond activate _mmfutils
 pytest
 ```
 
-### Continuous Integration (CI)
-
-As mentioned above, by providing
-[`.github/workflows/tests.yml`](.github/workflows/tests.yml), we can engage a [GitHub
-action for continuous
-integration](https://docs.github.com/en/actions/guides/about-continuous-integration).
-This can be configure to run the tests automatically on pushes, the results of which are
-displayed in the appropriate badges.
-
-The main difficulty I had was a need for a full LaTeX installation.  This is now
-working with `apt-get texlive-full`, but could probably be simplified, just updating the
-packages we really need for testing ([`mathpazo`], [`siunitx`], and [`type1cm`] were
-issues when just using the smaller `texlive` package.)
-
-[`mathpazo`]: <https://ctan.org/pkg/mathpazo> "mathpazo – Fonts to typeset mathematics to match Palatino"
-[`siunitx`]: <https://ctan.org/pkg/siunitx> "siunitx – A comprehensive (SI) units package"
-[`type1cm`]: <https://ctan.org/pkg/type1cm> "type1cm – Arbitrary size font selection in LaTeX"
-
-
 ### Gotchas
 
 I had a very difficult time with random errors when tested `mmf_setup` that boiled down
@@ -344,7 +584,7 @@ The solution is to make sure that `PYTHONNOUSERSITE=1` before running anything.
 
 * See: https://stackoverflow.com/a/51640558/1088938
 
-## Documentation
+# Documentation
 
 If you are a developer of this package, there are a few things to be aware of.
 
@@ -363,14 +603,23 @@ make sure that no one inserts malicious code.  This runs the following code:
     !cd $ROOTDIR; jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 
 
-## Releases
+# Profiling (Incomplete)
+
+To measure peak memory usage, look at [Fil].  Write your test-code as a script, then run
+it with `fil-profile`:
+
+```bash
+fil-profile run test_script.py
+```
+
+# Releases
 
 We try to keep the repository clean with the following properties:
 
 1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the latest stable release.
 2. Each release has its own named branch so that e.g. `hg up 0.5.0` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
 
-To do this, we advocate the following proceedure.
+To do this, we advocate the following procedure.
 
 1. **Update to Correct Branch**: Make sure this is the correct development branch, not the default branch by explicitly updating:
 
@@ -575,62 +824,96 @@ issues.  Here are some recommendations:
   shell and use `pip` to see what it brings.  Here is a strategy (I did this with the
   [`persist`] package):
   
-  1. Start with your desired python versions, then add projects, and restrict until
-     everything works:
+  1.  Start with your desired python versions, then add projects, and restrict until
+      everything works:
      
-     ```bash
-     $ poetry env use 3.8
-     # python = "^3.6"
-     $ poetry add zope.interface importlib-metadata
-     Using version ^5.4.0 for zope.interface
-     Using version ^4.0.1 for importlib-metadata
-     $ poetry add --optional Sphinx pytest pytest-cov sphinx-rtd-theme \
-       sphinxcontrib-zopeext nbsphinx h5py mmf-setup scipy
-     Using version ^3.5.4 for Sphinx
-     ...
-       SolverProblemError
-       ...
-       For scipy, a possible solution would be to set the `python` property to ">=3.8,<3.10"
-     # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
-     # scipy = [
-     #     {version = "*", python="<3.8", optional = true},
-     #     {version = "^1.6.3", python="^3.8, <3.10", optional = true}]
-     # and try again with python = "^3.6"
-     $ poetry update
-     ...
-       SolverProblemError
-       For h5py, a possible solution would be to set the `python` property to ">=3.7,<4.0"
-     # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
-     # h5py = [
-     #     {version = "*", python="<3.7", optional = true},
-     #     {version = "^3.2.1", python="^3.7", optional = true}]
-     $ poetry update 
-     ```
+      ```bash
+      $ poetry env use 3.8
+      # python = "^3.6"
+      $ poetry add zope.interface importlib-metadata
+      Using version ^5.4.0 for zope.interface
+      Using version ^4.0.1 for importlib-metadata
+      $ poetry add --optional Sphinx pytest pytest-cov sphinx-rtd-theme \
+        sphinxcontrib-zopeext nbsphinx h5py mmf-setup scipy
+      Using version ^3.5.4 for Sphinx
+      ...
+        SolverProblemError
+        ...
+        For scipy, a possible solution would be to set the `python` property to ">=3.8,<3.10"
+      # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
+      # scipy = [
+      #     {version = "*", python="<3.8", optional = true},
+      #     {version = "^1.6.3", python="^3.8, <3.10", optional = true}]
+      # and try again with python = "^3.6"
+      $ poetry update
+      ...
+        SolverProblemError
+        For h5py, a possible solution would be to set the `python` property to ">=3.7,<4.0"
+      # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
+      # h5py = [
+      #     {version = "*", python="<3.7", optional = true},
+      #     {version = "^3.2.1", python="^3.7", optional = true}]
+      $ poetry update 
+      ```
      
-     Note: Be very careful to express complete constraints.  The following works
+      Note: Be very careful to express complete constraints.  The following works
      
-     Consider both sides of the suggested dependencies.  Once I relaxed the
-     requirements for scipy for `python="<3.8"` I still got errors saying 
+      Consider both sides of the suggested dependencies.  Once I relaxed the
+      requirements for scipy for `python="<3.8"` I still got errors saying 
     
      
-  2. Add all dependencies and see what happens:
+  2.  Add all dependencies and see what happens:
   
-     ```bash
-     
-     ```
+      ```bash
+      
+      ```
+*   If you only need a tool for development, you can add it with the `-D` flag.  Note: if
+    you get an error about the version of python required here, you can simply avoid this
+    by specifying a more specific version required for installing the dev tools.  For
+    example:
   
+    ```bash
+    $ poetry add -D ipython
+    ...
+      SolverProblemError
+    ...
+        - ipython requires Python >=3.7
+    ...
+    $ poetry add -D ipython --python '^3.7'
+    Using version ^7.24.1 for ipython
+    ...
+    ```
  
 ## Issues:
 
 * [Document use of current conda env #1724](https://github.com/python-poetry/poetry/issues/1724)
+* [Ability to override/ignore sub-dependencies #697](https://github.com/python-poetry/poetry/issues/697)
+* [Poetry install tries to update system packages is 'system-site-packages' option enabled #4033](https://github.com/python-poetry/poetry/issues/4033)
 
-GitHub
-======
+# Reference
 
-We mirror our repos to GitHub to take advantage of continuous integration.
+## Conda Issues
 
-* https://cjolowicz.github.io/posts/hypermodern-python-06-ci-cd/
-* https://docs.github.com/en/actions/guides/setting-up-continuous-integration-using-workflow-templates
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/1329)](https://github.com/conda/conda/issues/1329)
+  "Better support for conda envs accessed by multiple users"
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/6991)](https://github.com/conda/conda/issues/6991)
+  "conda env create -f hangs if yaml is on read-only network share"
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/7227)](https://github.com/conda/conda/issues/7227)
+  "Write permission error with a shared package cache folder."
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/7279)](https://github.com/conda/conda/issues/7279)
+  "conda env update --prune does not remove installed packages not defined in
+  environment.yml"
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/8592)](https://github.com/conda/conda/issues/8592)
+  "It takes a couple of minutes to run conda commands"
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/8983)](https://github.com/conda/conda/issues/8983)
+  "conda fails install for local user due to permission issues"
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10690)](https://github.com/conda/conda/issues/10690)
+  "Conda run fails with Permission denied if environment is read-only."
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10105)](https://github.com/conda/conda/issues/10105)
+  "Local environment.yml file hides remote environment file specification in conda env
+  create."
+  * Could be an issue with `anaconda-client`:
+    [![Issue](https://img.shields.io/github/issues/detail/state/Anaconda-Platform/anaconda-client/549)](https://github.com/Anaconda-Platform/anaconda-client/issues/549)
 
 # Odds and Ends
 
@@ -676,13 +959,15 @@ make: *** [python.exe] Error 1
 ```
 
 <!-- Links -->
-[Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
-[Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/> "Hypermodern Python"
-[`pyenv`]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
-[`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [Conda]: <https://docs.conda.io> "Conda"
+[Fil]: <https://pythonspeed.com/products/filmemoryprofiler/> "The Fil memory profiler for Python"
 [Heptapod]: <https://heptapod.net> "Heptapod website"
-[pytest]: <https://docs.pytest.org> "pytest"
-[PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
+[Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/> "Hypermodern Python"
 [MyPI]: <https://alum.mit.edu/www/mforbes/mypi/> "MyPI: My personal package index"
+[Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
 [Poetry]: 
+[PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
+[`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
+[`pyenv`]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
+[pytest]: <https://docs.pytest.org> "pytest"
+[venv]: <https://docs.python.org/3/library/venv.html> "Creation of virtual environments"
