@@ -41,21 +41,33 @@ def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
     Arguments
     ---------
     Nxyz : [int]
-       Number of points in each dimension.
+        Number of points in each dimension.
     Lxyz : [float]
-       Size of periodic box in each dimension.
+        Size of periodic box in each dimension.
     symmetric_lattice : bool
-       If `True`, then shift the grid so that the origin is in the middle
-       but not on the lattice, otherwise the origin is part of the lattice,
-       but the lattice will not be symmetric (if `Nxyz` is even as is
-       typically the case for performance).
+        If `True`, then shift the grid so that the origin is in the middle
+        but not on the lattice, otherwise the origin is part of the lattice,
+        but the lattice will not be symmetric (if `Nxyz` is even as is
+        typically the case for performance).
+
+    Examples
+    --------
+    >>> get_xyz(Nxyz=(4, 5), Lxyz=(4, 5))
+    [array([[-2.],
+            [-1.],
+            [ 0.],
+            [ 1.]]), array([[-2., -1., 0.,  1.,  2.]])]
+    >>> get_xyz(Nxyz=(4, 5), Lxyz=(4, 5), symmetric_lattice=True)
+    [array([[-1.5],
+            [-0.5],
+            [ 0.5],
+            [ 1.5]]), array([[-2., -1., 0.,  1.,  2.]])]
     """
     xyz = []
-    # Special case for N = 1 should also always be centered
-    _offsets = [0.5 if symmetric_lattice or _N == 1 else 0 for _N in Nxyz]
+    _offsets = [_N // 2 - symmetric_lattice * ((_N + 1) % 2) / 2 for _N in Nxyz]
     xyz = ndgrid(
         *[
-            _l / _n * (np.arange(-_n / 2, _n / 2) + _offset)
+            _l / _n * (np.arange(_n) - _offset)
             for _n, _l, _offset in zip(Nxyz, Lxyz, _offsets)
         ]
     )
