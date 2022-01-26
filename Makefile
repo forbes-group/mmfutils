@@ -19,10 +19,10 @@ README.rst: doc/README.ipynb
 
 clean:
 	-rm -r .nox .conda fil-result
-	-find . -name "*.pyc" -delete
-	-find . -name "*.pyo" -delete
-	-find . -name "htmlcov" -type d -exec rm -r "{}" \;
-	-find . -name "__pycache__" -exec rm -r "{}" \;
+	-find . -type f -name "*.pyc" -delete
+	-find . -type f -name "*.pyo" -delete
+	-find . -type d -name "htmlcov"  -exec rm -r {} +
+	-find . -type d -name "__pycache__" -exec rm -r {} +
 	-rm -r build
 	-rm -r src/mmfutils.egg-info
 	-rm -r doc/README_files/

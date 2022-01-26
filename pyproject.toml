@@ -86,6 +86,10 @@ doc = [
     "nbconvert",
 ]
 
+[tools.poetry.scripts]
+mmf_setup = "mmf_setup.cli.mmf_setup:main"
+mmf_initial_setup = "mmf_setup.cli.mmf_initial_setup:main"
+
 [tool.poetry.urls]
 "Issues" = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues"
 "Git Mirror" = "https://github.com/forbes-group/mmfutils"

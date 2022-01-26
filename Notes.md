@@ -10,7 +10,9 @@ Developer Notes
 These are some notes for developers and a general discussion about the design choices I
 have made regarding things such as file hierarchy, packaging tools etc.  I intend for
 this file to document my choices and discussions about these issues for all projects.
-(Other projects should refer here for this discussion.)
+(Other projects should refer here for this discussion.)  For now, however, most of my
+work is being done in the [Physics 581] project which I am teaching, so please visit
+that for now.
 
 # To Do
 
@@ -92,7 +94,10 @@ poetry env info   # Should find .venv
 poetry shell
 ```
 
-
+Note: Poetry will use a virtual environment in `.venv` if the
+[`virtualenvs.in-project`
+option](https://python-poetry.org/docs/configuration#virtualenvsin-project) is `None`
+(default) or `true`.
 
 
 
@@ -259,6 +264,17 @@ There are several potential issues related to permissions:
 
 * [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/7227)](https://github.com/conda/conda/issues/7227)
   Write permission error with a shared package cache folder.
+
+## Reproducible Computing
+### Conda-Pack
+
+If you need to reproduce a conda environment, then [`conda-pack`] might be the right
+tool.  This makes a copy of the environment and all of the files that can then be
+archived and reinstalled elsewhere.  At the very least, `conda-pack` provides a check on
+the code installed, failing if any files installed by [Conda] have been overwritten or
+are installed twice.
+
+
 
 # Distribution
 
@@ -959,15 +975,17 @@ make: *** [python.exe] Error 1
 ```
 
 <!-- Links -->
+[Physics 581]: <https://gitlab.com/wsu-courses/physics-581-physics-inspired-computation> "Physics 581: Physics Inspired Computation course GitLab project."
 [Conda]: <https://docs.conda.io> "Conda"
 [Fil]: <https://pythonspeed.com/products/filmemoryprofiler/> "The Fil memory profiler for Python"
 [Heptapod]: <https://heptapod.net> "Heptapod website"
 [Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/> "Hypermodern Python"
 [MyPI]: <https://alum.mit.edu/www/mforbes/mypi/> "MyPI: My personal package index"
 [Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
-[Poetry]: 
+[Poetry]: <https://poetry.eustace.io> "Python packaging and dependency management made easy."
 [PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [`pyenv`]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
 [pytest]: <https://docs.pytest.org> "pytest"
 [venv]: <https://docs.python.org/3/library/venv.html> "Creation of virtual environments"
+[`conda-pack`]: <https://conda.github.io/conda-pack/> "Command line tool for creating archives of conda environments"
