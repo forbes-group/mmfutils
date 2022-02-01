@@ -55,6 +55,9 @@ scipy = [
 ]
 
 [tool.poetry.extras]
+fftw = [
+    "pyFFTW"
+]
 test = [
     "pytest",
     "pytest-cov",
@@ -66,7 +69,7 @@ test = [
     "matplotlib",
     "numexpr",
     "uncertainties",
-    "pyfftw",
+    "pyFFTW",
     "numba",
     "docutils",
     "psutil",
@@ -93,6 +96,11 @@ mercurial = { version = "^5.7.1", optional = true }
 hg-git = { version = "^0.10.0", optional = true }
 hg-evolve = { version = "^10.3.1", optional = true }
 nbconvert = "^6.0.7"
+
+# These are installed by mmf_setup, but we include them here for demonstration purposes.
+[tools.poetry.scripts]
+mmf_setup = "mmf_setup.cli.mmf_setup:main"
+mmf_initial_setup = "mmf_setup.cli.mmf_initial_setup:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

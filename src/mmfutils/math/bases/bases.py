@@ -342,7 +342,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         # TODO: Check this for the highest momentum issue.
         return sum(
             self.ifft(1j * _p * self.fft(_y, axis=_i), axis=_i)
-            for _i, (_p, _y) in enumerate(zip(self._pxy_derivativez, ys))
+            for _i, (_p, _y) in enumerate(zip(self._pxyz_derivative, ys))
         )
 
     @staticmethod
