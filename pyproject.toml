@@ -1,0 +1,154 @@
+[tool.poetry]
+name = "mmfutils"
+version = "0.6.1"
+description = "Small set of utilities: containers and interfaces."
+authors = ["Michael McNeil Forbes <michael.forbes+python@gmail.com>"]
+license = "BSD-3"
+readme = "description.md"
+repository = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils"
+documentation = "http://mmfutils.readthedocs.org"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+
+
+[tool.poetry.dependencies]
+# Problem with pyfftw and python 3.9
+# https://github.com/pyFFTW/pyFFTW/issues/252
+python = ">=3.6.2,<3.10"
+"zope.interface" = "~=5.4.0"
+husl = "~=4.0.3"
+importlib-metadata = { version = "~=1.0", python = "<3.8" }
+
+# Optional dependencies for testing, building the docs, etc.
+Sphinx = {version = "~=3.5.4", optional = true}
+ipyparallel = {version = "~=6.3.0", optional = true}
+mmf-setup = {version = "~=0.3.1", optional = true}
+mock = {version = "~=4.0.3", optional = true}
+nbconvert = {version = "~=6.0.7", optional = true}
+numba = {version = "~=0.53.1", python = "<3.10", optional = true}
+numexpr = {version = "~=2.7.3", optional = true}
+persist = {version = "~=3.0", optional = true}
+psutil = {version = "~=5.8.0", optional = true}
+pyFFTW = {version = "~=0.12.0", optional = true}
+pytest = {version = "~=6.2.3", optional = true}
+pytest-cov = {version = "~=2.11.1", optional = true}
+sphinx-rtd-theme = {version = "~=0.5.2", optional = true}
+sphinxcontrib-zopeext = {version = "~=0.2.4", optional = true}
+uncertainties = {version = "~=3.1.5", optional = true}
+
+# These have issues with python 3.6... so don't restrict and let pip deal with it.
+numpy = [
+    {version = "*", python="~=3.6", optional = true},
+    {version = "~=1.20.2", python="~=3.7", optional = true},
+]
+matplotlib = [
+    {version = "*", python="~=3.6", optional = true},
+    {version = "~=3.4.1", python="~=3.7", optional = true},
+]
+scipy = [
+    {version = "*", python="~=3.6", optional = true},
+    {version = "~=1.7.3", python="~=3.7,<3.10", optional = true},
+]
+poetry = {version = "~=1.1.12", optional = true}
+
+[tool.poetry.extras]
+fftw = [
+    "pyFFTW"
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-flake8",
+    "pytest-xdist",
+    "ipyparallel",
+    "persist",
+    "scipy",
+    "matplotlib",
+    "numexpr",
+    "uncertainties",
+    "pyFFTW",
+    "numba",
+    "docutils",
+    "psutil",
+    "poetry",
+]
+
+doc = [
+    "Sphinx",
+    "mock",
+    "sphinx_rtd_theme",
+    "sphinxcontrib.zopeext",
+    "numpy",
+    "matplotlib",
+    "mmf_setup",
+    "nbconvert",
+]
+
+[tool.poetry.urls]
+"Issues" = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues"
+"Git Mirror" = "https://github.com/forbes-group/mmfutils"
+
+[tool.poetry.dev-dependencies]
+ipython = { version = "*", python = ">=3.8" }
+traitlets = { version = "*", python = ">=3.8" }
+
+#black = "~=21.4b2"
+#mercurial = { version = "~=5.7.1", optional = true }
+#hg-git = { version = "~=0.10.0", optional = true }
+#hg-evolve = { version = "~=10.3.1", optional = true }
+#nbconvert = "~=6.0.7"
+
+# These are installed by mmf_setup, but we include them here for demonstration purposes.
+# [tools.poetry.scripts]
+# mmf_setup = "mmf_setup.cli.mmf_setup:main"
+# mmf_initial_setup = "mmf_setup.cli.mmf_initial_setup:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+######################################################################
+# PyTest
+[tool.pytest.ini_options]
+testpaths = [ "src/mmfutils" ]
+markers = [
+    # mark test as a benchmark.  (Might be slow, or platform dependent)
+    "bench",
+    # mark test as slow.
+    "slow",
+]
+addopts = [
+    "-m not bench",
+    "--doctest-modules",
+    "--cov",
+    "--cov-report=html",
+    "--cov-fail-under=80",
+    "--no-cov-on-fail",
+    #"-x",
+    #"--pdb",
+    #"--flake8",  # Disable until https://github.com/tholo/pytest-flake8/issues/8
+]
+
+doctest_optionflags = [
+    "ELLIPSIS",
+    "NORMALIZE_WHITESPACE"
+    ]
+
+######################################################################
+# Black
+[tool.black]
+exclude = '''
+    /(
+        \.git
+      | \.hg
+      | \.nox
+      | \.venv
+      | _build
+      | build
+      | dist
+    )/
+'''

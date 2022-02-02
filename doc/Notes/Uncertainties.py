@@ -14,7 +14,9 @@
 # ---
 
 # + {"hide_input": true, "hide_output": true, "init_cell": true, "run_control": {"marked": true}}
-import mmf_setup;mmf_setup.nbinit()
+import mmf_setup
+
+mmf_setup.nbinit()
 # -
 
 # # 1. Uncertainties
@@ -32,14 +34,17 @@ import uncertainties
 from uncertainties import ufloat
 from scipy.optimize import brentq
 
-a = ufloat(4.0, 0.1, 'a')
+a = ufloat(4.0, 0.1, "a")
+
 
 def f(x, a, n):
-    return x**n - a
+    return x ** n - a
+
 
 def _root(a, n=2):
     """Return `a**(1/n)` using a root-finding algorithm"""
     return brentq(lambda x: f(x, a, n), 0, max(a, 1))
+
 
 root = uncertainties.wrap(_root)
 root(a)
@@ -51,7 +56,7 @@ root(a)
 # %timeit root(4.0)
 # %timeit root(a)
 
-n = ufloat(2, 0.1, 'n')
+n = ufloat(2, 0.1, "n")
 print root(a, n=2)
 print root(a, n=n)
 
@@ -66,19 +71,20 @@ print root(a, n=n)
 class Root(object):
     def __init__(self, n=2.0):
         self.n = n
-        
+
     def _f(self, x, a):
-        return x**self.n - a
-    
+        return x ** self.n - a
+
     @uncertainties.wrap
     def __call__(self, a):
         return brentq(lambda x: self._f(x, a), 0, max(a, 1))
 
+
 print Root(n=2)(a)
-#print Root(n=n)(a)  # Fails
+# print Root(n=n)(a)  # Fails
 # -
 
-# One solution to this problem is to explicitly compute the derivatives 
+# One solution to this problem is to explicitly compute the derivatives
 
 # $$
 #   f(x, \vec{a}) = 0, \qquad
@@ -91,21 +97,25 @@ print Root(n=2)(a)
 def solve(f, a, b):
     """Return the root of f with uncertainties."""
     x = brentq(lambda _x: uncertainties.nominal_value(f(_x)), a, b)
-    _x = ufloat(x, 0, tag='x')
+    _x = ufloat(x, 0, tag="x")
     zero = f(_x)
     params = [_k for _k in zero.derivatives if _k is not _x]
-    return x - sum((_p - uncertainties.nominal_value(_p))
-                    *zero.derivatives[_p]/zero.derivatives[_x]
-                    for _p in params)
+    return x - sum(
+        (_p - uncertainties.nominal_value(_p))
+        * zero.derivatives[_p]
+        / zero.derivatives[_x]
+        for _p in params
+    )
+
 
 root = Root(n=n)
 x = solve(lambda x: root._f(x, a), 0, 3.0)
-exact = a**(1./n)
+exact = a ** (1.0 / n)
 
 n.std_dev = 0.2  # Change the uncertainty to make sure it tracks through
 print x
 print exact
-print x-exact
+print x - exact
 # -
 
 # Note that there is no uncertainty in the final answer indicating that we have correctly linked the derivatives to the original variables.

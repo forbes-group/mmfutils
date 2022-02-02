@@ -2,6 +2,7 @@
 # platform independent.  These are included here simply as a
 # convenience.
 
+PANDOC_FLAGS = --toc --standalone
 test:
 	nox
 
@@ -12,17 +13,19 @@ README.rst: doc/README.ipynb
 	rst2html5.py $< > $@
 
 %.html: %.md
-	pandoc -o $@ $< 
+	pandoc $(PANDOC_FLAGS) $< -o $@  && open -g -a Safari $@
+	fswatch -e ".*\.html" -o . | while read num ; do pandoc $(PANDOC_FLAGS) $< -o $@ && open -g -a Safari $@; done
+
 
 clean:
-	-find . -name "*.pyc" -delete
-	-find . -name "*.pyo" -delete
-	-find . -name "htmlcov" -type d -exec rm -r "{}" \;
-	-find . -name "__pycache__" -exec rm -r "{}" \;
-	-rm -r build
-	-rm -r mmfutils.egg-info
-	-rm -r .nox
-	-rm -r doc/README_files/
-	-rm *.html
+	$(RM) -r .nox .conda fil-result
+	find . -type d -name "htmlcov"  -exec $(RM) -r {} +
+	find . -type d -name "__pycache__" -exec $(RM) -r {} +
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	$(RM) -r build
+	$(RM) -r src/mmfutils.egg-info
+	$(RM) -r doc/README_files/
+	$(RM) *.html
 
-.PHONY: test clean
+.PHONY: test clean auto
