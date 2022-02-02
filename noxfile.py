@@ -2,6 +2,10 @@ import os
 
 import nox
 
+# import sys
+# sys.path.append(".")
+# from noxutils import get_versions
+
 # Do not use anything installed in the site local directory (~/.local for example) which
 # might have been installed by pip install --user.  These can prevent the install here
 # from pulling in the correct packages, thereby mucking up tests later on.
@@ -17,6 +21,7 @@ args = dict(python=["3.6", "3.7", "3.8", "3.9"], reuse_venv=True)
 
 
 @nox.session(**args)
+# @nox.parametrize("sphinx", get_versions("sphinx", "minor"))
 def test(session):
     session.install(".[test]")
     session.run("pytest")
@@ -27,5 +32,6 @@ def test_conda(session):
     # session.conda_env_update("environment.yml")
     # session.conda("env", "update", "--f", "environment.yml",
     #              conda="mamba", external=True)
+    session.conda_install("conda-forge::pyfftw")
     session.install(".[test]")
     session.run("pytest")

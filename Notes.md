@@ -902,8 +902,66 @@ issues.  Here are some recommendations:
  
 ## Issues:
 
+* Consider `pyFFTW`: if not using [Conda], then this needs the FFTW libraries installed
+  on the host platform, otherwise the install will fail.  How best to deal with this?
+  My current solution is to provide these as extras, but it would be nice if there was a
+  way to install if the libraries are present.
+
+* How to manage one definitive version?  The [current suggestion] is to use
+  `importlib.metadata`:
+  
+  ```python
+  # __init__.py
+  try:
+      import importlib.metadata as _metadata
+  except ModuleNotFoundError:
+      import _metadata
+
+  __version__ = _metadata.version(__name__)
+  ```
+  
+  ```toml
+  # pyproject.toml
+  [tool.poetry.dependencies]
+  ...
+  importlib-metadata = {version = "^1.0", python = "<3.8"}
+  ```
+  
+  If you only support Python >= 3.8, then you can simply do:
+  
+  ```python
+  # __init__.py
+  import importlib.metadata as _metadata
+  __version__ = _metadata.version(__name__)
+  ```
+
+  This works for installed packages, but fails when one just adds the source directory
+  to the path:
+  
+  ```bash
+  $ cd src
+  $ python -c "import mmfutils
+  Traceback (most recent call last):
+     ...
+  importlib.metadata.PackageNotFoundError: mmfutils
+  ```
+  
+  The work-around is as follows.  (We could fallback to VCS maybe?  Or look in `pyproject.toml`?).
+  
+  ```python
+  try:
+      __version__ = _metadata.version(__name__)
+  except _metadata.PackageNotFoundError:
+      __version__ = "<unknown source distribution>"    
+  ```
+
+[current suggestion]: <https://github.com/python-poetry/poetry/pull/2366#issuecomment-652418094>
+
 * [Document use of current conda env #1724](https://github.com/python-poetry/poetry/issues/1724)
-* [Ability to override/ignore sub-dependencies #697](https://github.com/python-poetry/poetry/issues/697)
+* [Ability to override/ignore sub-dependencies
+  #697](https://github.com/python-poetry/poetry/issues/697): What to do when
+  sub-dependencies do not properly specify requirements, leading to conflicts.  (Not
+  sure of the actual resolution.)
 * [Poetry install tries to update system packages is 'system-site-packages' option enabled #4033](https://github.com/python-poetry/poetry/issues/4033)
 
 # Reference

@@ -1,16 +1,15 @@
 name: _mmfutils
 channels:
   - defaults
-  - conda-forge
 dependencies:
-  - python>=3.6,<3.9
+  - python~=3.9
   - ipykernel
 
   # Better to install these from conda for performance.
   - numpy >=1.15.4
   - numba
-  - pyfftw
   - cython
+  - conda-forge::pyfftw
   
   - pip
   - pip:

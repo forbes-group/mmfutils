@@ -8,11 +8,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.1
+#       jupytext_version: 1.13.5
 #   kernelspec:
-#     display_name: Python [conda env:_mmfutils]
+#     display_name: Python [conda env:.conda-_mmfutils]
 #     language: python
-#     name: conda-env-_mmfutils-py
+#     name: conda-env-.conda-_mmfutils-py
 # ---
 
 # # MMF Utils
@@ -31,14 +31,14 @@
 #  * https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink (will forward).
 #  * https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the permalink fails.
 #  * https://github.com/forbes-group/mmfutils: Public read-only mirror.
-#    
+#
 # **Issues:**
 #  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
-#   
+#
 # **Build Status**
 #
 # [![Documentation Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
-# [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils) 
+# [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils)
 
 # ## Installing
 
@@ -46,6 +46,7 @@
 #
 # ```bash
 # python3 -m pip install mmfutils
+# python3 -m pip install mmfutils[fftw]   # If you have the FFTW libraries installed
 # ```
 #
 # or, if you need to install from source, you can get it from one of the repositories:
@@ -63,13 +64,13 @@
 
 # The `ObjectBase` and `Object` classes provide some useful features described below. Consider a problem where a class is defined through a few parameters, but requires extensive initialization before it can be properly used.  An example is a numerical simulation where one passes the number of grid points $N$ and a length $L$, but the initialization must generate large grids for efficient use later on.  These grids should be generated before computations begin, but should not be re-generated every time needed.  They also should not be pickled when saved to disk.
 #
-# **Deferred initialization via the `init()` method:** The idea here changes the semantics of `__init__()` slightly by deferring any expensive initialization to `init()`.  Under this scheme, `__init__()` should only set and check what we call picklable attributes: these are parameters that define the object (they will be pickled in `Object` below) and will be stored in a list `self.picklable_attributes` which is computed at the end of `ObjectBase.__init__()` as the list of all keys in `__dict__`.  Then, `ObjectBase.__init__()` will call `init()` where all remaining attributes should be calculated.  
+# **Deferred initialization via the `init()` method:** The idea here changes the semantics of `__init__()` slightly by deferring any expensive initialization to `init()`.  Under this scheme, `__init__()` should only set and check what we call picklable attributes: these are parameters that define the object (they will be pickled in `Object` below) and will be stored in a list `self.picklable_attributes` which is computed at the end of `ObjectBase.__init__()` as the list of all keys in `__dict__`.  Then, `ObjectBase.__init__()` will call `init()` where all remaining attributes should be calculated.
 #
 # This allows users to change various attributes, then reinitialize the object once with an explicit call to `init()` before performing expensive computations.  This is an alternative to providing complete properties (getters and setters) for objects that need to trigger computation.  The use of setters is safer, but requires more work on the side of the developer and can lead to complex code when different properties depend on each other.  The approach here puts all computations in a single place.  Of course, the user must remember to call `init()` before working with the object.
 #
 # To facilitate this, we provide a mild check in the form of an `initialized` flag that is set to `True` at the end of the base `init()` chain, and set to `False` if any variables are in `pickleable_attributes` are set.
 #
-# **Serialization and Deferred Initialization:** 
+# **Serialization and Deferred Initialization:**
 # The base class `ObjectBase` does not provide any pickling services but does provide a nice representation.  Additional functionality is provided by `Object` which uses the features of `ObjectBase` to define `__getstate__()` and `__setstate__()` methods for pickling which pickle only the `picklable_attributes`.  Note: unpickling an object will **not** call `__init__()` but will call `init()` giving objects a chance to restore the computed attributes from pickles.
 #
 # * **Note:** *Before using, consider if these features are really needed – with all such added functionality comes additional potential failure modes from side-interactions. The `ObjectBase` class is quite simple, and therefore quite safe, while `Object` adds additional functionality with potential side-effects.  For example, a side-effect of support for pickles is that `copy.copy()` will also invoke `init()` when copying might instead be much faster.  Thus, we recommend only using `ObjectBase` for efficient code.*
@@ -77,45 +78,50 @@
 # #### Object Example
 
 # +
-ROOTDIR = !hg root
+# ROOTDIR = !hg root
 ROOTDIR = ROOTDIR[0]
-import sys;sys.path.insert(0, ROOTDIR)
+import sys
+
+sys.path.insert(0, ROOTDIR)
 
 import numpy as np
 
 from mmfutils.containers import ObjectBase, ObjectMixin
 
-class State(ObjectBase):  
+
+class State(ObjectBase):
     _quiet = False
+
     def __init__(self, N, L=1.0, **kw):
         """Set all of the picklable parameters, in this case, N and L."""
         self.N = N
         self.L = L
-        
+
         # Now register these and call init()
         super().__init__(**kw)
         if not self._quiet:
             print("__init__() called")
-        
+
     def init(self):
         """All additional initializations"""
         if not self._quiet:
             print("init() called")
         dx = self.L / self.N
-        self.x = np.arange(self.N, dtype=float) * dx - self.L/2.0
-        self.k = 2*np.pi * np.fft.fftfreq(self.N, dx)
+        self.x = np.arange(self.N, dtype=float) * dx - self.L / 2.0
+        self.k = 2 * np.pi * np.fft.fftfreq(self.N, dx)
 
         # Set highest momentum to zero if N is even to
         # avoid rapid oscillations
         if self.N % 2 == 0:
-            self.k[self.N//2] = 0.0
+            self.k[self.N // 2] = 0.0
 
         # Calls base class which sets self.initialized
         super().init()
-            
+
     def compute_derivative(self, f):
-        """Return the derivative of f."""        
-        return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
+        """Return the derivative of f."""
+        return np.fft.ifft(self.k * 1j * np.fft.fft(f)).real
+
 
 s = State(256)
 print(s)  # No default value for L
@@ -126,8 +132,15 @@ print(s)
 
 # One feature is that a nice ``repr()`` of the object is produced.  Now let's do a calculation:
 
-f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+df = (
+    -2.0
+    * np.pi
+    / 5.0
+    * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+    * np.sin(2 * np.pi * s.x / s.L)
+    / s.L
+)
 np.allclose(s.compute_derivative(f), df)
 
 # Oops!  We forgot to reinitialize the object... (The formula is correct, but the lattice is no longer commensurate so the FFT derivative has huge errors).
@@ -135,8 +148,15 @@ np.allclose(s.compute_derivative(f), df)
 print(s.initialized)
 s.init()
 assert s.initialized
-f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+df = (
+    -2.0
+    * np.pi
+    / 5.0
+    * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+    * np.sin(2 * np.pi * s.x / s.L)
+    / s.L
+)
 np.allclose(s.compute_derivative(f), df)
 
 
@@ -146,11 +166,13 @@ np.allclose(s.compute_derivative(f), df)
 class State1(ObjectMixin, State):
     pass
 
+
 s = State(N=256, _quiet=True)
 s1 = State1(N=256, _quiet=True)
 # -
 
 import pickle, copy
+
 s_repr = pickle.dumps(s)
 s1_repr = pickle.dumps(s1)
 print(f"ObjectBase pickle:  {len(s_repr)} bytes")
@@ -171,13 +193,14 @@ s.init()
 
 # +
 import persist.archive
+
 a = persist.archive.Archive(check_on_insert=True)
 a.insert(s=s)
 
 d = {}
 exec(str(a), d)
 
-d['s']
+d["s"]
 # -
 
 # ### Container
@@ -197,25 +220,26 @@ d['s']
 # +
 from mmfutils.containers import Container
 
-c = Container(a=1, c=2, b='Hi there')
+c = Container(a=1, c=2, b="Hi there")
 print(c)
 print(tuple(c))
 # -
 
 # Attributes are mutable
-c.b = 'Ho there'
+c.b = "Ho there"
 print(c)
 
 # +
 # Other attributes can be used for temporary storage but will not be pickled.
 import numpy as np
 
-c.large_temporary_array = np.ones((256,256))
+c.large_temporary_array = np.ones((256, 256))
 print(c)
 print(c.large_temporary_array)
 # -
 
 import pickle
+
 c1 = pickle.loads(pickle.dumps(c))
 print(c1)
 c1.large_temporary_array
@@ -248,12 +272,19 @@ np.sign(res)
 # The interfaces module collects some useful [zope.interface](http://docs.zope.org/zope.interface/) tools for checking interface requirements.  Interfaces provide a convenient way of communicating to a programmer what needs to be done to used your code.  This can then be checked in tests.
 
 # +
-from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implementer
+from mmfutils.interface import (
+    Interface,
+    Attribute,
+    verifyClass,
+    verifyObject,
+    implementer,
+)
+
 
 class IAdder(Interface):
     """Interface for objects that support addition."""
 
-    value = Attribute('value', "Current value of object")
+    value = Attribute("value", "Current value of object")
 
     # No self here since this is the "user" interface
     def add(other):
@@ -271,11 +302,12 @@ class AdderBroken(object):
         # There should only be one argument!
         return one + another
 
+
 try:
     verifyClass(IAdder, AdderBroken)
 except Exception as e:
     print("{0.__class__.__name__}: {0}".format(e))
-    
+
 # -
 
 # Now we get ``add`` right, but forget to define ``value``.  This is only caught when we have an object since the attribute is supposed to be defined in ``__init__()``:
@@ -286,6 +318,7 @@ class AdderBroken(object):
     def add(self, other):
         return one + other
 
+
 # The class validates...
 verifyClass(IAdder, AdderBroken)
 
@@ -293,7 +326,7 @@ verifyClass(IAdder, AdderBroken)
 try:
     verifyObject(IAdder, AdderBroken())
 except Exception as e:
-    print("{0.__class__.__name__}: {0}".format(e))    
+    print("{0.__class__.__name__}: {0}".format(e))
 
 
 # -
@@ -305,9 +338,11 @@ except Exception as e:
 class Adder(object):
     def __init__(self, value=0):
         self.value = value
+
     def add(self, other):
         return one + other
-    
+
+
 verifyClass(IAdder, Adder) and verifyObject(IAdder, Adder())
 # -
 
@@ -316,6 +351,7 @@ verifyClass(IAdder, Adder) and verifyObject(IAdder, Adder())
 # We also monkeypatch ``zope.interface.documentation.asStructuredText()`` to provide a mechanism for documentating interfaces in a notebook.
 
 from mmfutils.interface import describe_interface
+
 describe_interface(IAdder)
 
 # ## Parallel
@@ -323,26 +359,28 @@ describe_interface(IAdder)
 # The ``mmfutils.parallel`` module provides some tools for launching and connecting to IPython clusters.  The ``parallel.Cluster`` class represents and controls a cluster.  The cluster is specified by the profile name, and can be started or stopped from this class:
 
 import logging
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 import numpy as np
 from mmfutils import parallel
-cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
+
+cluster = parallel.Cluster(profile="default", n=3, sleep_time=1.0)
 cluster.start()
 cluster.wait()  # Instance of IPython.parallel.Client
 view = cluster.load_balanced_view
 x = np.linspace(-6, 6, 100)
-y = view.map(lambda x:x**2, x)
-print(np.allclose(y, x**2))
+y = view.map(lambda x: x ** 2, x)
+print(np.allclose(y, x ** 2))
 cluster.stop()
 
 # If you only need a cluster for a single task, it can be managed with a context.  Be sure to wait for the result to be computed before exiting the context and shutting down the cluster!
 
-with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
+with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
     view = client.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
-print(np.allclose(y, x**2))
+    y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
+print(np.allclose(y, x ** 2))
 
 # If you just need to connect to a running cluster, you can use ``parallel.get_client()``.
 
@@ -370,10 +408,11 @@ from matplotlib import pyplot as plt
 import time
 import numpy as np
 from mmfutils import plot as mmfplt
-x = np.linspace(-1, 1, 100)[:, None]**3
-y = np.linspace(-0.1, 0.1, 200)[None, :]**3
-z = np.sin(10*x)*y**2
-plt.figure(figsize=(12,3))
+
+x = np.linspace(-1, 1, 100)[:, None] ** 3
+y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
+z = np.sin(10 * x) * y ** 2
+plt.figure(figsize=(12, 3))
 plt.subplot(141)
 # %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
 plt.subplot(142)
@@ -393,13 +432,14 @@ from matplotlib import pyplot as plt
 import time
 import numpy as np
 from mmfutils import plot as mmfplt
+
 x = np.linspace(-1, 1, 100)[:, None]
 y = np.linspace(-1, 1, 200)[None, :]
-z = x + 1j*y
+z = x + 1j * y
 
-plt.figure(figsize=(9,2))
+plt.figure(figsize=(9, 2))
 ax = plt.subplot(131)
-mmfplt.phase_contour(x, y, z, colors='k', linewidths=0.5)
+mmfplt.phase_contour(x, y, z, colors="k", linewidths=0.5)
 ax.set_aspect(1)
 
 # This is a little slow but allows you to vary the luminosity.
@@ -411,10 +451,10 @@ ax.set_aspect(1)
 # This is faster if you just want to show the phase and allows
 # for a colorbar via a registered colormap
 ax = plt.subplot(133)
-mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp')
+mmfplt.imcontourf(x, y, np.angle(z), cmap="huslp")
 ax.set_aspect(1)
 plt.colorbar()
-mmfplt.phase_contour(x, y, z, linewidths=0.5);
+mmfplt.phase_contour(x, y, z, linewidths=0.5)
 # -
 
 # ## Debugging
@@ -424,11 +464,13 @@ mmfplt.phase_contour(x, y, z, linewidths=0.5);
 # +
 from mmfutils.debugging import debug
 
+
 @debug(locals())
 def f(x):
-    y = x**1.5
-    z = 2/x
+    y = x ** 1.5
+    z = 2 / x
     return z
+
 
 print(f(2.0), x, y, z)
 # -
@@ -444,11 +486,14 @@ print(f(2.0), x, y, z)
 # Complete code coverage information is provided in ``build/_coverage/index.html``.
 
 from IPython.display import HTML
-with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
+
+with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
     coverage = f.read()
 HTML(coverage)
 
 # # Change Log
+
+# ## REL: 0.6.0
 
 # ## REL: 0.5.4
 
