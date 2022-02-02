@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "mmfutils"
-version = "0.6.0"
+version = "0.6.1"
 description = "Small set of utilities: containers and interfaces."
 authors = ["Michael McNeil Forbes <michael.forbes+python@gmail.com>"]
 license = "BSD-3"
-readme = "README.rst"
+readme = "description.md"
 repository = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils"
 documentation = "http://mmfutils.readthedocs.org"
 classifiers = [
