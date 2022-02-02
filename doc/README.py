@@ -495,6 +495,12 @@ HTML(coverage)
 
 # ## REL: 0.6.0
 
+# * Use Poetry for dependency management.
+# * Update to `src/mmfutils` layout.
+# * Better testing and coverage, including GitHub CI.
+# * Odd-numbered lattices are now centered at 0.
+# * Added `fftw` extra.
+
 # ## REL: 0.5.4
 
 # * Drop support for Python 3.5.

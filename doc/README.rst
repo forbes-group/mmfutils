@@ -42,16 +42,16 @@ This package can be installed from
 
 .. code:: bash
 
-    python3 -m pip install mmfutils
-    python3 -m pip install mmfutils[fftw]   # If you have the FFTW libraries installed
+   python3 -m pip install mmfutils
+   python3 -m pip install mmfutils[fftw]   # If you have the FFTW libraries installed
 
 or, if you need to install from source, you can get it from one of the
 repositories:
 
 .. code:: bash
 
-    python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
-    python3 -m pip install git+https://github.com/forbes-group/mmfutils
+   python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
+   python3 -m pip install git+https://github.com/forbes-group/mmfutils
 
 Usage
 =====
@@ -123,43 +123,48 @@ Object Example
 
     ROOTDIR = !hg root
     ROOTDIR = ROOTDIR[0]
-    import sys;sys.path.insert(0, ROOTDIR)
+    import sys
+    
+    sys.path.insert(0, ROOTDIR)
     
     import numpy as np
     
     from mmfutils.containers import ObjectBase, ObjectMixin
     
-    class State(ObjectBase):  
+    
+    class State(ObjectBase):
         _quiet = False
+    
         def __init__(self, N, L=1.0, **kw):
             """Set all of the picklable parameters, in this case, N and L."""
             self.N = N
             self.L = L
-            
+    
             # Now register these and call init()
             super().__init__(**kw)
             if not self._quiet:
                 print("__init__() called")
-            
+    
         def init(self):
             """All additional initializations"""
             if not self._quiet:
                 print("init() called")
             dx = self.L / self.N
-            self.x = np.arange(self.N, dtype=float) * dx - self.L/2.0
-            self.k = 2*np.pi * np.fft.fftfreq(self.N, dx)
+            self.x = np.arange(self.N, dtype=float) * dx - self.L / 2.0
+            self.k = 2 * np.pi * np.fft.fftfreq(self.N, dx)
     
             # Set highest momentum to zero if N is even to
             # avoid rapid oscillations
             if self.N % 2 == 0:
-                self.k[self.N//2] = 0.0
+                self.k[self.N // 2] = 0.0
     
             # Calls base class which sets self.initialized
             super().init()
-                
+    
         def compute_derivative(self, f):
-            """Return the derivative of f."""        
-            return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
+            """Return the derivative of f."""
+            return np.fft.ifft(self.k * 1j * np.fft.fft(f)).real
+    
     
     s = State(256)
     print(s)  # No default value for L
@@ -184,12 +189,19 @@ Object Example
 
 
 One feature is that a nice ``repr()`` of the object is produced. Now
-let's do a calculation:
+let’s do a calculation:
 
 .. code:: ipython3
 
-    f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-    df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+    f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+    df = (
+        -2.0
+        * np.pi
+        / 5.0
+        * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+        * np.sin(2 * np.pi * s.x / s.L)
+        / s.L
+    )
     np.allclose(s.compute_derivative(f), df)
 
 
@@ -201,8 +213,8 @@ let's do a calculation:
 
 
 
-Oops! We forgot to reinitialize the object... (The formula is correct,
-but the lattice is no longer commensurate so the FFT derivative has huge
+Oops! We forgot to reinitialize the object… (The formula is correct, but
+the lattice is no longer commensurate so the FFT derivative has huge
 errors).
 
 .. code:: ipython3
@@ -210,8 +222,15 @@ errors).
     print(s.initialized)
     s.init()
     assert s.initialized
-    f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-    df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+    f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+    df = (
+        -2.0
+        * np.pi
+        / 5.0
+        * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+        * np.sin(2 * np.pi * s.x / s.L)
+        / s.L
+    )
     np.allclose(s.compute_derivative(f), df)
 
 
@@ -240,12 +259,16 @@ functionality with ``ObjectMixin``:
     class State1(ObjectMixin, State):
         pass
     
+    
     s = State(N=256, _quiet=True)
     s1 = State1(N=256, _quiet=True)
 
 .. code:: ipython3
 
     import pickle, copy
+
+.. code:: ipython3
+
     s_repr = pickle.dumps(s)
     s1_repr = pickle.dumps(s1)
     print(f"ObjectBase pickle:  {len(s_repr)} bytes")
@@ -268,8 +291,8 @@ Note, however, that the speed of copying is significantly impacted:
 
 .. parsed-literal::
 
-    2.55 µs ± 37.8 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    26.6 µs ± 781 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    3.57 µs ± 192 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+    36.8 µs ± 1.57 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -291,13 +314,14 @@ the ``persist`` package:
 .. code:: ipython3
 
     import persist.archive
+    
     a = persist.archive.Archive(check_on_insert=True)
     a.insert(s=s)
     
     d = {}
     exec(str(a), d)
     
-    d['s']
+    d["s"]
 
 
 
@@ -349,7 +373,7 @@ Container Examples
 
     from mmfutils.containers import Container
     
-    c = Container(a=1, c=2, b='Hi there')
+    c = Container(a=1, c=2, b="Hi there")
     print(c)
     print(tuple(c))
 
@@ -363,7 +387,7 @@ Container Examples
 .. code:: ipython3
 
     # Attributes are mutable
-    c.b = 'Ho there'
+    c.b = "Ho there"
     print(c)
 
 
@@ -377,7 +401,7 @@ Container Examples
     # Other attributes can be used for temporary storage but will not be pickled.
     import numpy as np
     
-    c.large_temporary_array = np.ones((256,256))
+    c.large_temporary_array = np.ones((256, 256))
     print(c)
     print(c.large_temporary_array)
 
@@ -397,6 +421,9 @@ Container Examples
 .. code:: ipython3
 
     import pickle
+
+.. code:: ipython3
+
     c1 = pickle.loads(pickle.dumps(c))
     print(c1)
     c1.large_temporary_array
@@ -414,10 +441,10 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gp/T/ipykernel_8208/2591005537.py in <module>
-          2 c1 = pickle.loads(pickle.dumps(c))
-          3 print(c1)
-    ----> 4 c1.large_temporary_array
+    /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gp/T/ipykernel_18521/3951100459.py in <module>
+          1 c1 = pickle.loads(pickle.dumps(c))
+          2 print(c1)
+    ----> 3 c1.large_temporary_array
     
 
     AttributeError: 'Container' object has no attribute 'large_temporary_array'
@@ -484,12 +511,19 @@ This can then be checked in tests.
 
 .. code:: ipython3
 
-    from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implementer
+    from mmfutils.interface import (
+        Interface,
+        Attribute,
+        verifyClass,
+        verifyObject,
+        implementer,
+    )
+    
     
     class IAdder(Interface):
         """Interface for objects that support addition."""
     
-        value = Attribute('value', "Current value of object")
+        value = Attribute("value", "Current value of object")
     
         # No self here since this is the "user" interface
         def add(other):
@@ -505,11 +539,12 @@ Here is a broken implementation. We muck up the arguments to ``add``:
             # There should only be one argument!
             return one + another
     
+    
     try:
         verifyClass(IAdder, AdderBroken)
     except Exception as e:
         print("{0.__class__.__name__}: {0}".format(e))
-        
+
 
 
 .. parsed-literal::
@@ -528,6 +563,7 @@ defined in ``__init__()``:
         def add(self, other):
             return one + other
     
+    
     # The class validates...
     verifyClass(IAdder, AdderBroken)
     
@@ -535,12 +571,12 @@ defined in ``__init__()``:
     try:
         verifyObject(IAdder, AdderBroken())
     except Exception as e:
-        print("{0.__class__.__name__}: {0}".format(e))    
+        print("{0.__class__.__name__}: {0}".format(e))
 
 
 .. parsed-literal::
 
-    BrokenImplementation: The object <__main__.AdderBroken object at 0x11f815f70> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
+    BrokenImplementation: The object <__main__.AdderBroken object at 0x11b8ee610> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
 
 
 Finally, a working instance:
@@ -551,9 +587,11 @@ Finally, a working instance:
     class Adder(object):
         def __init__(self, value=0):
             self.value = value
+    
         def add(self, other):
             return one + other
-        
+    
+    
     verifyClass(IAdder, Adder) and verifyObject(IAdder, Adder())
 
 
@@ -574,6 +612,9 @@ to provide a mechanism for documentating interfaces in a notebook.
 .. code:: ipython3
 
     from mmfutils.interface import describe_interface
+
+.. code:: ipython3
+
     describe_interface(IAdder)
 
 
@@ -617,17 +658,23 @@ profile name, and can be started or stopped from this class:
 .. code:: ipython3
 
     import logging
+
+.. code:: ipython3
+
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     import numpy as np
     from mmfutils import parallel
-    cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
+
+.. code:: ipython3
+
+    cluster = parallel.Cluster(profile="default", n=3, sleep_time=1.0)
     cluster.start()
     cluster.wait()  # Instance of IPython.parallel.Client
     view = cluster.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x:x**2, x)
-    print(np.allclose(y, x**2))
+    y = view.map(lambda x: x ** 2, x)
+    print(np.allclose(y, x ** 2))
     cluster.stop()
 
 
@@ -661,7 +708,7 @@ profile name, and can be started or stopped from this class:
 
 .. parsed-literal::
 
-    2022-02-01 12:24:15.423 [IPClusterStop] Stopping cluster [pid=8261] with [signal=<Signals.SIGINT: 2>]
+    2022-02-01 16:24:14.585 [IPClusterStop] Stopping cluster [pid=18668] with [signal=<Signals.SIGINT: 2>]
 
 
 .. parsed-literal::
@@ -675,11 +722,11 @@ the context and shutting down the cluster!
 
 .. code:: ipython3
 
-    with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
+    with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
         view = client.load_balanced_view
         x = np.linspace(-6, 6, 100)
-        y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
-    print(np.allclose(y, x**2))
+        y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
+    print(np.allclose(y, x ** 2))
 
 
 .. parsed-literal::
@@ -703,7 +750,7 @@ the context and shutting down the cluster!
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
     INFO:root:Stopping cluster: ipcluster stop --profile=default
-    2022-02-01 12:24:45.160 [IPClusterStop] Stopping cluster [pid=8296] with [signal=<Signals.SIGINT: 2>]
+    2022-02-01 16:24:44.880 [IPClusterStop] Stopping cluster [pid=18704] with [signal=<Signals.SIGINT: 2>]
 
 
 .. parsed-literal::
@@ -724,7 +771,7 @@ packages including
 `numexp <https://github.com/pydata/numexpr/wiki/Numexpr-Users-Guide>`__,
 `pyfftw <http://hgomersall.github.io/pyFFTW/>`__, and the ``mkl``
 package installed by anaconda. Some of these require building system
-libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
+libraries (i.e. the `FFTW <http://www.fftw.org>`__). However, the
 various components will not be imported by default.
 
 Here is a brief description of the components:
@@ -736,8 +783,8 @@ Here is a brief description of the components:
    Also enables the planning cache and setting threads so you can better
    control your performance.
 -  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don't do this carefully, it will crash
-   your program so fast you won't even get a traceback.)
+   disabling the VML. (If you don’t do this carefully, it will crash
+   your program so fast you won’t even get a traceback.)
 -  ``mmfutils.performance.threads``: Provides some hooks for setting the
    maximum number of threads in a bunch of places including the MKL,
    numexpr, and fftw.
@@ -750,10 +797,10 @@ Several tools are provided in ``mmfutils.plot``:
 Fast Filled Contour Plots
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``mmfutils.plot.imcontourf`` is similar to matplotlib's ``plt.contourf``
+``mmfutils.plot.imcontourf`` is similar to matplotlib’s ``plt.contourf``
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
-array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
+array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
 then it will match these to the shape of ``z``). Matplotlib now provies
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
@@ -764,10 +811,13 @@ then it will match these to the shape of ``z``). Matplotlib now provies
     import time
     import numpy as np
     from mmfutils import plot as mmfplt
-    x = np.linspace(-1, 1, 100)[:, None]**3
-    y = np.linspace(-0.1, 0.1, 200)[None, :]**3
-    z = np.sin(10*x)*y**2
-    plt.figure(figsize=(12,3))
+
+.. code:: ipython3
+
+    x = np.linspace(-1, 1, 100)[:, None] ** 3
+    y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
+    z = np.sin(10 * x) * y ** 2
+    plt.figure(figsize=(12, 3))
     plt.subplot(141)
     %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
     plt.subplot(142)
@@ -780,26 +830,26 @@ then it will match these to the shape of ``z``). Matplotlib now provies
 
 .. parsed-literal::
 
-    CPU times: user 9.83 ms, sys: 2.67 ms, total: 12.5 ms
-    Wall time: 12.5 ms
-    CPU times: user 35.5 ms, sys: 1.18 ms, total: 36.7 ms
-    Wall time: 36.7 ms
-    CPU times: user 116 ms, sys: 4.72 ms, total: 121 ms
-    Wall time: 121 ms
-    CPU times: user 3.09 ms, sys: 149 µs, total: 3.24 ms
-    Wall time: 3.24 ms
+    CPU times: user 13.2 ms, sys: 5.15 ms, total: 18.3 ms
+    Wall time: 20.6 ms
+    CPU times: user 49.3 ms, sys: 4.39 ms, total: 53.7 ms
+    Wall time: 56 ms
+    CPU times: user 144 ms, sys: 8.9 ms, total: 153 ms
+    Wall time: 154 ms
+    CPU times: user 5.23 ms, sys: 287 µs, total: 5.52 ms
+    Wall time: 5.6 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x12e5b1ca0>
+    <matplotlib.collections.QuadMesh at 0x12b322e80>
 
 
 
 
-.. image:: README_files/README_60_2.png
+.. image:: README_files/README_66_2.png
 
 
 Angular Variables
@@ -815,13 +865,14 @@ phase of a complex wavefunction.
     import time
     import numpy as np
     from mmfutils import plot as mmfplt
+    
     x = np.linspace(-1, 1, 100)[:, None]
     y = np.linspace(-1, 1, 200)[None, :]
-    z = x + 1j*y
+    z = x + 1j * y
     
-    plt.figure(figsize=(9,2))
+    plt.figure(figsize=(9, 2))
     ax = plt.subplot(131)
-    mmfplt.phase_contour(x, y, z, colors='k', linewidths=0.5)
+    mmfplt.phase_contour(x, y, z, colors="k", linewidths=0.5)
     ax.set_aspect(1)
     
     # This is a little slow but allows you to vary the luminosity.
@@ -833,14 +884,14 @@ phase of a complex wavefunction.
     # This is faster if you just want to show the phase and allows
     # for a colorbar via a registered colormap
     ax = plt.subplot(133)
-    mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp')
+    mmfplt.imcontourf(x, y, np.angle(z), cmap="huslp")
     ax.set_aspect(1)
     plt.colorbar()
     mmfplt.phase_contour(x, y, z, linewidths=0.5);
 
 
 
-.. image:: README_files/README_63_0.png
+.. image:: README_files/README_69_0.png
 
 
 Debugging
@@ -854,11 +905,13 @@ in a dictionary or in your global scope.
 
     from mmfutils.debugging import debug
     
+    
     @debug(locals())
     def f(x):
-        y = x**1.5
-        z = 2/x
+        y = x ** 1.5
+        z = 2 / x
         return z
+    
     
     print(f(2.0), x, y, z)
 
@@ -886,7 +939,10 @@ Complete code coverage information is provided in
 .. code:: ipython3
 
     from IPython.display import HTML
-    with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
+
+.. code:: ipython3
+
+    with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
         coverage = f.read()
     HTML(coverage)
 
@@ -895,6 +951,12 @@ Change Log
 
 REL: 0.6.0
 ----------
+
+-  Use Poetry for dependency management.
+-  Update to ``src/mmfutils`` layout.
+-  Better testing and coverage, including GitHub CI.
+-  Odd-numbered lattices are now centered at 0.
+-  Added ``fftw`` extra.
 
 REL: 0.5.4
 ----------
@@ -936,8 +998,9 @@ API changes:
 -  Added ``mmfutils.math.bases.interfaces.IBasisLz`` and support in
    ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating frames.
 -  Cleanup of build environment and tests.
--  Single environment ``_mmfutils`` now used for testing and
-   documentation.
+
+   -  Single environment ``_mmfutils`` now used for testing and
+      documentation.
 
 REL: 0.4.13
 -----------
