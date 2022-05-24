@@ -49,7 +49,7 @@ class SphericalBasis(ObjectBase, BasisMixin):
         k = np.pi * (0.5 + np.arange(self.N)) / self.R
         self.xyz = [r]
         self._pxyz = [k]
-        self.metric = 4 * np.pi * r ** 2 * dx
+        self.metric = 4 * np.pi * r**2 * dx
         self.k_max = k.max()
 
     def laplacian(self, y, factor=1.0, exp=False):
@@ -85,7 +85,7 @@ class SphericalBasis(ObjectBase, BasisMixin):
         """Form for the truncated Coulomb kernel."""
         D = 2 * self.R
         return (
-            4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k ** 2).filled(D ** 2 / 2.0)
+            4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k**2).filled(D**2 / 2.0)
         )
 
     def convolve_coulomb(self, y, form_factors=[]):
@@ -174,6 +174,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         self.Nxyz = np.asarray(Nxyz)
         self.Lxyz = np.asarray(Lxyz)
         self.smoothing_cutoff = smoothing_cutoff
+        self.memoization_GB = memoization_GB
         if boost_pxyz is None:
             boost_pxyz = np.zeros_like(self.Lxyz)
         self.boost_pxyz = np.asarray(boost_pxyz)
@@ -211,9 +212,9 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         self.metric = np.prod(self.Lxyz / self.Nxyz)
         self.k_max = np.array([float(abs(_p).max()) for _p in self._pxyz])
 
-        x_GB = self.Nxyz[0] * np.dtype(float).itemsize / 1024 ** 3
-        yz_GB = np.prod(self.Nxyz[1:]) * np.dtype(float).itemsize / 1024 ** 3
-        xyz_GB = np.prod(self.Nxyz) * np.dtype(float).itemsize / 1024 ** 3
+        x_GB = self.Nxyz[0] * np.dtype(float).itemsize / 1024**3
+        yz_GB = np.prod(self.Nxyz[1:]) * np.dtype(float).itemsize / 1024**3
+        xyz_GB = np.prod(self.Nxyz) * np.dtype(float).itemsize / 1024**3
 
         # _smoothing_factor + _k2 + _kx2 + _kyz2
         memoize_size_GB = xyz_GB + xyz_GB + x_GB + yz_GB
@@ -227,7 +228,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
 
             # Memoize momentum sums for speed
             _kx2 = self._pxyz[0] ** 2
-            _kyz2 = sum(_p ** 2 for _p in self._pxyz[1:])
+            _kyz2 = sum(_p**2 for _p in self._pxyz[1:])
             _k2 = _kx2 + _kyz2
             self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
         else:
@@ -374,7 +375,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         constant background removed so that the net charge in the unit
         cell is zero.
         """
-        return 4 * np.pi * np.ma.divide(1.0, k ** 2).filled(0.0)
+        return 4 * np.pi * np.ma.divide(1.0, k**2).filled(0.0)
 
     def convolve_coulomb(self, y, form_factors=[]):
         """Periodic convolution with the Coulomb kernel."""
@@ -386,7 +387,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         # N = np.asarray(y.shape)
         # b_cast = [None] * (dim - len(N)) + [slice(None)]*dim
 
-        k = np.sqrt(sum(_k ** 2 for _k in self._pxyz))
+        k = np.sqrt(sum(_k**2 for _k in self._pxyz))
         Ck = prod([_K(k) for _K in [self.coulomb_kernel] + form_factors])
         return self.ifftn(Ck * self.fftn(y))
 
@@ -407,7 +408,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         if Ck is None:
             Ck = self.fftn(C)
         else:
-            k = np.sqrt(sum(_k ** 2 for _k in self._pxyz))
+            k = np.sqrt(sum(_k**2 for _k in self._pxyz))
             Ck = Ck(k)
         return self.ifftn(Ck * self.fftn(y))
 
@@ -506,8 +507,8 @@ class CartesianBasis(PeriodicBasis):
             self.convolve_coulomb_exact(y0, form_factors=form_factors, method="pad"), N
         )
         if correct:
-            k = np.sqrt(sum(_K ** 2 for _K in self._pxyz))
-            C = 4 * np.pi * np.ma.divide(1.0, k ** 2).filled(0.0)
+            k = np.sqrt(sum(_K**2 for _K in self._pxyz))
+            C = 4 * np.pi * np.ma.divide(1.0, k**2).filled(0.0)
             for F in form_factors:
                 C = C * F(k)
             dV = self.ifftn(C * self.fftn(y - resample(y0, N)))
@@ -548,10 +549,10 @@ class CartesianBasis(PeriodicBasis):
         y = np.asarray(y)
         L = np.asarray(self.Lxyz)
         dim = len(L)
-        D = np.sqrt((L ** 2).sum())  # Diameter of cell
+        D = np.sqrt((L**2).sum())  # Diameter of cell
 
         def C(k):
-            C = 4 * np.pi * np.ma.divide(1 - np.cos(D * k), k ** 2).filled(D ** 2 / 2.0)
+            C = 4 * np.pi * np.ma.divide(1 - np.cos(D * k), k**2).filled(D**2 / 2.0)
             for F in form_factors:
                 C = C * F(k)
             return C
@@ -573,7 +574,7 @@ class CartesianBasis(PeriodicBasis):
                 else:
                     assert np.allclose(0, V.imag)
                     V += dV.real
-            return V / dim ** 3
+            return V / dim**3
         elif method == "pad":
             N = np.asarray(y.shape[-dim:])
             N_padded = 3 * N
@@ -584,7 +585,7 @@ class CartesianBasis(PeriodicBasis):
             y_padded = np.zeros(shape_padded, dtype=y.dtype)
             inds = tuple(slice(0, _N) for _N in shape)
             y_padded[inds] = y
-            k = np.sqrt(sum(_K ** 2 for _K in get_kxyz(N_padded, L_padded)))
+            k = np.sqrt(sum(_K**2 for _K in get_kxyz(N_padded, L_padded)))
 
             # This broadcasts to the appropriate size
             b_cast = (None,) * (dim - len(N)) + (slice(None),) * dim
@@ -643,7 +644,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
         self.kx = kx0 + float(self.twist) / Lx - self.boost_px
         self._kx0 = kx0
-        self._kx2 = self.kx ** 2
+        self._kx2 = self.kx**2
 
         self.y_twist = np.exp(1j * self.twist * x / Lx)
 
@@ -859,8 +860,8 @@ class CylindricalBasis(ObjectBase, BasisMixin):
             (-1.0) ** (n[i1] - n[i2]) * 8.0 * z[i1] * z[i2],
             (z[i1] ** 2 - z[i2] ** 2) ** 2,
         ).filled(0)
-        K[n, n] = 1.0 / 3.0 * (1.0 + 2.0 * (nu ** 2 - 1.0) / z ** 2)
-        K *= self._kmax ** 2
+        K[n, n] = 1.0 / 3.0 * (1.0 + 2.0 * (nu**2 - 1.0) / z**2)
+        K *= self._kmax**2
 
         # Here we convert from the wavefunction Psi(r) to the radial
         # function u(r) = sqrt(r)*Psi(r) and back with factors of
