@@ -20,7 +20,8 @@ in a notebook.
    (will forward).
 -  https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the
    permalink fails.
--  https://github.com/forbes-group/mmfutils: Public read-only mirror.
+-  https://github.com/forbes-group/mmfutils: Public read-only GitHub mirror.
+-  https://gitlab.com/coldatoms/utilities/mmfutils: Public read-only GitLab mirror.
 
 **Issues:**
 https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues

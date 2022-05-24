@@ -12,7 +12,8 @@ have made regarding things such as file hierarchy, packaging tools etc.  I inten
 this file to document my choices and discussions about these issues for all projects.
 (Other projects should refer here for this discussion.)  For now, however, most of my
 work is being done in the [Physics 581] project which I am teaching, so please visit
-that for now.
+that for now, however, notes about packaging will be kept here (since the course is not
+intended to be installed on [PyPI]).
 
 # To Do
 
@@ -21,6 +22,7 @@ that for now.
   and we should have a release branch?  (Thinking about testing and badges... currently
   I have a branch for each version, but this means I need to specify the latest one each
   time.)
+* Fix bases to properly use GPU (sundered values etc.).
 
 # Working Environment (Conda/pip and all that)
 
@@ -291,6 +293,8 @@ mode if distribution.  To use such projects in a [Conda] environment, just use `
     - mmfutils>=0.6
     ...
 ```
+
+## Private Release (`--find-links`)
 
 To make packages available before their release on [PyPI], one can make use of the
 [`-f, --find-links
