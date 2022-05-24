@@ -138,7 +138,12 @@ try:  # NOQA  This is too complex, but that is okay
         auto_contiguous=True,
         avoid_copy=False,
     ):
-        """Return a function to compute the fft."""
+        """Return a function to compute the fft.
+
+        WARNING: The returned array may not own its data (check `res.flags['OWNDATA']`).
+                 If it does not, subsequent calls to the function might change the data.
+                 Make a copy if needed.
+        """
         global _THREADS, _PLANNER_EFFORT
         # Support negative arguments for the axis keyword
         dim = len(np.shape(a))
@@ -164,7 +169,12 @@ try:  # NOQA  This is too complex, but that is okay
         auto_contiguous=True,
         avoid_copy=False,
     ):
-        """Return a function to compute the ifft."""
+        """Return a function to compute the ifft.
+
+        WARNING: The returned array may not own its data (check `res.flags['OWNDATA']`).
+                 If it does not, subsequent calls to the function might change the data.
+                 Make a copy if needed.
+        """
         global _THREADS, _PLANNER_EFFORT
         dim = len(np.shape(a))
         axis = (axis + dim) % dim
@@ -189,7 +199,12 @@ try:  # NOQA  This is too complex, but that is okay
         auto_contiguous=True,
         avoid_copy=False,
     ):
-        """Return a function to compute the fftn."""
+        """Return a function to compute the fftn.
+
+        WARNING: The returned array may not own its data (check `res.flags['OWNDATA']`).
+                 If it does not, subsequent calls to the function might change the data.
+                 Make a copy if needed.
+        """
         global _THREADS, _PLANNER_EFFORT
         if axes is not None:
             dim = len(np.shape(a))
@@ -215,7 +230,12 @@ try:  # NOQA  This is too complex, but that is okay
         auto_contiguous=True,
         avoid_copy=False,
     ):
-        """Return a function to compute the ifftn."""
+        """Return a function to compute the ifftn.
+
+        WARNING: The returned array may not own its data (check `res.flags['OWNDATA']`).
+                 If it does not, subsequent calls to the function might change the data.
+                 Make a copy if needed.
+        """
         global _THREADS, _PLANNER_EFFORT
         if axes is not None:
             dim = len(np.shape(a))

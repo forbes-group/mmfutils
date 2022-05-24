@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.0
+#       jupytext_version: 1.11.1
 #   kernelspec:
 #     display_name: Python [conda env:_mmfutils]
 #     language: python
@@ -24,6 +24,7 @@
 import numpy as np
 from IPython.display import clear_output
 
+
 def ssum_python(xs):
     r"""Return (sum(xs), err) computed stably using Kahan's summation
     method for floating point numbers.  (Python version.)
@@ -37,13 +38,14 @@ def ssum_python(xs):
         sum = tmp
 
     eps = np.finfo(np.double).eps
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
+    err = max(abs(2.0 * sum * eps), len(xs) * eps * eps)
 
     return (sum, err)
 
+
 N = 100000
-l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
-ans = 250.0*((N + 1.0)*N)**2
+l = np.array([(10.0 * n) ** 3.0 for n in reversed(range(N + 1))])
+ans = 250.0 * ((N + 1.0) * N) ** 2
 print("sum error: {}".format(sum(l) - ans))
 print("ssum error: {}".format(ssum_python(l)[0] - ans))
 ssum_python(l)
@@ -62,7 +64,7 @@ try:
 except ImportError:
     weave = None
 
-code = '''
+code = """
 double volatile t, y;
 double sum = 0.0;
 double volatile c = 0.0;
@@ -76,14 +78,15 @@ for (i=0;i<Nxs[0];++i) {
 }
 Py_END_ALLOW_THREADS
 return_val = sum;
-'''
+"""
+
 
 def ssum_weave(xs):
     xs = np.asarray(xs).astype(np.double)
-    sum = weave.inline(code, ['xs'])
+    sum = weave.inline(code, ["xs"])
 
     eps = np.finfo(np.double).eps
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
+    err = max(abs(2.0 * sum * eps), len(xs) * eps * eps)
 
     return (sum, err)
 
@@ -93,9 +96,10 @@ def ssum_weave(xs):
 ssum_weave(l), ssum_python(l)
 
 if weave:
-    #assert np.allclose(ssum_weave(l)[0], ans)
-    #clear_output()
-    %timeit ssum_weave(l)
+    pass  # Keep so that black works.
+    # assert np.allclose(ssum_weave(l)[0], ans)
+    # clear_output()
+    # %timeit ssum_weave(l)
 
 # ## Cython
 
@@ -103,60 +107,57 @@ if weave:
 
 # %load_ext Cython
 
-# +
-# %%cython --annotate
-#cython: boundscheck=False
-#cython: wraparound=False
-import numpy
-cimport numpy as np
-import cython
-
-_EPS = numpy.finfo(numpy.double).eps
-
-def ssum_cython1(xs, _EPS=_EPS):
-    r"""Return (sum(xs), err) computed stably using Kahan's summation
-    method for floating point numbers.  (Cython version.)
-    """
-    sum = 0.0
-    carry = 0.0
-    for x in xs:
-        y = x - carry
-        tmp = sum + y
-        carry = (tmp - sum) - y
-        sum = tmp
-
-    eps = _EPS
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
-
-    return (sum, err)
-
-
-def ssum_cython2(cython.numeric[::1] xs):
-    r"""Return (sum(xs), err) computed stably using Kahan's summation
-    method for floating point numbers.  (Cython version.)
-    """
-    cdef:
-        cython.numeric x, y, sum=0, carry=0, tmp
-        cython.double eps
-        size_t k, Nx 
-    Nx = xs.shape[0]
-    for k in range(Nx):
-        x = xs[k]
-        y = x - carry
-        tmp = sum + y
-        carry = (tmp - sum) - y
-        sum = tmp
-
-    eps = 1e-16
-    err = max(abs(2.0*sum*eps), Nx*eps)
-
-    return (sum, err)
-
-
+# + {"magic_args": "--annotate", "language": "cython"}
+# #cython: boundscheck=False
+# #cython: wraparound=False
+# import numpy
+# cimport numpy as np
+# import cython
+#
+# _EPS = numpy.finfo(numpy.double).eps
+#
+# def ssum_cython1(xs, _EPS=_EPS):
+#     r"""Return (sum(xs), err) computed stably using Kahan's summation
+#     method for floating point numbers.  (Cython version.)
+#     """
+#     sum = 0.0
+#     carry = 0.0
+#     for x in xs:
+#         y = x - carry
+#         tmp = sum + y
+#         carry = (tmp - sum) - y
+#         sum = tmp
+#
+#     eps = _EPS
+#     err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
+#
+#     return (sum, err)
+#
+#
+# def ssum_cython2(cython.numeric[::1] xs):
+#     r"""Return (sum(xs), err) computed stably using Kahan's summation
+#     method for floating point numbers.  (Cython version.)
+#     """
+#     cdef:
+#         cython.numeric x, y, sum=0, carry=0, tmp
+#         cython.double eps
+#         size_t k, Nx
+#     Nx = xs.shape[0]
+#     for k in range(Nx):
+#         x = xs[k]
+#         y = x - carry
+#         tmp = sum + y
+#         carry = (tmp - sum) - y
+#         sum = tmp
+#
+#     eps = 1e-16
+#     err = max(abs(2.0*sum*eps), Nx*eps)
+#
+#     return (sum, err)
 # -
 
-sn = 1./np.arange(1, 10**4, dtype=np.float32)
-sn = 1./np.arange(1, 10**4, dtype=np.float64)
+sn = 1.0 / np.arange(1, 10 ** 4, dtype=np.float32)
+sn = 1.0 / np.arange(1, 10 ** 4, dtype=np.float64)
 ssum_cython2(sn)
 
 # +
@@ -174,6 +175,7 @@ assert np.allclose(ssum_cython2(l)[0], ans)
 # ## Numba
 
 import numba
+
 numba.__version__
 
 # +
@@ -181,6 +183,7 @@ import numpy as np
 from numba import jit, prange
 
 _EPS = np.finfo(float).eps
+
 
 @jit(nopython=True)
 def ssum_numba1(xs, _EPS=_EPS):
@@ -196,9 +199,10 @@ def ssum_numba1(xs, _EPS=_EPS):
         sum = tmp
 
     eps = _EPS
-    err = max(abs(2.0*sum*eps), len(xs)*eps*eps)
+    err = max(abs(2.0 * sum * eps), len(xs) * eps * eps)
 
     return (sum, err)
+
 
 assert np.allclose(ssum_numba1(l)[0], ans)
 # -
@@ -210,14 +214,25 @@ assert np.allclose(ssum_numba1(l)[0], ans)
 # From a performance perspective, both numba and Cython are similar and about 3 times faster than weave (which I do not understand, this is not just due to boiler-plate as the difference remains even for larger arrays.)
 
 N = 100000000
-l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
+l = np.array([(10.0 * n) ** 3.0 for n in reversed(range(N + 1))])
 
 if weave:
     print("weave:")
-    %timeit ssum_weave(l)
+    # %timeit ssum_weave(l)
 print("sum:")
 # %timeit l.sum()
 print("cython:")
 # %timeit ssum_cython2(l)
 print("numba:")
 # %timeit ssum_numba1(l)
+
+# # Loading Data
+
+import numpy as np
+
+np.random.seed(2)
+Nxyz = (256,) * 3
+print(f"{(np.prod(Nxyz)*16)/1024**3}GB")
+A = (np.random.random(Nxyz + (2,)) - 0.5).view(dtype=complex)[..., 0]
+# %timeit np.save("A.npy", A)
+# %timeit B = np.load("A.npy")

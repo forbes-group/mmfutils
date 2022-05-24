@@ -6,11 +6,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.4.0
+#       jupytext_version: 1.5.0
 #   kernelspec:
-#     display_name: Python [conda env:_mmfutils]
+#     display_name: Python [conda env:work]
 #     language: python
-#     name: conda-env-_mmfutils-py
+#     name: conda-env-work-py
 # ---
 
 # # Animation with IPython Notebooks

@@ -144,6 +144,9 @@ class PeriodicBasis(ObjectBase, BasisMixin):
        corresponds to working in a boosted frame with velocity `vx = px/m`.
     smoothing_cutoff : float
        Fraction of maximum momentum used in the function smooth().
+    memoization_GB : float
+       Memoization threshold.  If memoizing factors like the momentum and smoothing
+       factor would exceed this threshold, then memoization is disabled.
     """
 
     # Select operations are performed using self.xp instead of numpy.
@@ -165,6 +168,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         axes=None,
         boost_pxyz=None,
         smoothing_cutoff=0.8,
+        memoization_GB=0.5,
     ):
         self.symmetric_lattice = symmetric_lattice
         self.Nxyz = np.asarray(Nxyz)
@@ -205,20 +209,30 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             _p - _b for (_p, _b) in zip(self._pxyz, self.xp.asarray(self.boost_pxyz))
         ]
         self.metric = np.prod(self.Lxyz / self.Nxyz)
-        self.k_max = self._asnumpy([abs(_p).max() for _p in self._pxyz])
+        self.k_max = np.array([float(abs(_p).max()) for _p in self._pxyz])
 
-        p2_pc2 = sum(
-            (_p / (self.smoothing_cutoff * _p).max()) ** 2 for _p in self._pxyz
-        )
-        self._smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
-        # np.exp(-p2_pc2**4)
-        # self._smoothing_factor = 1.0
+        x_GB = self.Nxyz[0] * np.dtype(float).itemsize / 1024 ** 3
+        yz_GB = np.prod(self.Nxyz[1:]) * np.dtype(float).itemsize / 1024 ** 3
+        xyz_GB = np.prod(self.Nxyz) * np.dtype(float).itemsize / 1024 ** 3
 
-        # Memoize momentum sums for speed
-        _kx2 = self._pxyz[0] ** 2
-        _kyz2 = sum(_p ** 2 for _p in self._pxyz[1:])
-        _k2 = _kx2 + _kyz2
-        self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
+        # _smoothing_factor + _k2 + _kx2 + _kyz2
+        memoize_size_GB = xyz_GB + xyz_GB + x_GB + yz_GB
+        if memoize_size_GB < self.memoization_GB:
+            p2_pc2 = sum(
+                (_p / (self.smoothing_cutoff * _p).max()) ** 2 for _p in self._pxyz
+            )
+            self._smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
+            # np.exp(-p2_pc2**4)
+            # self._smoothing_factor = 1.0
+
+            # Memoize momentum sums for speed
+            _kx2 = self._pxyz[0] ** 2
+            _kyz2 = sum(_p ** 2 for _p in self._pxyz[1:])
+            _k2 = _kx2 + _kyz2
+            self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
+        else:
+            self._smoothing_factor = None
+            self._k2_kx2_kyz2 = N
 
     @property
     def kx(self):

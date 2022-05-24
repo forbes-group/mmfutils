@@ -12,7 +12,8 @@ have made regarding things such as file hierarchy, packaging tools etc.  I inten
 this file to document my choices and discussions about these issues for all projects.
 (Other projects should refer here for this discussion.)  For now, however, most of my
 work is being done in the [Physics 581] project which I am teaching, so please visit
-that for now.
+that for now, however, notes about packaging will be kept here (since the course is not
+intended to be installed on [PyPI]).
 
 # To Do
 
@@ -21,6 +22,7 @@ that for now.
   and we should have a release branch?  (Thinking about testing and badges... currently
   I have a branch for each version, but this means I need to specify the latest one each
   time.)
+* Fix bases to properly use GPU (sundered values etc.).
 
 # Working Environment (Conda/pip and all that)
 
@@ -292,6 +294,8 @@ mode if distribution.  To use such projects in a [Conda] environment, just use `
     ...
 ```
 
+## Private Release (`--find-links`)
+
 To make packages available before their release on [PyPI], one can make use of the
 [`-f, --find-links
 <url>`](https://pip.pypa.io/en/stable/cli/pip_wheel/?highlight=find-links#cmdoption-f)
@@ -301,7 +305,46 @@ project.  Unfortunately, until [issue
 #22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
 sites are useless for this purpose, so we rely on mirroring through GitHub.
 
+<<<<<<< variant A
 # Packaging
+>>>>>>> variant B
+## To Do
+
+* Consider a two-branch model so that one can easily update to the latest development
+  branch or the latest default branch.  Maybe default should be the development branch
+  and we should have a release branch?  (Thinking about testing and badges... currently
+  I have a branch for each version, but this means I need to specify the latest one each
+  time.)
+
+## Distribution
+
+In general, we will try to distribute projects on [PyPI] and this will be the primary
+mode if distribution.  To use such projects in a [Conda] environment, just use `pip`:
+
+```yml
+# environment.yml
+...
+[dependencies]
+  ...
+  - pip
+  - pip:
+    - mmfutils>=0.6
+    ...
+```
+
+To make packages available before their release on [PyPI], one can make use of the
+[`-f, --find-links
+<url>`](https://pip.pypa.io/en/stable/cli/pip_wheel/?highlight=find-links#cmdoption-f)
+option of `pip`.  If this points to a webpage with links, then these links can define
+how to get a package from source etc.  I maintain my own set of links in my [MyPI]
+project.  Unfortunately, until [issue
+#22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
+sites are useless for this purpose, so we rely on mirroring through GitHub.
+
+## Packaging
+####### Ancestor
+## Packaging
+======= end
 
 Starting with version 0.6.0, we reorganized the repository as follows (modified from the
 output of `tree -L 2`:
@@ -600,7 +643,19 @@ The solution is to make sure that `PYTHONNOUSERSITE=1` before running anything.
 
 * See: https://stackoverflow.com/a/51640558/1088938
 
-# Documentation
+### Gotchas
+
+I had a very difficult time with random errors when tested `mmf_setup` that boiled down
+to `pip` not installing some packages in the testing environment because they were in
+`~/.local`, but then having issues when the underlying tests were running and sometimes
+did not have access to these.  (The specific case was when running `run_tests.py` for
+Mercurial tests.)
+
+The solution is to make sure that `PYTHONNOUSERSITE=1` before running anything.
+
+* See: https://stackoverflow.com/a/51640558/1088938
+
+## Documentation
 
 If you are a developer of this package, there are a few things to be aware of.
 
@@ -762,6 +817,134 @@ To do this, we advocate the following procedure.
 
 
 Poetry
+======
+
+[Poetry] has great promise, but is currently a bit of a pain due to some unresolved
+issues.  Here are some recommendations:
+
+* Always work in an explicit environment.  This is an issue if you routinely have a
+  [conda] environment activated.  Currently, [poetry] interprets an active [conda]
+  environment as a virtual environment and uses it.  This means that `poetry add ...`
+  will add these dependencies **to that environment**.  Instead, I [recommend the
+  following](https://github.com/python-poetry/poetry/issues/1724#issuecomment-834080057):
+   
+  1. Create some bare [conda] environments with the various python interpreters you
+     want to use *(only needs to be done once per system)*:
+      
+     ```bash
+     for py_ver in 2.7 3.6 3.7 3.8 3.9; do
+          conda_env="py${py_ver}"
+          conda create --strict-channel-priority \
+                       -c defaults -y            \
+                       -n "${conda_env}"         \ 
+                       python="${py_ver}"
+          conda activate "${conda_env}"
+          ln -fs "$(type -p python${py_ver})" ~/.local/bin/
+          conda deactivate
+      done
+      ```
+  2. Specifically activate one of these for each project while developing *(only needs
+     to be done once per project)*:
+   
+     ```bash
+     cd project
+     poetry env use python3.8
+     ```
+  3. Poetry should now remember this and use it.  See also `poetry env list` to see all
+     environments, and `poetry env remove 3.8` to remove the environment.
+   
+     <details>
+
+     Prior to creating the virtual environment with `poetry env using`, poetry assumes
+     that the conda `work` environment is the virtual env:
+
+     ```bash
+     $ cd project
+     $ poetry env info
+
+     Virtualenv
+     Python:         3.8.8
+     Implementation: CPython
+     Path:           /data/apps/conda/envs/work
+     Valid:          True
+
+     System
+     Platform: darwin
+     OS:       posix
+     Python:   /data/apps/conda/envs/work
+
+     $ poetry env using 3.8
+     $ poetry env info
+
+     Virtualenv
+     Python:         3.8.8
+     Implementation: CPython
+     Path:           .../Caches/pypoetry/virtualenvs/project-...-py3.8
+     Valid:          True
+
+     System
+     Platform: darwin
+     OS:       posix
+     Python:   /data/apps/conda/envs/work
+     ```
+     </details>
+* To support multiple versions of python, use `python = "^2.7 || ^3.6"` for example,
+  with logical or `||` not a comma `,`.  Note, however, that poetry has difficulty
+  resolving dependencies when you have multiple version specified.  You may have to
+  first add your dependencies with each explicit version.  Sometimes I just activate a
+  shell and use `pip` to see what it brings.  Here is a strategy (I did this with the
+  [`persist`] package):
+  
+  1. Start with your desired python versions, then add projects, and restrict until
+     everything works:
+     
+     ```bash
+     $ poetry env use 3.8
+     # python = "^3.6"
+     $ poetry add zope.interface importlib-metadata
+     Using version ^5.4.0 for zope.interface
+     Using version ^4.0.1 for importlib-metadata
+     $ poetry add --optional Sphinx pytest pytest-cov sphinx-rtd-theme \
+       sphinxcontrib-zopeext nbsphinx h5py mmf-setup scipy
+     Using version ^3.5.4 for Sphinx
+     ...
+       SolverProblemError
+       ...
+       For scipy, a possible solution would be to set the `python` property to ">=3.8,<3.10"
+     # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
+     # scipy = [
+     #     {version = "*", python="<3.8", optional = true},
+     #     {version = "^1.6.3", python="^3.8, <3.10", optional = true}]
+     # and try again with python = "^3.6"
+     $ poetry update
+     ...
+       SolverProblemError
+       For h5py, a possible solution would be to set the `python` property to ">=3.7,<4.0"
+     # Try with python = ">=3.8,<3.10"... it works.  Now relax scipy as:
+     # h5py = [
+     #     {version = "*", python="<3.7", optional = true},
+     #     {version = "^3.2.1", python="^3.7", optional = true}]
+     $ poetry update 
+     ```
+     
+     Note: Be very careful to express complete constraints.  The following works
+     
+     Consider both sides of the suggested dependencies.  Once I relaxed the
+     requirements for scipy for `python="<3.8"` I still got errors saying 
+    
+     
+  2. Add all dependencies and see what happens:
+  
+     ```bash
+     
+     ```
+  
+ 
+## Issues:
+
+* [Document use of current conda env #1724](https://github.com/python-poetry/poetry/issues/1724)
+
+GitHub
 ======
 
 [Poetry] has great promise, but is currently a bit of a pain due to some unresolved

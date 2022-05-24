@@ -64,10 +64,11 @@ def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
             [ 1.5]]), array([[-2., -1., 0.,  1.,  2.]])]
     """
     xyz = []
-    _offsets = [_N // 2 - symmetric_lattice * ((_N + 1) % 2) / 2 for _N in Nxyz]
+    # Special case for N = 1 should also always be centered
+    _offsets = [0.5 if symmetric_lattice or _N == 1 else 0 for _N in Nxyz]
     xyz = ndgrid(
         *[
-            _l / _n * (np.arange(_n) - _offset)
+            _l / _n * (np.arange(-_n / 2, _n / 2) + _offset)
             for _n, _l, _offset in zip(Nxyz, Lxyz, _offsets)
         ]
     )

@@ -10,6 +10,10 @@ the following form:
    e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d}
    e^{-r^2/(r_0^2+2a)/2}
 """
+import gc
+import os
+import psutil
+
 import numpy as np
 import scipy.special
 import scipy as sp
@@ -31,6 +35,18 @@ del scipy
 #     """Return a random complex array"""
 #     return (np.random.random(shape) + np.random.random(shape) * 1j
 #             - 0.5 - 0.5j)
+
+
+@pytest.fixture
+def get_mem_MB():
+    """Current memory usage in MB."""
+    process = psutil.Process(os.getpid())
+    mem0 = process.memory_info().rss / 1024 ** 2
+
+    def _get_mem():
+        return process.memory_info().rss / 1024 ** 2 - mem0
+
+    yield _get_mem
 
 
 class ExactGaussian(object):
@@ -508,6 +524,21 @@ class TestCartesianBasis(ConvolutionTests):
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
+
+    def test_memory(self, get_mem_MB):
+        """Regression for issue #29: excessive memory usage."""
+        # 4.0MB/complex state,
+        Nxyz = (2 ** 18,)
+        basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3)
+        assert get_mem_MB() < 0.006
+        del basis
+        assert get_mem_MB() == 0
+
+        Nxyz = (2 ** 6,) * 3
+        basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3)
+        assert get_mem_MB() < 0.006
+        del basis
+        assert get_mem_MB() == 0
 
 
 class TestCylindricalBasis(LaplacianTests):
