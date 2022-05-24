@@ -209,7 +209,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             _p - _b for (_p, _b) in zip(self._pxyz, self.xp.asarray(self.boost_pxyz))
         ]
         self.metric = np.prod(self.Lxyz / self.Nxyz)
-        self.k_max = self._asnumpy([abs(_p).max() for _p in self._pxyz])
+        self.k_max = np.array([float(abs(_p).max()) for _p in self._pxyz])
 
         x_GB = self.Nxyz[0] * np.dtype(float).itemsize / 1024 ** 3
         yz_GB = np.prod(self.Nxyz[1:]) * np.dtype(float).itemsize / 1024 ** 3
