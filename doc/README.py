@@ -493,7 +493,7 @@ HTML(coverage)
 
 # # Change Log
 
-# ## REL: 0.6.1
+# ## REL: 0.6.2
 
 # * Fix some issues with GPU and PeriodicBases.
 # * Add warning to FFT plans about data ownership.
