@@ -8,11 +8,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.5
+#       jupytext_version: 1.13.8
 #   kernelspec:
-#     display_name: Python [conda env:.conda-_mmfutils]
+#     display_name: Python [conda env:work]
 #     language: python
-#     name: conda-env-.conda-_mmfutils-py
+#     name: conda-env-work-py
 # ---
 
 # # MMF Utils
@@ -401,7 +401,7 @@ print(np.allclose(y, x ** 2))
 
 # ### Fast Filled Contour Plots
 
-# `mmfutils.plot.imcontourf` is similar to matplotlib's `plt.contourf` function, but uses `plt.imshow` which is much faster.  This is useful for animations and interactive work.  It also supports my idea of saner array-shape processing (i.e. if `x` and `y` have different shapes, then it will match these to the shape of `z`).  Matplotlib now provies `plt.pcolourmesh` which is similar, but has the same interface issues.
+# `mmfutils.plot.imcontourf` is similar to matplotlib's `plt.contourf` function, but uses `plt.imshow` which is much faster.  This is useful for animations and interactive work.  It also supports my idea of saner array-shape processing (i.e. if `x` and `y` have different shapes, then it will match these to the shape of `z`).  Matplotlib now provides `plt.pcolourmesh` which is similar, but has the same interface issues.
 
 # %matplotlib inline
 from matplotlib import pyplot as plt
@@ -420,7 +420,7 @@ plt.subplot(142)
 plt.subplot(143)
 # %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
 plt.subplot(144)
-# %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
+# %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='gouraud')
 
 # ## Angular Variables
 
@@ -492,6 +492,13 @@ with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
 HTML(coverage)
 
 # # Change Log
+
+# ## REL: 0.6.2
+
+# * Fix some issues with GPU and PeriodicBases.
+# * Add warning to FFT plans about data ownership.
+# * Include some Sparkline demonstrations.
+# * Drop support for Python 3.6. (Still no support for 3.10).
 
 # ## REL: 0.6.0
 

@@ -56,14 +56,13 @@ def get_xyz(Nxyz, Lxyz, symmetric_lattice=False):
     [array([[-2.],
             [-1.],
             [ 0.],
-            [ 1.]]), array([[-2., -1., 0.,  1.,  2.]])]
+            [ 1.]]), array([[-2.5, -1.5, -0.5,  0.5,  1.5]])]
     >>> get_xyz(Nxyz=(4, 5), Lxyz=(4, 5), symmetric_lattice=True)
     [array([[-1.5],
             [-0.5],
             [ 0.5],
             [ 1.5]]), array([[-2., -1., 0.,  1.,  2.]])]
     """
-    xyz = []
     # Special case for N = 1 should also always be centered
     _offsets = [0.5 if symmetric_lattice or _N == 1 else 0 for _N in Nxyz]
     xyz = ndgrid(

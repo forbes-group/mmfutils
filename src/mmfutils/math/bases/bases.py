@@ -169,17 +169,20 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         boost_pxyz=None,
         smoothing_cutoff=0.8,
         memoization_GB=0.5,
+        _test=False,
     ):
         self.symmetric_lattice = symmetric_lattice
         self.Nxyz = np.asarray(Nxyz)
         self.Lxyz = np.asarray(Lxyz)
         self.smoothing_cutoff = smoothing_cutoff
-        if boost_pxyz is None:
-            boost_pxyz = np.zeros_like(self.Lxyz)
-        self.boost_pxyz = np.asarray(boost_pxyz)
+        self.boost_pxyz = boost_pxyz
+        if boost_pxyz is not None:
+            self.boost_pxyz = np.asarray(boost_pxyz)
         if axes is None:
             axes = np.arange(-self.dim, 0)
         self.axes = np.asarray(axes)
+        self.memoization_GB = memoization_GB
+        self._test = _test
         super().__init__()
 
     def init(self):
@@ -196,18 +199,14 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         self._pxyz = tuple(
             map(self.xp.asarray, get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz))
         )
-        self._pxyz_derivative = tuple(
-            map(self.xp.asarray, get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz))
-        )
-
-        # Zero out odd highest frequency component.
-        for _N, _p in zip(self.Nxyz, self._pxyz_derivative):
-            _p.ravel()[_N // 2] = 0.0
 
         # Add boosts
-        self._pxyz = [
-            _p - _b for (_p, _b) in zip(self._pxyz, self.xp.asarray(self.boost_pxyz))
-        ]
+        if self.boost_pxyz is not None:
+            self._pxyz = [
+                _p - _b
+                for (_p, _b) in zip(self._pxyz, self.xp.asarray(self.boost_pxyz))
+            ]
+
         self.metric = np.prod(self.Lxyz / self.Nxyz)
         self.k_max = np.array([float(abs(_p).max()) for _p in self._pxyz])
 
@@ -215,26 +214,43 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         yz_GB = np.prod(self.Nxyz[1:]) * np.dtype(float).itemsize / 1024 ** 3
         xyz_GB = np.prod(self.Nxyz) * np.dtype(float).itemsize / 1024 ** 3
 
-        # _smoothing_factor + _k2 + _kx2 + _kyz2
-        memoize_size_GB = xyz_GB + xyz_GB + x_GB + yz_GB
+        # These computations can take a lot of memory if the state is big... we defer
+        # unless actually needed.
+        self.__pxyz_derivative = None  # Computed as needed: see _pxyz_derivative
+        self.__smoothing_factor = None  # Computed as needed: see _cmoothing_factor
+        # _k2 + _kx2 + _kyz2
+        memoize_size_GB = xyz_GB + x_GB + yz_GB
         if memoize_size_GB < self.memoization_GB:
-            p2_pc2 = sum(
-                (_p / (self.smoothing_cutoff * _p).max()) ** 2 for _p in self._pxyz
-            )
-            self._smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
-            # np.exp(-p2_pc2**4)
-            # self._smoothing_factor = 1.0
-
             # Memoize momentum sums for speed
             _kx2 = self._pxyz[0] ** 2
             _kyz2 = sum(_p ** 2 for _p in self._pxyz[1:])
             _k2 = _kx2 + _kyz2
             self._k2_kx2_kyz2 = (_k2, _kx2, _kyz2)
         else:
-            self._smoothing_factor = None
-            self._k2_kx2_kyz2 = N
+            self._k2_kx2_kyz2 = None
+
+    # These are some memoized properties
+    @property
+    def _pxyz_derivative(self):
+        if self.__pxyz_derivative is None:
+            self.__pxyz_derivative = tuple(
+                map(self.xp.asarray, get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz))
+            )
+
+            # Zero out odd highest frequency component.
+            for _N, _p in zip(self.Nxyz, self.__pxyz_derivative):
+                _p.ravel()[_N // 2] = 0.0
+        return self.__pxyz_derivative
 
     @property
+    def _smoothing_factor(self):
+        if self.__smoothing_factor is None:
+            p2_pc2 = sum(
+                (_p / (self.smoothing_cutoff * _p).max()) ** 2 for _p in self._pxyz
+            )
+            self.__smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
+        return self._smoothing_factor
+
     def kx(self):
         return self._pxyz[0]
 
@@ -245,6 +261,33 @@ class PeriodicBasis(ObjectBase, BasisMixin):
     @property
     def Nx(self):
         return self.Nxyz[0]
+
+    def _apply_K(self, yt, kx2=None, k2=None, exp=False, factor=1.0):
+        """Apply `K` or `exp(K)` to the `yt=fftn(y)`."""
+        if not exp and k2 is None and self._k2_kx2_kyz2 is None:
+            # Special memory-limited processing... slow.
+            if kx2 is None:
+                kx2 = self._pxyz[0] ** 2
+            k2s = [kx2] + [_p ** 2 for _p in self._pxyz[1:]]
+            return -factor * sum(_k2 * yt for _k2 in k2s)
+        elif k2 is None and self._k2_kx2_kyz2 is None:
+            raise NotImplementedError("Must be able to memoize if exp=True")
+        else:
+            if k2 is None:
+                _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
+                if kx2 is None:
+                    k2 = _k2
+                else:
+                    kx2 = self.xp.asarray(kx2)
+                    k2 = kx2 + _kyz2
+            else:
+                k2 = self.xp.asarray(k2)
+                assert kx2 is None
+
+            K = -factor * k2
+            if exp:
+                K = self.xp.exp(K)
+            return K * yt
 
     def laplacian(
         self, y, factor=1.0, exp=False, kx2=None, k2=None, kwz2=0, twist_phase_x=None
@@ -278,33 +321,21 @@ class PeriodicBasis(ObjectBase, BasisMixin):
 
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
-        _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
-        if k2 is None:
-            if kx2 is None:
-                k2 = _k2
-            else:
-                kx2 = self.xp.asarray(kx2)
-                k2 = kx2 + _kyz2
-        else:
-            k2 = self.xp.asarray(k2)
-            assert kx2 is None
-
-        K = -factor * k2
-        if exp:
-            if kwz2 != 0:
-                raise NotImplementedError(
-                    f"Cannot use exp=True if kwz2 != 0 (got {kwz2})."
-                )
-            K = self.xp.exp(K)
-
         if twist_phase_x is not None:
             twist_phase_x = self.xp.asarray(twist_phase_x)
             y = y / twist_phase_x
 
+        # Apply K
         yt = self.fftn(y)
-        laplacian_y = self.ifftn(K * yt)
+        laplacian_y = self.ifftn(
+            self._apply_K(yt, kx2=kx2, k2=k2, exp=exp, factor=factor)
+        )
 
         if kwz2 != 0:
+            if exp:
+                raise NotImplementedError(
+                    f"Cannot use exp=True if kwz2 != 0 (got {kwz2})."
+                )
             laplacian_y += 2 * kwz2 * factor * self.apply_Lz_hbar(y, yt=yt)
 
         if twist_phase_x is not None:
@@ -439,14 +470,30 @@ class CartesianBasis(PeriodicBasis):
     fast_coulomb : bool
        If `True`, use the fast Coulomb algorithm which is slightly less
        accurate but much faster.
+    memoization_GB : float
+       Memoization threshold.  If memoizing factors like the momentum and smoothing
+       factor would exceed this threshold, then memoization is disabled.
     """
 
     def __init__(
-        self, Nxyz, Lxyz, axes=None, symmetric_lattice=False, fast_coulomb=True
+        self,
+        Nxyz,
+        Lxyz,
+        axes=None,
+        symmetric_lattice=False,
+        fast_coulomb=True,
+        memoization_GB=0.5,
+        _test=False,
     ):
         self.fast_coulomb = fast_coulomb
         PeriodicBasis.__init__(
-            self, Nxyz=Nxyz, Lxyz=Lxyz, axes=axes, symmetric_lattice=symmetric_lattice
+            self,
+            Nxyz=Nxyz,
+            Lxyz=Lxyz,
+            axes=axes,
+            symmetric_lattice=symmetric_lattice,
+            memoization_GB=memoization_GB,
+            _test=_test,
         )
 
     def convolve_coulomb_fast(self, y, form_factors=[], correct=False):
