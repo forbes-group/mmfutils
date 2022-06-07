@@ -41,12 +41,19 @@ del scipy
 def get_mem_MB():
     """Current memory usage in MB."""
     process = psutil.Process(os.getpid())
-    mem0 = process.memory_info().rss / 1024 ** 2
+    mem0 = [process.memory_info().rss / 1024 ** 2]
 
-    def _get_mem():
-        return process.memory_info().rss / 1024 ** 2 - mem0
+    def _get_mem(reset=False):
+        if reset:
+            mem0[0] = process.memory_info().rss / 1024 ** 2
+        return process.memory_info().rss / 1024 ** 2 - mem0[0]
 
     yield _get_mem
+
+
+@pytest.fixture(params=[0, 0.5])
+def memoization_GB(request):
+    yield request.param
 
 
 class ExactGaussian(object):
@@ -184,78 +191,84 @@ class ExactGaussianQuartCyl(ExactGaussian):
         return (self.r_0 / r_0) ** self.d * self.get_y(r_0=r_0)
 
 
-class LaplacianTests(object):
+class LaplacianTests:
     """Base with some tests for the laplacian functionality.
 
-    Requires the following attributes:
+    Requires the following fixtures:
 
-    cls.Basis
-    cls.basis
-    cls.exact
+    Basis
+    basis
+    exact
     """
 
-    @classmethod
-    def get_r(cls):
-        return np.sqrt(sum(_x ** 2 for _x in cls.basis.xyz))
+    def get_r(self, basis):
+        return np.sqrt(sum(_x ** 2 for _x in basis.xyz))
 
-    @property
-    def r(self):
-        return self.get_r()
+    # @property
+    # def y(self):
+    #    return self.exact.y
 
-    @property
-    def y(self):
-        return self.exact.y
-
-    def test_interface(self):
+    def test_interface(self, basis):
         assert verifyClass(IBasis, self.Basis)
-        assert verifyObject(IBasis, self.basis)
+        assert verifyObject(IBasis, basis)
 
-    def test_laplacian(self):
+    def test_laplacian(self, basis, exact):
         """Test the laplacian with a Gaussian."""
         # Real and Complex
-        laplacian = self.basis.laplacian
-        exact = self.exact
+        laplacian = basis.laplacian
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
             for exact.A in [(0.5 + 0.5j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor)
                 assert np.allclose(ddy, exact.d2y)
+                if getattr(basis, "memoization_GB", 1) == 0:
+                    with pytest.raises(NotImplementedError):
+                        exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
+                        assert np.allclose(exp_ddy, exact.exp_d2y)
+                else:
+                    exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
+                    assert np.allclose(exp_ddy, exact.exp_d2y)
 
-                exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
-                assert np.allclose(exp_ddy, exact.exp_d2y)
-
-    def test_grad_dot_grad(self):
+    def test_grad_dot_grad(self, basis, exact):
         """Test grad_dot_grad function."""
-        grad_dot_grad = self.basis.grad_dot_grad
-        exact = self.exact
+        grad_dot_grad = basis.grad_dot_grad
         dydy = grad_dot_grad(exact.y, exact.y)
         # Lower atol since y^2 lies outside of the basis.
         assert np.allclose(dydy, exact.grad_dot_grad, atol=1e-5)
 
-    def test_apply_K(self):
+    def test_apply_K(self, basis, exact):
         """Test the application of K."""
-        exact = self.exact
-        Ky = self.basis.laplacian(exact.y, factor=-0.5)
+        Ky = basis.laplacian(exact.y, factor=-0.5)
         Ky_exact = -0.5 * exact.d2y
         assert np.allclose(Ky, Ky_exact)
+
+    @pytest.fixture
+    def exact(self, basis):
+        return ExactGaussian(
+            r=self.get_r(basis),
+            d=3,
+            r_0=np.sqrt(2),
+            A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
+        )
 
 
 class ConvolutionTests(LaplacianTests):
     """Adds tests for convolution."""
 
-    def test_interface(self):
-        LaplacianTests.test_interface(self)
+    def test_interface(self, basis):
+        LaplacianTests.test_interface(self, basis)
         assert verifyClass(IBasisWithConvolution, self.Basis)
-        assert verifyObject(IBasisWithConvolution, self.basis)
+        assert verifyObject(IBasisWithConvolution, basis)
 
-    def test_coulomb(self):
+    def test_coulomb(self, basis, exact):
         """Test computation of the coulomb potential."""
-        y = [self.y, self.y]  # Test that broadcasting works
-        V = self.basis.convolve_coulomb(y)
-        V_exact = self.Q * sp.special.erf(self.r / 2) / self.r
+        y = [exact.y] * 2  # Test that broadcasting works
+        V = basis.convolve_coulomb(y)
+        r = self.get_r(basis)
+        V_exact = self.Q * sp.special.erf(r / 2) / r
         assert np.allclose(V[0], V_exact)
         assert np.allclose(V[1], V_exact)
 
-    def test_coulomb_form_factors_stub(self):
+    def test_coulomb_form_factors_stub(self, basis, exact):
         """Test computation of the coulomb potential with form-factors.
         This is just a stub - it does not do a non-trivial test, but checks
         to see that broadcasting works properly.
@@ -267,28 +280,36 @@ class ConvolutionTests(LaplacianTests):
         def F2(k):
             return [1.0 / (1.0 + k ** 2), 1.0 / (2.0 + k ** 2)]
 
-        y = [self.y] * 2
-        V = self.basis.convolve_coulomb(y, form_factors=[F1, F2])
-        V_exact = self.Q * sp.special.erf(self.r / 2) / self.r
+        y = [exact.y] * 2
+        V = basis.convolve_coulomb(y, form_factors=[F1, F2])
+        r = self.get_r(basis)
+        V_exact = self.Q * sp.special.erf(r / 2) / r
         assert np.allclose(V[0], V_exact)
         assert np.allclose(V[1], V_exact)
 
-
-class TestSphericalBasis(ConvolutionTests):
-    @classmethod
-    def setup_class(cls):
-        cls.Basis = bases.SphericalBasis
-        cls.basis = bases.SphericalBasis(N=32 * 2, R=15.0)
-        cls.Q = 8.0
-        cls.exact = ExactGaussian(
-            r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
+    @pytest.fixture
+    def exact_quart(self, basis):
+        return ExactGaussianQuart(
+            r=self.get_r(basis),
+            d=self.dim,
+            r_0=np.sqrt(2),
+            A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
         )
 
-    def test_convolution(self):
+
+class TestSphericalBasis(ConvolutionTests):
+    Basis = bases.SphericalBasis
+    Q = 8.0
+
+    @pytest.fixture
+    def basis(self):
+        yield self.Basis(N=32 * 2, R=15.0)
+
+    def test_convolution(self, basis, exact):
         """Test the convolution."""
-        y = self.y
-        convolution = self.basis.convolve(y, y)
-        assert np.allclose(convolution, self.exact.convolution)
+        y = exact.y
+        convolution = basis.convolve(y, y)
+        assert np.allclose(convolution, exact.convolution)
 
 
 class TestPeriodicBasis(ConvolutionTests):
@@ -309,43 +330,51 @@ class TestPeriodicBasis(ConvolutionTests):
     This net neutrality is the only thing that makes sense physically.
 
     """
+    Basis = bases.PeriodicBasis
+    dim = 3
+    Q = 8.0
+    Mi = -1.747564594633182190636212
 
-    @classmethod
-    def setup_class(cls):
-        dim = 3
-        cls.Basis = bases.PeriodicBasis
-        cls.basis = bases.PeriodicBasis(Nxyz=(32,) * dim, Lxyz=(25.0,) * dim)
-        cls.Q = 8.0
-        cls.exact = ExactGaussian(
-            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
+    @pytest.fixture
+    def basis(self, memoization_GB):
+        yield self.Basis(
+            Nxyz=(32,) * self.dim,
+            Lxyz=(25.0,) * self.dim,
+            memoization_GB=memoization_GB,
         )
-        cls.exact_quart = ExactGaussianQuart(
-            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
-        )
-        cls.Mi = -1.747564594633182190636212
 
-    def test_interface(self):
-        super().test_interface()
+    @pytest.fixture
+    def exact(self, basis):
+        return ExactGaussian(
+            r=self.get_r(basis),
+            d=self.dim,
+            r_0=np.sqrt(2),
+            A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
+        )
+
+    def test_interface(self, basis):
+        super().test_interface(basis)
         assert verifyClass(IBasisKx, self.Basis)
-        assert verifyObject(IBasisLz, self.basis)
+        assert verifyObject(IBasisLz, basis)
 
-    def test_coulomb(self):
+    def test_coulomb(self, basis, exact):
         """Test computation of the coulomb potential.
 
         This is a stub: it just makes sure the code
         runs... unfortunately, computing the exact result to check is
         a bit tricky!
         """
-        y = [self.y] * 2
-        V = self.basis.convolve_coulomb(y)
-        V_exact = np.ma.divide(self.Q * sp.special.erf(self.r / 2), self.r).filled(
+        y = [exact.y] * 2
+        V = basis.convolve_coulomb(y)
+        r = self.get_r(basis)
+        V_exact = np.ma.divide(self.Q * sp.special.erf(r / 2), r).filled(
             self.Q / np.sqrt(np.pi)
         )
         if False:
             assert np.allclose(V[0], V_exact)
             assert np.allclose(V[1], V_exact)
 
-    def test_coulomb_form_factors_stub(self):
+    def test_coulomb_form_factors_stub(self, basis, exact):
         """Test computation of the coulomb potential with form-factors.
         This is just a stub - it does not do a non-trivial test, but checks
         to see that broadcasting works properly.
@@ -357,43 +386,42 @@ class TestPeriodicBasis(ConvolutionTests):
         def F2(k):
             return [1.0 / (1.0 + k ** 2), 1.0 / (2.0 + k ** 2)]
 
-        y = [self.y] * 2
-        V = self.basis.convolve_coulomb(y, form_factors=[F1, F2])
-        V_no_ff = self.basis.convolve_coulomb(self.y)
+        y = [exact.y] * 2
+        V = basis.convolve_coulomb(y, form_factors=[F1, F2])
+        V_no_ff = basis.convolve_coulomb(exact.y)
         assert np.allclose(V[0], V_no_ff)
         assert np.allclose(V[1], V_no_ff)
 
-    def test_laplacian_quart(self):
+    def test_laplacian_quart(self, basis, exact_quart):
         """Test the laplacian with a Gaussian and modified dispersion."""
         # Real and Complex
-        laplacian = self.basis.laplacian
-        k2 = sum(_k ** 2 for _k in self.basis._pxyz)
+        laplacian = basis.laplacian
+        k2 = sum(_k ** 2 for _k in basis._pxyz)
         k4 = k2 ** 2
         _k2 = k2 + k4
-        exact = self.exact_quart
+        exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
             for exact.A in [(0.5 + 0.5j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
-                # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                # exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
                 # assert np.allclose(exp_ddy, exact.exp_d2y)
 
-    def test_gradient(self):
+    def test_gradient(self, basis, exact):
         """Test the gradient"""
-        get_gradient = self.basis.get_gradient
-        xyz = self.basis.xyz
-        exact = self.exact
+        get_gradient = basis.get_gradient
+        xyz = basis.xyz
         for exact.A in [(0.5 + 0.5j), exact.A]:
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
-    def test_Lz(self):
+    def test_Lz(self, memoization_GB):
         """Test Lz"""
         N = 64
         L = 14.0
-        b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L))
+        b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L), memoization_GB=memoization_GB)
         x, y = b.xyz[:2]
         kx, ky = b._pxyz
 
@@ -416,53 +444,53 @@ class TestPeriodicBasis(ConvolutionTests):
 
 
 class TestCartesianBasis(ConvolutionTests):
-    @classmethod
-    def setup_class(cls):
-        dim = 3
-        cls.Basis = bases.CartesianBasis
-        cls.basis = bases.CartesianBasis(Nxyz=(32,) * dim, Lxyz=(25.0,) * dim)
-        cls.Q = 8.0
-        cls.exact = ExactGaussian(
-            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
-        )
-        cls.exact_quart = ExactGaussianQuart(
-            r=cls.get_r(), d=dim, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
+    dim = 3
+    Q = 8.0
+    Basis = bases.CartesianBasis
+
+    @pytest.fixture
+    def basis(self, memoization_GB):
+        yield self.Basis(
+            Nxyz=(32,) * self.dim,
+            Lxyz=(25.0,) * self.dim,
+            memoization_GB=memoization_GB,
         )
 
-    def test_coulomb_exact(self):
+    def test_coulomb_exact(self, basis, exact):
         """Test computation of the coulomb potential."""
-        y = [self.y] * 2  # Test that broadcasting works
-        self.basis.fast_coulomb = False
-        V_exact = np.ma.divide(self.Q * sp.special.erf(self.r / 2), self.r).filled(
+        y = [exact.y] * 2  # Test that broadcasting works
+        basis.fast_coulomb = False
+        r = self.get_r(basis)
+        V_exact = np.ma.divide(self.Q * sp.special.erf(r / 2), r).filled(
             self.Q / np.sqrt(np.pi)
         )
         for method in ["sum", "pad"]:
-            V = self.basis.convolve_coulomb(y, method=method)
+            V = basis.convolve_coulomb(y, method=method)
             assert np.allclose(V[0], V_exact)
             assert np.allclose(V[1], V_exact)
 
     test_coulomb = test_coulomb_exact
 
-    def test_coulomb_fast(self):
+    def test_coulomb_fast(self, basis, exact):
         """Test fast computation of the coulomb potential."""
-        y = [self.y] * 2  # Test that broadcasting works
-        self.basis.fast_coulomb = True
-        V_exact = np.ma.divide(self.Q * sp.special.erf(self.r / 2), self.r).filled(
+        y = [exact.y] * 2  # Test that broadcasting works
+        basis.fast_coulomb = True
+        V_exact = np.ma.divide(self.Q * sp.special.erf(exact.r / 2), exact.r).filled(
             self.Q / np.sqrt(np.pi)
         )
-        V = self.basis.convolve_coulomb(y)
+        V = basis.convolve_coulomb(y)
         assert np.allclose(V[0], V_exact, rtol=0.052)
         assert np.allclose(V[1], V_exact, rtol=0.052)
-        V = self.basis.convolve_coulomb_fast(y, correct=True)
+        V = basis.convolve_coulomb_fast(y, correct=True)
         assert np.allclose(V[0], V_exact, rtol=0.052)
         assert np.allclose(V[1], V_exact, rtol=0.052)
 
-    def test_coulomb_form_factors_stub(self):
+    def test_coulomb_form_factors_stub(self, basis, exact):
         """Test computation of the coulomb potential with form-factors.
         This is just a stub - it does not do a non-trivial test, but checks
         to see that broadcasting works properly.
         """
-        self.basis.fast_coulomb = False
+        basis.fast_coulomb = False
 
         def F1(k):
             return [1.0 + k ** 2, 2.0 + k ** 2]
@@ -470,20 +498,20 @@ class TestCartesianBasis(ConvolutionTests):
         def F2(k):
             return [1.0 / (1.0 + k ** 2), 1.0 / (2.0 + k ** 2)]
 
-        y = [self.y] * 2
-        V = self.basis.convolve_coulomb(y, form_factors=[F1, F2])
-        V_exact = np.ma.divide(self.Q * sp.special.erf(self.r / 2), self.r).filled(
+        y = [exact.y] * 2
+        V = basis.convolve_coulomb(y, form_factors=[F1, F2])
+        V_exact = np.ma.divide(self.Q * sp.special.erf(exact.r / 2), exact.r).filled(
             self.Q / np.sqrt(np.pi)
         )
         assert np.allclose(V[0], V_exact)
         assert np.allclose(V[1], V_exact)
 
-    def test_coulomb_fast_form_factors_stub(self):
+    def test_coulomb_fast_form_factors_stub(self, basis, exact):
         """Test computation of the coulomb potential with form-factors.
         This is just a stub - it does not do a non-trivial test, but checks
         to see that broadcasting works properly.
         """
-        self.basis.fast_coulomb = True
+        basis.fast_coulomb = True
 
         def F1(k):
             return [1.0 + k ** 2, 2.0 + k ** 2]
@@ -491,35 +519,34 @@ class TestCartesianBasis(ConvolutionTests):
         def F2(k):
             return [1.0 / (1.0 + k ** 2), 1.0 / (2.0 + k ** 2)]
 
-        y = [self.y] * 2
-        V = self.basis.convolve_coulomb_fast(y, form_factors=[F1, F2])
-        V_exact = np.ma.divide(self.Q * sp.special.erf(self.r / 2), self.r).filled(
+        y = [exact.y] * 2
+        V = basis.convolve_coulomb_fast(y, form_factors=[F1, F2])
+        V_exact = np.ma.divide(self.Q * sp.special.erf(exact.r / 2), exact.r).filled(
             self.Q / np.sqrt(np.pi)
         )
         assert np.allclose(V[0], V_exact, rtol=0.052)
         assert np.allclose(V[1], V_exact, rtol=0.052)
 
-    def test_laplacian_quart(self):
+    def test_laplacian_quart(self, basis, exact_quart):
         """Test the laplacian with a Gaussian and modified dispersion."""
         # Real and Complex
-        laplacian = self.basis.laplacian
-        k2 = sum(_k ** 2 for _k in self.basis._pxyz)
+        laplacian = basis.laplacian
+        k2 = sum(_k ** 2 for _k in basis._pxyz)
         k4 = k2 ** 2
         _k2 = k2 + k4
-        exact = self.exact_quart
+        exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
             for exact.A in [(0.5 + 0.5j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
-                # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                # exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
                 # assert np.allclose(exp_ddy, exact.exp_d2y)
 
-    def test_gradient(self):
+    def test_gradient(self, basis, exact):
         """Test the gradient"""
-        get_gradient = self.basis.get_gradient
-        xyz = self.basis.xyz
-        exact = self.exact
+        get_gradient = basis.get_gradient
+        xyz = basis.xyz
         for exact.A in [(0.5 + 0.5j), exact.A]:
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
@@ -528,42 +555,47 @@ class TestCartesianBasis(ConvolutionTests):
     def test_memory(self, get_mem_MB):
         """Regression for issue #29: excessive memory usage."""
         # 4.0MB/complex state,
-        Nxyz = (2 ** 18,)
-        basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3)
-        assert get_mem_MB() < 0.006
-        del basis
+        Nxyz = (2 ** 20,)  # 8.0MB per real array
+        Nxyz = (2 ** 9,) * 3  # 1GB for full state, but each array is small
+        Nxyz = (2 ** 10,) * 3  # 8GB for full state, but each array is small
+        # Nxyz = (2 ** 11,) * 3  # 64GB for full state, but each array is small
+        MB_per_array = np.prod(Nxyz) * 8 / 1024 ** 2
+        MB_per_slices = np.sum(_N * 8 for _N in Nxyz) / 1024 ** 2
+        get_mem_MB(reset=True)
         assert get_mem_MB() == 0
+        basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3, memoization_GB=0)
+        assert get_mem_MB() < MB_per_array
 
-        Nxyz = (2 ** 6,) * 3
-        basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3)
-        assert get_mem_MB() < 0.006
+        # 3 slices for xyz, 3 slices for pxyz
+        assert get_mem_MB() < 6 * MB_per_slices
         del basis
-        assert get_mem_MB() == 0
+        assert get_mem_MB() < 1.0
 
 
 class TestCylindricalBasis(LaplacianTests):
-    @classmethod
-    def setup_class(cls):
-        Lxr = (25.0, 13.0)
-        cls.Basis = bases.CylindricalBasis
-        cls.basis = bases.CylindricalBasis(Nxr=(64, 32), Lxr=Lxr)
-        x, r = cls.basis.xyz
-        cls.Q = 8.0
-        cls.exact = ExactGaussian(
-            r=cls.get_r(), d=3, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
-        )
-        cls.exact_quart = ExactGaussianQuartCyl(
-            x=x, r=r, r_0=np.sqrt(2), A=cls.Q / 8.0 / np.pi ** (3.0 / 2.0)
+    Basis = bases.CylindricalBasis
+    Q = 8.0
+    Lxr = (25.0, 13.0)
+    Nm = 5  # Number of functions to test
+    Nn = 5  # Used when functions are compared
+
+    # Enough points for trapz to give answers to 4 digits.
+    R = np.linspace(0.0, Lxr[1] * 3.0, 10000)
+
+    @pytest.fixture
+    def basis(self):
+        yield self.Basis(Nxr=(64, 32), Lxr=self.Lxr)
+
+    @pytest.fixture
+    def exact_quart(self, basis):
+        x, r = basis.xyz
+        return ExactGaussianQuartCyl(
+            x=x, r=r, r_0=np.sqrt(2), A=self.Q / 8.0 / np.pi ** (3.0 / 2.0)
         )
 
-        cls.Nm = 5  # Number of functions to test
-        cls.Nn = 5  # Used when functions are compared
-        # Enough points for trapz to give answers to 4 digits.
-        cls.R = np.linspace(0.0, Lxr[1] * 3.0, 10000)
-
-    def test_basis(self):
+    def test_basis(self, basis):
         """Test orthonormality of basis functions."""
-        b = self.basis
+        b = basis
         x, r = b.xyz
         R = self.R
         for _m in range(self.Nm):
@@ -573,9 +605,9 @@ class TestCylindricalBasis(LaplacianTests):
                 Fn = b._F(_n, R)
                 assert np.allclose(np.trapz(Fm.conj() * Fn, R), 0.0, atol=1e-3)
 
-    def test_derivatives(self):
+    def test_derivatives(self, basis):
         """Test the derivatives of the basis functions."""
-        b = self.basis
+        b = basis
         x, r = b.xyz
         R = self.R + 0.1  # Derivatives are singular at origin
         for _m in range(self.Nm):
@@ -591,62 +623,65 @@ class TestCylindricalBasis(LaplacianTests):
 
             assert np.allclose(dF, dF_fd, atol=1e-2)
 
-    def test_laplacian_quart(self):
+    def test_laplacian_quart(self, basis, exact_quart):
         """Test the laplacian with a Gaussian and modified dispersion."""
         # Real and Complex
-        laplacian = self.basis.laplacian
-        kx2 = self.basis._kx2
+        laplacian = basis.laplacian
+        kx2 = basis._kx2
         kx4 = kx2 ** 2
         _kx2 = kx2 + kx4
-        exact = self.exact_quart
+        exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
             for exact.A in [(0.5 + 0.5j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, kx2=_kx2)
                 assert np.allclose(ddy, exact.d2y)
 
-                # exp_ddy = laplacian(self.y, factor=exact.factor, exp=True)
+                # exp_ddy = laplacian(exact.y, factor=exact.factor, exp=True)
                 # assert np.allclose(exp_ddy, exact.exp_d2y)
 
-    def test_gradient(self):
+    def test_gradient(self, basis, exact):
         """Test the gradient"""
-        get_gradient = self.basis.get_gradient
-        x, r = self.basis.xyz
-        exact = self.exact
+        get_gradient = basis.get_gradient
+        x, r = basis.xyz
         for exact.A in [(0.5 + 0.5j), exact.A]:
             dy = get_gradient(exact.y)[0]
             dy_exact = exact.get_dy(x)
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
-    def test_integrate1(self):
-        x, r = self.basis.xyz
-        n = abs(self.exact.y) ** 2
-        assert np.allclose((self.basis.metric * n).sum(), self.exact.N_3D)
-        n_1D = self.basis.integrate1(n).ravel()
-        r0 = self.exact.r_0
+    def test_integrate1(self, basis, exact):
+        x, r = basis.xyz
+        n = abs(exact.y) ** 2
+        assert np.allclose((basis.metric * n).sum(), exact.N_3D)
+        n_1D = basis.integrate1(n).ravel()
+        r0 = exact.r_0
         n_1D_exact = (
-            self.exact.A ** 2 * (np.pi * r0 ** 2 * np.exp(-(x ** 2) / r0 ** 2)).ravel()
+            exact.A ** 2 * (np.pi * r0 ** 2 * np.exp(-(x ** 2) / r0 ** 2)).ravel()
         )
         assert np.allclose(n_1D, n_1D_exact)
 
-    def test_integrate2(self):
-        x, r = self.basis.xyz
-        n = abs(self.exact.y) ** 2
-        assert np.allclose((self.basis.metric * n).sum(), self.exact.N_3D)
+    def test_integrate2(self, basis, exact):
+        x, r = basis.xyz
+        n = abs(exact.y) ** 2
+        assert np.allclose((basis.metric * n).sum(), exact.N_3D)
         y = np.linspace(0, r.max(), 50)[None, :]
-        n_2D = self.basis.integrate2(n, y=y)
-        r0 = self.exact.r_0
-        n_2D_exact = self.exact.A ** 2 * (
+        n_2D = basis.integrate2(n, y=y)
+        r0 = exact.r_0
+        n_2D_exact = exact.A ** 2 * (
             np.sqrt(np.pi) * r0 * np.exp(-(x ** 2 + y ** 2) / r0 ** 2)
         )
         assert np.allclose(n_2D, n_2D_exact, rtol=0.01, atol=0.01)
 
 
-class TestCoverage(object):
+class TestCoverage:
     """Walk down some error branches for coverage."""
 
-    def test_convolve_coulomb_exact(self):
+    def test_convolve_coulomb_exact(self, memoization_GB):
         dim = 1
-        basis = bases.CartesianBasis(Nxyz=(32,) * dim, Lxyz=(25.0,) * dim)
+        basis = bases.CartesianBasis(
+            Nxyz=(32,) * dim,
+            Lxyz=(25.0,) * dim,
+            memoization_GB=memoization_GB,
+        )
         exact = ExactGaussian(r=abs(basis.xyz[0]), d=dim)
         with pytest.raises(NotImplementedError):
             basis.convolve_coulomb_exact(exact.y, method="unknown")

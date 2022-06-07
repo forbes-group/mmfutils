@@ -291,8 +291,8 @@ Note, however, that the speed of copying is significantly impacted:
 
 .. parsed-literal::
 
-    3.57 µs ± 192 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    36.8 µs ± 1.57 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    2.99 µs ± 141 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+    29.8 µs ± 951 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -441,11 +441,11 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gp/T/ipykernel_18521/3951100459.py in <module>
+    Input In [15], in <cell line: 3>()
           1 c1 = pickle.loads(pickle.dumps(c))
           2 print(c1)
     ----> 3 c1.large_temporary_array
-    
+
 
     AttributeError: 'Container' object has no attribute 'large_temporary_array'
 
@@ -576,7 +576,7 @@ defined in ``__init__()``:
 
 .. parsed-literal::
 
-    BrokenImplementation: The object <__main__.AdderBroken object at 0x11b8ee610> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
+    BrokenImplementation: The object <__main__.AdderBroken object at 0x11558c1c0> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
 
 
 Finally, a working instance:
@@ -626,7 +626,7 @@ to provide a mechanism for documentating interfaces in a notebook.
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="generator" content="Docutils 0.16: http://docutils.sourceforge.net/" />
+    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
     <title>&lt;string&gt;</title>
     
     <div class="document">
@@ -686,15 +686,7 @@ profile name, and can be started or stopped from this class:
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-
-
-.. parsed-literal::
-
-    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
-
-
-.. parsed-literal::
-
+    Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
@@ -708,7 +700,11 @@ profile name, and can be started or stopped from this class:
 
 .. parsed-literal::
 
-    2022-02-01 16:24:14.585 [IPClusterStop] Stopping cluster [pid=18668] with [signal=<Signals.SIGINT: 2>]
+    2022-06-07 11:37:19.290 [IPClusterStop] Stopping cluster 
+    2022-06-07 11:37:19.290 [IPClusterStop] Stopping controller
+    2022-06-07 11:37:19.432 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8883, 'identifier': 'ipcontroller-8934'}
+    2022-06-07 11:37:19.434 [IPClusterStop] Stopping engine(s): 1654627030
+    2022-06-07 11:37:19.857 [IPClusterStop] engine set stopped 1654627030: {'engines': {'0': {'exit_code': None, 'pid': 8896, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 8897, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 8898, 'identifier': '2'}}, 'exit_code': None}
 
 
 .. parsed-literal::
@@ -737,20 +733,16 @@ the context and shutting down the cluster!
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-
-
-.. parsed-literal::
-
-    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
-
-
-.. parsed-literal::
-
+    Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
     INFO:root:Stopping cluster: ipcluster stop --profile=default
-    2022-02-01 16:24:44.880 [IPClusterStop] Stopping cluster [pid=18704] with [signal=<Signals.SIGINT: 2>]
+    2022-06-07 11:38:27.128 [IPClusterStop] Stopping cluster 
+    2022-06-07 11:38:27.129 [IPClusterStop] Stopping controller
+    2022-06-07 11:38:27.279 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8997, 'identifier': 'ipcontroller-9044'}
+    2022-06-07 11:38:27.281 [IPClusterStop] Stopping engine(s): 1654627098
+    2022-06-07 11:38:27.710 [IPClusterStop] engine set stopped 1654627098: {'engines': {'0': {'exit_code': None, 'pid': 9010, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 9011, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 9015, 'identifier': '2'}}, 'exit_code': None}
 
 
 .. parsed-literal::
@@ -801,7 +793,7 @@ Fast Filled Contour Plots
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
 array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
-then it will match these to the shape of ``z``). Matplotlib now provies
+then it will match these to the shape of ``z``). Matplotlib now provides
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
 .. code:: ipython3
@@ -825,26 +817,26 @@ then it will match these to the shape of ``z``). Matplotlib now provies
     plt.subplot(143)
     %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
     plt.subplot(144)
-    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
+    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='gouraud')
 
 
 .. parsed-literal::
 
-    CPU times: user 13.2 ms, sys: 5.15 ms, total: 18.3 ms
-    Wall time: 20.6 ms
-    CPU times: user 49.3 ms, sys: 4.39 ms, total: 53.7 ms
-    Wall time: 56 ms
-    CPU times: user 144 ms, sys: 8.9 ms, total: 153 ms
-    Wall time: 154 ms
-    CPU times: user 5.23 ms, sys: 287 µs, total: 5.52 ms
-    Wall time: 5.6 ms
+    CPU times: user 10 ms, sys: 2.64 ms, total: 12.7 ms
+    Wall time: 12.7 ms
+    CPU times: user 101 ms, sys: 1.65 ms, total: 103 ms
+    Wall time: 104 ms
+    CPU times: user 135 ms, sys: 6.21 ms, total: 141 ms
+    Wall time: 141 ms
+    CPU times: user 3.59 ms, sys: 176 µs, total: 3.77 ms
+    Wall time: 3.74 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x12b322e80>
+    <matplotlib.collections.QuadMesh at 0x1241e3850>
 
 
 
@@ -887,11 +879,20 @@ phase of a complex wavefunction.
     mmfplt.imcontourf(x, y, np.angle(z), cmap="huslp")
     ax.set_aspect(1)
     plt.colorbar()
-    mmfplt.phase_contour(x, y, z, linewidths=0.5);
+    mmfplt.phase_contour(x, y, z, linewidths=0.5)
 
 
 
-.. image:: README_files/README_69_0.png
+
+.. parsed-literal::
+
+    (<matplotlib.contour.QuadContourSet at 0x12506ca60>,
+     <matplotlib.contour.QuadContourSet at 0x124036dc0>)
+
+
+
+
+.. image:: README_files/README_69_1.png
 
 
 Debugging
@@ -946,8 +947,365 @@ Complete code coverage information is provided in
         coverage = f.read()
     HTML(coverage)
 
+
+
+
+.. raw:: html
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Coverage report</title>
+        <link rel="icon" sizes="32x32" href="favicon_32.png">
+        <link rel="stylesheet" href="style.css" type="text/css">
+        <script type="text/javascript" src="coverage_html.js" defer></script>
+    </head>
+    <body class="indexfile">
+    <header>
+        <div class="content">
+            <h1>Coverage report:
+                <span class="pc_cov">82%</span>
+            </h1>
+            <aside id="help_panel_wrapper">
+                <input id="help_panel_state" type="checkbox">
+                <label for="help_panel_state">
+                    <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts" />
+                </label>
+                <div id="help_panel">
+                    <p class="legend">Shortcuts on this page</p>
+                    <div class="keyhelp">
+                        <p>
+                            <kbd>n</kbd>
+                            <kbd>s</kbd>
+                            <kbd>m</kbd>
+                            <kbd>x</kbd>
+                            <kbd>c</kbd>
+                            &nbsp; change column sorting
+                        </p>
+                        <p>
+                            <kbd>[</kbd>
+                            <kbd>]</kbd>
+                            &nbsp; prev/next file
+                        </p>
+                        <p>
+                            <kbd>?</kbd> &nbsp; show/hide this help
+                        </p>
+                    </div>
+                </div>
+            </aside>
+            <form id="filter_container">
+                <input id="filter" type="text" value="" placeholder="filter..." />
+            </form>
+            <p class="text">
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
+                created at 2022-06-07 11:36 -0700
+            </p>
+        </div>
+    </header>
+    <main id="index">
+        <table class="index" data-sortable>
+            <thead>
+                <tr class="tablehead" title="Click to sort">
+                    <th class="name left" aria-sort="none" data-shortcut="n">Module</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="s">statements</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="m">missing</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="x">excluded</th>
+                    <th class="right" aria-sort="none" data-shortcut="c">coverage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6___init___py.html">src/mmfutils/__init__.py</a></td>
+                    <td>20</td>
+                    <td>4</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="16 20">80%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_containers_py.html">src/mmfutils/containers.py</a></td>
+                    <td>113</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="111 113">98%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_contexts_py.html">src/mmfutils/contexts.py</a></td>
+                    <td>199</td>
+                    <td>25</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="174 199">87%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_debugging_py.html">src/mmfutils/debugging.py</a></td>
+                    <td>49</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td class="right" data-ratio="49 49">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_interface_py.html">src/mmfutils/interface.py</a></td>
+                    <td>77</td>
+                    <td>0</td>
+                    <td>15</td>
+                    <td class="right" data-ratio="77 77">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78___init___py.html">src/mmfutils/math/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_eb8720e8ec2674ec___init___py.html">src/mmfutils/math/bases/__init__.py</a></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="2 2">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_bases_py.html">src/mmfutils/math/bases/bases.py</a></td>
+                    <td>458</td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="400 458">87%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_interfaces_py.html">src/mmfutils/math/bases/interfaces.py</a></td>
+                    <td>37</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="37 37">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_utils_py.html">src/mmfutils/math/bases/utils.py</a></td>
+                    <td>40</td>
+                    <td>11</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="29 40">72%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78_bessel_py.html">src/mmfutils/math/bessel.py</a></td>
+                    <td>132</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="132 132">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78_differentiate_py.html">src/mmfutils/math/differentiate.py</a></td>
+                    <td>61</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="61 61">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_6c95154c693d83f3___init___py.html">src/mmfutils/math/integrate/__init__.py</a></td>
+                    <td>212</td>
+                    <td>12</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="200 212">94%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78_linalg_py.html">src/mmfutils/math/linalg.py</a></td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="12 12">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78_special_py.html">src/mmfutils/math/special.py</a></td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="26 26">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_3e34d5763a905f78_wigner_py.html">src/mmfutils/math/wigner.py</a></td>
+                    <td>20</td>
+                    <td>17</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="3 20">15%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_optimize_py.html">src/mmfutils/optimize.py</a></td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="26 26">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_parallel_py.html">src/mmfutils/parallel.py</a></td>
+                    <td>128</td>
+                    <td>5</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="123 128">96%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_904e42d388a55e09___init___py.html">src/mmfutils/performance/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_904e42d388a55e09_blas_py.html">src/mmfutils/performance/blas.py</a></td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td>6</td>
+                    <td class="right" data-ratio="58 58">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_904e42d388a55e09_fft_py.html">src/mmfutils/performance/fft.py</a></td>
+                    <td>92</td>
+                    <td>58</td>
+                    <td>6</td>
+                    <td class="right" data-ratio="34 92">37%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_904e42d388a55e09_numexpr_py.html">src/mmfutils/performance/numexpr.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>7</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_904e42d388a55e09_threads_py.html">src/mmfutils/performance/threads.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6___init___py.html">src/mmfutils/plot/__init__.py</a></td>
+                    <td>5</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="5 5">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_animation_py.html">src/mmfutils/plot/animation.py</a></td>
+                    <td>81</td>
+                    <td>19</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="62 81">77%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_cmaps_py.html">src/mmfutils/plot/cmaps.py</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="10 10">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_colors_py.html">src/mmfutils/plot/colors.py</a></td>
+                    <td>85</td>
+                    <td>8</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="77 85">91%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_contour_py.html">src/mmfutils/plot/contour.py</a></td>
+                    <td>63</td>
+                    <td>24</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="39 63">62%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_errors_py.html">src/mmfutils/plot/errors.py</a></td>
+                    <td>78</td>
+                    <td>67</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="11 78">14%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_publish_py.html">src/mmfutils/plot/publish.py</a></td>
+                    <td>327</td>
+                    <td>139</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="188 327">57%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_rasterize_py.html">src/mmfutils/plot/rasterize.py</a></td>
+                    <td>29</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="28 29">97%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_sparkline_py.html">src/mmfutils/plot/sparkline.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_b8e9249e6a4792af___init___py.html">src/mmfutils/solve/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_b8e9249e6a4792af_broyden_py.html">src/mmfutils/solve/broyden.py</a></td>
+                    <td>319</td>
+                    <td>64</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="255 319">80%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_testing_py.html">src/mmfutils/testing.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="total">
+                    <td class="name left">Total</td>
+                    <td>2795</td>
+                    <td>516</td>
+                    <td>85</td>
+                    <td class="right" data-ratio="2279 2795">82%</td>
+                </tr>
+            </tfoot>
+        </table>
+        <p id="no_rows">
+            No items found using the specified filter.
+        </p>
+    </main>
+    <footer>
+        <div class="content">
+            <p>
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
+                created at 2022-06-07 11:36 -0700
+            </p>
+        </div>
+        <aside class="hidden">
+            <a id="prevFileLink" class="nav" href="d_5f1563ee9ba979c6_testing_py.html"/>
+            <a id="nextFileLink" class="nav" href="d_5f1563ee9ba979c6___init___py.html"/>
+            <button type="button" class="button_prev_file" data-shortcut="["/>
+            <button type="button" class="button_next_file" data-shortcut="]"/>
+            <button type="button" class="button_show_hide_help" data-shortcut="?"/>
+        </aside>
+    </footer>
+    </body>
+    </html>
+
+
+
+
 Change Log
 ==========
+
+REL: 0.6.1
+----------
+
+-  Fix some issues with GPU and PeriodicBases.
+-  Add warning to FFT plans about data ownership.
+-  Include some Sparkline demonstrations.
+-  Drop support for Python 3.6. (Still no support for 3.10).
 
 REL: 0.6.0
 ----------
