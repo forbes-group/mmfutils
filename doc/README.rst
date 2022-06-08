@@ -1299,6 +1299,11 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.6.3
+----------
+
+-  Fix some dependencies.
+
 REL: 0.6.2
 ----------
 

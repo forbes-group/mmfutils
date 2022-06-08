@@ -939,6 +939,14 @@ issues.  Here are some recommendations:
      
      ```
   
+* To update packages, us the `poetry show` command:
+
+   ```bash
+   poetry show --outdated
+   ```
+   
+   Note: it is useful to do this with two separate environments -- one at the lowest
+   version supported, and another at the highest.
  
 ## Issues:
 
