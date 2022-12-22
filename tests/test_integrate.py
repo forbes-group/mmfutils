@@ -80,7 +80,7 @@ class TestSSum(object):
 
         Series such as these  should be summed in reverse, but ssum
         should do it well."""
-        sn = 1.0 / np.arange(1, 10 ** 4)
+        sn = 1.0 / np.arange(1, 10**4)
         Hn, Hn_err = integrate.exact_sum(sn)
         ans, err = ssum(sn)
         assert abs(ans - Hn) < err
@@ -90,10 +90,10 @@ class TestSSum(object):
     def test_truncation(self, ssum):
         N = 10000
         np.random.seed(3)
-        r = np.random.randint(-(2 ** 30), 2 ** 30, 4 * N)
+        r = np.random.randint(-(2**30), 2**30, 4 * N)
         A = np.array(
             [
-                int(a) * 2 ** 90 + int(b) * 2 ** 60 + int(c) * 2 ** 30 + int(d)
+                int(a) * 2**90 + int(b) * 2**60 + int(c) * 2**30 + int(d)
                 for (a, b, c, d) in zip(
                     r[:N], r[N : 2 * N], r[2 * N : 3 * N], r[3 * N : 4 * N]
                 )

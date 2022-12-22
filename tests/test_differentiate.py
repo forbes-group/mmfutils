@@ -14,5 +14,5 @@ class TestCoverage(object):
 
         x = 1.0
         for d in range(5):
-            exact = (2j ** d * np.exp(2j * x)).imag
+            exact = (2j**d * np.exp(2j * x)).imag
             assert np.allclose(exact, differentiate(f, 1, d=d))

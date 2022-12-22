@@ -17,8 +17,8 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.7.13,<3.10"
-"zope.interface" = "~=5.4.0"
-husl = "~=4.0.3"
+"zope.interface" = ">=5.4.0"
+husl = ">=4.0.3"
 importlib-metadata = { version = ">=3.6.0" }
 
 # Optional dependencies for testing, building the docs, etc.
@@ -40,15 +40,15 @@ uncertainties = {version = "~=3.1.5", optional = true}
 
 numpy = [
     {version = "~=1.20.2", python="~=3.7.0", optional = true},
-    {version = "~", python=">3.7", optional = true},
+    {version = "~=1.24.0", python=">=3.8", optional = true},
 ]
 matplotlib = [
     {version = "~=3.4.1", python="~=3.7.0", optional = true},
-    {version = "~=3.5.2", python=">3.7", optional = true},
+    {version = "~=3.5.2", python=">=3.8", optional = true},
 ]
 scipy = [
     {version = "~=1.7.3", python="~=3.7.0", optional = true},
-    {version = "~=1.8.1", python=">3.7", optional = true},
+    {version = "~=1.8.1", python=">=3.8", optional = true},
 ]
 
 [tool.poetry.extras]
@@ -109,7 +109,7 @@ build-backend = "poetry.core.masonry.api"
 ######################################################################
 # PyTest
 [tool.pytest.ini_options]
-testpaths = [ "src/mmfutils" ]
+testpaths = [ "src/mmfutils", "tests" ]
 markers = [
     # mark test as a benchmark.  (Might be slow, or platform dependent)
     "bench",
@@ -123,7 +123,7 @@ addopts = [
     "--cov-report=html",
     "--cov-fail-under=80",
     "--no-cov-on-fail",
-    #"-x",
+    "-x",
     #"--pdb",
     #"--flake8",  # Disable until https://github.com/tholo/pytest-flake8/issues/8
 ]

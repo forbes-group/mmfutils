@@ -6,6 +6,7 @@ _trash/
 .eggs
 .ipynb_checkpoints
 .nox
+envs
 build
 dist
 mmfutils.egg-info

@@ -16,4 +16,4 @@ testing file which imported nose.tools.
 
 def exp2(p):
     """Return 2^p"""
-    return 2 ** p
+    return 2**p

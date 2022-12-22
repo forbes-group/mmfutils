@@ -83,7 +83,7 @@ class TestCluster(object):
 
         p = range(20)
         res = self.cluster1.load_balanced_view.map(parallel_module.exp2, p, block=True)
-        assert res == [2 ** _p for _p in p]
+        assert res == [2**_p for _p in p]
 
     def test_del(self):
         """Test deleting of cluster objects"""
