@@ -169,6 +169,10 @@ class TestObject(object):
         o1 = pickle.loads(pickle.dumps(o))
         assert o1.x == 6
 
+    def test_unpicklable(self):
+        with pytest.raises(ValueError):
+            o = MyDefaultObject(x=lambda x: x**2)
+
 
 class TestPersist(object):
     def test_archive(self):

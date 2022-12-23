@@ -39,6 +39,7 @@ if platform.system() == "Darwin" and platform.processor() == "arm":
 @nox.session(venv_backend="venv", **args)
 # @nox.parametrize("sphinx", get_versions("sphinx", "minor"))
 def test(session):
+    session.install("pip")
     session.install(".[test]")
     session.run("pytest")
 

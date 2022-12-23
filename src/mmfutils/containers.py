@@ -273,7 +273,7 @@ class ObjectMixin(object):
         """Raise ValueError if obj is not picklable."""
         try:
             pickle.dumps(value)
-        except pickle.PicklingError:
+        except (AttributeError, pickle.PicklingError):
             raise ValueError(f"Attribute {key}={value} not picklable.")
 
     def _check_attribute(self, key, value=None):

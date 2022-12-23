@@ -11,9 +11,9 @@ These are some notes for developers and a general discussion about the design ch
 have made regarding things such as file hierarchy, packaging tools etc.  I intend for
 this file to document my choices and discussions about these issues for all projects.
 (Other projects should refer here for this discussion.)  For now, however, most of my
-work is being done in the [Physics 581] project which I am teaching, so please visit
+work is being done in the [Physics 581[]] project which I am teaching, so please visit
 that for now, however, notes about packaging will be kept here (since the course is not
-intended to be installed on [PyPI]).
+intended to be installed on [PyPI][]).
 
 # To Do
 
@@ -820,8 +820,8 @@ provision environments with the desired version of python, then to install the p
 with `pip install .[test]` in that environment.  This has the following advantages:
 
 * Generally works.  The typical recommendation (for example in the [Hypermodern Python]
-  series) is to use [`pyenv`].  Unfortunately, this is a pain for me on my Mac OS X
-  development machine as [`pyenv`] tries to compile python from source which can take
+  series) is to use [PyEnv][].  Unfortunately, this is a pain for me on my Mac OS X
+  development machine as [PyEnv][] tries to compile python from source which can take
   forever, and often fails.  (For example, I cannot build `python=3.5.8` for some
   reason, and `miniconda3-3.5.*` is not available.)  Conversely, `conda env create -n
   py3.5 python=3.5` seems to always work for me.  Of course, this does require you to
@@ -886,17 +886,6 @@ The solution is to make sure that `PYTHONNOUSERSITE=1` before running anything.
 
 * See: https://stackoverflow.com/a/51640558/1088938
 
-### Gotchas
-
-I had a very difficult time with random errors when tested `mmf_setup` that boiled down
-to `pip` not installing some packages in the testing environment because they were in
-`~/.local`, but then having issues when the underlying tests were running and sometimes
-did not have access to these.  (The specific case was when running `run_tests.py` for
-Mercurial tests.)
-
-The solution is to make sure that `PYTHONNOUSERSITE=1` before running anything.
-
-* See: https://stackoverflow.com/a/51640558/1088938
 
 ## Documentation
 
@@ -1062,20 +1051,42 @@ To do this, we advocate the following procedure.
 Poetry
 ======
 
-[Poetry] has great promise, but is currently a bit of a pain due to some unresolved
+* TL;DR: With the current project, you can do all of this with:
+
+    ```bash
+    make dev
+    poetry shell
+    ...
+    ```
+
+    System installs will take less disk space and time though.
+
+
+[Poetry][] has great promise, but is currently a bit of a pain due to some unresolved
 issues.  Here are some recommendations:
 
+
 * Always work in an explicit environment.  This is an issue if you routinely have a
-  [conda] environment activated.  Currently, [poetry] interprets an active [conda]
+  [conda][] environment activated.  Currently, [poetry][] interprets an active [conda][]
   environment as a virtual environment and uses it.  This means that `poetry add ...`
   will add these dependencies **to that environment**.  Instead, I [recommend the
   following](https://github.com/python-poetry/poetry/issues/1724#issuecomment-834080057):
    
-  1. Create some bare [conda] environments with the various python interpreters you
-     want to use *(only needs to be done once per system)*:
+  1. Provide a set of python interpreters at the system level.  By *system* I mean that
+     you should install these as a special user (`conda` or `admin`) so that users
+     cannot accidentally install packages into these environments.  There are several ways
+     of doing this.  Once these interpreters are available in `PATH`, then [Nox][] will
+     find them and create a virtual environment with the appropriate interpreter for testing.
+     
+     I used to used [conda][], which is probably a good strategy on
+     Linux systems etc., but on my Mac M1 Max (ARM), I use [MacPorts][].  This step
+     *(only needs to be done once per system)*.  [PyEnv][] might be another option, but
+     I have had problems on my Mac OS X (see above).
+     
+     Here is an example with [conda][]:
       
      ```bash
-     for py_ver in 2.7 3.6 3.7 3.8 3.9; do
+     for py_ver in 3.7 3.8 3.9 3.10 3.11; do
           conda_env="py${py_ver}"
           conda create --strict-channel-priority \
                        -c defaults -y            \
@@ -1086,12 +1097,34 @@ issues.  Here are some recommendations:
           conda deactivate
       done
       ```
+      
+      Or, using [MacPorts][]:
+      
+      ```bash
+      port install python37 python38 python39 python310 python311
+      ```
+      
+      Note: these are all native interpreters, meaning that on my Mac M1, they are ARM
+      executables.  In some cases, you might need OSX-64 executables to be run under
+      [Rosetta][].  Currently I need this to install [PyFFTW][] (see [issue
+      #144](https://github.com/pyFFTW/pyFFTW/issues/144)).  This is more complicated,
+      and so I provide a `Makefile` that does this if you run
+      
+      ```bash
+      make envs
+      ```
+      
+      This uses [conda][] like above, but also specifies the appropriate architecture
+      (via `CONDA_SUBDIR` or the `subdir` config variable) and then links these to
+      `build/bin` which can then be added to the path. This is also done in `noxfile.py`
+      if executed on an Mac OS X ARM platform.
+      
   2. Specifically activate one of these for each project while developing *(only needs
      to be done once per project)*:
    
      ```bash
      cd project
-     poetry env use python3.8
+     poetry env use python3.9
      ```
   3. Poetry should now remember this and use it.  See also `poetry env list` to see all
      environments, and `poetry env remove 3.8` to remove the environment.
@@ -1131,12 +1164,13 @@ issues.  Here are some recommendations:
      Python:   /data/apps/conda/envs/work
      ```
      </details>
+
 * To support multiple versions of python, use `python = "^2.7 || ^3.6"` for example,
   with logical or `||` not a comma `,`.  Note, however, that poetry has difficulty
   resolving dependencies when you have multiple version specified.  You may have to
   first add your dependencies with each explicit version.  Sometimes I just activate a
   shell and use `pip` to see what it brings.  Here is a strategy (I did this with the
-  [`persist`] package):
+  [`persist`][] package):
   
   1. Start with your desired python versions, then add projects, and restrict until
      everything works:
@@ -1169,19 +1203,7 @@ issues.  Here are some recommendations:
      #     {version = "^3.2.1", python="^3.7", optional = true}]
      $ poetry update 
      ```
-     
-     Note: Be very careful to express complete constraints.  The following works
-     
-     Consider both sides of the suggested dependencies.  Once I relaxed the
-     requirements for scipy for `python="<3.8"` I still got errors saying 
-    
-     
-  2. Add all dependencies and see what happens:
-  
-     ```bash
-     
-     ```
-  
+
 * To update packages, us the `poetry show` command:
 
    ```bash
@@ -1191,6 +1213,39 @@ issues.  Here are some recommendations:
    Note: it is useful to do this with two separate environments -- one at the lowest
    version supported, and another at the highest.
  
+## Soft Dependencies
+
+In general, [Poetry][] advocates [against unbound versions][].  While we generally
+agree, we we really don't want installing `mmfutils` to break their environment because
+they need a new version of [SciPy][] that we have not had a chance to test yet.
+
+We follow the approach here that `mmfutils` depends explicitly on the minimum
+requirements. Ideally, we would run a set of tests in an intelligent manner, slowly
+expanding the range of allowed versions until we get the broadest range of dependencies
+that work with each version of python.  However, it might be better to just exclude
+known bad-versions, and be otherwise unbound. See also this discussion:
+
+* [Support for "soft" or suggestet
+  constraints](https://github.com/python-poetry/poetry/issues/7051)
+
+All other dependencies -- especially complex ones that might break an install -- are
+optional. Thus, one can still install it without [PyFFTW][] -- which might not be
+available on your platform -- and still use other features.  To support this, we do the
+following: 
+
+* Delay imports.  Thus, `import mmfutils.contexts` does not import `mmfutils.plot`, so
+    one can still use the useful `mmfutils.contexts.FPS` without installing
+    `matplotlib`.  In some cases, the import might be delayed until a specific function
+    is called, but this should be done sparingly.
+* Make the associated dependencies optional.  If the user wants a fully-functional
+    installation, they do
+  
+    ```bash
+    pip install mmfutils[all]
+    ```
+    
+    This will pull in a working version of [PyFFTW][], [SciPy][], etc.
+
 ## Issues:
 
 * [Document use of current conda env #1724](https://github.com/python-poetry/poetry/issues/1724)
@@ -1498,7 +1553,7 @@ make: *** [python.exe] Error 1
 [Poetry]: <https://poetry.eustace.io> "Python packaging and dependency management made easy."
 [PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
-[`pyenv`]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
+[PyEnv]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
 [pytest]: <https://docs.pytest.org> "pytest"
 [venv]: <https://docs.python.org/3/library/venv.html> "Creation of virtual environments"
 [`conda-pack`]: <https://conda.github.io/conda-pack/> "Command line tool for creating archives of conda environments"
@@ -1515,3 +1570,9 @@ make: *** [python.exe] Error 1
 [click]: https://click.palletsprojects.com
 [pipx]: https://pypa.github.io/pipx/
 [condax]: https://github.com/mariusvniekerk/condax
+[MacPorts]: https://www.macports.org/
+[Rosetta]: https://support.apple.com/en-us/HT211861
+[PyFFTW]: https://github.com/pyFFTW/pyFFTW
+[SciPy]: https://scipy.org/
+
+[against unbound versions]: https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea

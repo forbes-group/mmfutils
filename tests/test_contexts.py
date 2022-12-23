@@ -3,6 +3,8 @@ import os
 import signal
 import time
 
+from uncertainties import ufloat
+
 import numpy as np
 
 import pytest
@@ -15,6 +17,11 @@ def NoInterrupt():
     yield contexts.NoInterrupt
     # Restore original handlers
     contexts.NoInterrupt.unregister()
+
+
+@pytest.fixture(params=[False, True])
+def unregister(request):
+    yield request.param
 
 
 class TestNoInterrupt(object):
@@ -305,13 +312,14 @@ class TestFPS:
         sleep_time = 0.01
         frames = 13
         with contexts.FPS(frames=frames) as fps:
+            time.sleep(sleep_time)
             for frame in fps:
                 time.sleep(sleep_time)
         assert frame == frames - 1
         _fps = fps.fps
         time.sleep(sleep_time)  # should not change fps
         assert _fps == fps.fps
-        assert np.allclose(fps.fps, 1.0 / sleep_time, rtol=0.2)
+        self._check_fps(fps, sleep_time)
 
     def test_ts(self):
         sleep_time = 0.01
@@ -325,23 +333,32 @@ class TestFPS:
         assert np.allclose(fps.fps, 1.0 / sleep_time, rtol=0.2)
 
     def test_infinite(self):
-        sleep_time = 0.01
+        sleep_time = 0.02
         timeout = 0.1
+        tic = time.time()
         with contexts.FPS(
-            frames=itertools.count(start=0, step=1), timeout=timeout
+            frames=itertools.count(start=0, step=1),
+            timeout=timeout,
+            unregister=unregister,
         ) as fps:
-            tic = time.time()
             for frame in fps:
                 time.sleep(sleep_time)
 
         t = time.time() - tic
         assert t < 1.1 * (timeout + sleep_time)
-        assert np.allclose(fps.fps, 1.0 / sleep_time, rtol=0.2)
+        self._check_fps(fps, sleep_time)
+        # leftover = 1.0 / fps.fps - sleep_time
+        # assert np.allclose(fps.fps, leftover)
 
-    def test_coverage(self):
+    def _check_fps(self, fps, sleep_time, rtol=0.2):
+        _fps = 1.0 / sleep_time
+        dts = np.diff(fps.tics)
+        dt = ufloat(dts.mean(), dts.std())
+        assert np.allclose(1 / dt.n, fps.fps)
+        assert np.allclose(fps.fps, _fps, rtol=rtol, atol=2 * (1 / dt).s)
+
+    def test_coverage(self, unregister):
         """Test some edge cases."""
-        sleep_time = 0.01
-        timeout = 0.1
-        with contexts.FPS(frames=[]) as fps:
+        with contexts.FPS(frames=[], unregister=unregister) as fps:
             assert np.isnan(fps.fps)
             assert len(fps.tics) == 1

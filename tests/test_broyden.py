@@ -1,8 +1,14 @@
 import sys
 
 import numpy as np
-import scipy.optimize.nonlin
-import scipy as sp
+
+try:
+    from scipy.optimize import asjacobian
+except ImportError:
+    try:
+        from scipy.optimize._nonlin import asjacobian
+    except ImportError:
+        from scipy.optimize.nonlin import asjacobian
 
 import pytest
 
@@ -39,7 +45,7 @@ def jacobian(alpha):
     B.add_dyad(a.T, b)
     B_ = alpha * np.eye(4) + a.T.dot(b)
     assert np.allclose(B_, B.todense())
-    B_ = sp.optimize.nonlin.asjacobian(B_)
+    B_ = asjacobian(B_)
     x = np.random.random(4) - 0.5
     yield (B, B_, x)
 

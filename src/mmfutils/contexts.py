@@ -12,6 +12,12 @@ import threading
 
 import warnings
 
+try:
+    # Try importing this here to prevent delays in contexts.
+    import IPython
+except ImportError:  # pragma: no cover
+    IPython = None
+
 __all__ = [
     "is_main_thread",
     "NoInterrupt",
@@ -427,14 +433,10 @@ class NoInterrupt:
         """Enter context."""
         with self._lock:
             self.tic = time.time()
-            try:
-                import IPython
-
+            if IPython and IPython.get_ipython():
                 kernel = IPython.get_ipython().kernel
                 kernel.pre_handler_hook = self._pre_handler_hook
                 kernel.post_handler_hook = self._post_handler_hook
-            except (ImportError, AttributeError):
-                pass
 
             self._active = True
             self.signal_count_at_start = dict(self._signal_count)
@@ -474,14 +476,10 @@ class NoInterrupt:
                     # Call original handler.
                     signum, frame, _time = last_signal
                     self.handle_original_signal(signum=signum, frame=frame)
-            try:
-                import IPython
-
+            if IPython and IPython.get_ipython():
                 kernel = IPython.get_ipython().kernel
                 del kernel.pre_handler_hook
                 del kernel.post_handler_hook
-            except (ImportError, AttributeError):
-                pass
 
     def __bool__(self):
         """Return True if interrupted."""
@@ -653,7 +651,7 @@ def coroutine(coroutine):
 
 
 @contextmanager
-def FPS(frames=200, timeout=5, tics=20):
+def FPS(frames=200, timeout=5, tics=20, unregister=True):
     """Context manager to measure framerate and provide interrupt control.
 
     This can be used in two ways:
@@ -672,6 +670,8 @@ def FPS(frames=200, timeout=5, tics=20):
         Timeout in seconds.
     tics : int
         How many of the last updates will be used to calculate the fps.
+    unregister : bool
+        If `True`, then call NoInterrupt.unregister() before the loop.
 
     Examples
     --------
@@ -679,7 +679,7 @@ def FPS(frames=200, timeout=5, tics=20):
     >>> import numpy as np
     >>> with FPS(frames=0.1*np.arange(10), timeout=10) as fps:
     ...     for t in fps:
-    ...         print(f"{t=:.1f}: {fps=}")
+    ...         print(f"t={t:.1f}: fps={fps:}")
     ...         sleep(0.1)
     ...     print(1/np.diff(fps.tics))
     t=0.0: fps=nan
@@ -746,7 +746,8 @@ def FPS(frames=200, timeout=5, tics=20):
                 yield frame
                 self.frame += 1
 
-    NoInterrupt().unregister()
+    if unregister:
+        NoInterrupt().unregister()
     with NoInterrupt(timeout=timeout) as interrupted:
         fps = Frame(interrupted=interrupted, frames=frames)
         yield fps

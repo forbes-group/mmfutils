@@ -560,7 +560,7 @@ class TestCartesianBasis(ConvolutionTests):
         Nxyz = (2**10,) * 3  # 8GB for full state, but each array is small
         # Nxyz = (2 ** 11,) * 3  # 64GB for full state, but each array is small
         MB_per_array = np.prod(Nxyz) * 8 / 1024**2
-        MB_per_slices = np.sum(_N * 8 for _N in Nxyz) / 1024**2
+        MB_per_slices = sum(_N * 8 for _N in Nxyz) / 1024**2
         get_mem_MB(reset=True)
         assert get_mem_MB() == 0
         basis = bases.CartesianBasis(Nxyz=Nxyz, Lxyz=(1.0,) * 3, memoization_GB=0)

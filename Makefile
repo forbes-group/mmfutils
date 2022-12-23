@@ -58,24 +58,29 @@ realclean: clean
 	$(RM) -r .nox .conda $(ENVS) $(BIN)
 	$(RM) -r build
 
-dev_env: $(DEV_ENV)
-	 $(CONDA_ACTIVATE_DEV) && pip install -e .[test]
+dev: $(DEV_ENV)
+	#$(CONDA_ACTIVATE_DEV) && pip install -e .[test]
+	poetry env use $(DEV_ENV)/bin/python$(DEV_PYTHON_VER)
 
 $(ENVS): $(ALL_ENVS)
 
 $(ENVS)/py3.11:
 	$(CONDA) create -y -p $@ "conda-forge::python=3.11"
+ifeq ($(shell uname -p),arm)
 	$(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
+endif    
 	mkdir -p $(BIN)
 	ln -fs $(abspath $@/bin/python3.11) $(BIN)/
 
 $(ENVS)/py%:
 	$(CONDA) create -y -p $@ "python=$*"
+ifeq ($(shell uname -p),arm)
 	$(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
+endif    
 	mkdir -p $(BIN)
 	ln -fs $(abspath $@/bin/python$*) $(BIN)/
 
-.PHONY: help usage dev_env test clean realclean
+.PHONY: help usage dev test clean realclean
 
 
 
@@ -120,7 +125,7 @@ Computed variables (cannot be overwritten on command line)
                      All environments that will be made.
 
 Initialization:
-   make dev_env      Initialize the development environment.
+   make dev          Initialize the development environment and setup poetry.
    make $(ENVS)      Initialize all environments.
 
 Testing:
