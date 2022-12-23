@@ -19,7 +19,7 @@ os.environ["PYTHONNOUSERSITE"] = "1"
 # desired.
 nox.options.sessions = ["test_conda"]
 
-args = dict(python=["3.7", "3.8", "3.9"], reuse_venv=True)
+args = dict(python=["3.7", "3.8", "3.9", "3.10", "3.11"], reuse_venv=True)
 
 # Note: On new Mac's (ARM) one must use test for python <3.8, unless special effort is
 # made to ensure conda chooses the correct channel:
@@ -39,7 +39,7 @@ if platform.system() == "Darwin" and platform.processor() == "arm":
 @nox.session(venv_backend="venv", **args)
 # @nox.parametrize("sphinx", get_versions("sphinx", "minor"))
 def test(session):
-    session.install("pip")
+    session.install("--upgrade", "pip")
     session.install(".[test]")
     session.run("pytest")
 

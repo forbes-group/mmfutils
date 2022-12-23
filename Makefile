@@ -1,4 +1,4 @@
-DEV_PYTHON_VER ?= 3.9
+DEV_PYTHON_VER ?= 3.10
 PY_VERS ?= 3.7 3.8 3.9 3.10 3.11
 PANDOC_FLAGS ?= --toc --standalone
 
