@@ -255,7 +255,9 @@ class NoInterrupt:
     # operation of one of the functions.
     _lock = threading.RLock()
 
-    def __init__(self, ignore=True, timeout=None):
+    def __init__(self, ignore=True, timeout=None, unregister=False):
+        if unregister:
+            self.unregister()
         with self._lock:
             self.ignore = ignore
             self._active = True
@@ -650,8 +652,7 @@ def coroutine(coroutine):
     return wrapper
 
 
-@contextmanager
-def FPS(frames=200, timeout=5, tics=20, unregister=True):
+class FPS:
     """Context manager to measure framerate and provide interrupt control.
 
     This can be used in two ways:
@@ -692,10 +693,52 @@ def FPS(frames=200, timeout=5, tics=20, unregister=True):
     t=0.7: fps=9...
     t=0.8: fps=9...
     t=0.9: fps=9...
+
+    If you don't need to report the actual performance, you can just use the FPS class
+    as an iterator.  This will break only at the start of the loop if interrupted, or if
+    the timeout is exceeded.
+
+    >>> from time import sleep
+    >>> import numpy as np
+    >>> for t in FPS(frames=0.1*np.arange(10), timeout=10):
+    ...     print(f"t={t:.1f}")
+    ...     sleep(0.1)
+    t=0.0
+    t=0.1
+    t=0.2
+    t=0.3
+    t=0.4
+    t=0.5
+    t=0.6
+    t=0.7
+    t=0.8
+    t=0.9
     """
 
+    def __init__(self, frames=200, timeout=5, tics=20, unregister=True):
+        self.frames = frames
+        self.timeout = timeout
+        self.tics = tics
+        self.unregister = unregister
+
+    def __enter__(self):
+        self._interrupted = NoInterrupt(
+            timeout=self.timeout, unregister=self.unregister
+        )
+        interrupted = self._interrupted.__enter__()
+        fps = self.Frame(interrupted=interrupted, frames=self.frames, tics=self.tics)
+        return fps
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._interrupted.__exit__(exc_type, exc_value, traceback)
+
+    def __iter__(self):
+        with self as frames:
+            for frame in frames:
+                yield frame
+
     class Frame:
-        def __init__(self, interrupted, frames, tics=10):
+        def __init__(self, interrupted, frames, tics):
             self.interrupted = interrupted
             try:
                 self.the_frames = iter(frames)
@@ -745,9 +788,3 @@ def FPS(frames=200, timeout=5, tics=20, unregister=True):
                     break
                 yield frame
                 self.frame += 1
-
-    if unregister:
-        NoInterrupt().unregister()
-    with NoInterrupt(timeout=timeout) as interrupted:
-        fps = Frame(interrupted=interrupted, frames=frames)
-        yield fps
