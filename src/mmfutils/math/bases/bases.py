@@ -252,6 +252,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             self.__smoothing_factor = self.xp.where(p2_pc2 < 1, 1, 0)
         return self._smoothing_factor
 
+    @property
     def kx(self):
         return self._pxyz[0]
 
