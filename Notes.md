@@ -7,13 +7,11 @@ Developer Notes
 [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
 [![Code style: black][black_img]][black]
 
-These are some notes for developers and a general discussion about the design choices I
-have made regarding things such as file hierarchy, packaging tools etc.  I intend for
-this file to document my choices and discussions about these issues for all projects.
-(Other projects should refer here for this discussion.)  For now, however, most of my
-work is being done in the [Physics 581[]] project which I am teaching, so please visit
-that for now, however, notes about packaging will be kept here (since the course is not
-intended to be installed on [PyPI][]).
+These are some notes for developers and a general discussion about some of the design
+choices I have made regarding things such as file hierarchy, packaging tools etc.  I
+intend for this file to document my choices and discussions about these issues for all
+projects.  (Other projects should refer here for this discussion.)
+
 
 # To Do
 
@@ -26,25 +24,32 @@ intended to be installed on [PyPI][]).
 
 # Working Environment (Conda/pip and all that)
 
-Our goal is to be able to use [conda] for packages that might require binary installs,
-such as `pyfftw`, `pyvista`, `numpy` etc., but allow [pip] or [Poetry] to be used for
-pure python packages.  Our strategy attempts to balance the following
+Our goal is to be able to use [conda][] for packages that might require binary installs,
+such as `pyfftw`, `pyvista`, `numpy` etc., but allow [pip][], [PDM][], or [Poetry][] to
+be used for pure python packages.  Our strategy attempts to balance the following
 desires/features/issues:
 
-*  [Conda] is the most convenient choice for managing binary installs in a platform
+*  [Conda][] is the most convenient choice for managing binary installs in a platform
    independent way.  Alternatives include using package managers (platform dependent)
    like `apt`, `macports`, or building from source, but this can be tricky.
    
-   A concrete example is [CuPy] which requires very specific versions of the CUDA
-   toolkit, so generically upgrading to the latest might not be compatible.  [Conda]
+   A concrete example is [CuPy][] which requires very specific versions of the CUDA
+   toolkit, so generically upgrading to the latest might not be compatible.  [Conda][]
    allows one to resolve all of these issues **if** a package has been built.
-*  [Conda] can be very slow/memory intensive, especially if search `conda-forge`.
-   [Mamba] can sometimes help, but is not always the solution.
+*  [Conda][] can be very slow/memory intensive, especially if searching `conda-forge`.
+   [Mamba][] can sometimes help, but is not always the solution.
    
-   A concrete example is [CoCalc] where even `conda search` can exhaust the memory since
-   the default [Conda] installation has a huge list of channels.  Reducing the number of
-   channels solved this problem -- [Mamba] was not enough.
-*  [Anaconda Cloud] is a very convenient way of distributing environments: 
+   A concrete example is [CoCalc][] where even `conda search` can exhaust the memory since
+   the default [Conda][] installation has a huge list of channels.  Reducing the number of
+   channels solved this problem -- [Mamba][] was not enough.
+   
+   <details><summary>Sample CoCalc Session</summary>
+   
+   ```bash
+   ```
+   
+   </details>
+*  [Anaconda Cloud][] is a very convenient way of distributing environments: 
 
    ```bash
    conda install anaconda-client
@@ -53,21 +58,21 @@ desires/features/issues:
    
    It would be ideal if this could give a fully provisioned environment `work` with both
    a useful set of python libraries for development and python-dependent utilities such
-   as [black], [cookiecutter] and [mercurial].  I no longer know how to do this (see
+   as [black][], [cookiecutter][] and [mercurial][].  I no longer know how to do this (see
    below) -- please let me know if you have an idea.
 *  Conflicts can be very problematic, especially for monolithic environments.  The
-   [Anaconda] meta-package manages, but I think it is a lot of work to maintain.
+   [Anaconda][] meta-package manages, but I think it is a lot of work to maintain.
    
    I used to do this with my `work` environment, but when I switched to a new Mac with
-   an [ARM] processor, I started to run into major conflicts.  It turns our that most of
-   these are caused by utilities like [coockiecutter] and [black] (which required
+   an [ARM][] processor, I started to run into major conflicts.  It turns our that most of
+   these are caused by utilities like [coockiecutter][] and [black][] (which required
    conflicting versions of [click]).
    
    As a result, I now recommend separately installing utilities.  In principle, this can
-   be done using [pipx] and [condax], but these are not very flexible right now, so
+   be done using [pipx][] and [condax][], but these are not very flexible right now, so
    instead, I recommend manually doing this.
    
-*  [Poetry] does a more careful job of inspecting and managing dependencies -- breaking
+*  [Poetry][] does a more careful job of inspecting and managing dependencies -- breaking
    early, but producing a more reliable build specification.
 
 1. Allows these conda environments to be installed in a read-only environment (i.e. as a
@@ -82,15 +87,16 @@ additional packages, which will go in the directory
 be customized with the
 [`PYTHONUSERBASE`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE)
 environment variable.  Unfortunately, this approach does not allow you to install
-additional packages with [conda].
+additional packages with [conda][].
 
-## Option 1 (Recommendation as of July 2022)
+## Option 1 (Recommendation as of March 2023)
 
-1. Install [Miniconda] on your system, preferably as a separate `conda` account and
+1. Install [Miniconda][] on your system, preferably as a separate `conda` account and
    user.  E.g., on my Mac:
    
    ```bash
    # Install miniconda as conda user
+   ssh conda
    bash Miniconda3-latest-MacOSX-arm64.sh -ubp /data/apps/conda
    
    # Update base environment
@@ -114,10 +120,27 @@ additional packages with [conda].
    ln -s /data/apps/poetry/bin/poetry /usr/local/bin/
    ```
    
+   Notes:
 
-The recommended approach is to use [Anaconda Project] to specify an environment in an
-`anaconda-project.yaml` file.  This allows you to specify the [conda] dependencies, then
-customize the remaining installs with [pip].  Here is a minimal example:
+   * I include a `conda` alias in my `~/.ssh/config` to log me in.  It looks like
+     this:
+       
+     ```
+     # ~/.ssh/config
+     ...
+     Host conda
+       Hostname localhost
+       ForwardAgent yes
+       User conda
+     ```
+   * On newer versions of Mac OS X, you need to [jump through some
+     hoops](https://stackoverflow.com/questions/58396821) to make a new root folder like
+     `/data` (called a "firm link").
+   
+   
+The recommended approach is to use [Anaconda Project][] to specify an environment in an
+`anaconda-project.yaml` file.  This allows you to specify the [conda][] dependencies, then
+customize the remaining installs with [pip][].  Here is a minimal example:
 
 ```yaml
 # anaconda-project.yaml
@@ -139,24 +162,24 @@ env_specs:
 ```
 
 This will create a local environment in `envs/myenv` (as specified in the `env_specs`
-section - you can have many) with [conda] provisioning `python` and `numpy` while [pip]
+section - you can have many) with [conda][] provisioning `python` and `numpy` while [pip][]
 provisions `uncertainties`.  Note: you can generate a more complete
 `anaconda-project.yml` file by running `anaconda-project init`.  If you use
 `dependencies:` rather than `packages:` as in this example, then you can also use
-[conda] directly
+[conda][] directly
 
 ```bash
 conda env create -f anaconda-project.yaml
 ```
 
-which will create an environment `myenv` (as specified by the `name` - [conda] will
-currently ignore the `env_specs`).  I use this on [Read the Docs] for example.
+which will create an environment `myenv` (as specified by the `name` - [conda][] will
+currently ignore the `env_specs`).  I use this on [Read the Docs][] for example.
 
 ## Option 2 (experimental)
-If you want to use [Poetry] instead of [pip], then I recommend adding a command that
+If you want to use [Poetry][] instead of [pip][], then I recommend adding a command that
 runs poetry after the environment is created.  In this case, you should really manage as
-many dependencies with [Poetry] as possible, using [anaconda project] for only the
-things where you really need [conda].
+many dependencies with [Poetry][] as possible, using [anaconda project][] for only the
+things where you really need [conda][].
 
 ```yaml
 # anaconda-project.yaml
@@ -185,13 +208,13 @@ env_specs:
 ```
 
 Here we provide an `anaconda-project run init` function that will first provision the
-[conda] environment in `envs/myenv`, then run [Poetry].  You might also use the `init`
-function to install a [Jupyter] kernel, or perform other setup functions.
+[conda][] environment in `envs/myenv`, then run [Poetry][].  You might also use the `init`
+function to install a [Jupyter][] kernel, or perform other setup functions.
 
 We also include an `anaconda-project run shell` command which behaves like `poetry
-shell`, first activating the [conda] environment, then spawning a shell with a local
+shell`, first activating the [conda][] environment, then spawning a shell with a local
 init file where you can specify any additional build features.  For example, here we
-explicitly use [conda] to activate the environment, so we get the name in the prompt:
+explicitly use [conda][] to activate the environment, so we get the name in the prompt:
 
 ```bash
 # .init-file.bash
@@ -238,8 +261,8 @@ function findcss { findf css "${*}"; }
 We also define convenient aliases and functions.
 
 ### Caveats
-* This will no longer work out-of-the-box on [Read the Docs].  Instead, you will need to
-  provision the other dependencies in your [Sphinx] `conda.py` file.  For example:
+* This will no longer work out-of-the-box on [Read the Docs][].  Instead, you will need to
+  provision the other dependencies in your [Sphinx][] `conda.py` file.  For example:
   
   ```python
   # conf.py
@@ -334,8 +357,8 @@ environment.  We could code something into the [`Makefile`](Makefile).
 
 ## Option 3 (incomplete)
 
-If you do not need to install any additional packages with [conda], and cannot afford
-the disk space issues, then you can create a virtual environment [venv].  I recommend
+If you do not need to install any additional packages with [conda][], and cannot afford
+the disk space issues, then you can create a virtual environment [venv][].  I recommend
 managing this with [Poetry]:
 
 ```bash
@@ -520,18 +543,18 @@ There are several potential issues related to permissions:
 ## Reproducible Computing
 ### Conda-Pack
 
-If you need to reproduce a conda environment, then [`conda-pack`] might be the right
+If you need to reproduce a conda environment, then [`conda-pack`][] might be the right
 tool.  This makes a copy of the environment and all of the files that can then be
 archived and reinstalled elsewhere.  At the very least, `conda-pack` provides a check on
-the code installed, failing if any files installed by [Conda] have been overwritten or
+the code installed, failing if any files installed by [Conda][] have been overwritten or
 are installed twice.
 
 
 
 # Distribution
 
-In general, we will try to distribute projects on [PyPI] and this will be the primary
-mode if distribution.  To use such projects in a [Conda] environment, just use `pip`:
+In general, we will try to distribute projects on [PyPI][] and this will be the primary
+mode if distribution.  To use such projects in a [Conda][] environment, just use `pip`:
 
 ```yml
 # environment.yml
@@ -546,11 +569,11 @@ mode if distribution.  To use such projects in a [Conda] environment, just use `
 
 ## Private Release (`--find-links`)
 
-To make packages available before their release on [PyPI], one can make use of the
+To make packages available before their release on [PyPI][], one can make use of the
 [`-f, --find-links
 <url>`](https://pip.pypa.io/en/stable/cli/pip_wheel/?highlight=find-links#cmdoption-f)
 option of `pip`.  If this points to a webpage with links, then these links can define
-how to get a package from source etc.  I maintain my own set of links in my [MyPI]
+how to get a package from source etc.  I maintain my own set of links in my [MyPI][]
 project.  Unfortunately, until [issue
 #22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
 sites are useless for this purpose, so we rely on mirroring through GitHub.
@@ -566,8 +589,8 @@ sites are useless for this purpose, so we rely on mirroring through GitHub.
 
 ## Distribution
 
-In general, we will try to distribute projects on [PyPI] and this will be the primary
-mode if distribution.  To use such projects in a [Conda] environment, just use `pip`:
+In general, we will try to distribute projects on [PyPI][] and this will be the primary
+mode if distribution.  To use such projects in a [Conda][] environment, just use `pip`:
 
 ```yml
 # environment.yml
@@ -580,11 +603,11 @@ mode if distribution.  To use such projects in a [Conda] environment, just use `
     ...
 ```
 
-To make packages available before their release on [PyPI], one can make use of the
+To make packages available before their release on [PyPI][], one can make use of the
 [`-f, --find-links
 <url>`](https://pip.pypa.io/en/stable/cli/pip_wheel/?highlight=find-links#cmdoption-f)
 option of `pip`.  If this points to a webpage with links, then these links can define
-how to get a package from source etc.  I maintain my own set of links in my [MyPI]
+how to get a package from source etc.  I maintain my own set of links in my [MyPI][]
 project.  Unfortunately, until [issue
 #22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
 sites are useless for this purpose, so we rely on mirroring through GitHub.
@@ -655,7 +678,7 @@ going with option 5, which uses `importlib.metadata`.
 
 # Repositories
 
-Currently the main repository is on our own [Heptapod] server, but I have enabled 
+Currently the main repository is on our own [Heptapod][] server, but I have enabled 
 `Settings/Repository/Mirroring repositories` to push to a public GitHub mirror
 https://github.com/forbes-group/mmfutils/.  This required getting a personal token from GitHub
 as [described
@@ -676,7 +699,7 @@ reviews.  For this one, I mirror everything.
 Summary:
 
 * https://hg.iscimath.org/forbes-group/mmfutils: Main development repository (Mercurial)
-  running on our hosted [Heptapod] server.  This is where
+  running on our hosted [Heptapod][] server.  This is where
   [Issues](https://hg.iscimath.org/forbes-group/mmfutils/-issues), [Merge
   Requests](https://hg.iscimath.org/forbes-group/mmfutils/-/merge_requests) etc. should
   be reported here.
@@ -741,7 +764,7 @@ displayed in the appropriate badges.
 
 The main difficulty I had was a need for a full LaTeX installation.  This is now
 working with `apt-get texlive-full`, but could probably be simplified, just updating the
-packages we really need for testing ([`mathpazo`], [`siunitx`], and [`type1cm`] were
+packages we really need for testing ([`mathpazo`][], [`siunitx`][], and [`type1cm`][] were
 issues when just using the smaller `texlive` package.)
 
 [`mathpazo`]: <https://ctan.org/pkg/mathpazo> "mathpazo – Fonts to typeset mathematics to match Palatino"
@@ -754,7 +777,7 @@ issues when just using the smaller `texlive` package.)
 
 # Testing
 
-We use [pytest] for testing, running the tests with [Nox] for multiple versions of
+We use [pytest][] for testing, running the tests with [Nox][] for multiple versions of
 python.  If you have multiple cores, you can run tests in parallel by passing the number
 with `PYTEST_ADDPOPTS`:
 
@@ -813,19 +836,19 @@ documentation](https://docs.pytest.org/en/stable/goodpractices.html#tests-outsid
 
 ## Nox
 
-Testing is now done using [Nox] as configured in `noxfile.py`.  This allows for testing
+Testing is now done using [Nox][] as configured in `noxfile.py`.  This allows for testing
 against multiple versions of python (similar to [Tox]) but I find that it is simpler to
-use and works with [Conda].  My general strategy is to use [Conda] to minimally
+use and works with [Conda][].  My general strategy is to use [Conda][] to minimally
 provision environments with the desired version of python, then to install the package
 with `pip install .[test]` in that environment.  This has the following advantages:
 
-* Generally works.  The typical recommendation (for example in the [Hypermodern Python]
+* Generally works.  The typical recommendation (for example in the [Hypermodern Python][]
   series) is to use [PyEnv][].  Unfortunately, this is a pain for me on my Mac OS X
   development machine as [PyEnv][] tries to compile python from source which can take
   forever, and often fails.  (For example, I cannot build `python=3.5.8` for some
   reason, and `miniconda3-3.5.*` is not available.)  Conversely, `conda env create -n
   py3.5 python=3.5` seems to always work for me.  Of course, this does require you to
-  install [`miniconda`] on your machine, which I do with something like this:
+  install [`miniconda`][] on your machine, which I do with something like this:
   
     ```bash
     # I install conda as a non-privileged user in /data/apps/conda 
@@ -838,10 +861,10 @@ with `pip install .[test]` in that environment.  This has the following advantag
     bash Miniconda3-latest-MacOSX-x86_64.sh -f -b -p "$CONDA_PATH"
     ```
 
-* This approach only used [Conda] to install python: we then test `pip install` which we
+* This approach only used [Conda][] to install python: we then test `pip install` which we
   certainly want to test.
 
-* We can use [Conda] if we like to test installing dependencies from an
+* We can use [Conda][] if we like to test installing dependencies from an
   `environment.yml` file for example.
 
 Tests should be run as follows:
@@ -908,7 +931,7 @@ make sure that no one inserts malicious code.  This runs the following code:
 
 # Profiling (Incomplete)
 
-To measure peak memory usage, look at [Fil].  Write your test-code as a script, then run
+To measure peak memory usage, look at [Fil][].  Write your test-code as a script, then run
 it with `fil-profile`:
 
 ```bash
@@ -1009,7 +1032,7 @@ To do this, we advocate the following procedure.
 7. **Pull Request**: Create a pull request on the development fork from your branch to
    `default` on the release project. Review it, fix anything, then accept the merge
    request.  **Do not close the branch!** Unlike bitbucket, if you close the branch on
-   Heptapod, it will vanish, breaking our [MyPI] index.
+   Heptapod, it will vanish, breaking our [MyPI][] index.
 8. **Publish on PyPI**: Publish the released version on [PyPI](https://pypi.org/project/mmfutils/) using [twine](https://pypi.org/project/twine/)
 
     ```bash
@@ -1264,7 +1287,7 @@ provides a list of versions that might be installed.
 
 ## Issues:
 
-* It would be really nice if `noxutils.py` did not require [Poetry] as an install and
+* It would be really nice if `noxutils.py` did not require [Poetry][] as an install and
   could get the appropriate information directly by invoking `poetry`, which might be
   installed outside of the development environment.
 * Related to the above, it would be really nice if there were a semi-automated way of
@@ -1274,16 +1297,16 @@ provides a list of versions that might be installed.
 GitHub
 ======
 
-[Poetry] has great promise, but is currently a bit of a pain due to some unresolved
+[Poetry][] has great promise, but is currently a bit of a pain due to some unresolved
 issues.  Here are some recommendations:
 
 * Always work in an explicit environment.  This is an issue if you routinely have a
-  [conda] environment activated.  Currently, [poetry] interprets an active [conda]
+  [conda][] environment activated.  Currently, [poetry][] interprets an active [conda][]
   environment as a virtual environment and uses it.  This means that `poetry add ...`
   will add these dependencies **to that environment**.  Instead, I [recommend the
   following](https://github.com/python-poetry/poetry/issues/1724#issuecomment-834080057):
    
-  1. Create some bare [conda] environments with the various python interpreters you
+  1. Create some bare [conda][] environments with the various python interpreters you
      want to use *(only needs to be done once per system)*:
       
      ```bash
@@ -1348,7 +1371,7 @@ issues.  Here are some recommendations:
   resolving dependencies when you have multiple version specified.  You may have to
   first add your dependencies with each explicit version.  Sometimes I just activate a
   shell and use `pip` to see what it brings.  Here is a strategy (I did this with the
-  [`persist`] package):
+  [`persist`][] package):
   
   1.  Start with your desired python versions, then add projects, and restrict until
       everything works:
@@ -1412,12 +1435,12 @@ issues.  Here are some recommendations:
  
 ## Issues:
 
-* Consider `pyFFTW`: if not using [Conda], then this needs the FFTW libraries installed
+* Consider `pyFFTW`: if not using [Conda][], then this needs the FFTW libraries installed
   on the host platform, otherwise the install will fail.  How best to deal with this?
   My current solution is to provide these as extras, but it would be nice if there was a
   way to install if the libraries are present.
 
-* How to manage one definitive version?  The [current suggestion] is to use
+* How to manage one definitive version?  The [current suggestion][] is to use
   `importlib.metadata`:
   
   ```python
@@ -1473,6 +1496,89 @@ issues.  Here are some recommendations:
   sub-dependencies do not properly specify requirements, leading to conflicts.  (Not
   sure of the actual resolution.)
 * [Poetry install tries to update system packages is 'system-site-packages' option enabled #4033](https://github.com/python-poetry/poetry/issues/4033)
+
+# [CoCalc][]
+
+We make fairly heavy use of [CoCalc][] for online computations and collaboration.  Thus,
+we try to include a mechanism for easily building and running our software on that
+platform.  Here are a couple of principles:
+
+* [CoCalc][] comes with a few fairly complete software environments that can be enabled
+  by running `anaconda2020` or `anaconda2021`.  Corresponding Jupyter kernels exist, so
+  these are natural choices.  If possible, I recommend that simple projects just use
+  these -- especially if they will be shared with many people who might not want to
+  install software (i.e. students in a lower-level or non-programming course).
+  
+  This has the added advantage of allowing users to work on unpaid projects: these have
+  no network access, so cannot install software.
+  
+  Caveat: Including many packages forces some packages like [SciPy][] to fairly low
+  versions (see issue [cocalc#6391][]).  This means you might not be able to depend on
+  the latest features.  Hopefully this will be resolved with `anaconda2022`.  To see
+  which versions are included, look at <https://cocalc.com/software/python>.
+
+* [CoCalc][] projects typically have limited memory (1-2GB), which can pose a problem
+  for [conda][].  In particular, **do not** just try run [conda][] from one of the
+  `anaconda*` environments without disabling channels:
+  
+  ```bash
+  
+  ```
+  
+  .  They include so many channels that even a
+  simple `conda search` is likely to run out of memory.
+  
+  There are several mitigation strategies:
+  
+  * Directly call the executable:
+
+    ```bash
+    /ext/anaconda2021.11/bin/conda
+    ```
+  * Install and use [micromamba][]:
+  
+    ```bash
+    curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | \
+             tar -xvj bin/micromamba -O > ~/.local/bin/micromamba
+    ```
+
+## Implementation Details
+
+**Detecting CoCalc**: Currently we use the presence of the environmental variable
+`ANACONDA2020` to determine if we are on [CoCalc][].  *(In the
+[future](https://github.com/sagemathinc/cocalc/issues/5483), `ANACONDA_CURRENT` will
+point to the latest release.  It might be better to use this in case `ANACONDA2020` is
+deprecated.)
+
+**PATH**: `~/.local/bin` is included in the path, so this is where to put/symlink
+executables.  Note, however, that this is only included for login shells.  If you put
+things (like [mercurial][]) there that are needed over ssh, then you need to modify
+`~/.bashrc` so these are added.  We do this with [mmf_setup][], moving the default
+`~/.bashrc` to `~/.bashrc_cocalc`:
+
+```bash
+# ~/.bashrc
+export PATH="~/.local/bin/:$PATH"
+[ -f ~/.bashrc_cocalc ] && . ~/.bashrc_cocalc
+```
+
+[CoCalc][] follows the common linux practice of sourcing `~/.bash_aliases`, so we put
+the rest of our customizations there.
+
+**VCS**: One issue with [CoCalc][] is that all users share the same account.  Thus,
+there is no easy way to tell who is logged in for purposes like committing code to VCS.
+To deal with this, we abuse this by  See [cocalc#370][] for details.
+
+
+[cocalc#370]: <https://github.com/sagemathinc/cocalc/issues/370>
+
+
+  
+  
+[cocalc#6391]: <https://github.com/sagemathinc/cocalc/issues/6391>
+[micromamba]: <https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html>
+
+
 
 # Reference
 
@@ -1550,6 +1656,7 @@ make: *** [python.exe] Error 1
 [Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/> "Hypermodern Python"
 [MyPI]: <https://alum.mit.edu/www/mforbes/mypi/> "MyPI: My personal package index"
 [Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
+[PDM]: <https://pdm.fming.dev/latest/>
 [Poetry]: <https://poetry.eustace.io> "Python packaging and dependency management made easy."
 [PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
@@ -1574,5 +1681,7 @@ make: *** [python.exe] Error 1
 [Rosetta]: https://support.apple.com/en-us/HT211861
 [PyFFTW]: https://github.com/pyFFTW/pyFFTW
 [SciPy]: https://scipy.org/
+[mercurial]: https://www.mercurial-scm.org/
+[git]: https://git-scm.com/
 
 [against unbound versions]: https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea
