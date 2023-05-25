@@ -1299,6 +1299,19 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.6.4
+----------
+
+-  Support python 3.7.13 through 3.11.
+-  Fix some tests.
+-  Add ``contexts.FPS`` which is generally preferred to ``NoInterrupt``.
+-  Add a ``timeout=`` argument to contexts.
+-  Unbind versions.
+-  Fix a couple of bugs in ``math.bases.bases.py``:
+
+   -  Actually use ``memoization_GB``.
+   -  ``PeriodicBasis.kx`` is now a property.
+
 REL: 0.6.3
 ----------
 

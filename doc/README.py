@@ -8,7 +8,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.14.0
 #   kernelspec:
 #     display_name: Python [conda env:work]
 #     language: python
@@ -162,6 +162,7 @@ np.allclose(s.compute_derivative(f), df)
 
 # Here we demonstrate pickling.  Note that using `Object` makes the pickles very small, and when unpickled, ``init()`` is called to re-establish ``s.x`` and ``s.k``.  Generally one would inherit from `Object`, but since we already have a class, we can provide pickling functionality with `ObjectMixin`:
 
+
 # +
 class State1(ObjectMixin, State):
     pass
@@ -295,6 +296,7 @@ class IAdder(Interface):
 
 # Here is a broken implementation. We muck up the arguments to ``add``:
 
+
 # +
 @implementer(IAdder)
 class AdderBroken(object):
@@ -311,6 +313,7 @@ except Exception as e:
 # -
 
 # Now we get ``add`` right, but forget to define ``value``.  This is only caught when we have an object since the attribute is supposed to be defined in ``__init__()``:
+
 
 # +
 @implementer(IAdder)
@@ -332,6 +335,7 @@ except Exception as e:
 # -
 
 # Finally, a working instance:
+
 
 # +
 @implementer(IAdder)
@@ -370,8 +374,8 @@ cluster.start()
 cluster.wait()  # Instance of IPython.parallel.Client
 view = cluster.load_balanced_view
 x = np.linspace(-6, 6, 100)
-y = view.map(lambda x: x ** 2, x)
-print(np.allclose(y, x ** 2))
+y = view.map(lambda x: x**2, x)
+print(np.allclose(y, x**2))
 cluster.stop()
 
 # If you only need a cluster for a single task, it can be managed with a context.  Be sure to wait for the result to be computed before exiting the context and shutting down the cluster!
@@ -379,8 +383,8 @@ cluster.stop()
 with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
     view = client.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
-print(np.allclose(y, x ** 2))
+    y = view.map(lambda x: x**2, x, block=True)  # Make sure to wait for the result!
+print(np.allclose(y, x**2))
 
 # If you just need to connect to a running cluster, you can use ``parallel.get_client()``.
 
@@ -411,7 +415,7 @@ from mmfutils import plot as mmfplt
 
 x = np.linspace(-1, 1, 100)[:, None] ** 3
 y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
-z = np.sin(10 * x) * y ** 2
+z = np.sin(10 * x) * y**2
 plt.figure(figsize=(12, 3))
 plt.subplot(141)
 # %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
@@ -467,7 +471,7 @@ from mmfutils.debugging import debug
 
 @debug(locals())
 def f(x):
-    y = x ** 1.5
+    y = x**1.5
     z = 2 / x
     return z
 
@@ -492,6 +496,16 @@ with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
 HTML(coverage)
 
 # # Change Log
+
+# ## REL: 0.6.4
+# * Support python 3.7.13 through 3.11.
+# * Fix some tests.
+# * Add `contexts.FPS` which is generally preferred to `NoInterrupt`.
+# * Add a `timeout=` argument to contexts.
+# * Unbind versions.
+# * Fix a couple of bugs in `math.bases.bases.py`:
+#   * Actually use `memoization_GB`.
+#   * `PeriodicBasis.kx` is now a property.
 
 # ## REL: 0.6.3
 # * Fix some dependencies.
