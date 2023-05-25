@@ -42,6 +42,7 @@ docutils = {version = ">=0.18.1", optional = true}
 sphinx-rtd-theme = {version = ">=1.2.1", optional = true}
 sphinxcontrib-zopeext = {version = ">=0.3.2", optional = true}
 uncertainties = {version = ">=3.1.5", optional = true}
+pytest-rerunfailures = {version = ">=11.1.2", optional = true}
 
 # https://numpy.org/doc/stable/release/1.22.0-notes.html#python-3-7-is-no-longer-supported
 numpy = [
@@ -76,6 +77,7 @@ test = [
     "pytest-cov",
     "pytest-flake8",
     "pytest-xdist",
+    "pytest-rerunfailures",
     "ipyparallel",
     "persist",
     "scipy",

@@ -1,5 +1,6 @@
 """General utility functions"""
-from distutils.version import StrictVersion
+# from distutils.version import StrictVersion as Version
+from packaging.version import Version
 import functools
 import operator
 
@@ -107,7 +108,7 @@ def idst(F, axis=-1):
     return sp.fftpack.dst(F, **args) / (2.0 * N)
 
 
-if StrictVersion(sp.__version__) < StrictVersion("0.16.0"):
+if Version(sp.__version__) < Version("0.16.0"):
     # Scipy pre 0.16.0 cannot handle complex inputs.
     dst_real, idst_real = dst, idst
 

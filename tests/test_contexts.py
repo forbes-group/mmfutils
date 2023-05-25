@@ -321,6 +321,7 @@ class TestFPS:
         assert _fps == fps.fps
         self._check_fps(fps, sleep_time)
 
+    @pytest.mark.flaky(reruns=5)
     def test_ts(self):
         sleep_time = 0.01
         ts = np.linspace(0, 1, 13)

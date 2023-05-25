@@ -7,6 +7,8 @@ import time
 
 import pytest
 
+os.environ["JUPYTER_PLATFORM_DIRS"] = "1"
+
 from mmfutils.parallel import Cluster, get_cluster, ipyparallel
 
 from . import parallel_module
@@ -20,7 +22,7 @@ class TestCluster(object):
         cls.ipython_dir = tempfile.mkdtemp()
         cmd = 'ipython profile create testing --parallel --ipython-dir="{}"'
         cmd = cmd.format(cls.ipython_dir)
-        subprocess.check_call(cmd.split())
+        subprocess.check_call(cmd.split(), env=os.environ)
 
         cls.cluster1 = get_cluster(profile="testing1", ipython_dir=cls.ipython_dir)
         cls.cluster1.start()

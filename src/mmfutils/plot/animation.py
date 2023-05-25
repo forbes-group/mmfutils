@@ -21,6 +21,8 @@ class MyFuncAnimation(FuncAnimation):
 
     def __init__(self, *v, **kw):
         self.interrupted = kw.pop("interrupted", False)
+        if not hasattr(kw, "save_count"):
+            kw.setdefault("cache_frame_data", False)
         FuncAnimation.__init__(self, *v, **kw)
 
     def new_frame_seq(self):
@@ -33,9 +35,9 @@ class MyFuncAnimation(FuncAnimation):
         """Convert the animation to an HTML5 ``<video>`` tag.
 
         This saves the animation as an h264 video, encoded in base64
-        directly into the HTML5 video tag. This respects :obj:`animation.writer`
-        and :obj:`animation.bitrate`. This also makes use of the
-        ``interval`` to control the speed, and uses the ``repeat``
+        directly into the HTML5 video tag. This respects :rc:`animation.writer`
+        and :rc:`animation.bitrate`. This also makes use of the
+        *interval* to control the speed, and uses the *repeat*
         parameter to decide whether to loop.
 
         Parameters
@@ -43,7 +45,7 @@ class MyFuncAnimation(FuncAnimation):
         embed_limit : float, optional
             Limit, in MB, of the returned animation. No animation is created
             if the limit is exceeded.
-            Defaults to :obj:`embed_limit` = 20.0.
+            Defaults to :rc:`animation.embed_limit` = 20.0.
         filename : str, optional
            *(New)* If provided, save the movie in this file and keep it,
            otherwise the movie will be stored in a temporary directory
@@ -54,7 +56,7 @@ class MyFuncAnimation(FuncAnimation):
         video_tag : str
             An HTML5 video tag with the animation embedded as base64 encoded
             h264 video.
-            If the :obj:`embed_limit` is exceeded, this returns the string
+            If the *embed_limit* is exceeded, this returns the string
             "Video too large to embed."
         """
         VIDEO_TAG = r"""<video {size} {options}>
@@ -88,18 +90,12 @@ class MyFuncAnimation(FuncAnimation):
                     path = Path(tmpdir, "temp.m4v")
                     self.save(str(path), writer=writer)
                     # Now open and base64 encode.
-                    with open(str(path), "rb") as video:
-                        vid64 = encodebytes(video.read())
-                    # The following works on python 3 only
-                    # vid64 = encodebytes(path.read_bytes())
+                    vid64 = encodebytes(path.read_bytes())
             else:
                 path = Path(filename)
                 self.save(str(path), writer=writer)
                 # Now open and base64 encode.
-                with open(str(path), "rb") as video:
-                    vid64 = encodebytes(video.read())
-                # The following works on python 3 only
-                # vid64 = encodebytes(path.read_bytes())
+                vid64 = encodebytes(path.read_bytes())
 
             # End of modifications
             ########################################################
@@ -123,7 +119,7 @@ class MyFuncAnimation(FuncAnimation):
             options = ["controls", "autoplay"]
 
             # If we're set to repeat, make it loop
-            if hasattr(self, "repeat") and self.repeat:
+            if getattr(self, "_repeat", False):
                 options.append("loop")
 
             return VIDEO_TAG.format(
@@ -168,7 +164,6 @@ def animate(get_frames, fig=None, display=False, **kw):
         fig = plt.gcf()
 
     def _get_frames():
-
         nframe = 0
         for frame in get_frames():
             if nframe == 0:
