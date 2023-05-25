@@ -20,8 +20,7 @@ in a notebook.
    (will forward).
 -  https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the
    permalink fails.
--  https://github.com/forbes-group/mmfutils: Public read-only GitHub mirror.
--  https://gitlab.com/coldatoms/utilities/mmfutils: Public read-only GitLab mirror.
+-  https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
 **Issues:**
 https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
@@ -44,6 +43,7 @@ This package can be installed from
 .. code:: bash
 
    python3 -m pip install mmfutils
+   python3 -m pip install mmfutils[fftw]   # If you have the FFTW libraries installed
 
 or, if you need to install from source, you can get it from one of the
 repositories:
@@ -123,43 +123,48 @@ Object Example
 
     ROOTDIR = !hg root
     ROOTDIR = ROOTDIR[0]
-    import sys;sys.path.insert(0, ROOTDIR)
+    import sys
+    
+    sys.path.insert(0, ROOTDIR)
     
     import numpy as np
     
     from mmfutils.containers import ObjectBase, ObjectMixin
     
-    class State(ObjectBase):  
+    
+    class State(ObjectBase):
         _quiet = False
+    
         def __init__(self, N, L=1.0, **kw):
             """Set all of the picklable parameters, in this case, N and L."""
             self.N = N
             self.L = L
-            
+    
             # Now register these and call init()
             super().__init__(**kw)
             if not self._quiet:
                 print("__init__() called")
-            
+    
         def init(self):
             """All additional initializations"""
             if not self._quiet:
                 print("init() called")
             dx = self.L / self.N
-            self.x = np.arange(self.N, dtype=float) * dx - self.L/2.0
-            self.k = 2*np.pi * np.fft.fftfreq(self.N, dx)
+            self.x = np.arange(self.N, dtype=float) * dx - self.L / 2.0
+            self.k = 2 * np.pi * np.fft.fftfreq(self.N, dx)
     
             # Set highest momentum to zero if N is even to
             # avoid rapid oscillations
             if self.N % 2 == 0:
-                self.k[self.N//2] = 0.0
+                self.k[self.N // 2] = 0.0
     
             # Calls base class which sets self.initialized
             super().init()
-                
+    
         def compute_derivative(self, f):
-            """Return the derivative of f."""        
-            return np.fft.ifft(self.k*1j*np.fft.fft(f)).real
+            """Return the derivative of f."""
+            return np.fft.ifft(self.k * 1j * np.fft.fft(f)).real
+    
     
     s = State(256)
     print(s)  # No default value for L
@@ -188,8 +193,15 @@ let’s do a calculation:
 
 .. code:: ipython3
 
-    f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-    df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+    f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+    df = (
+        -2.0
+        * np.pi
+        / 5.0
+        * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+        * np.sin(2 * np.pi * s.x / s.L)
+        / s.L
+    )
     np.allclose(s.compute_derivative(f), df)
 
 
@@ -210,8 +222,15 @@ errors).
     print(s.initialized)
     s.init()
     assert s.initialized
-    f = np.exp(3*np.cos(2*np.pi*s.x/s.L)) / 15
-    df = -2.*np.pi/5.*np.exp(3*np.cos(2*np.pi*s.x/s.L))*np.sin(2*np.pi*s.x/s.L)/s.L
+    f = np.exp(3 * np.cos(2 * np.pi * s.x / s.L)) / 15
+    df = (
+        -2.0
+        * np.pi
+        / 5.0
+        * np.exp(3 * np.cos(2 * np.pi * s.x / s.L))
+        * np.sin(2 * np.pi * s.x / s.L)
+        / s.L
+    )
     np.allclose(s.compute_derivative(f), df)
 
 
@@ -240,12 +259,16 @@ functionality with ``ObjectMixin``:
     class State1(ObjectMixin, State):
         pass
     
+    
     s = State(N=256, _quiet=True)
     s1 = State1(N=256, _quiet=True)
 
 .. code:: ipython3
 
     import pickle, copy
+
+.. code:: ipython3
+
     s_repr = pickle.dumps(s)
     s1_repr = pickle.dumps(s1)
     print(f"ObjectBase pickle:  {len(s_repr)} bytes")
@@ -268,8 +291,8 @@ Note, however, that the speed of copying is significantly impacted:
 
 .. parsed-literal::
 
-    2.58 µs ± 34.3 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    27.1 µs ± 404 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    2.99 µs ± 141 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+    29.8 µs ± 951 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -291,13 +314,14 @@ the ``persist`` package:
 .. code:: ipython3
 
     import persist.archive
+    
     a = persist.archive.Archive(check_on_insert=True)
     a.insert(s=s)
     
     d = {}
     exec(str(a), d)
     
-    d['s']
+    d["s"]
 
 
 
@@ -349,7 +373,7 @@ Container Examples
 
     from mmfutils.containers import Container
     
-    c = Container(a=1, c=2, b='Hi there')
+    c = Container(a=1, c=2, b="Hi there")
     print(c)
     print(tuple(c))
 
@@ -363,7 +387,7 @@ Container Examples
 .. code:: ipython3
 
     # Attributes are mutable
-    c.b = 'Ho there'
+    c.b = "Ho there"
     print(c)
 
 
@@ -377,7 +401,7 @@ Container Examples
     # Other attributes can be used for temporary storage but will not be pickled.
     import numpy as np
     
-    c.large_temporary_array = np.ones((256,256))
+    c.large_temporary_array = np.ones((256, 256))
     print(c)
     print(c.large_temporary_array)
 
@@ -397,6 +421,9 @@ Container Examples
 .. code:: ipython3
 
     import pickle
+
+.. code:: ipython3
+
     c1 = pickle.loads(pickle.dumps(c))
     print(c1)
     c1.large_temporary_array
@@ -414,11 +441,11 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    <ipython-input-13-bd53d5116502> in <module>
-          2 c1 = pickle.loads(pickle.dumps(c))
-          3 print(c1)
-    ----> 4 c1.large_temporary_array
-    
+    Input In [15], in <cell line: 3>()
+          1 c1 = pickle.loads(pickle.dumps(c))
+          2 print(c1)
+    ----> 3 c1.large_temporary_array
+
 
     AttributeError: 'Container' object has no attribute 'large_temporary_array'
 
@@ -484,12 +511,19 @@ This can then be checked in tests.
 
 .. code:: ipython3
 
-    from mmfutils.interface import Interface, Attribute, verifyClass, verifyObject, implementer
+    from mmfutils.interface import (
+        Interface,
+        Attribute,
+        verifyClass,
+        verifyObject,
+        implementer,
+    )
+    
     
     class IAdder(Interface):
         """Interface for objects that support addition."""
     
-        value = Attribute('value', "Current value of object")
+        value = Attribute("value", "Current value of object")
     
         # No self here since this is the "user" interface
         def add(other):
@@ -505,11 +539,12 @@ Here is a broken implementation. We muck up the arguments to ``add``:
             # There should only be one argument!
             return one + another
     
+    
     try:
         verifyClass(IAdder, AdderBroken)
     except Exception as e:
         print("{0.__class__.__name__}: {0}".format(e))
-        
+
 
 
 .. parsed-literal::
@@ -528,6 +563,7 @@ defined in ``__init__()``:
         def add(self, other):
             return one + other
     
+    
     # The class validates...
     verifyClass(IAdder, AdderBroken)
     
@@ -535,12 +571,12 @@ defined in ``__init__()``:
     try:
         verifyObject(IAdder, AdderBroken())
     except Exception as e:
-        print("{0.__class__.__name__}: {0}".format(e))    
+        print("{0.__class__.__name__}: {0}".format(e))
 
 
 .. parsed-literal::
 
-    BrokenImplementation: The object <__main__.AdderBroken object at 0x11693cac0> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
+    BrokenImplementation: The object <__main__.AdderBroken object at 0x11558c1c0> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
 
 
 Finally, a working instance:
@@ -551,9 +587,11 @@ Finally, a working instance:
     class Adder(object):
         def __init__(self, value=0):
             self.value = value
+    
         def add(self, other):
             return one + other
-        
+    
+    
     verifyClass(IAdder, Adder) and verifyObject(IAdder, Adder())
 
 
@@ -574,6 +612,9 @@ to provide a mechanism for documentating interfaces in a notebook.
 .. code:: ipython3
 
     from mmfutils.interface import describe_interface
+
+.. code:: ipython3
+
     describe_interface(IAdder)
 
 
@@ -585,7 +626,7 @@ to provide a mechanism for documentating interfaces in a notebook.
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="generator" content="Docutils 0.16: http://docutils.sourceforge.net/" />
+    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
     <title>&lt;string&gt;</title>
     
     <div class="document">
@@ -617,17 +658,23 @@ profile name, and can be started or stopped from this class:
 .. code:: ipython3
 
     import logging
+
+.. code:: ipython3
+
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     import numpy as np
     from mmfutils import parallel
-    cluster = parallel.Cluster(profile='default', n=3, sleep_time=1.0)
+
+.. code:: ipython3
+
+    cluster = parallel.Cluster(profile="default", n=3, sleep_time=1.0)
     cluster.start()
     cluster.wait()  # Instance of IPython.parallel.Client
     view = cluster.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x:x**2, x)
-    print(np.allclose(y, x**2))
+    y = view.map(lambda x: x ** 2, x)
+    print(np.allclose(y, x ** 2))
     cluster.stop()
 
 
@@ -639,15 +686,7 @@ profile name, and can be started or stopped from this class:
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-
-
-.. parsed-literal::
-
-    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
-
-
-.. parsed-literal::
-
+    Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
@@ -657,6 +696,19 @@ profile name, and can be started or stopped from this class:
 .. parsed-literal::
 
     True
+
+
+.. parsed-literal::
+
+    2022-06-07 11:37:19.290 [IPClusterStop] Stopping cluster 
+    2022-06-07 11:37:19.290 [IPClusterStop] Stopping controller
+    2022-06-07 11:37:19.432 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8883, 'identifier': 'ipcontroller-8934'}
+    2022-06-07 11:37:19.434 [IPClusterStop] Stopping engine(s): 1654627030
+    2022-06-07 11:37:19.857 [IPClusterStop] engine set stopped 1654627030: {'engines': {'0': {'exit_code': None, 'pid': 8896, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 8897, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 8898, 'identifier': '2'}}, 'exit_code': None}
+
+
+.. parsed-literal::
+
     Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
 
 
@@ -666,11 +718,11 @@ the context and shutting down the cluster!
 
 .. code:: ipython3
 
-    with parallel.Cluster(profile='default', n=3, sleep_time=1.0) as client:
+    with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
         view = client.load_balanced_view
         x = np.linspace(-6, 6, 100)
-        y = view.map(lambda x:x**2, x, block=True)  # Make sure to wait for the result!
-    print(np.allclose(y, x**2))
+        y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
+    print(np.allclose(y, x ** 2))
 
 
 .. parsed-literal::
@@ -681,19 +733,16 @@ the context and shutting down the cluster!
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
-
-
-.. parsed-literal::
-
-    Waiting for connection file: ~/.ipython/profile_default/security/ipcontroller-client.json
-
-
-.. parsed-literal::
-
+    Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
     INFO:root:Stopping cluster: ipcluster stop --profile=default
+    2022-06-07 11:38:27.128 [IPClusterStop] Stopping cluster 
+    2022-06-07 11:38:27.129 [IPClusterStop] Stopping controller
+    2022-06-07 11:38:27.279 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8997, 'identifier': 'ipcontroller-9044'}
+    2022-06-07 11:38:27.281 [IPClusterStop] Stopping engine(s): 1654627098
+    2022-06-07 11:38:27.710 [IPClusterStop] engine set stopped 1654627098: {'engines': {'0': {'exit_code': None, 'pid': 9010, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 9011, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 9015, 'identifier': '2'}}, 'exit_code': None}
 
 
 .. parsed-literal::
@@ -744,7 +793,7 @@ Fast Filled Contour Plots
 function, but uses ``plt.imshow`` which is much faster. This is useful
 for animations and interactive work. It also supports my idea of saner
 array-shape processing (i.e. if ``x`` and ``y`` have different shapes,
-then it will match these to the shape of ``z``). Matplotlib now provies
+then it will match these to the shape of ``z``). Matplotlib now provides
 ``plt.pcolourmesh`` which is similar, but has the same interface issues.
 
 .. code:: ipython3
@@ -754,10 +803,13 @@ then it will match these to the shape of ``z``). Matplotlib now provies
     import time
     import numpy as np
     from mmfutils import plot as mmfplt
-    x = np.linspace(-1, 1, 100)[:, None]**3
-    y = np.linspace(-0.1, 0.1, 200)[None, :]**3
-    z = np.sin(10*x)*y**2
-    plt.figure(figsize=(12,3))
+
+.. code:: ipython3
+
+    x = np.linspace(-1, 1, 100)[:, None] ** 3
+    y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
+    z = np.sin(10 * x) * y ** 2
+    plt.figure(figsize=(12, 3))
     plt.subplot(141)
     %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
     plt.subplot(142)
@@ -765,31 +817,31 @@ then it will match these to the shape of ``z``). Matplotlib now provies
     plt.subplot(143)
     %time plt.pcolor(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
     plt.subplot(144)
-    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='auto')
+    %time plt.pcolormesh(x.ravel(), y.ravel(), z.T, cmap='gist_heat', shading='gouraud')
 
 
 .. parsed-literal::
 
-    CPU times: user 9.48 ms, sys: 3.72 ms, total: 13.2 ms
-    Wall time: 16.5 ms
-    CPU times: user 38.2 ms, sys: 2.97 ms, total: 41.2 ms
-    Wall time: 45 ms
-    CPU times: user 126 ms, sys: 5.86 ms, total: 132 ms
-    Wall time: 133 ms
-    CPU times: user 4.43 ms, sys: 209 µs, total: 4.64 ms
-    Wall time: 4.65 ms
+    CPU times: user 10 ms, sys: 2.64 ms, total: 12.7 ms
+    Wall time: 12.7 ms
+    CPU times: user 101 ms, sys: 1.65 ms, total: 103 ms
+    Wall time: 104 ms
+    CPU times: user 135 ms, sys: 6.21 ms, total: 141 ms
+    Wall time: 141 ms
+    CPU times: user 3.59 ms, sys: 176 µs, total: 3.77 ms
+    Wall time: 3.74 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x124ec2130>
+    <matplotlib.collections.QuadMesh at 0x1241e3850>
 
 
 
 
-.. image:: README_files/README_60_2.png
+.. image:: ../README_files/../README_66_2.png
 
 
 Angular Variables
@@ -805,13 +857,14 @@ phase of a complex wavefunction.
     import time
     import numpy as np
     from mmfutils import plot as mmfplt
+    
     x = np.linspace(-1, 1, 100)[:, None]
     y = np.linspace(-1, 1, 200)[None, :]
-    z = x + 1j*y
+    z = x + 1j * y
     
-    plt.figure(figsize=(9,2))
+    plt.figure(figsize=(9, 2))
     ax = plt.subplot(131)
-    mmfplt.phase_contour(x, y, z, colors='k', linewidths=0.5)
+    mmfplt.phase_contour(x, y, z, colors="k", linewidths=0.5)
     ax.set_aspect(1)
     
     # This is a little slow but allows you to vary the luminosity.
@@ -823,14 +876,23 @@ phase of a complex wavefunction.
     # This is faster if you just want to show the phase and allows
     # for a colorbar via a registered colormap
     ax = plt.subplot(133)
-    mmfplt.imcontourf(x, y, np.angle(z), cmap='huslp')
+    mmfplt.imcontourf(x, y, np.angle(z), cmap="huslp")
     ax.set_aspect(1)
     plt.colorbar()
-    mmfplt.phase_contour(x, y, z, linewidths=0.5);
+    mmfplt.phase_contour(x, y, z, linewidths=0.5)
 
 
 
-.. image:: README_files/README_63_0.png
+
+.. parsed-literal::
+
+    (<matplotlib.contour.QuadContourSet at 0x12506ca60>,
+     <matplotlib.contour.QuadContourSet at 0x124036dc0>)
+
+
+
+
+.. image:: ../README_files/../README_69_1.png
 
 
 Debugging
@@ -844,11 +906,13 @@ in a dictionary or in your global scope.
 
     from mmfutils.debugging import debug
     
+    
     @debug(locals())
     def f(x):
-        y = x**1.5
-        z = 2/x
+        y = x ** 1.5
+        z = 2 / x
         return z
+    
     
     print(f(2.0), x, y, z)
 
@@ -868,13 +932,18 @@ details.
 Developer Instructions
 ======================
 
+For Developer Notes, please see `Notes.md <../Notes.md>`__.
+
 Complete code coverage information is provided in
 ``build/_coverage/index.html``.
 
 .. code:: ipython3
 
     from IPython.display import HTML
-    with open(os.path.join(ROOTDIR, 'build/_coverage/index.html')) as f:
+
+.. code:: ipython3
+
+    with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
         coverage = f.read()
     HTML(coverage)
 
@@ -890,285 +959,337 @@ Complete code coverage information is provided in
         <title>Coverage report</title>
         <link rel="icon" sizes="32x32" href="favicon_32.png">
         <link rel="stylesheet" href="style.css" type="text/css">
-        <script type="text/javascript" src="jquery.min.js"></script>
-        <script type="text/javascript" src="jquery.ba-throttle-debounce.min.js"></script>
-        <script type="text/javascript" src="jquery.tablesorter.min.js"></script>
-        <script type="text/javascript" src="jquery.hotkeys.js"></script>
-        <script type="text/javascript" src="coverage_html.js"></script>
-        <script type="text/javascript">
-            jQuery(document).ready(coverage.index_ready);
-        </script>
+        <script type="text/javascript" src="coverage_html.js" defer></script>
     </head>
     <body class="indexfile">
-    <div id="header">
+    <header>
         <div class="content">
             <h1>Coverage report:
-                <span class="pc_cov">90%</span>
+                <span class="pc_cov">82%</span>
             </h1>
-            <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
+            <aside id="help_panel_wrapper">
+                <input id="help_panel_state" type="checkbox">
+                <label for="help_panel_state">
+                    <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts" />
+                </label>
+                <div id="help_panel">
+                    <p class="legend">Shortcuts on this page</p>
+                    <div class="keyhelp">
+                        <p>
+                            <kbd>n</kbd>
+                            <kbd>s</kbd>
+                            <kbd>m</kbd>
+                            <kbd>x</kbd>
+                            <kbd>c</kbd>
+                            &nbsp; change column sorting
+                        </p>
+                        <p>
+                            <kbd>[</kbd>
+                            <kbd>]</kbd>
+                            &nbsp; prev/next file
+                        </p>
+                        <p>
+                            <kbd>?</kbd> &nbsp; show/hide this help
+                        </p>
+                    </div>
+                </div>
+            </aside>
             <form id="filter_container">
                 <input id="filter" type="text" value="" placeholder="filter..." />
             </form>
+            <p class="text">
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
+                created at 2022-06-07 11:36 -0700
+            </p>
         </div>
-    </div>
-    <div class="help_panel">
-        <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
-        <p class="legend">Hot-keys on this page</p>
-        <div>
-        <p class="keyhelp">
-            <span class="key">n</span>
-            <span class="key">s</span>
-            <span class="key">m</span>
-            <span class="key">x</span>
-            <span class="key">c</span> &nbsp; change column sorting
-        </p>
-        </div>
-    </div>
-    <div id="index">
-        <table class="index">
+    </header>
+    <main id="index">
+        <table class="index" data-sortable>
             <thead>
                 <tr class="tablehead" title="Click to sort">
-                    <th class="name left headerSortDown shortkey_n">Module</th>
-                    <th class="shortkey_s">statements</th>
-                    <th class="shortkey_m">missing</th>
-                    <th class="shortkey_x">excluded</th>
-                    <th class="right shortkey_c">coverage</th>
+                    <th class="name left" aria-sort="none" data-shortcut="n">Module</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="s">statements</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="m">missing</th>
+                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="x">excluded</th>
+                    <th class="right" aria-sort="none" data-shortcut="c">coverage</th>
                 </tr>
             </thead>
-            <tfoot>
-                <tr class="total">
-                    <td class="name left">Total</td>
-                    <td>2209</td>
-                    <td>213</td>
-                    <td>85</td>
-                    <td class="right" data-ratio="1996 2209">90%</td>
-                </tr>
-            </tfoot>
             <tbody>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils___init___py.html">mmfutils/__init__.py</a></td>
-                    <td>13</td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6___init___py.html">src/mmfutils/__init__.py</a></td>
+                    <td>20</td>
+                    <td>4</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="13 13">100%</td>
+                    <td class="right" data-ratio="16 20">80%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_containers_py.html">mmfutils/containers.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_containers_py.html">src/mmfutils/containers.py</a></td>
                     <td>113</td>
                     <td>2</td>
                     <td>0</td>
                     <td class="right" data-ratio="111 113">98%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_contexts_py.html">mmfutils/contexts.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_contexts_py.html">src/mmfutils/contexts.py</a></td>
                     <td>199</td>
                     <td>25</td>
                     <td>0</td>
                     <td class="right" data-ratio="174 199">87%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_debugging_py.html">mmfutils/debugging.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_debugging_py.html">src/mmfutils/debugging.py</a></td>
                     <td>49</td>
                     <td>0</td>
                     <td>3</td>
                     <td class="right" data-ratio="49 49">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_interface_py.html">mmfutils/interface.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_interface_py.html">src/mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
                     <td>15</td>
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math___init___py.html">mmfutils/math/__init__.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78___init___py.html">src/mmfutils/math/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases___init___py.html">mmfutils/math/bases/__init__.py</a></td>
+                    <td class="name left"><a href="d_eb8720e8ec2674ec___init___py.html">src/mmfutils/math/bases/__init__.py</a></td>
                     <td>2</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="2 2">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases_bases_py.html">mmfutils/math/bases/bases.py</a></td>
-                    <td>431</td>
-                    <td>52</td>
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_bases_py.html">src/mmfutils/math/bases/bases.py</a></td>
+                    <td>458</td>
+                    <td>58</td>
                     <td>0</td>
-                    <td class="right" data-ratio="379 431">88%</td>
+                    <td class="right" data-ratio="400 458">87%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases_interfaces_py.html">mmfutils/math/bases/interfaces.py</a></td>
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_interfaces_py.html">src/mmfutils/math/bases/interfaces.py</a></td>
                     <td>37</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="37 37">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bases_utils_py.html">mmfutils/math/bases/utils.py</a></td>
-                    <td>41</td>
+                    <td class="name left"><a href="d_eb8720e8ec2674ec_utils_py.html">src/mmfutils/math/bases/utils.py</a></td>
+                    <td>40</td>
                     <td>11</td>
                     <td>0</td>
-                    <td class="right" data-ratio="30 41">73%</td>
+                    <td class="right" data-ratio="29 40">72%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_bessel_py.html">mmfutils/math/bessel.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78_bessel_py.html">src/mmfutils/math/bessel.py</a></td>
                     <td>132</td>
                     <td>0</td>
                     <td>14</td>
                     <td class="right" data-ratio="132 132">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_differentiate_py.html">mmfutils/math/differentiate.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78_differentiate_py.html">src/mmfutils/math/differentiate.py</a></td>
                     <td>61</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="61 61">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_integrate___init___py.html">mmfutils/math/integrate/__init__.py</a></td>
+                    <td class="name left"><a href="d_6c95154c693d83f3___init___py.html">src/mmfutils/math/integrate/__init__.py</a></td>
                     <td>212</td>
                     <td>12</td>
                     <td>16</td>
                     <td class="right" data-ratio="200 212">94%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_linalg_py.html">mmfutils/math/linalg.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78_linalg_py.html">src/mmfutils/math/linalg.py</a></td>
                     <td>12</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="12 12">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_special_py.html">mmfutils/math/special.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78_special_py.html">src/mmfutils/math/special.py</a></td>
                     <td>26</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="26 26">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_math_wigner_py.html">mmfutils/math/wigner.py</a></td>
+                    <td class="name left"><a href="d_3e34d5763a905f78_wigner_py.html">src/mmfutils/math/wigner.py</a></td>
                     <td>20</td>
                     <td>17</td>
                     <td>0</td>
                     <td class="right" data-ratio="3 20">15%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_optimize_py.html">mmfutils/optimize.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_optimize_py.html">src/mmfutils/optimize.py</a></td>
                     <td>26</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="26 26">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_parallel_py.html">mmfutils/parallel.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_parallel_py.html">src/mmfutils/parallel.py</a></td>
                     <td>128</td>
                     <td>5</td>
                     <td>8</td>
                     <td class="right" data-ratio="123 128">96%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_performance___init___py.html">mmfutils/performance/__init__.py</a></td>
+                    <td class="name left"><a href="d_904e42d388a55e09___init___py.html">src/mmfutils/performance/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_performance_blas_py.html">mmfutils/performance/blas.py</a></td>
+                    <td class="name left"><a href="d_904e42d388a55e09_blas_py.html">src/mmfutils/performance/blas.py</a></td>
                     <td>58</td>
                     <td>0</td>
                     <td>6</td>
                     <td class="right" data-ratio="58 58">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_performance_fft_py.html">mmfutils/performance/fft.py</a></td>
+                    <td class="name left"><a href="d_904e42d388a55e09_fft_py.html">src/mmfutils/performance/fft.py</a></td>
                     <td>92</td>
-                    <td>3</td>
+                    <td>58</td>
                     <td>6</td>
-                    <td class="right" data-ratio="89 92">97%</td>
+                    <td class="right" data-ratio="34 92">37%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_performance_numexpr_py.html">mmfutils/performance/numexpr.py</a></td>
+                    <td class="name left"><a href="d_904e42d388a55e09_numexpr_py.html">src/mmfutils/performance/numexpr.py</a></td>
                     <td>9</td>
                     <td>0</td>
                     <td>7</td>
                     <td class="right" data-ratio="9 9">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_performance_threads_py.html">mmfutils/performance/threads.py</a></td>
+                    <td class="name left"><a href="d_904e42d388a55e09_threads_py.html">src/mmfutils/performance/threads.py</a></td>
                     <td>9</td>
                     <td>0</td>
                     <td>8</td>
                     <td class="right" data-ratio="9 9">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_plot___init___py.html">mmfutils/plot/__init__.py</a></td>
-                    <td>4</td>
+                    <td class="name left"><a href="d_741a542e2fc1e4b6___init___py.html">src/mmfutils/plot/__init__.py</a></td>
+                    <td>5</td>
                     <td>0</td>
                     <td>0</td>
-                    <td class="right" data-ratio="4 4">100%</td>
+                    <td class="right" data-ratio="5 5">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_plot_animation_py.html">mmfutils/plot/animation.py</a></td>
-                    <td>82</td>
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_animation_py.html">src/mmfutils/plot/animation.py</a></td>
+                    <td>81</td>
                     <td>19</td>
                     <td>0</td>
-                    <td class="right" data-ratio="63 82">77%</td>
+                    <td class="right" data-ratio="62 81">77%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_plot_cmaps_py.html">mmfutils/plot/cmaps.py</a></td>
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_cmaps_py.html">src/mmfutils/plot/cmaps.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_plot_rasterize_py.html">mmfutils/plot/rasterize.py</a></td>
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_colors_py.html">src/mmfutils/plot/colors.py</a></td>
+                    <td>85</td>
+                    <td>8</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="77 85">91%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_contour_py.html">src/mmfutils/plot/contour.py</a></td>
+                    <td>63</td>
+                    <td>24</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="39 63">62%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_errors_py.html">src/mmfutils/plot/errors.py</a></td>
+                    <td>78</td>
+                    <td>67</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="11 78">14%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_publish_py.html">src/mmfutils/plot/publish.py</a></td>
+                    <td>327</td>
+                    <td>139</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="188 327">57%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_rasterize_py.html">src/mmfutils/plot/rasterize.py</a></td>
                     <td>29</td>
                     <td>1</td>
                     <td>0</td>
                     <td class="right" data-ratio="28 29">97%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_solve___init___py.html">mmfutils/solve/__init__.py</a></td>
+                    <td class="name left"><a href="d_741a542e2fc1e4b6_sparkline_py.html">src/mmfutils/plot/sparkline.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_solve_broyden_py.html">mmfutils/solve/broyden.py</a></td>
+                    <td class="name left"><a href="d_b8e9249e6a4792af___init___py.html">src/mmfutils/solve/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="file">
+                    <td class="name left"><a href="d_b8e9249e6a4792af_broyden_py.html">src/mmfutils/solve/broyden.py</a></td>
                     <td>319</td>
                     <td>64</td>
                     <td>0</td>
                     <td class="right" data-ratio="255 319">80%</td>
                 </tr>
                 <tr class="file">
-                    <td class="name left"><a href="mmfutils_testing_py.html">mmfutils/testing.py</a></td>
+                    <td class="name left"><a href="d_5f1563ee9ba979c6_testing_py.html">src/mmfutils/testing.py</a></td>
                     <td>18</td>
                     <td>2</td>
                     <td>2</td>
                     <td class="right" data-ratio="16 18">89%</td>
                 </tr>
             </tbody>
+            <tfoot>
+                <tr class="total">
+                    <td class="name left">Total</td>
+                    <td>2795</td>
+                    <td>516</td>
+                    <td>85</td>
+                    <td class="right" data-ratio="2279 2795">82%</td>
+                </tr>
+            </tfoot>
         </table>
         <p id="no_rows">
             No items found using the specified filter.
         </p>
-    </div>
-    <div id="footer">
+    </main>
+    <footer>
         <div class="content">
             <p>
-                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.5</a>,
-                created at 2021-04-28 01:48 -0700
+                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
+                created at 2022-06-07 11:36 -0700
             </p>
         </div>
-    </div>
+        <aside class="hidden">
+            <a id="prevFileLink" class="nav" href="d_5f1563ee9ba979c6_testing_py.html"/>
+            <a id="nextFileLink" class="nav" href="d_5f1563ee9ba979c6___init___py.html"/>
+            <button type="button" class="button_prev_file" data-shortcut="["/>
+            <button type="button" class="button_next_file" data-shortcut="]"/>
+            <button type="button" class="button_show_hide_help" data-shortcut="?"/>
+        </aside>
+    </footer>
     </body>
     </html>
 
@@ -1177,6 +1298,28 @@ Complete code coverage information is provided in
 
 Change Log
 ==========
+
+REL: 0.6.3
+----------
+
+-  Fix some dependencies.
+
+REL: 0.6.2
+----------
+
+-  Fix some issues with GPU and PeriodicBases.
+-  Add warning to FFT plans about data ownership.
+-  Include some Sparkline demonstrations.
+-  Drop support for Python 3.6. (Still no support for 3.10).
+
+REL: 0.6.0
+----------
+
+-  Use Poetry for dependency management.
+-  Update to ``src/mmfutils`` layout.
+-  Better testing and coverage, including GitHub CI.
+-  Odd-numbered lattices are now centered at 0.
+-  Added ``fftw`` extra.
 
 REL: 0.5.4
 ----------

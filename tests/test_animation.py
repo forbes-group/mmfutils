@@ -52,7 +52,10 @@ class TestAnimation(object):
     def test_animate(self):
         anim = animation.animate(self.get_frames)
         html = anim.to_html5_video()
-        return html
+        assert html.startswith("<video width=")
+        assert "controls autoplay" in html
+        assert '<source type="video/mp4" src="data:video/mp4;base64' in html
+        assert "Your browser does not support the video tag." in html
 
 
 pytest.mark.slow(TestAnimation)

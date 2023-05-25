@@ -206,7 +206,8 @@ class Colormaps(object):
             if not hasattr(matplotlib.cm, cm):
                 cmap = getattr(self, cm)
                 setattr(matplotlib.cm, cm, cmap)
-                matplotlib.cm.register_cmap(name=cm, cmap=cmap)
+                # matplotlib.cm.register_cmap(name=cm, cmap=cmap)
+                matplotlib.colormaps.register(cmap=cmap, name=cm)
 
 
 cm = Colormaps(**cmaps)

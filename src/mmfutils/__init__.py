@@ -5,7 +5,7 @@ except ImportError:
 
 try:
     __version__ = _metadata.version(__name__)
-except _metadata.PackageNotFoundError:
+except _metadata.PackageNotFoundError:  # pragma: no cover
     __version__ = "<unknown source distribution>"
 
 

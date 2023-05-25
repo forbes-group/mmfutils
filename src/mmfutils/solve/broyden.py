@@ -11,7 +11,14 @@ import numpy as np
 # efficient implementations.
 from numpy import matmul
 
-import scipy.optimize.nonlin
+try:
+    from scipy.optimize import Jacobian as sp_Jacobian
+except ImportError:
+    try:
+        from scipy.optimize._nonlin import Jacobian as sp_Jacobian
+    except ImportError:
+        from scipy.optimize.nonlin import Jacobian as sp_Jacobian
+
 import scipy as sp
 
 from ..math.linalg import block_diag
@@ -663,7 +670,7 @@ class DyadicSum(object):
             self.add_dyad((dx - Bdf) / df.dot(df), df)
 
 
-class JacobianBFGS(sp.optimize.nonlin.Jacobian):
+class JacobianBFGS(sp_Jacobian):
     r"""Represent a symmetric matrix by a memory-limited L-BFGS approximation.
 
     This assumes that the Jacobian :math:`J_{ij} = \partial_i\partial_j f(x)` is
@@ -689,7 +696,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         self._H0 = alpha
         self._last_x = self._last_f = None
         self.n_max = n_max
-        sp.optimize.nonlin.Jacobian.__init__(self)
+        sp_Jacobian.__init__(self)
 
     @property
     def H0(self):
@@ -776,7 +783,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
         if self._last_x is not None:
             dx = x - self._last_x
             df = f - self._last_f
-            if np.allclose(0, df.dot(dx), atol=_EPS ** 2):
+            if np.allclose(0, df.dot(dx), atol=_EPS**2):
                 raise np.linalg.LinAlgError("Current step makes Jacobian singular.")
             self._dx.append(dx)
             self._df.append(df)
@@ -787,7 +794,7 @@ class JacobianBFGS(sp.optimize.nonlin.Jacobian):
 
 
 class Jacobian(DyadicSum):
-    """Provides the `scipy.optimize.nonlin.Jacobian` interface."""
+    """Provides the `scipy.optimize.Jacobian` interface."""
 
     def __init__(self, method="good", *v, **kw):
         DyadicSum.__init__(self, *v, **kw)

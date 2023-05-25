@@ -4,7 +4,8 @@ tweakdefaults = true
 mergemarkers = detailed
 
 [paths]
-default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
+#default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
+default = ssh://heptapod/forbes-group/mmfutils
 
 # Default to the current revision (`.`) when pushing to `default`. 
 default:pushrev = .

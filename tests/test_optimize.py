@@ -12,7 +12,7 @@ class Test(object):
         a = ufloat(3.0, 0.1, "a")
 
         def f(x):
-            return x ** n - a * c
+            return x**n - a * c
 
         ans = optimize.ubrentq(f, 0, max(1, a))
         exact = (a * c) ** (1.0 / n)
@@ -26,7 +26,7 @@ class Test(object):
         a = 3.0
 
         def f(x):
-            return x ** n - a * c
+            return x**n - a * c
 
         ans = optimize.ubrentq(f, 0, max(1, a))
         exact = (a * c) ** (1.0 / n)

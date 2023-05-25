@@ -20,7 +20,7 @@ class TestRasterize(object):
     def test_contourf(self):
         with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
             x, y = np.meshgrid(*(np.linspace(-1, 1, 500),) * 2)
-            z = np.sin(20 * x ** 2) * np.cos(30 * y)
+            z = np.sin(20 * x**2) * np.cos(30 * y)
             plt.contourf(x, y, z, 30)
 
             plt.savefig(f.name)
