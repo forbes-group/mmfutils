@@ -20,6 +20,7 @@ import scipy as sp
 
 import pytest
 
+import mmfutils.performance.threads
 from mmfutils.interface import verifyObject, verifyClass
 from mmfutils.math.bases import bases
 from mmfutils.math.bases.interfaces import (
@@ -212,7 +213,7 @@ class LaplacianTests:
         assert verifyClass(IBasis, self.Basis)
         assert verifyObject(IBasis, basis)
 
-    def test_laplacian(self, basis, exact):
+    def test_laplacian(self, basis, exact, threads):
         """Test the laplacian with a Gaussian."""
         # Real and Complex
         laplacian = basis.laplacian
