@@ -497,6 +497,10 @@ HTML(coverage)
 
 # # Change Log
 
+# ## REL: 0.6.5
+#
+# * Fix issue #30: measure fft performance and fallback to numpy (with a warning) if it is faster than pyfftw.
+
 # ## REL: 0.6.4
 # * Support python 3.7.13 through 3.11.
 # * Fix some tests.

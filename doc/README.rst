@@ -673,8 +673,8 @@ profile name, and can be started or stopped from this class:
     cluster.wait()  # Instance of IPython.parallel.Client
     view = cluster.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x: x ** 2, x)
-    print(np.allclose(y, x ** 2))
+    y = view.map(lambda x: x**2, x)
+    print(np.allclose(y, x**2))
     cluster.stop()
 
 
@@ -721,8 +721,8 @@ the context and shutting down the cluster!
     with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
         view = client.load_balanced_view
         x = np.linspace(-6, 6, 100)
-        y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
-    print(np.allclose(y, x ** 2))
+        y = view.map(lambda x: x**2, x, block=True)  # Make sure to wait for the result!
+    print(np.allclose(y, x**2))
 
 
 .. parsed-literal::
@@ -808,7 +808,7 @@ then it will match these to the shape of ``z``). Matplotlib now provides
 
     x = np.linspace(-1, 1, 100)[:, None] ** 3
     y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
-    z = np.sin(10 * x) * y ** 2
+    z = np.sin(10 * x) * y**2
     plt.figure(figsize=(12, 3))
     plt.subplot(141)
     %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
@@ -909,7 +909,7 @@ in a dictionary or in your global scope.
     
     @debug(locals())
     def f(x):
-        y = x ** 1.5
+        y = x**1.5
         z = 2 / x
         return z
     
@@ -1298,6 +1298,12 @@ Complete code coverage information is provided in
 
 Change Log
 ==========
+
+REL: 0.6.5
+----------
+
+-  Fix issue #30: measure fft performance and fallback to numpy (with a
+   warning) if it is faster than pyfftw.
 
 REL: 0.6.4
 ----------
