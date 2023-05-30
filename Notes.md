@@ -22,6 +22,72 @@ projects.  (Other projects should refer here for this discussion.)
   time.)
 * Fix bases to properly use GPU (sundered values etc.).
 
+# Tools
+
+When developing applications, one often needs a set of tools (see following section).
+The question is: how should these be managed?  Here are some options:
+
+* As part of the package (i.e. specified in the `pyproject.toml`, `environment.yaml`, or
+  `anaconda-project.yaml` files).  This is convenient and satisfies the DRY principle,
+  but can cause some issues if the tool dependencies conflict with the project itself.
+* [PDM][] development groups.  As of version 1.5.0, PDM supports [development-only
+  dependencies][] that won't appear in the package index and should not affect the main
+  package dependencies.  (I am not sure if [Poetry][] has a similar functionality.)
+* In a separate [Conda][] environment.  Unlike the previous approaches, this allows one
+  to install tools that require [Conda][].  This separates the dependencies, but
+  provides a clean place for them -- `environment.tools.yaml`.
+* Install each tool in an isolated environment with [PipX][] (or [CondaX][], but there
+  are some issues, e.g. a lack of scriptable ways of locating the packages, or
+  specifying python versions).  The current question is: where should one specify these
+  dependences?  A nice solution from the user's perspective is to have separate targets
+  in `Makefile` for each tool.  However, I think this means we need to specify the
+  versions in the `Makefile`, or do some parsing.  It might also be a burden
+  maintaining.  Perhaps an automatic rule could be used for `$(BIN)/tool:
+  <what_file_here?>` which runs `pipx` to install the tool as specified in
+  `<what_file_here?>`. (`requirements.txt`, or maybe a section in `pyproject.toml`?
+  Probably needs custom parsing.)
+  
+For now I am going with `environment.tools.yaml` as it seems the simplest to maintain.
+
+[development-only dependencies]: 
+  <https://pdm.fming.dev/latest/usage/dependency/#add-development-only-dependencies>
+
+## Useful Tools
+
+* [PipX][]: A tool for installing packages in independent environments.
+* [Coverage][]: Normally this is installed along with PyTest, but it can be needed as a
+  standalone tool for `make clean` which calls `coverage erase` to remove the coverage
+  files.  One could do this manually, but config files can override the default
+  location.  Using the tool itself takes care of this.
+* [Nox][]: a command-line tool that automates testing in multiple Python environments,
+  similar to tox, but using a standard Python file for configuration.  Nox is configured
+  via a `noxfile.py` file.
+* [Jupytext][]: Converts notebooks.  More of a development tool, but often used in `make
+  sync`.
+* [Nbconvert][]: Similar and needed by [Jupytext][], but cannot be installed in the same
+  environment with [PipX][].
+* [PDM][]: a Python package management tool that allows you to manage your project
+  dependencies and environments in a more flexible and efficient way than pip. It is
+  built on top of pip and provides additional features such as dependency resolution,
+  lock files, and build isolation. PDM is not limited to a specific build backend; users
+  have the freedom to choose any build backend they prefer.
+* [Poetry][]: Another Python package management tool that aims to provide a simple and
+  reliable way to manage project dependencies. Poetry uses a lock file to ensure
+  repeatable installs and provides features such as dependency resolution, virtual
+  environments, and build isolation. 
+* [Anaconda Project][]:  A tool for managing data science projects that provides an easy
+  way to create, share, and reproduce data science workflows. It allows you to specify
+  required packages and multiple Conda environments in an `anaconda-project.yaml` file.
+* [Black][]: A Python code formatter that reformats your code to make it more readable
+  and consistent. If you want to format Jupyter Notebooks, install with `pip install
+  "black[jupyter]"`.  Note: if you want to format cells in the notebook with the you
+  must install `black` in the kernel, not the environment running `jupyter` (though `pip
+  install "black[jupytyer]"` in that environment is a convenient way of installing the
+  extension).  (See [issue #26](https://github.com/drillan/jupyter-black/issues/26).)
+* [Jupytext][]: A Python package that provides two-way conversion between Jupyter
+  notebooks and several other text-based formats like Markdown (we generally use MyST
+  Markdown files).
+
 # Working Environment (Conda/pip and all that)
 
 Our goal is to be able to use [conda][] for packages that might require binary installs,
@@ -548,7 +614,6 @@ tool.  This makes a copy of the environment and all of the files that can then b
 archived and reinstalled elsewhere.  At the very least, `conda-pack` provides a check on
 the code installed, failing if any files installed by [Conda][] have been overwritten or
 are installed twice.
-
 
 
 # Distribution
@@ -1271,7 +1336,9 @@ following:
 
 ## Issues:
 
-* [Document use of current conda env #1724](https://github.com/python-poetry/poetry/issues/1724)
+* [![Issue](https://img.shields.io/github/issues/detail/state/python-poetry/poetry/1724)](
+  https://github.com/python-poetry/poetry/issues/1724)
+  "Document use of current conda env"
 
 
 Testing
@@ -1571,10 +1638,6 @@ To deal with this, we abuse this by  See [cocalc#370][] for details.
 
 
 [cocalc#370]: <https://github.com/sagemathinc/cocalc/issues/370>
-
-
-  
-  
 [cocalc#6391]: <https://github.com/sagemathinc/cocalc/issues/6391>
 [micromamba]: <https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html>
 
@@ -1597,13 +1660,63 @@ To deal with this, we abuse this by  See [cocalc#370][] for details.
   "It takes a couple of minutes to run conda commands"
 * [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/8983)](https://github.com/conda/conda/issues/8983)
   "conda fails install for local user due to permission issues"
-* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10690)](https://github.com/conda/conda/issues/10690)
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10690)](
+  https://github.com/conda/conda/issues/10690)
   "Conda run fails with Permission denied if environment is read-only."
-* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10105)](https://github.com/conda/conda/issues/10105)
+* [![Issue](https://img.shields.io/github/issues/detail/state/conda/conda/10105)](
+  https://github.com/conda/conda/issues/10105)
   "Local environment.yml file hides remote environment file specification in conda env
   create."
   * Could be an issue with `anaconda-client`:
-    [![Issue](https://img.shields.io/github/issues/detail/state/Anaconda-Platform/anaconda-client/549)](https://github.com/Anaconda-Platform/anaconda-client/issues/549)
+    [![Issue](https://img.shields.io/github/issues/detail/state/Anaconda-Platform/anaconda-client/549)](
+    https://github.com/Anaconda-Platform/anaconda-client/issues/549)
+
+## Black Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/drillan/jupyter-black/26)](
+  https://github.com/drillan/jupyter-black/issues/26)
+  "Black is needed in the kernel, not the environment running jupyter, but the reverse
+  is preferred."
+
+## PDM Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/pdm-project/pdm/1606)](
+  https://github.com/pdm-project/pdm/issues/1606)
+  "install development groups into separate environments".  This issue addresses a
+  similar question related to installing development groups as separate environments.
+  This was closed as not going to be supported in the core, but maybe in a plugin.
+
+## Poetry Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/python-poetry/poetry/1724)](
+  https://github.com/python-poetry/poetry/issues/1724)
+  "Document use of current conda env"
+  
+## PipX Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/pypa/pipx/934)](
+  https://github.com/pypa/pipx/issues/934)
+  "Support for `pipx inject <package> -r <requirements-file>`"
+
+## CondaX Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/mariusvniekerk/condax/16)](
+  https://github.com/mariusvniekerk/condax/issues/16)
+  "Scriptable (commandline) customization of CONDAX_LINK_DESTINATION (link_destination)"
+* [![Issue](https://img.shields.io/github/issues/detail/state/mariusvniekerk/condax/63)](
+  https://github.com/mariusvniekerk/condax/issues/63)
+  "Allow specifying Python version when installing a package (i.e. --python flag)"
+
+## CoCalc Issues
+
+* [![Issue](https://img.shields.io/github/issues/detail/state/sagemathinc/cocalc/370)](
+  https://github.com/sagemathinc/cocalc/issues/370)
+  "Version Control with SMC"
+* [![Issue](https://img.shields.io/github/issues/detail/state/sagemathinc/cocalc/6391)](
+  https://github.com/sagemathinc/cocalc/issues/6391)
+  "Scipy regression with anaconda progression?"
+
+https://discussions.apple.com/thread/254891544
 
 # Odds and Ends
 
@@ -1683,5 +1796,14 @@ make: *** [python.exe] Error 1
 [SciPy]: https://scipy.org/
 [mercurial]: https://www.mercurial-scm.org/
 [git]: https://git-scm.com/
+[Jupytext]: <https://jupytext.readthedocs.io/en/latest/>
+[Nox]: <https://nox.thea.codes/en/stable/>
+[PyTest]: <https://docs.pytest.org/en/latest/>
+[Coverage]: <https://coverage.readthedocs.io/en/latest>
+[PDM]: <https://pdm.fming.dev/>
+[Poetry]: <https://python-poetry.org/>
+[Anaconda Project]: <https://anaconda-project.readthedocs.io/en/latest/>
+[Black]: <https://black.readthedocs.io/en/stable/>
+[Nbconvert]: <https://nbconvert.readthedocs.io/en/latest/>
 
 [against unbound versions]: https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea
