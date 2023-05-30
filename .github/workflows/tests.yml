@@ -5,12 +5,14 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
-        python-version: 3.8
+        python-version: 3.11
         architecture: x64
-    - run: sudo apt-get install texlive-full ffmpeg libfftw3-dev
-    - run: pip install nox==2019.11.9
-    - run: pip install poetry==1.0.5
+    # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
+    - run: sudo apt-get --option="APT::Acquire::Retries=3" update 
+    - run: sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
+    - run: pip install nox==2022.11.21
+    - run: pip install poetry==1.5.0
     - run: nox

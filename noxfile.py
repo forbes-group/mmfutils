@@ -14,6 +14,10 @@ import nox
 # See https://stackoverflow.com/a/51640558/1088938
 os.environ["PYTHONNOUSERSITE"] = "1"
 
+# https://github.com/pytest-dev/pytest/issues/9567
+# https://github.com/pytest-dev/pytest/issues/2042
+# os.environ["PY_IGNORE_IMPORTMISMATCH"] = "1"
+
 # By default, we only execute the conda tests because the others required various python
 # interpreters to be installed.  The other tests can be run, e.g., with `nox -s test` if
 # desired.
@@ -49,6 +53,6 @@ def test_conda(session):
     # session.conda_env_update("environment.yml")
     # session.conda("env", "update", "--f", "environment.yml",
     #              conda="mamba", external=True)
-    session.conda_install("conda-forge::pyfftw")
+    session.conda_install("conda-forge::pyfftw==0.13.1")
     session.install(".[test]")
     session.run("pytest")

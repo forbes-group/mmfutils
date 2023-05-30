@@ -38,9 +38,12 @@ README.rst: doc/README.ipynb
 %.html: %.rst
 	rst2html5.py $< > $@
 
+BROWSER ?= Safari
+BROWSER ?= "Brave Browser"
+
 %.html: %.md
-	pandoc $(PANDOC_FLAGS) $< -o $@  && open -g -a Safari $@
-	fswatch -e ".*\.html" -o . | while read num ; do pandoc $(PANDOC_FLAGS) $< -o $@ && open -g -a Safari $@; done
+	pandoc $(PANDOC_FLAGS) $< -o $@  && open -g -a $(BROWSER) $@
+	fswatch -e ".*\.html" -o . | while read num ; do pandoc $(PANDOC_FLAGS) $< -o $@ && open -g -a $(BROWSER) $@; done
 
 
 clean:

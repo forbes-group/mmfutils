@@ -1074,7 +1074,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         return n_2D
 
 
-'''
+r'''
 Incomplete!
 @implementer(IBasis, IBasisKx)
 class SphericalDVRBasis(ObjectBase, BasisMixin):

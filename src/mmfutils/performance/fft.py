@@ -20,6 +20,7 @@ Indices should first be normalized by ``inds % len(shape)``.
 """
 import functools
 import itertools
+import timeit
 import warnings
 
 import numpy.fft
@@ -29,7 +30,18 @@ from .threads import SET_THREAD_HOOKS
 
 del numpy
 
-__all__ = ["fft", "ifft", "fftn", "ifftn", "fftfreq", "resample"]
+__all__ = [
+    "fft",
+    "ifft",
+    "fftn",
+    "ifftn",
+    "get_fft",
+    "get_ifft",
+    "get_fftn",
+    "get_ifftn",
+    "fftfreq",
+    "resample",
+]
 
 
 # Numpy versions with a default axis specified
@@ -252,16 +264,164 @@ try:  # NOQA  This is too complex, but that is okay
             avoid_copy=avoid_copy,
         )
 
-    fft = fft_pyfftw
-    ifft = ifft_pyfftw
-    fftn = fftn_pyfftw
-    ifftn = ifftn_pyfftw
 except ImportError:  # pragma: nocover
     warnings.warn("Could not import pyfftw... falling back to numpy")
-    fft = fft_numpy
-    ifft = ifft_numpy
-    fftn = fftn_numpy
-    ifftn = ifftn_numpy
+    get_fft_pyfftw = None
+    get_ifft_pyfftw = None
+    get_fftn_pyfftw = None
+    get_ifft_pyfftw = None
+
+
+def _get_best(ffts, a, repeat=3, number=1):
+    """Measure the performance of the ffts and return the best.
+
+    The first entry should be the fastest (pyfftw), and a warning is raised if it is not.
+    """
+    if len(ffts) == 1:
+        return ffts[0]
+
+    assert len(ffts) == 2
+    assert np.allclose(ffts[0](a), ffts[1](a))
+    times = [
+        min(
+            timeit.repeat(
+                "_fft(a)", number=number, repeat=repeat, globals=dict(_fft=_fft, a=a)
+            )
+        )
+        for _fft in ffts
+    ]
+    ind = np.argmin(times)
+    if ind != 0:
+        msg = [
+            f"Numpy fft {times[0]/times[-1]:.1f}x faster than pyfftw.",
+            f"(dtype={a.dtype}, shape={a.shape})",
+            "Check that it is properly compiled/selected.",
+        ]
+        warnings.warn(" ".join(msg))
+    return ffts[ind]
+
+
+def get_fft(a, n=None, axis=-1, repeat=3, number=1, **kw):
+    """Return the fastest function to compute the fft.
+
+    Arguments
+    ---------
+    repeat, number : int
+        Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
+    Other arguments are as for :func:`numpy.fft.fft`.
+    """
+    ffts = []
+    if get_fft_pyfftw:
+        ffts.append(get_fft_pyfftw(a=a, n=n, axis=axis, **kw))
+    ffts.append(functools.partial(np.fft.fft, n=n, axis=axis))
+    return _get_best(ffts, a, repeat=3, number=1)
+
+
+def get_ifft(a, n=None, axis=-1, repeat=3, number=1, **kw):
+    """Return the fastest function to compute the ifft.
+
+    Arguments
+    ---------
+    repeat, number : int
+        Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
+    Other arguments are as for :func:`numpy.fft.ifft`.
+    """
+    ffts = []
+    if get_ifft_pyfftw:
+        ffts.append(get_ifft_pyfftw(a=a, n=n, axis=axis, **kw))
+    ffts.append(functools.partial(np.fft.ifft, n=n, axis=axis))
+    return _get_best(ffts, a, repeat=3, number=1)
+
+
+def get_fftn(a, s=None, axes=None, repeat=3, number=1, **kw):
+    """Return the fastest function to compute the fftn.
+
+    Arguments
+    ---------
+    repeat, number : int
+        Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
+    Other arguments are as for :func:`numpy.fft.fftn`.
+    """
+    ffts = []
+    if get_fftn_pyfftw:
+        ffts.append(get_fftn_pyfftw(a=a, s=s, axes=axes, **kw))
+    ffts.append(functools.partial(np.fft.fftn, s=s, axes=axes))
+    return _get_best(ffts, a, repeat=3, number=1)
+
+
+def get_ifftn(a, s=None, axes=None, repeat=3, number=1, **kw):
+    """Return the fastest function to compute the ifftn.
+
+    Arguments
+    ---------
+    repeat, number : int
+        Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
+    Other arguments are as for :func:`numpy.fft.ifftn`.
+    """
+    ffts = []
+    if get_ifftn_pyfftw:
+        ffts.append(get_ifftn_pyfftw(a=a.copy(), s=s, axes=axes, **kw))
+    ffts.append(functools.partial(np.fft.ifftn, s=s, axes=axes))
+    return _get_best(ffts, a, repeat=3, number=1)
+
+
+_fft_cache = dict()
+
+
+def fft(a, n=None, axis=-1):
+    """High-performance replacement for :func:`numpy.fft.fft`"""
+    # return get_fft(a=a, n=n, axis=axis)(a)
+    key = ("fft", a.dtype, a.shape, n, axis)
+    if key not in _fft_cache:
+        _fft_cache[key] = get_fft(a=a, n=n, axis=axis)
+    res = _fft_cache[key](a)
+    if not res.flags["OWNDATA"]:
+        res = res.copy()
+    return res
+
+
+def ifft(a, n=None, axis=-1):
+    """High-performance replacement for :func:`numpy.fft.ifft`"""
+    # return get_ifft(a=a, n=n, axis=axis)(a)
+    key = ("ifft", a.dtype, a.shape, n, axis)
+    if key not in _fft_cache:
+        _fft_cache[key] = get_ifft(a=a, n=n, axis=axis)
+    res = _fft_cache[key](a)
+    if not res.flags["OWNDATA"]:
+        res = res.copy()
+    return res
+
+
+def fftn(a, s=None, axes=None):
+    """High-performance replacement for :func:`numpy.fft.fftn`"""
+    # return get_fftn(a=a, s=s, axes=axes)(a)
+    if axes is not None:
+        axes = tuple(axes)
+    key = ("fftn", a.dtype, a.shape, s, axes)
+    if key not in _fft_cache:
+        _fft_cache[key] = get_fftn(a=a, s=s, axes=axes)
+    res = _fft_cache[key](a)
+    if not res.flags["OWNDATA"]:
+        res = res.copy()
+    return res
+
+
+def ifftn(a, s=None, axes=None):
+    """High-performance replacement for :func:`numpy.fft.ifftn`"""
+    # return get_ifftn(a=a, s=s, axes=axes)(a)
+    if axes is not None:
+        axes = tuple(axes)
+    key = ("ifftn", a.dtype, a.shape, s, axes)
+    if key not in _fft_cache:
+        _fft_cache[key] = get_ifftn(a=a, s=s, axes=axes)
+    res = _fft_cache[key](a)
+    if not res.flags["OWNDATA"]:
+        res = res.copy()
+    return res
 
 
 def resample(f, N):
