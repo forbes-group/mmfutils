@@ -17,9 +17,22 @@ using something like::
 
 Note: The FFTW library does not work with negative indices for axis.
 Indices should first be normalized by ``inds % len(shape)``.
+
+For best performance, you should call the appropriate `get_*fft*()`.  By default, this
+uses `_PLANNER_EFFORT = "FFTW_MEASURE"` with `_THREADS`.  For optimal performance, you
+need to adjust `_THREADS` or use `_PLANNER_EFFORT = "FFTW_PATIENT"`, but this can be
+extremely slow.
+
+The methods `fft`, `ifft`, fftn`, and `ifftn` are provided for convenience.  They call
+an appropriate builder upon first invocation, check that the returned function is faster
+than the NumPy version, and then cache this.  The returned function checks the global
+flag `_COPY_OUTPUT` ensures that the resulting array has `flags['OWNDATA']`, otherwise a
+copy is made.  If the fft function will not be called before the array is copied, you
+might gain some performance improvement by setting this to `False`.
 """
 import functools
 import itertools
+import os
 import timeit
 import warnings
 
@@ -65,8 +78,9 @@ fftfreq = np.fft.fftfreq
 fftshift = np.fft.fftshift
 
 
-_THREADS = 8
+_THREADS = os.cpu_count()
 _PLANNER_EFFORT = "FFTW_MEASURE"
+_COPY_OUTPUT = True
 
 
 def set_num_threads(nthreads):
@@ -269,7 +283,7 @@ except ImportError:  # pragma: nocover
     get_fft_pyfftw = None
     get_ifft_pyfftw = None
     get_fftn_pyfftw = None
-    get_ifft_pyfftw = None
+    get_ifftn_pyfftw = None
 
 
 def _get_best(ffts, a, repeat=3, number=1):
@@ -311,6 +325,7 @@ def get_fft(a, n=None, axis=-1, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.fft`.
     """
+    global get_fft_pyfftw
     ffts = []
     if get_fft_pyfftw:
         ffts.append(get_fft_pyfftw(a=a, n=n, axis=axis, **kw))
@@ -328,6 +343,7 @@ def get_ifft(a, n=None, axis=-1, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.ifft`.
     """
+    global get_ifft_pyfftw
     ffts = []
     if get_ifft_pyfftw:
         ffts.append(get_ifft_pyfftw(a=a, n=n, axis=axis, **kw))
@@ -345,6 +361,7 @@ def get_fftn(a, s=None, axes=None, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.fftn`.
     """
+    global get_fftn_pyfftw
     ffts = []
     if get_fftn_pyfftw:
         ffts.append(get_fftn_pyfftw(a=a, s=s, axes=axes, **kw))
@@ -362,6 +379,7 @@ def get_ifftn(a, s=None, axes=None, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.ifftn`.
     """
+    global get_ifftn_pyfftw
     ffts = []
     if get_ifftn_pyfftw:
         ffts.append(get_ifftn_pyfftw(a=a.copy(), s=s, axes=axes, **kw))
@@ -369,17 +387,18 @@ def get_ifftn(a, s=None, axes=None, repeat=3, number=1, **kw):
     return _get_best(ffts, a, repeat=3, number=1)
 
 
-_fft_cache = dict()
+_FFT_CACHE = dict()
 
 
 def fft(a, n=None, axis=-1):
     """High-performance replacement for :func:`numpy.fft.fft`"""
     # return get_fft(a=a, n=n, axis=axis)(a)
-    key = ("fft", a.dtype, a.shape, n, axis)
-    if key not in _fft_cache:
-        _fft_cache[key] = get_fft(a=a, n=n, axis=axis)
-    res = _fft_cache[key](a)
-    if not res.flags["OWNDATA"]:
+    global _THREADS, _PLANNER_EFFORT, _COPY_OUTPUT, _FFT_CACHE
+    key = ("fft", a.dtype, a.shape, n, axis, _THREADS, _PLANNER_EFFORT)
+    if key not in _FFT_CACHE:
+        _FFT_CACHE[key] = get_fft(a=a.copy(), n=n, axis=axis)
+    res = _FFT_CACHE[key](a)
+    if _COPY_OUTPUT and not res.flags["OWNDATA"]:
         res = res.copy()
     return res
 
@@ -387,11 +406,12 @@ def fft(a, n=None, axis=-1):
 def ifft(a, n=None, axis=-1):
     """High-performance replacement for :func:`numpy.fft.ifft`"""
     # return get_ifft(a=a, n=n, axis=axis)(a)
-    key = ("ifft", a.dtype, a.shape, n, axis)
-    if key not in _fft_cache:
-        _fft_cache[key] = get_ifft(a=a, n=n, axis=axis)
-    res = _fft_cache[key](a)
-    if not res.flags["OWNDATA"]:
+    global _THREADS, _PLANNER_EFFORT, _COPY_OUTPUT, _FFT_CACHE
+    key = ("ifft", a.dtype, a.shape, n, axis, _THREADS, _PLANNER_EFFORT)
+    if key not in _FFT_CACHE:
+        _FFT_CACHE[key] = get_ifft(a=a.copy(), n=n, axis=axis)
+    res = _FFT_CACHE[key](a)
+    if _COPY_OUTPUT and not res.flags["OWNDATA"]:
         res = res.copy()
     return res
 
@@ -399,13 +419,14 @@ def ifft(a, n=None, axis=-1):
 def fftn(a, s=None, axes=None):
     """High-performance replacement for :func:`numpy.fft.fftn`"""
     # return get_fftn(a=a, s=s, axes=axes)(a)
+    global _THREADS, _PLANNER_EFFORT, _COPY_OUTPUT, _FFT_CACHE
     if axes is not None:
         axes = tuple(axes)
-    key = ("fftn", a.dtype, a.shape, s, axes)
-    if key not in _fft_cache:
-        _fft_cache[key] = get_fftn(a=a, s=s, axes=axes)
-    res = _fft_cache[key](a)
-    if not res.flags["OWNDATA"]:
+    key = ("fftn", a.dtype, a.shape, s, axes, _THREADS, _PLANNER_EFFORT)
+    if key not in _FFT_CACHE:
+        _FFT_CACHE[key] = get_fftn(a=a.copy(), s=s, axes=axes)
+    res = _FFT_CACHE[key](a)
+    if _COPY_OUTPUT and not res.flags["OWNDATA"]:
         res = res.copy()
     return res
 
@@ -413,13 +434,14 @@ def fftn(a, s=None, axes=None):
 def ifftn(a, s=None, axes=None):
     """High-performance replacement for :func:`numpy.fft.ifftn`"""
     # return get_ifftn(a=a, s=s, axes=axes)(a)
+    global _THREADS, _PLANNER_EFFORT, _COPY_OUTPUT, _FFT_CACHE
     if axes is not None:
         axes = tuple(axes)
-    key = ("ifftn", a.dtype, a.shape, s, axes)
-    if key not in _fft_cache:
-        _fft_cache[key] = get_ifftn(a=a, s=s, axes=axes)
-    res = _fft_cache[key](a)
-    if not res.flags["OWNDATA"]:
+    key = ("ifftn", a.dtype, a.shape, s, axes, _THREADS, _PLANNER_EFFORT)
+    if key not in _FFT_CACHE:
+        _FFT_CACHE[key] = get_ifftn(a=a.copy(), s=s, axes=axes)
+    res = _FFT_CACHE[key](a)
+    if _COPY_OUTPUT and not res.flags["OWNDATA"]:
         res = res.copy()
     return res
 

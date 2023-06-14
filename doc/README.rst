@@ -1299,6 +1299,15 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.6.6
+----------
+
+-  Fix issue #31: FFT falbacks should work even if pyfftw is not
+   installed. (Monkeypatch this case in ``test_performance_fft.py``)
+-  Fix issue #32: Make copy of arrays before calling pyfftw builders for
+   the convenience functions to ensure that everything works, even if
+   they are not ``WRITEABLE``.
+
 REL: 0.6.5
 ----------
 
