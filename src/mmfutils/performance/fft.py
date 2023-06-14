@@ -283,7 +283,7 @@ except ImportError:  # pragma: nocover
     get_fft_pyfftw = None
     get_ifft_pyfftw = None
     get_fftn_pyfftw = None
-    get_ifft_pyfftw = None
+    get_ifftn_pyfftw = None
 
 
 def _get_best(ffts, a, repeat=3, number=1):
@@ -325,6 +325,7 @@ def get_fft(a, n=None, axis=-1, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.fft`.
     """
+    global get_fft_pyfftw
     ffts = []
     if get_fft_pyfftw:
         ffts.append(get_fft_pyfftw(a=a, n=n, axis=axis, **kw))
@@ -342,6 +343,7 @@ def get_ifft(a, n=None, axis=-1, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.ifft`.
     """
+    global get_ifft_pyfftw
     ffts = []
     if get_ifft_pyfftw:
         ffts.append(get_ifft_pyfftw(a=a, n=n, axis=axis, **kw))
@@ -359,6 +361,7 @@ def get_fftn(a, s=None, axes=None, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.fftn`.
     """
+    global get_fftn_pyfftw
     ffts = []
     if get_fftn_pyfftw:
         ffts.append(get_fftn_pyfftw(a=a, s=s, axes=axes, **kw))
@@ -376,6 +379,7 @@ def get_ifftn(a, s=None, axes=None, repeat=3, number=1, **kw):
 
     Other arguments are as for :func:`numpy.fft.ifftn`.
     """
+    global get_ifftn_pyfftw
     ffts = []
     if get_ifftn_pyfftw:
         ffts.append(get_ifftn_pyfftw(a=a.copy(), s=s, axes=axes, **kw))
