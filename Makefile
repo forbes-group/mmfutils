@@ -1,23 +1,39 @@
-DEV_PYTHON_VER ?= 3.10
+DEV_PYTHON_VER ?= 3.11
 PY_VERS ?= 3.7 3.8 3.9 3.10 3.11
 PANDOC_FLAGS ?= --toc --standalone
 
+USE_MICROMAMBA ?= true
+USE_ROSETTA ?= false
+
+CHANNEL ?= conda-forge
+
 ENVS ?= envs
-
-# We need special effects for 
-ifeq ($(shell uname -p),arm)
-  PLATFORM = arm64
-  CONDA_PRE += CONDA_SUBDIR=osx-64
-endif    
-
-CONDA ?= $(CONDA_PRE) conda
-CONDA_ACTIVATE ?= source $$($(CONDA) info --base)/etc/profile.d/conda.sh && $(CONDA) activate
-
-DEV_ENV ?= $(ENVS)/py$(DEV_PYTHON_VER)
-
 BIN ?= build/bin
 
+# Set to true if you want to use poetry shell etc.
+
+USE_POETRY ?= false
+
 # ------- Computed variables ------
+ifeq ($(USE_MICROMAMBA), true)
+  CONDA ?= $(CONDA_PRE) micromamba
+	CONDA_ENV = $(CONDA)
+  CONDA_ACTIVATE ?= eval "$$(micromamba shell hook --shell=bash)" && micromamba activate
+else
+  CONDA ?= $(CONDA_PRE) conda
+	CONDA_ENV = $(CONDA) env
+  CONDA_ACTIVATE ?= source $$($(CONDA) info --base)/etc/profile.d/conda.sh && $(CONDA) activate
+endif
+
+# We need special effects for 
+ifeq ($(USE_ROSETTA), true)
+  ifeq ($(shell uname -p),arm)
+    PLATFORM = arm64
+    CONDA_PRE += CONDA_SUBDIR=osx-64
+  endif
+endif
+
+DEV_ENV ?= $(ENVS)/py$(DEV_PYTHON_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
@@ -29,22 +45,37 @@ help:
 usage:
 	@echo "$$HELP_MESSAGE"
 
+shell: dev
+ifeq ($(USE_POETRY), true)
+	poetry shell
+else
+	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
+endif
+
 test: dev
 	$(CONDA_ACTIVATE_DEV) && pytest
 
 README.rst: doc/README.ipynb
 	jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 
+
 %.html: %.rst
 	rst2html5.py $< > $@
 
-BROWSER ?= Safari
+# Running make <name>.html will use fswatch to look for modifications in the corresponding
+# <name>.md file and will use pandoc to generate the html file, then calling $(OPEN_BROWSER)
+# to show this. We then run fswatch to look over this looking for changes.  Once the user
+# exits with a keyboard interrupt, the intermediate html file is removed.  We use Safari
+# as the default browser on Mac OS X because Chrome-based browsers steal focus.
+BROWSER ?= "Safari"
 BROWSER ?= "Brave Browser"
-
+OPEN_BROWSER ?= open -g -a $(BROWSER) $@
+PANDOC_FLAGS ?= -s
+PANDOC ?= pandoc $(PANDOC_FLAGS) --metadata title=\"$*\" $< -o $@
+FSWATCH ?= fswatch -e ".*" -i "$<" -o . 
 %.html: %.md
-	pandoc $(PANDOC_FLAGS) $< -o $@  && open -g -a $(BROWSER) $@
-	fswatch -e ".*\.html" -o . | while read num ; do pandoc $(PANDOC_FLAGS) $< -o $@ && open -g -a $(BROWSER) $@; done
-
+	$(PANDOC) && $(OPEN_BROWSER)
+	$(FSWATCH) | while read num; do $(PANDOC) && $(OPEN_BROWSER); done
 
 clean:
 	-coverage erase
@@ -62,24 +93,32 @@ realclean: clean
 	$(RM) -r build
 
 dev: $(DEV_ENV)
-	#$(CONDA_ACTIVATE_DEV) && pip install -e .[test]
+ifeq ($(USE_POETRY), true)
 	poetry env use $(DEV_ENV)/bin/python$(DEV_PYTHON_VER)
+	poetry install -E test -E doc
+else
+	$(CONDA_ACTIVATE_DEV) && python3 -m pip install -e .[test,doc]
+endif
 
 $(ENVS): $(ALL_ENVS)
 
-$(ENVS)/py3.11:
-	$(CONDA) create -y -p $@ "conda-forge::python=3.11"
-ifeq ($(shell uname -p),arm)
-	$(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
-endif    
+$(ENVS)/py3.11: environment.yaml pyproject.toml
+	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "conda-forge::python=3.11"
+ifneq ($(USE_MICROMAMBA), true)
+  ifeq ($(shell uname -p),arm)
+	  $(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
+  endif
+endif
 	mkdir -p $(BIN)
 	ln -fs $(abspath $@/bin/python3.11) $(BIN)/
 
-$(ENVS)/py%:
-	$(CONDA) create -y -p $@ "python=$*"
-ifeq ($(shell uname -p),arm)
-	$(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
-endif    
+$(ENVS)/py%: environment.yaml pyproject.toml
+	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "python=$*"
+ifneq ($(USE_MICROMAMBA), true)
+  ifeq ($(shell uname -p),arm)
+	  $(CONDA_ACTIVATE) $@ && $(CONDA) config --env --set subdir osx-64
+  endif
+endif
 	mkdir -p $(BIN)
 	ln -fs $(abspath $@/bin/python$*) $(BIN)/
 

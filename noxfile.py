@@ -53,6 +53,6 @@ def test_conda(session):
     # session.conda_env_update("environment.yml")
     # session.conda("env", "update", "--f", "environment.yml",
     #              conda="mamba", external=True)
-    session.conda_install("conda-forge::pyfftw==0.13.1")
+    session.conda_install("conda-forge::fftw>=0.13.1")
     session.install(".[test]")
     session.run("pytest")

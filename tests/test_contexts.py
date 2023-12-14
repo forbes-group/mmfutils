@@ -34,7 +34,7 @@ class TestNoInterrupt(object):
             # Simulated a forced interrupt with multiple signals
             os.kill(os.getpid(), signum)
             os.kill(os.getpid(), signum)
-        time.sleep(0.1)
+        contexts.sleep(0.1)
 
     def test_typical_use(self, NoInterrupt):
         """Typical usage"""
@@ -81,7 +81,7 @@ class TestNoInterrupt(object):
         # Make sure the signals can still be raised.
         with pytest.raises(KeyboardInterrupt):
             self.simulate_interrupt()
-            time.sleep(1)
+            contexts.sleep(1)
 
         # And that the interrupts are reset
         try:
@@ -210,7 +210,7 @@ class TestNoInterrupt(object):
         # Signals should no longer be caught
         with pytest.raises(KeyboardInterrupt):
             self.simulate_interrupt()
-            time.sleep(1)
+            contexts.sleep(1)
 
     def test_reused_context(self, NoInterrupt):
         """Test that NoInterrupt() instances can be reused."""
@@ -293,6 +293,27 @@ class TestNoInterrupt(object):
         with NoInterrupt(ignore=True) as interrupted:
             self.simulate_interrupt(signum=signal.SIGINT)
 
+    def test_nested_exceptions(self, NoInterrupt):
+        with pytest.raises(ValueError):
+            with NoInterrupt():
+                with NoInterrupt():
+                    raise ValueError("My Value Error")
+
+    def test_issue33(self, NoInterrupt):
+        """Regression test for issue #33 about ipython and nested contexts."""
+        import IPython
+
+        # IPython.start_ipython()
+        with pytest.raises(ValueError):
+            with NoInterrupt():
+                with NoInterrupt():
+                    raise ValueError("My Value Error")
+
+
+@pytest.fixture(params=[None, 60])
+def max_fps(request):
+    yield request.param
+
 
 class TestFPS:
     def test_timeout(self):
@@ -301,49 +322,50 @@ class TestFPS:
         with contexts.FPS(frames=100, timeout=timeout) as fps:
             tic = time.time()
             for frame in fps:
-                time.sleep(sleep_time)
+                contexts.sleep(sleep_time)
             _fps = fps.fps
         assert fps.fps == _fps
         t = time.time() - tic
         assert t < 1.1 * (timeout + sleep_time)
         assert repr(fps) == f"{fps.fps:.2f}"
 
-    def test_frames(self):
+    def test_frames(self, max_fps):
         sleep_time = 0.01
         frames = 13
-        with contexts.FPS(frames=frames) as fps:
-            time.sleep(sleep_time)
+        with contexts.FPS(frames=frames, max_fps=max_fps) as fps:
+            contexts.sleep(sleep_time)
             for frame in fps:
-                time.sleep(sleep_time)
+                contexts.sleep(sleep_time)
         assert frame == frames - 1
         _fps = fps.fps
-        time.sleep(sleep_time)  # should not change fps
+        contexts.sleep(sleep_time)  # should not change fps
         assert _fps == fps.fps
-        self._check_fps(fps, sleep_time)
+        self._check_fps(fps, sleep_time=sleep_time)
 
     @pytest.mark.flaky(reruns=5)
-    def test_ts(self):
+    def test_ts(self, max_fps):
         sleep_time = 0.01
         ts = np.linspace(0, 1, 13)
-        with contexts.FPS(frames=ts) as fps:
+        with contexts.FPS(frames=ts, max_fps=max_fps) as fps:
             for n, t in enumerate(fps):
                 assert t == ts[n]
-                time.sleep(sleep_time)
+                contexts.sleep(sleep_time)
 
         assert t == ts[-1]
-        assert np.allclose(fps.fps, 1.0 / sleep_time, rtol=0.2)
+        self._check_fps(fps, sleep_time=sleep_time)
 
-    def test_infinite(self):
-        sleep_time = 0.02
+    def test_infinite(self, max_fps):
+        sleep_time = 0.01
         timeout = 0.1
         tic = time.time()
         with contexts.FPS(
             frames=itertools.count(start=0, step=1),
             timeout=timeout,
             unregister=unregister,
+            max_fps=max_fps,
         ) as fps:
             for frame in fps:
-                time.sleep(sleep_time)
+                contexts.sleep(sleep_time)
 
         t = time.time() - tic
         assert t < 1.1 * (timeout + sleep_time)
@@ -351,12 +373,14 @@ class TestFPS:
         # leftover = 1.0 / fps.fps - sleep_time
         # assert np.allclose(fps.fps, leftover)
 
-    def _check_fps(self, fps, sleep_time, rtol=0.2):
+    def _check_fps(self, fps, sleep_time, rtol=0.05):
+        if fps.max_fps:
+            sleep_time = max(sleep_time, 1 / fps.max_fps)
         _fps = 1.0 / sleep_time
         dts = np.diff(fps.tics)
         dt = ufloat(dts.mean(), dts.std())
         assert np.allclose(1 / dt.n, fps.fps)
-        assert np.allclose(fps.fps, _fps, rtol=rtol, atol=2 * (1 / dt).s)
+        assert np.allclose(fps.fps, _fps, rtol=rtol, atol=(1 / dt).s)
 
     def test_coverage(self, unregister):
         """Test some edge cases."""
