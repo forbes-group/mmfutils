@@ -1,0 +1,11 @@
+# Environment for running tests.
+name: mmfutils_dev
+channels:
+  - conda-forge
+dependencies:
+  # Better to install these from conda for performance.
+  - numpy>=1.24.3
+  - numba>=0.57
+  - cython
+  - fftw>=3.3.10
+  - pip>=23.1.2
