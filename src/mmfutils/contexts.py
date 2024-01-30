@@ -1,5 +1,6 @@
 """Various useful contexts.
 """
+
 import collections
 from contextlib import contextmanager
 import functools
@@ -698,8 +699,25 @@ class FPS:
 
     Examples
     --------
-    >>> from time import sleep
     >>> import numpy as np
+    >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
+    >>> for t in fps:
+    ...     print(f"t={t:.1f}: fps={fps:}")
+    ...     sleep(0.1)
+    ...     print(1/np.diff(fps.tics))
+    t=0.0: fps=nan
+    t=0.1: fps=9...
+    t=0.2: fps=9...
+    t=0.3: fps=9...
+    t=0.4: fps=9...
+    t=0.5: fps=9...
+    t=0.6: fps=9...
+    t=0.7: fps=9...
+    t=0.8: fps=9...
+    t=0.9: fps=9...
+
+    This actually creates a context under the hood.  If you want to be explicit, you can
+    do something like this:
     >>> with FPS(frames=0.1*np.arange(10), timeout=10) as fps:
     ...     for t in fps:
     ...         print(f"t={t:.1f}: fps={fps:}")
@@ -716,11 +734,21 @@ class FPS:
     t=0.8: fps=9...
     t=0.9: fps=9...
 
+    Note that you can get the results after if needed:
+    >>> print(fps)
+    9...
+
+    But you can't do this:
+    >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
+    >>> print(fps)
+    Traceback (most recent call last):
+       ...
+    ValueError: Unintialized FPS object: please use in a context or after a loop.
+
     If you don't need to report the actual performance, you can just use the FPS class
     as an iterator.  This will break only at the start of the loop if interrupted, or if
     the timeout is exceeded.
 
-    >>> from time import sleep
     >>> import numpy as np
     >>> for t in FPS(frames=0.1*np.arange(10), timeout=10):
     ...     print(f"t={t:.1f}")
@@ -761,9 +789,18 @@ class FPS:
         return self._interrupted.__exit__(exc_type, exc_value, traceback)
 
     def __iter__(self):
-        with self as frames:
-            for frame in frames:
+        with self as self._frames_obj:
+            for frame in self._frames_obj:
                 yield frame
+
+    def __str__(self):
+        """Delegate to self._frames if it exists."""
+        if hasattr(self, "_frames_obj"):
+            return str(self._frames_obj)
+        raise ValueError(
+            f"Unintialized {self.__class__.__name__} object:"
+            + " please use in a context or after a loop."
+        )
 
     class Frame:
         def __init__(self, interrupted, frames, max_tics, max_fps):
