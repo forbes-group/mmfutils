@@ -327,7 +327,8 @@ class TestFPS:
         assert fps.fps == _fps
         t = time.time() - tic
         assert t < 1.1 * (timeout + sleep_time)
-        assert repr(fps) == f"{fps.fps:.2f}"
+        assert str(fps) == f"{fps.fps:.2f}"
+        assert np.allclose(float(fps), fps.fps)
 
     def test_frames(self, max_fps):
         sleep_time = 0.01

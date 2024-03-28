@@ -673,6 +673,109 @@ def coroutine(coroutine):
     return wrapper
 
 
+class FPS_Frames:
+    """Helper class for FPS.
+
+    This is the object returned in the with FPS() context.
+
+    Attributes
+    ----------
+    the_frames : iterable
+        Iterable of the actual frames.
+    frames : int, None
+        Number of frames or None if unavailable.
+    frame : int
+        Number of the current frame.
+    fps : float
+        Current frames-per-second, base on last `max_tics` iterations.
+    max_fps : float, None
+        If provided, then sleep to rate-limit the iterations to this maximum fps.
+    max_tics : int
+        How many of the last updates will be used to calculate the fps.  (All if None).
+    """
+
+    def __init__(self, interrupted, the_frames_or_frames, max_fps, max_tics):
+        self.interrupted = interrupted
+
+        try:  # Can we iterate through frames directly?
+            self.the_frames = iter(the_frames_or_frames)
+            try:  # If so, can we find the length?
+                self.frames = len(self.the_frames)
+            except TypeError:  # No.  Infinite or indeterminate iterator.
+                self.frames = None
+        except TypeError:  # Not an iterator.  Delegate to range().
+            self.the_frames = range(the_frames_or_frames)
+            self.frames = the_frames_or_frames
+
+        self.max_tics = max_tics
+        self.max_fps = max_fps
+        self._reset()
+
+    def _reset(self):
+        self._frame = -1
+        self.tic = time.perf_counter()
+        self.tics = collections.deque([self.tic], maxlen=self.max_tics)
+
+    def __bool__(self):
+        """True while running"""
+        return not bool(self.interrupted) and (
+            self.frames is None or self.frame < self.frames
+        )
+
+    @property
+    def frame(self):
+        return self._frame
+
+    @frame.setter
+    def frame(self, frame):
+        # SMELLS.  assert (frame == self._frame + 1)?
+        if frame > 0 and frame == self._frame + 1:
+            self.tics.append(time.perf_counter())
+        self._frame = frame
+
+    @property
+    def fps(self):
+        assert 0 < len(self.tics)
+        if len(self.tics) == 1:
+            return math.nan
+        else:
+            return (len(self.tics) - 1) / (self.tics[-1] - self.tics[0])
+
+    def __str__(self):
+        return "{:.2f}".format(self.fps)
+
+    def __iter__(self):
+        self._reset()
+        the_frames = self.the_frames
+        if not self.max_fps:
+            for frame in the_frames:
+                if not self:
+                    break
+                self.frame += 1
+                yield frame
+        else:
+            # More complicated version with rate limiting.
+            dt = 1.0 / self.max_fps
+            tic = None
+            for frame in the_frames:
+                if not self:
+                    break
+                toc = time.perf_counter()
+                if tic is not None:
+                    wait = max(0, tic + dt - toc)
+                    sleep(wait)
+                    # Our sleep makes this a little more accurate since time.sleep() can
+                    # take longer than wait
+                    # https://stackoverflow.com/questions/1133857
+                    toc += wait
+                tic = toc
+                self.frame += 1
+                yield frame
+
+    def __float__(self):
+        return self.fps
+
+
 class FPS:
     """Context manager to measure framerate and provide interrupt control.
 
@@ -690,12 +793,12 @@ class FPS:
         Yields iterator or range.
     timeout : float
         Timeout in seconds.
-    tics : int
-        How many of the last updates will be used to calculate the fps.
     max_fps : float, None
         If provided, then sleep to rate-limit the iterations to this maximum fps.
     unregister : bool
         If `True`, then call NoInterrupt.unregister() before the loop.
+    max_tics : int, None
+        Maximum number of last updates used to calculate the fps.  Will use all if None.
 
     Examples
     --------
@@ -704,7 +807,6 @@ class FPS:
     >>> for t in fps:
     ...     print(f"t={t:.1f}: fps={fps:}")
     ...     sleep(0.1)
-    ...     print(1/np.diff(fps.tics))
     t=0.0: fps=nan
     t=0.1: fps=9...
     t=0.2: fps=9...
@@ -715,6 +817,8 @@ class FPS:
     t=0.7: fps=9...
     t=0.8: fps=9...
     t=0.9: fps=9...
+    >>> print(1/np.diff(fps.tics))
+    [9... 9... 9... 9... 9... 9... 9... 9... 9...]
 
     This actually creates a context under the hood.  If you want to be explicit, you can
     do something like this:
@@ -722,6 +826,7 @@ class FPS:
     ...     for t in fps:
     ...         print(f"t={t:.1f}: fps={fps:}")
     ...         sleep(0.1)
+    ...     print("Loop done!")
     ...     print(1/np.diff(fps.tics))
     t=0.0: fps=nan
     t=0.1: fps=9...
@@ -733,6 +838,8 @@ class FPS:
     t=0.7: fps=9...
     t=0.8: fps=9...
     t=0.9: fps=9...
+    Loop done!
+    [9... 9... 9... 9... 9... 9... 9... 9... 9...]
 
     Note that you can get the results after if needed:
     >>> print(fps)
@@ -765,10 +872,12 @@ class FPS:
     t=0.9
     """
 
-    def __init__(self, frames=200, timeout=5, tics=20, max_fps=None, unregister=True):
+    def __init__(
+        self, frames=200, timeout=5, max_fps=None, unregister=True, max_tics=20
+    ):
         self.frames = frames
         self.timeout = timeout
-        self.max_tics = tics
+        self.max_tics = max_tics
         self.max_fps = max_fps
         self.unregister = unregister
 
@@ -777,9 +886,9 @@ class FPS:
             timeout=self.timeout, unregister=self.unregister
         )
         interrupted = self._interrupted.__enter__()
-        fps = self.Frame(
+        fps = FPS_Frames(
             interrupted=interrupted,
-            frames=self.frames,
+            the_frames_or_frames=self.frames,
             max_tics=self.max_tics,
             max_fps=self.max_fps,
         )
@@ -802,80 +911,19 @@ class FPS:
             + " please use in a context or after a loop."
         )
 
-    class Frame:
-        def __init__(self, interrupted, frames, max_tics, max_fps):
-            self.interrupted = interrupted
-            try:
-                self.the_frames = iter(frames)
-                try:
-                    self.frames = len(frames)
-                except TypeError:
-                    self.frames = None
+    @property
+    def tics(self):
+        if hasattr(self, "_frames_obj"):
+            return getattr(self._frames_obj, "tics")
+        raise AttributeError(
+            f"Unintialized {self.__class__.__name__} object:"
+            + " please use in a context or after a loop."
+        )
 
-            except TypeError:
-                self.the_frames = range(frames)
-                self.frames = frames
-            self.max_tics = max_tics
-            self.max_fps = max_fps
-            self._reset()
+    # Do something like this... that works
 
-        def _reset(self):
-            self._frame = -1
-            self.tic = time.perf_counter()
-            self.tics = collections.deque([self.tic], maxlen=self.max_tics)
-
-        def __bool__(self):
-            """True while running"""
-            return not bool(self.interrupted) and (
-                self.frames is None or self.frame < self.frames
-            )
-
-        @property
-        def frame(self):
-            return self._frame
-
-        @frame.setter
-        def frame(self, frame):
-            if frame > 0 and frame == self._frame + 1:
-                self.tics.append(time.perf_counter())
-            self._frame = frame
-
-        @property
-        def fps(self):
-            if len(self.tics) == 0:  # pragma: nocover
-                return 0  # Never happens if properly constructed.
-            elif len(self.tics) == 1:
-                return math.nan
-            else:
-                return (len(self.tics) - 1) / (self.tics[-1] - self.tics[0])
-
-        def __repr__(self):
-            return "{:.2f}".format(self.fps)
-
-        def __iter__(self):
-            self._reset()
-            frames = self.the_frames
-            if not self.max_fps:
-                for frame in frames:
-                    if not self:
-                        break
-                    self.frame += 1
-                    yield frame
-            else:
-                # More complicated version with rate limiting.
-                dt = 1.0 / self.max_fps
-                tic = None
-                for frame in frames:
-                    if not self:
-                        break
-                    toc = time.perf_counter()
-                    if tic:
-                        wait = max(0, tic + dt - toc)
-                        sleep(wait)
-                        # This makes this a little more accurate since time.sleep() can
-                        # take longer than wait
-                        # https://stackoverflow.com/questions/1133857
-                        toc += wait
-                    tic = toc
-                    self.frame += 1
-                    yield frame
+    def ___getattr__(self, key):
+        if hasattr(self, "_frames_obj"):
+            return getattr(self._frames_obj, key)
+        else:
+            return super().__getattr__(key)
