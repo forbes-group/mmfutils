@@ -604,7 +604,7 @@ class CoroutineWrapper(object):
 
 
 def coroutine(coroutine):
-    """Decorator for a context that yeilds a function from a coroutine.
+    """Decorator for a context that yields a function from a coroutine.
 
     This allows you to write functions that maintain state between calls.  The
     use as a context here ensures that the coroutine is closed.
@@ -697,15 +697,16 @@ class FPS_Frames:
     def __init__(self, interrupted, the_frames_or_frames, max_fps, max_tics):
         self.interrupted = interrupted
 
-        try:  # Can we iterate through frames directly?
-            self.the_frames = iter(the_frames_or_frames)
-            try:  # If so, can we find the length?
-                self.frames = len(self.the_frames)
-            except TypeError:  # No.  Infinite or indeterminate iterator.
+        try:  # Do we have a length?
+            self.frames = len(the_frames_or_frames)
+            self.the_frames = the_frames_or_frames
+        except TypeError:  # No.  Infinite/indefinite or number
+            try:
+                self.the_frames = iter(the_frames_or_frames)
                 self.frames = None
-        except TypeError:  # Not an iterator.  Delegate to range().
-            self.the_frames = range(the_frames_or_frames)
-            self.frames = the_frames_or_frames
+            except TypeError:  # Not an iterator.  Delegate to range().
+                self.the_frames = range(the_frames_or_frames)
+                self.frames = the_frames_or_frames
 
         self.max_tics = max_tics
         self.max_fps = max_fps
@@ -791,8 +792,9 @@ class FPS:
     ---------
     frames : int | iterable
         Yields iterator or range.
-    timeout : float
-        Timeout in seconds.
+    timeout : float, None
+        Timeout in seconds.  If `len(frames)` is finite, then the default is -1
+        (corresponding to no timeout).
     max_fps : float, None
         If provided, then sleep to rate-limit the iterations to this maximum fps.
     unregister : bool
@@ -872,8 +874,10 @@ class FPS:
     t=0.9
     """
 
+    _default_timeout = 10
+
     def __init__(
-        self, frames=200, timeout=5, max_fps=None, unregister=True, max_tics=20
+        self, frames=200, timeout=None, max_fps=None, unregister=True, max_tics=20
     ):
         self.frames = frames
         self.timeout = timeout
@@ -882,16 +886,18 @@ class FPS:
         self.unregister = unregister
 
     def __enter__(self):
-        self._interrupted = NoInterrupt(
-            timeout=self.timeout, unregister=self.unregister
-        )
-        interrupted = self._interrupted.__enter__()
         fps = FPS_Frames(
-            interrupted=interrupted,
+            interrupted=None,
             the_frames_or_frames=self.frames,
             max_tics=self.max_tics,
             max_fps=self.max_fps,
         )
+        if fps.frames is None and self.timeout is None:
+            self.timeout = self._default_timeout
+        self._interrupted = NoInterrupt(
+            timeout=self.timeout, unregister=self.unregister
+        )
+        fps.interrupted = self._interrupted.__enter__()
         return fps
 
     def __exit__(self, exc_type, exc_value, traceback):

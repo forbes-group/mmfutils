@@ -2014,7 +2014,7 @@ I was having lots of issues with [pyFFTW][] on my ARM Mac.  These include the fo
 * Several new issues related to Cython 3.0 appeared in 2023: [issue
   #362](https://github.com/pyFFTW/pyFFTW/issues/362) and [issue
   #294](https://github.com/pyFFTW/pyFFTW/issues/294), and several related to paths
-  [issue #349](https://github.com/pyFFTW/pyFFTW/issues/349) and [issue
+  [issue #349](https://github.com/pyFFT/pyFFTW/issues/349) and [issue
   #352](https://github.com/pyFFTW/pyFFTW/issues/352).  Most of these seem to be resolved
   by [PR #363](https://github.com/pyFFTW/pyFFTW/pull/363), so I currently recommend
   using that.

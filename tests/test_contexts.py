@@ -374,6 +374,45 @@ class TestFPS:
         # leftover = 1.0 / fps.fps - sleep_time
         # assert np.allclose(fps.fps, leftover)
 
+    @pytest.mark.flaky(reruns=5)
+    def test_default_timeout(self):
+        _default_timeout = contexts.FPS._default_timeout
+        try:
+            dT = 0.03
+            contexts.FPS._default_timeout = 0.1
+            N = 10
+
+            def gen():
+                """Indeterminate generator... no len."""
+                for n in range(N):
+                    time.sleep(dT)
+                    yield n
+
+            tic = time.time()
+            for frame in contexts.FPS(gen()):
+                # Loop would normally take N*dT, but default timeout should kick in
+                # since we can get the length of the loop.
+                pass
+            T = time.time() - tic
+
+            # Should take less than the full time but close to default.
+            assert frame < N - 1
+            assert T < (N - 2) * dT
+            assert np.allclose(T, contexts.FPS._default_timeout, atol=2 * dT)
+
+            tic = time.time()
+            for frame in contexts.FPS(range(N)):
+                # Now we can count, so this should take the full
+                time.sleep(dT)
+            T = time.time() - tic
+
+            # Should take full time, more than timeout.
+            assert frame == N - 1
+            assert T > contexts.FPS._default_timeout + dT
+            assert np.allclose(T, N * dT, atol=2 * dT)
+        finally:
+            contexts.FPS._default_timeout = _default_timeout
+
     def _check_fps(self, fps, sleep_time, rtol=0.05):
         if fps.max_fps:
             sleep_time = max(sleep_time, 1 / fps.max_fps)
