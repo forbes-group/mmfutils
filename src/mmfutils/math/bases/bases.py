@@ -13,6 +13,7 @@ from .interfaces import (
     IBasisKx,
     IBasisLz,
     IBasisWithConvolution,
+    IBasisCutoff,
     BasisMixin,
 )
 
@@ -120,7 +121,7 @@ class SphericalBasis(ObjectBase, BasisMixin):
         return idst(Ck * dst(r * y)) / r
 
 
-@implementer(IBasisWithConvolution, IBasisKx, IBasisLz)
+@implementer(IBasisWithConvolution, IBasisKx, IBasisLz, IBasisCutoff)
 class PeriodicBasis(ObjectBase, BasisMixin):
     """dim-dimensional periodic bases.
 
@@ -290,6 +291,22 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             if exp:
                 K = self.xp.exp(K)
             return K * yt
+
+    def smooth(self, f, kc):
+        """Return `f` projected onto momenta < kc, maintaining reality."""
+        if len(np.ravel(kc)) < len(self._pxyz):
+            kc = (kc, ) * len(self._pxyz)
+
+        ft = self.fftn(f)
+
+        for k, _kc in zip(self._pxyz, kc):
+            ft *= np.where(abs(k) < _kc, 1, 0)
+
+        f_smooth = self.ifftn(ft)
+        if np.isrealobj(f):
+            # Maintain reality
+            f_smooth = f_smooth.real
+        return f_smooth
 
     def laplacian(
         self, y, factor=1.0, exp=False, kx2=None, k2=None, kwz2=0, twist_phase_x=None

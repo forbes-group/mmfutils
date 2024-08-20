@@ -129,6 +129,17 @@ class IBasisKx(IBasis):
         """
 
 
+class IBasisCutoff(IBasis):
+    """Extended basis classes that provide a momentum cutoff.
+
+    These classes are used by the PGPE to project to lower frequency.
+    """
+    k_max = Attribute("Maximum momenta representable in the basis.")
+
+    def smooth(f, kc):
+        """Return `f` projected onto momenta < kc, maintaining reality."""
+
+
 class IBasisLz(IBasis):
     """Extension of IBasis that allows the angular momentum along the
     z-axis to be applied.  Useful for implementing rotating frames.
