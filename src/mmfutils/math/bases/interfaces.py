@@ -4,6 +4,7 @@ The interface here provides a way to represent functions in a variety
 of spaces, such as in periodic boxes, or in cylindrical or spherical
 symmetry.
 """
+
 import functools
 
 import numpy as np
@@ -16,6 +17,7 @@ __all__ = [
     "IBasisKx",
     "IBasisLz",
     "IBasisWithConvolution",
+    "IBasisCutoff",
     "BasisMixin",
 ]
 
@@ -134,6 +136,7 @@ class IBasisCutoff(IBasis):
 
     These classes are used by the PGPE to project to lower frequency.
     """
+
     k_max = Attribute("Maximum momenta representable in the basis.")
 
     def smooth(f, kc):
