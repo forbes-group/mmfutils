@@ -85,9 +85,7 @@ class SphericalBasis(ObjectBase, BasisMixin):
     def coulomb_kernel(self, k):
         """Form for the truncated Coulomb kernel."""
         D = 2 * self.R
-        return (
-            4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k**2).filled(D**2 / 2.0)
-        )
+        return 4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k**2).filled(D**2 / 2.0)
 
     def convolve_coulomb(self, y, form_factors=[]):
         """Modified Coulomb convolution to include form-factors (if provided).
@@ -144,7 +142,11 @@ class PeriodicBasis(ObjectBase, BasisMixin):
        Momentum of moving frame.  Momenta are shifted by this, which
        corresponds to working in a boosted frame with velocity `vx = px/m`.
     smoothing_cutoff : float
-       Fraction of maximum momentum used in the function smooth().
+       Fraction of maximum momentum used in the function smooth().  The current
+       implementation is a spherically symmetric truncation in momentum space.  A
+       smoothing_cutoff of 0.5 is suitable for the TGPE as is 2/3 if the density is
+       additionally truncated at each step.  (For details, see
+       https://doi.org/10.1103%2Fphysreve.83.066311)
     memoization_GB : float
        Memoization threshold.  If memoizing factors like the momentum and smoothing
        factor would exceed this threshold, then memoization is disabled.
@@ -219,7 +221,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         # These computations can take a lot of memory if the state is big... we defer
         # unless actually needed.
         self.__pxyz_derivative = None  # Computed as needed: see _pxyz_derivative
-        self.__smoothing_factor = None  # Computed as needed: see _cmoothing_factor
+        self.__smoothing_factor = None  # Computed as needed: see _smoothing_factor
         # _k2 + _kx2 + _kyz2
         memoize_size_GB = xyz_GB + x_GB + yz_GB
         if memoize_size_GB < self.memoization_GB:
@@ -291,22 +293,6 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             if exp:
                 K = self.xp.exp(K)
             return K * yt
-
-    def smooth(self, f, kc):
-        """Return `f` projected onto momenta < kc, maintaining reality."""
-        if len(np.ravel(kc)) < len(self._pxyz):
-            kc = (kc, ) * len(self._pxyz)
-
-        ft = self.fftn(f)
-
-        for k, _kc in zip(self._pxyz, kc):
-            ft *= np.where(abs(k) < _kc, 1, 0)
-
-        f_smooth = self.ifftn(ft)
-        if np.isrealobj(f):
-            # Maintain reality
-            f_smooth = f_smooth.real
-        return f_smooth
 
     def laplacian(
         self, y, factor=1.0, exp=False, kx2=None, k2=None, kwz2=0, twist_phase_x=None
@@ -391,9 +377,13 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         axes = self.axes % len(x.shape)
         return self._ifftn(x, axes=axes)
 
-    def smooth(self, x, frac=0.8):
+    def smooth(self, x):
         """Smooth the state by multiplying by form factor."""
-        return self.ifftn(self._smoothing_factor * self.fftn(x))
+        x_smooth = self.ifftn(self._smoothing_factor * self.fftn(x))
+        if np.isrealobj(x):
+            # Maintain reality
+            x_smooth = x_smooth.real
+        return x_smooth
 
     def get_gradient(self, y):
         # TODO: Check this for the highest momentum issue.
@@ -692,6 +682,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
        This is required for cases where y has additional dimensions.
        The default is the last two axes (best for performance).
     """
+
     _d = 2  # Dimension of spherical part (see nu())
 
     def __init__(self, Nxr, Lxr, twist=0, boost_px=0, axes=(-2, -1), symmetric_x=True):
