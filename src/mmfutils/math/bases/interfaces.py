@@ -138,7 +138,7 @@ class IBasisCutoff(IBasis):
     """
 
     k_max = Attribute("Maximum momenta representable in the basis.")
-    smoothing_factor = Attribute("Fraction of k_max to smooth.")
+    smoothing_cutoff = Attribute("Fraction of k_max to smooth.")
 
     def smooth(f):
         """Return `f` projected onto momenta < kc, maintaining reality."""
