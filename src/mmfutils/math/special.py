@@ -104,7 +104,7 @@ def mstep(t, t1, alpha=3.0, d=0):
     if d == 0:
         return np.piecewise(
             theta,
-            [theta < 0.0, np.logical_and(0 <= theta, theta < np.pi)],
+            [theta <= 0.0, np.logical_and(0 < theta, theta < np.pi)],
             [
                 0.0,
                 lambda theta: (1 - np.tanh(alpha / np.tan(theta))) / 2,
