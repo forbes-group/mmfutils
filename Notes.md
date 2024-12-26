@@ -1461,8 +1461,13 @@ To do this, we advocate the following procedure.
        :show-inheritance:
 ```
   
-5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
-6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
+5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to
+   clean up the repo before you push.  Branches should generally be linear unless there
+   is an exceptional reason to split development.
+   
+6. **Release**: First edit `pyproject.toml` to update the version number by removing the
+   `dev` part of the version number.  Commit only this change and then push only the
+   branch you are working on:
 
     ```bash
     hg com -m "REL: <version>"
@@ -1472,7 +1477,10 @@ To do this, we advocate the following procedure.
    `default` on the release project. Review it, fix anything, then accept the merge
    request.  **Do not close the branch!** Unlike bitbucket, if you close the branch on
    Heptapod, it will vanish, breaking our [MyPI][] index.
-8. **Publish on PyPI**: Publish the released version on [PyPI](https://pypi.org/project/mmfutils/) using [twine](https://pypi.org/project/twine/)
+   
+8. **Publish on PyPI**: Publish the released version on
+   [PyPI](https://pypi.org/project/mmfutils/) using
+   [twine](https://pypi.org/project/twine/) 
 
     ```bash
     # Build the package.
