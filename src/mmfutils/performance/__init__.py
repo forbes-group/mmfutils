@@ -3,6 +3,7 @@
 This module may rely on many other packages that are not easy to install such
 as pyfftw and the corresponding fftw implementation.
 """
+
 import timeit
 import numpy as np
 
@@ -61,7 +62,7 @@ def auto_timeit(
 
     >>> ts, number, factor, unit = auto_timeit(
     ...     'f(t)', display=False, globals=dict(t=0.05, f=f))
-    >>> len(ts), min(ts), np.median(ts), factor, unit
+    >>> len(ts), float(min(ts)), float(np.median(ts)), factor, unit
     (5, 0.05..., 0.05..., 1000, 'ms')
     """
     timer = timeit.Timer(stmt, setup, globals=globals)

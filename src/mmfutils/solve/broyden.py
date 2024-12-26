@@ -3,6 +3,7 @@
 This module contains several different minimizers and root finders that
 implement Broyden's method.
 """
+
 import copy
 
 import numpy as np
@@ -145,7 +146,7 @@ class DyadicSum(object):
 
     >>> d1 = np.linalg.svd(s1.todense(), compute_uv=False)
     >>> d2 = np.linalg.svd(s2.todense(), compute_uv=False)
-    >>> (abs(d1 - d2)/max(d2)).max() < 0.02
+    >>> print((abs(d1 - d2)/max(d2)).max() < 0.02)
     True
 
     Attributes
@@ -190,6 +191,7 @@ class DyadicSum(object):
     alpha : float
        Initial dyad is this factor times the identity.
     """
+
     # Ensure that this has higher priority than numpy or scipy arrays
     # so that A @ B will call B.__rmatmul__ if B is a DyadicSum.
     __array_priority__ = 100.0  # https://stackoverflow.com/questions/55879170

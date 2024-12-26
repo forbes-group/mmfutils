@@ -4,6 +4,7 @@ Some plots - especially contour plots - can become extremely large when stored
 as vector graphics files (i.e. PDF).  These tools allow parts of these figures
 to be rasterized so that file sizes can be kept manageable.
 """
+
 import matplotlib.collections
 from matplotlib import pyplot as plt
 
@@ -33,17 +34,15 @@ class ListCollection(matplotlib.collections.Collection):
 
 def contourf(*v, **kw):
     r"""Replacement for :func:`matplotlib.pyplot.contourf` that supports the
-    `rasterized` keyword."""
+    `rasterized` keyword.
+
+    Can be removed once this issue is resolved:
+    https://github.com/matplotlib/matplotlib/issues/27669
+    """
     was_interactive = matplotlib.is_interactive()
     matplotlib.interactive(False)
     rasterized = kw.pop("rasterized", None)
     contour_set = plt.contourf(*v, **kw)
-    figure = plt.gcf()
-    for _c in contour_set.collections:
-        _c.remove()
-        _c.set_figure(figure)
-    collection = ListCollection(contour_set.collections, rasterized=rasterized)
-    ax = plt.gca()
-    ax.add_artist(collection)
+    contour_set.set_rasterized(rasterized)
     matplotlib.interactive(was_interactive)
     return contour_set

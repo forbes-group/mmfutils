@@ -1,16 +1,16 @@
 r"""Some utilities for computing properties of the Bessel functions for the DVR
 basis."""
+
 from warnings import warn
 
 import numpy as np
-from numpy import pi, finfo
 
 import scipy.special
 
 sp = scipy
 
-_EPS = finfo(np.double).eps
-_TINY = finfo(np.double).tiny
+_EPS = np.finfo(np.double).eps
+_TINY = np.finfo(np.double).tiny
 
 
 __all__ = ["sinc", "J", "j_root", "J_sqrt_pole"]
@@ -68,7 +68,7 @@ def J(nu, d=0):
     --------
     >>> J0 = J(0.5); J1 = J(1.5); J2 = J(2.5);
     >>> z = 2.5; nu = 1.5
-    >>> abs(J0(z) + J2(z) - 2*nu/z*J1(z)) < _EPS
+    >>> print(abs(J0(z) + J2(z) - 2*nu/z*J1(z)) < _EPS)
     True
 
     .. todo:: Fix tolerances so that these are computed to machine precision.
@@ -78,18 +78,20 @@ def J(nu, d=0):
         if 1 == nu2:
 
             def j(z):
-                return np.sqrt(2 * z / pi) * sinc(z)
+                return np.sqrt(2 * z / np.pi) * sinc(z)
 
         elif 3 == nu2:
 
             def j(z):
-                return np.sqrt(2 / z / pi) * (sinc(z) - np.cos(z))
+                return np.sqrt(2 / z / np.pi) * (sinc(z) - np.cos(z))
 
         elif 5 == nu2:
 
             def j(z):
                 return (
-                    np.sqrt(2 / z / pi) / z * ((3.0 - z * z) * sinc(z) - 3 * np.cos(z))
+                    np.sqrt(2 / z / np.pi)
+                    / z
+                    * ((3.0 - z * z) * sinc(z) - 3 * np.cos(z))
                 )
 
         elif False:  # pragma: no cover
@@ -210,17 +212,17 @@ def j_root(nu, N, rel_tol=2 * _EPS):
 
     These are roots!
 
-    >>> np.max(abs(J_/j_)) < _EPS
+    >>> print(np.max(abs(J_/j_)) < _EPS)
     True
 
     They are also distinct
 
-    >>> pi < min(np.diff(j_))
+    >>> print(np.pi < min(np.diff(j_)))
     True
 
     And the spacing is decreasing, meaning we have not skipped any.
 
-    >>> np.max(np.diff(np.diff(j_))) < 0
+    >>> print(np.max(np.diff(np.diff(j_))) < 0)
     True
     """
     J_ = J(nu)
@@ -231,13 +233,13 @@ def j_root(nu, N, rel_tol=2 * _EPS):
         raise ValueError("nu must be non-negative")
     elif 1 == nu2:
         # Roots of sin(x)/x = 0:
-        # x = pi*n excluding n=0
-        return pi * np.arange(1, N + 1)
+        # x = np.pi*n excluding n=0
+        return np.pi * np.arange(1, N + 1)
     elif 3 == nu2:
         # Roots of sin(x)/x**2 - cos(x)/x:
         # x = tan(x) excluding x = 0
-        # If n > 10 iterate x :-> n*pi + arctan(x)
-        # 5 times starting with x = pi*(n+0.5)
+        # If n > 10 iterate x :-> n*np.pi + arctan(x)
+        # 5 times starting with x = np.pi*(n+0.5)
         x = np.array(
             [
                 4.4934094579090642,
@@ -254,8 +256,8 @@ def j_root(nu, N, rel_tol=2 * _EPS):
         )
         if N > 10:
             n = np.arange(11, N + 1)
-            npi = n * pi
-            x0 = (n + 0.5) * pi
+            npi = n * np.pi
+            x0 = (n + 0.5) * np.pi
             for c in range(5):
                 np.arctan(x0, x0)
                 x0 += npi
@@ -270,10 +272,10 @@ def j_root(nu, N, rel_tol=2 * _EPS):
         x[0] = nu + nu ** (1.0 / 3.0)
         Jx[0] = J_(x[0])
         for n in range(1, N + 1):
-            x[n] = x[n - 1] + pi
+            x[n] = x[n - 1] + np.pi
             Jx[n] = J_(x[n])
             while Jx[n] * Jx[n - 1] > 0:
-                x[n] += pi
+                x[n] += np.pi
                 Jx[n] = J_(x[n])
 
         # Two steps of bisection method
@@ -411,7 +413,7 @@ def J_sqrt_pole(nu, zn, d=0):
     --------
     >>> nu = 5.5
     >>> zn = j_root(nu,21)[-1]
-    >>> abs(zn - 73.62361318251753391646) < 1e-16
+    >>> print(abs(zn - 73.62361318251753391646) < 1e-16)
     True
     >>> float(J_sqrt_pole(nu,zn)(zn))   # doctest: +ELLIPSIS
     -0.796778576780013...
@@ -491,7 +493,7 @@ def _Horner(a, d):
     --------
     >>> a = [1, 1, 2, 3*2, 4*3*2]
     >>> d = 2
-    >>> _Horner(a,d)
+    >>> float(_Horner(a,d))
     31.0
     """
     d = np.asarray(d)

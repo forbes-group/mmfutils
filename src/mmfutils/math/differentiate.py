@@ -1,4 +1,5 @@
 """Differentiation."""
+
 import itertools
 
 import numpy as np
@@ -93,11 +94,11 @@ def differentiate(f, x=0.0, d=1, h0=1.0, l=1.4, nmax=10, dir=0, p0=1, err=[0]):
     >>> assert(abs(differentiate(sin, x, d=2)+sin(x))<1e-13)
     >>> assert(abs(differentiate(sin, x, d=3)+cos(x))<1e-11)
     >>> assert(abs(differentiate(sin, x, d=4)-sin(x))<1e-9)
-    >>> differentiate(abs, 0.0, d=1, dir=1)
+    >>> print(differentiate(abs, 0.0, d=1, dir=1))
     1.0
-    >>> differentiate(abs, 0.0, d=1, dir=-1)
+    >>> print(differentiate(abs, 0.0, d=1, dir=-1))
     -1.0
-    >>> differentiate(abs, 0.0, d=1, dir=0)
+    >>> print(differentiate(abs, 0.0, d=1, dir=0))
     0.0
 
     Note that the Richardson extrapolation assumes that `h0` is small
@@ -109,11 +110,11 @@ def differentiate(f, x=0.0, d=1, h0=1.0, l=1.4, nmax=10, dir=0, p0=1, err=[0]):
     >>> def f(x):
     ...     return np.sign(x)*abs(x)**(1.5)
     >>> df = differentiate(f, 0.0)
-    >>> abs(df) < 0.1
+    >>> print(abs(df) < 0.1)
     True
-    >>> abs(df) < 0.01
+    >>> print(abs(df) < 0.01)
     False
-    >>> abs(differentiate(f, 0.0, nmax=100)) < 3e-8
+    >>> print(abs(differentiate(f, 0.0, nmax=100)) < 3e-8)
     True
 
     Sometimes, one may compensate by increasing nmax.  (One could in
