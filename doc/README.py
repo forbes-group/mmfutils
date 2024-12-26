@@ -8,7 +8,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.0
+#       jupytext_version: 1.16.4
 #   kernelspec:
 #     display_name: Python [conda env:work]
 #     language: python
@@ -496,6 +496,20 @@ with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
 HTML(coverage)
 
 # # Change Log
+
+# ## REL: 0.6.7
+# * Add derivative `d=1` support for step and mstep.  Remove floating point warning.
+# * Improved FPS context: better sleeping timing and default timeout behavior.
+# * Drop support for python 3.9 and below.  (Could work, but dependencies need careful
+#   thought and version pinning.)
+# * Added IBasisCutoff to allow working with the Galerkin projected GPE.
+# * Updated some tests to work with new Numpy formatting (See [NEP
+#   51](https://numpy.org/neps/nep-0051-scalar-representation.html).)
+# * Fixed broken rasterization in contourf but should be unnecessary in the future (see
+#   https://github.com/matplotlib/matplotlib/issues/27669).
+# * Improved `performance.auto_timeit`.
+# * Revert to installing pyfftw from default repo now that [issue
+#   303](https://github.com/pyFFTW/pyFFTW/issues/303) is fixed.
 
 # ## REL: 0.6.6
 # * Fix issue #31: FFT falbacks should work even if pyfftw is not installed.  (Monkeypatch this case in `test_performance_fft.py`)

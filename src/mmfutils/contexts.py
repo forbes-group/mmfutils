@@ -58,9 +58,9 @@ class NoInterrupt:
     Arguments
     ---------
     ignore : bool
-       If True, then do not raise a KeyboardInterrupt if a soft interrupt is
-       caught unless forced by multiple interrupt requests in a
-       limited time.
+        If `True`, then do not raise a `KeyboardInterrupt` if a soft interrupt is
+        caught unless forced by multiple interrupt requests in a limited time.
+
 
     There are two main entry points: globally by calling the :meth:`suspend()`
     method, and within a :class:`NoInterrupt()` context.
@@ -112,10 +112,9 @@ class NoInterrupt:
     Attributes
     ----------
     force_n : int
-       Number of interrupts to force signal.
+        Number of interrupts to force signal.
     force_timeout : float
-       Time in which force_n interrupts must be received to trigger a
-       forced interrupt.
+        Time in which force_n interrupts must be received to trigger a forced interrupt.
 
     Examples
     --------
@@ -206,6 +205,7 @@ class NoInterrupt:
     [10, 10]
 
     One can ignore the exception if desired (this is the default as of 0.4.11):
+
     >>> n = [0, 0]
     >>> with NoInterrupt() as interrupted:
     ...     f(n)
@@ -215,6 +215,7 @@ class NoInterrupt:
     Three rapid exceptions will still force an interrupt when it occurs.  This
     might occur at random places in your code, so don't do this unless you
     really need to stop the process.
+
     >>> n = [0, 0]
     >>> try:
     ...     with NoInterrupt(ignore=False) as interrupted:
@@ -240,6 +241,7 @@ class NoInterrupt:
     [5, 5]
 
     Again: the exception can be ignored
+
     >>> n = [0, 0]
     >>> with NoInterrupt() as interrupted:
     ...     f(n, interrupted)
@@ -266,7 +268,7 @@ class NoInterrupt:
 
     # Time, in seconds, for which force_n successive interrupts will
     # toggle the default handler.
-    force_n = 3
+    force_n = 3  # How to document?
     force_timeout = 1
 
     # Lock should be re-entrant (I think) since a signal might be sent during
@@ -676,7 +678,7 @@ def coroutine(coroutine):
 class FPS_Frames:
     """Helper class for FPS.
 
-    This is the object returned in the with FPS() context.
+    This is the object returned in the with `FPS()` context.
 
     Attributes
     ----------
@@ -784,6 +786,7 @@ class FPS:
     """Context manager to measure framerate and provide interrupt control.
 
     This can be used in two ways:
+
     1. As an iterator, which will run for the specified number of frames or until the
        timeout is exceeded;
     2. As flag that can be run while `bool(fps)`.  In this second usage, you must
@@ -827,6 +830,7 @@ class FPS:
 
     This actually creates a context under the hood.  If you want to be explicit, you can
     do something like this:
+
     >>> with FPS(frames=0.1*np.arange(10), timeout=10) as fps:
     ...     for t in fps:
     ...         print(f"t={t:.1f}: fps={fps:0.0f}")
@@ -847,10 +851,12 @@ class FPS:
     [9... 9... 9... 9... 9... 9... 9... 9... 9...]
 
     Note that you can get the results after if needed:
+
     >>> print(f"{fps:.0f}")
     10...
 
     But you can't do this:
+
     >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
     >>> print(fps)
     Traceback (most recent call last):

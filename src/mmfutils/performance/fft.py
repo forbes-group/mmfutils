@@ -30,6 +30,7 @@ flag `_COPY_OUTPUT` ensures that the resulting array has `flags['OWNDATA']`, oth
 copy is made.  If the fft function will not be called before the array is copied, you
 might gain some performance improvement by setting this to `False`.
 """
+
 import functools
 import itertools
 import os
@@ -333,6 +334,7 @@ def get_fft(a, n=None, axis=-1, repeat=3, **kw):
     repeat : int
         Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
 
+
     Other arguments are as for :func:`numpy.fft.fft`.
     """
     global get_fft_pyfftw
@@ -350,6 +352,7 @@ def get_ifft(a, n=None, axis=-1, repeat=3, **kw):
     ---------
     repeat : int
         Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
 
     Other arguments are as for :func:`numpy.fft.ifft`.
     """
@@ -369,6 +372,7 @@ def get_fftn(a, s=None, axes=None, repeat=3, **kw):
     repeat : int
         Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
 
+
     Other arguments are as for :func:`numpy.fft.fftn`.
     """
     global get_fftn_pyfftw
@@ -386,6 +390,7 @@ def get_ifftn(a, s=None, axes=None, repeat=3, **kw):
     ---------
     repeat : int
         Uses :func:`timeit.repeat` to compare versions (if pyfftw is defined).
+
 
     Other arguments are as for :func:`numpy.fft.ifftn`.
     """

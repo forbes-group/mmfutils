@@ -1,4 +1,5 @@
 """Tools for creating animations and movies."""
+
 import base64
 from tempfile import TemporaryDirectory
 

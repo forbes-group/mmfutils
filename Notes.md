@@ -1408,17 +1408,22 @@ To do this, we advocate the following procedure.
     conda activate _mmfutils; pytest
     ```
 
-    (`hg com` will automatically run tests after pip-installing everything in `setup.py` if you have linked the `.hgrc` file as discussed above, but the use of independent environments is preferred now.)
+    (`hg com` will automatically run tests after pip-installing everything in `setup.py`
+    if you have linked the `.hgrc` file as discussed above, but the use of independent
+    environments is preferred now.)
+
 4. **Update Docs**: Update the documentation if needed.  To generate new documentation run:
 
     ```bash
+    make shell
     cd doc
-    sphinx-apidoc -eTE ../mmfutils -o source
+    sphinx-apidoc -eTE ../src/mmfutils -o source
     rm source/mmfutils.*tests*
     ```
    
     * Include any changes at the bottom of this file (`doc/README.ipynb`).
-    * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
+    * You may need to copy new figures to `README_files/` if the figure numbers have
+      changed, and then `hg add` these while `hg rm` the old ones.
    
     Edit any new files created (titles often need to be added) and check that this looks good with
   
@@ -1427,7 +1432,12 @@ To do this, we advocate the following procedure.
     open build/html/index.html
     ```
      
-    Look especially for errors of the type "WARNING: document isn't included in any toctree".  This indicates that you probably need to add the module to an upper level `.. toctree::`.  Also look for "WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated".  This indicates you need to add a title to a new file.  For example, when I added the `mmf.math.optimize` module, I needed to update the following:
+    Look especially for errors of the type "WARNING: document isn't included in any
+    toctree".  This indicates that you probably need to add the module to an upper level
+    `.. toctree::`.  Also look for "WARNING: toctree contains reference to document
+    u'...' that doesn't have a title: no link will be generated".  This indicates you
+    need to add a title to a new file.  For example, when I added the
+    `mmf.math.optimize` module, I needed to update the following:
   
 [comment]: # (The rst generate is mucked up by this indented code block...)
 ```rst
