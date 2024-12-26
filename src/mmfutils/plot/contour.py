@@ -1,4 +1,5 @@
 """Various types of contour plots."""
+
 import numpy as np
 
 import scipy.interpolate
@@ -28,6 +29,11 @@ def imcontourf(x, y, z, interpolate=True, diverging=False, *v, **kw):
     contours.  Just displays `z` using
     :func:`matplotlib.pyplot.imshow` which is much faster and uses
     exactly the information available.
+
+    **Update**: I generally recommend using :func:`matplotlib.pyplot.pcolormesh` which
+    has similar performance characteristics, but is standard.  One note is that
+    `pcolormesh` uses the default index ordering from `meshgrid` (not `'ij'`) and so
+    requires transposing the `z` argument.  It also requires 1D  arrays for `x` and `y`.
 
     Parameters
     ----------

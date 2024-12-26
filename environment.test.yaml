@@ -1,0 +1,21 @@
+# Environment for running tests.
+name: mmfutils_test
+channels:
+  - conda-forge
+dependencies:
+  - python~=3.11
+  - ipykernel
+
+  # Better to install these from conda for performance.
+  - numpy>=1.15.4
+  - numba
+  - cython
+
+  - pip>=23.1.2
+  - pip:
+      # For best performance, we must build pyfftw with pip.
+      # Until https://github.com/pyFFTW/pyFFTW/issues/303 is in a release, we must build
+      # from the source
+      #- pyfftw>0.13.1
+      - git+https://github.com/pyFFTW/pyFFTW.git
+      - .[test,doc]

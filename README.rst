@@ -673,8 +673,8 @@ profile name, and can be started or stopped from this class:
     cluster.wait()  # Instance of IPython.parallel.Client
     view = cluster.load_balanced_view
     x = np.linspace(-6, 6, 100)
-    y = view.map(lambda x: x ** 2, x)
-    print(np.allclose(y, x ** 2))
+    y = view.map(lambda x: x**2, x)
+    print(np.allclose(y, x**2))
     cluster.stop()
 
 
@@ -721,8 +721,8 @@ the context and shutting down the cluster!
     with parallel.Cluster(profile="default", n=3, sleep_time=1.0) as client:
         view = client.load_balanced_view
         x = np.linspace(-6, 6, 100)
-        y = view.map(lambda x: x ** 2, x, block=True)  # Make sure to wait for the result!
-    print(np.allclose(y, x ** 2))
+        y = view.map(lambda x: x**2, x, block=True)  # Make sure to wait for the result!
+    print(np.allclose(y, x**2))
 
 
 .. parsed-literal::
@@ -808,7 +808,7 @@ then it will match these to the shape of ``z``). Matplotlib now provides
 
     x = np.linspace(-1, 1, 100)[:, None] ** 3
     y = np.linspace(-0.1, 0.1, 200)[None, :] ** 3
-    z = np.sin(10 * x) * y ** 2
+    z = np.sin(10 * x) * y**2
     plt.figure(figsize=(12, 3))
     plt.subplot(141)
     %time mmfplt.imcontourf(x, y, z, cmap='gist_heat')
@@ -909,7 +909,7 @@ in a dictionary or in your global scope.
     
     @debug(locals())
     def f(x):
-        y = x ** 1.5
+        y = x**1.5
         z = 2 / x
         return z
     
@@ -1298,6 +1298,34 @@ Complete code coverage information is provided in
 
 Change Log
 ==========
+
+REL: 0.6.6
+----------
+
+-  Fix issue #31: FFT fallbacks should work even if pyfftw is not
+   installed. (Monkeypatch this case in ``test_performance_fft.py``)
+-  Fix issue #32: Make copy of arrays before calling pyfftw builders for
+   the convenience functions to ensure that everything works, even if
+   they are not ``WRITEABLE``.
+
+REL: 0.6.5
+----------
+
+-  Fix issue #30: measure fft performance and fallback to numpy (with a
+   warning) if it is faster than pyfftw.
+
+REL: 0.6.4
+----------
+
+-  Support python 3.7.13 through 3.11.
+-  Fix some tests.
+-  Add ``contexts.FPS`` which is generally preferred to ``NoInterrupt``.
+-  Add a ``timeout=`` argument to contexts.
+-  Unbind versions.
+-  Fix a couple of bugs in ``math.bases.bases.py``:
+
+   -  Actually use ``memoization_GB``.
+   -  ``PeriodicBasis.kx`` is now a property.
 
 REL: 0.6.3
 ----------

@@ -1,5 +1,6 @@
 """Integration Utilities.
 """
+
 import itertools
 import logging
 import warnings
@@ -39,10 +40,10 @@ def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL, limit=1000, points=None, **k
     --------
     >>> def f(x): return 1./x**2
     >>> (ans, err) = quad(f, 1, np.inf, points=[])
-    >>> abs(ans - 1.0) < err
+    >>> print(abs(ans - 1.0) < err)
     True
     >>> (ans, err) = quad(f, 1, np.inf, points=[3.0, 2.0])
-    >>> abs(ans - 1.0) < err
+    >>> print(abs(ans - 1.0) < err)
     True
 
     """
@@ -171,17 +172,17 @@ def mquad(
     ...     v = np.exp(1j*np.array([[1.0, 2.0, 3.0]])*x)
     ...     return v.T.conj()*v/2.0/np.pi
     >>> ans = mquad(f, 0, 2*np.pi)
-    >>> abs(ans - np.eye(ans.shape[0])).max() < _ABS_TOL
+    >>> print(abs(ans - np.eye(ans.shape[0])).max() < _ABS_TOL)
     True
 
     >>> res_dict = {}
     >>> def f(x): return x**2
     >>> ans = mquad(f, -2, 1, res_dict=res_dict, save_fx=True)
-    >>> abs(ans - 3.0) < _ABS_TOL
+    >>> print(abs(ans - 3.0) < _ABS_TOL)
     True
     >>> x = np.array([xy[0] for xy in res_dict['xy']])
     >>> y = np.array([xy[1] for xy in res_dict['xy']])
-    >>> abs(y - f(x)).max()
+    >>> print(abs(y - f(x)).max())
     0.0
 
     # This works, but triggers a warning because of the singular
@@ -189,7 +190,7 @@ def mquad(
     >>> logger = logging.getLogger()
     >>> logger.disabled = True
     >>> def f(x): return 1.0/np.sqrt(x) + 1.0/np.sqrt(1.0-x)
-    >>> abs(mquad(f, 0, 1, abs_tol=1e-8) - 4.0) < 1e-8
+    >>> print(abs(mquad(f, 0, 1, abs_tol=1e-8) - 4.0) < 1e-8)
     True
     >>> logger.disabled = False
 
@@ -198,7 +199,7 @@ def mquad(
     ...         return 0.0
     ...     else:
     ...         return 1.0
-    >>> abs(mquad(f, -2.0, 1.0) - 1.0) < 1e-10
+    >>> print(abs(mquad(f, -2.0, 1.0) - 1.0) < 1e-10)
     True
 
     >>> def f(x): return 1./x
@@ -279,7 +280,7 @@ def mquad(
 
     # Increase the tolerance so that roundoff errors from each
     # interval will not accumulate too much.
-    abs_tol2 = abs_tol ** 2 / float(len(xs_) - 1)
+    abs_tol2 = abs_tol**2 / float(len(xs_) - 1)
 
     res = 0.0
     err2 = 0.0
@@ -503,7 +504,7 @@ def Richardson(f, ps=None, l=2, n0=1):
         if 0 == l:  # pragma: no cover (What is this?)
             S[n, 0] = f0
         else:
-            S[n, 0] = f(n0 * l ** n)
+            S[n, 0] = f(n0 * l**n)
         p.append(next(ps))
         for m in range(1, n + 1):
             lpm1 = float(l ** p[m - 1])
@@ -587,7 +588,7 @@ def ssum_python(xs):
     >>> N = 10000
     >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
-    >>> (ssum_python(l)[0] - ans, sum(l) - ans)
+    >>> (float(ssum_python(l)[0]) - ans, sum(l) - ans)
     (0.0, -5632.0)
     """
     sum = 0.0
@@ -614,7 +615,7 @@ if numba:
         >>> N = 10000
         >>> l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
         >>> ans = 250.0*((N + 1.0)*N)**2
-        >>> (ssum_numba(l)[0] - ans, sum(l) - ans)
+        >>> (float(ssum_numba(l)[0]) - ans, float(sum(l)) - ans)
         (0.0, -5632.0)
 
         Should run less than 8 times slower than a regular sum.
@@ -661,7 +662,7 @@ def ssum(xs):
     >>> N = 10000
     >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
-    >>> (ssum(l)[0] - ans, sum(l) - ans)
+    >>> (float(ssum(l)[0]) - ans, sum(l) - ans)
     (0.0, -5632.0)
 
     Here is an example of the Harmonic series.  Series such as these
@@ -669,11 +670,11 @@ def ssum(xs):
     >>> sn = 1./np.arange(1, 10**4)
     >>> Hn, Hn_err = exact_sum(sn)
     >>> ans, err = ssum(sn)
-    >>> abs(ans - Hn) < err
+    >>> print(abs(ans - Hn) < err)
     True
-    >>> abs(sum(sn) - Hn) < err # Normal sum not good!
+    >>> print(abs(sum(sn) - Hn) < err) # Normal sum not good!
     False
-    >>> abs(sum(list(reversed(sn))) - Hn) < err # Unless elements sorted
+    >>> print(abs(sum(list(reversed(sn))) - Hn) < err) # Unless elements sorted
     True
 
     Here is an example where the truncation errors are tested.
@@ -690,9 +691,9 @@ def ssum(xs):
     >>> ans *= 3987.0
     >>> err *= 3987.0
     >>> exact_err = abs(float(long(ans) - exact_ans))
-    >>> exact_err < err
+    >>> print(exact_err < err)
     True
-    >>> exact_err < err/1000.0
+    >>> print(exact_err < err/1000.0)
     False
     """
     return ssum_cython(xs)
@@ -706,9 +707,9 @@ def rsum(f, N0=0, ps=None, l=2, abs_tol=_ABS_TOL, rel_tol=_REL_TOL, verbosity=0)
     >>> def f(n):
     ...     return 1./(n+1)**2
     >>> res, err = rsum(f)
-    >>> res
+    >>> print(res)
     1.6449340668...
-    >>> abs(res - np.pi**2/6.0) < err
+    >>> print(abs(res - np.pi**2/6.0) < err)
     True
     """
 

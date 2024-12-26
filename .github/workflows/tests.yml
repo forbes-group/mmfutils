@@ -6,6 +6,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: mamba-org/setup-micromamba@v1
+      # https://github.com/mamba-org/setup-micromamba
+      with:
+        micromamba-version: '1.4.8-0'
+        #environment-file: environment.yml
+        init-shell: >-
+          bash
+        post-cleanup: 'all'
     - uses: actions/setup-python@v4
       with:
         python-version: 3.11

@@ -75,6 +75,7 @@ extensions = [
     "sphinxcontrib.zopeext.autointerface",
     #'matplotlib.sphinxext.only_directives',
     "matplotlib.sphinxext.plot_directive",
+    "matplotlib.sphinxext.roles",
     #'IPython.sphinxext.ipython_directive',
     #'IPython.sphinxext.ipython_console_highlighting',
     #'sphinx.ext.inheritance_diagram',
@@ -95,9 +96,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"MMFUtils"
-copyright = u"2015, Michael McNeil Forbes"
-author = u"Michael McNeil Forbes"
+project = "MMFUtils"
+copyright = "2015, Michael McNeil Forbes"
+author = "Michael McNeil Forbes"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -113,7 +114,7 @@ release = mmfutils.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "English"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -274,8 +275,8 @@ latex_documents = [
     (
         master_doc,
         "MMFUtils.tex",
-        u"MMFUtils Documentation",
-        u"Michael McNeil Forbes",
+        "MMFUtils Documentation",
+        "Michael McNeil Forbes",
         "manual",
     ),
 ]
@@ -305,7 +306,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "mmfutils", u"MMFUtils Documentation", [author], 1)]
+man_pages = [(master_doc, "mmfutils", "MMFUtils Documentation", [author], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -320,7 +321,7 @@ texinfo_documents = [
     (
         master_doc,
         "MMFUtils",
-        u"MMFUtils Documentation",
+        "MMFUtils Documentation",
         author,
         "MMFUtils",
         "One line description of project.",
@@ -343,7 +344,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "https://docs.python.org/": None,
+    "python": ("https://docs.python.org/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 

@@ -71,6 +71,7 @@ class TestCluster(object):
         self.cluster1.start()
         assert time.time() - tic < 0.1
 
+    @pytest.mark.flaky(reruns=3)
     def test_timeout1(self):
         """Test timeout (coverage)"""
         with pytest.raises(ipyparallel.TimeoutError):

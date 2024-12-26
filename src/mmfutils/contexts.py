@@ -1,5 +1,6 @@
 """Various useful contexts.
 """
+
 import collections
 from contextlib import contextmanager
 import functools
@@ -28,6 +29,23 @@ __all__ = [
 ]
 
 
+def sleep(duration):
+    """More accurate sleep function for Mac OS X.
+
+    See https://stackoverflow.com/a/30672412/1088938
+    """
+    start_time = time.perf_counter()
+    while True:
+        elapsed_time = time.perf_counter() - start_time
+        remaining_time = duration - elapsed_time
+        if remaining_time <= 0:
+            break
+        if remaining_time > 0.02:  # Sleep for 5ms if remaining time is greater
+            time.sleep(
+                max(remaining_time / 2, 0.0001)
+            )  # Sleep for the remaining time or minimum sleep interval
+
+
 def is_main_thread():
     """Return True if this is the main thread."""
     return threading.current_thread() is threading.main_thread()
@@ -40,9 +58,9 @@ class NoInterrupt:
     Arguments
     ---------
     ignore : bool
-       If True, then do not raise a KeyboardInterrupt if a soft interrupt is
-       caught unless forced by multiple interrupt requests in a
-       limited time.
+        If `True`, then do not raise a `KeyboardInterrupt` if a soft interrupt is
+        caught unless forced by multiple interrupt requests in a limited time.
+
 
     There are two main entry points: globally by calling the :meth:`suspend()`
     method, and within a :class:`NoInterrupt()` context.
@@ -94,10 +112,9 @@ class NoInterrupt:
     Attributes
     ----------
     force_n : int
-       Number of interrupts to force signal.
+        Number of interrupts to force signal.
     force_timeout : float
-       Time in which force_n interrupts must be received to trigger a
-       forced interrupt.
+        Time in which force_n interrupts must be received to trigger a forced interrupt.
 
     Examples
     --------
@@ -188,6 +205,7 @@ class NoInterrupt:
     [10, 10]
 
     One can ignore the exception if desired (this is the default as of 0.4.11):
+
     >>> n = [0, 0]
     >>> with NoInterrupt() as interrupted:
     ...     f(n)
@@ -197,6 +215,7 @@ class NoInterrupt:
     Three rapid exceptions will still force an interrupt when it occurs.  This
     might occur at random places in your code, so don't do this unless you
     really need to stop the process.
+
     >>> n = [0, 0]
     >>> try:
     ...     with NoInterrupt(ignore=False) as interrupted:
@@ -222,6 +241,7 @@ class NoInterrupt:
     [5, 5]
 
     Again: the exception can be ignored
+
     >>> n = [0, 0]
     >>> with NoInterrupt() as interrupted:
     ...     f(n, interrupted)
@@ -248,7 +268,7 @@ class NoInterrupt:
 
     # Time, in seconds, for which force_n successive interrupts will
     # toggle the default handler.
-    force_n = 3
+    force_n = 3  # How to document?
     force_timeout = 1
 
     # Lock should be re-entrant (I think) since a signal might be sent during
@@ -384,7 +404,7 @@ class NoInterrupt:
         original handlers will be called.
         """
         with cls._lock:
-            cls._last_signal = (signum, frame, time.time())
+            cls._last_signal = (signum, frame, time.perf_counter())
             cls._signals_raised.setdefault(signum, [])
             cls._signals_raised[signum].append(cls._last_signal)
             cls._signal_count.setdefault(signum, 0)
@@ -434,11 +454,12 @@ class NoInterrupt:
     def __enter__(self):
         """Enter context."""
         with self._lock:
-            self.tic = time.time()
-            if IPython and IPython.get_ipython():
-                kernel = IPython.get_ipython().kernel
-                kernel.pre_handler_hook = self._pre_handler_hook
-                kernel.post_handler_hook = self._post_handler_hook
+            self.tic = time.perf_counter()
+            if IPython:
+                kernel = getattr(IPython.get_ipython(), "kernel", None)
+                if kernel:
+                    kernel.pre_handler_hook = self._pre_handler_hook
+                    kernel.post_handler_hook = self._post_handler_hook
 
             self._active = True
             self.signal_count_at_start = dict(self._signal_count)
@@ -478,15 +499,16 @@ class NoInterrupt:
                     # Call original handler.
                     signum, frame, _time = last_signal
                     self.handle_original_signal(signum=signum, frame=frame)
-            if IPython and IPython.get_ipython():
-                kernel = IPython.get_ipython().kernel
-                del kernel.pre_handler_hook
-                del kernel.post_handler_hook
+            if IPython:
+                kernel = getattr(IPython.get_ipython(), "kernel", None)
+                if kernel:
+                    del kernel.pre_handler_hook
+                    del kernel.post_handler_hook
 
     def __bool__(self):
         """Return True if interrupted."""
         with self._lock:
-            timeout = self.timeout and time.time() - self.tic > self.timeout
+            timeout = self.timeout and time.perf_counter() - self.tic > self.timeout
             return (
                 not self._active
                 or timeout
@@ -584,7 +606,7 @@ class CoroutineWrapper(object):
 
 
 def coroutine(coroutine):
-    """Decorator for a context that yeilds a function from a coroutine.
+    """Decorator for a context that yields a function from a coroutine.
 
     This allows you to write functions that maintain state between calls.  The
     use as a context here ensures that the coroutine is closed.
@@ -653,10 +675,118 @@ def coroutine(coroutine):
     return wrapper
 
 
+class FPS_Frames:
+    """Helper class for FPS.
+
+    This is the object returned in the with `FPS()` context.
+
+    Attributes
+    ----------
+    the_frames : iterable
+        Iterable of the actual frames.
+    frames : int, None
+        Number of frames or None if unavailable.
+    frame : int
+        Number of the current frame.
+    fps : float
+        Current frames-per-second, base on last `max_tics` iterations.
+    max_fps : float, None
+        If provided, then sleep to rate-limit the iterations to this maximum fps.
+    max_tics : int
+        How many of the last updates will be used to calculate the fps.  (All if None).
+    """
+
+    def __init__(self, interrupted, the_frames_or_frames, max_fps, max_tics):
+        self.interrupted = interrupted
+
+        try:  # Do we have a length?
+            self.frames = len(the_frames_or_frames)
+            self.the_frames = the_frames_or_frames
+        except TypeError:  # No.  Infinite/indefinite or number
+            try:
+                self.the_frames = iter(the_frames_or_frames)
+                self.frames = None
+            except TypeError:  # Not an iterator.  Delegate to range().
+                self.the_frames = range(the_frames_or_frames)
+                self.frames = the_frames_or_frames
+
+        self.max_tics = max_tics
+        self.max_fps = max_fps
+        self._reset()
+
+    def _reset(self):
+        self._frame = -1
+        self.tic = time.perf_counter()
+        self.tics = collections.deque([self.tic], maxlen=self.max_tics)
+
+    def __bool__(self):
+        """True while running"""
+        return not bool(self.interrupted) and (
+            self.frames is None or self.frame < self.frames
+        )
+
+    @property
+    def frame(self):
+        return self._frame
+
+    @frame.setter
+    def frame(self, frame):
+        # SMELLS.  assert (frame == self._frame + 1)?
+        if frame > 0 and frame == self._frame + 1:
+            self.tics.append(time.perf_counter())
+        self._frame = frame
+
+    @property
+    def fps(self):
+        assert 0 < len(self.tics)
+        if len(self.tics) == 1:
+            return math.nan
+        else:
+            return (len(self.tics) - 1) / (self.tics[-1] - self.tics[0])
+
+    def __str__(self):
+        return "{:.2f}".format(self.fps)
+
+    def __format__(self, format_spec):
+        return float(self.fps).__format__(format_spec)
+
+    def __iter__(self):
+        self._reset()
+        the_frames = self.the_frames
+        if not self.max_fps:
+            for frame in the_frames:
+                if not self:
+                    break
+                self.frame += 1
+                yield frame
+        else:
+            # More complicated version with rate limiting.
+            dt = 1.0 / self.max_fps
+            tic = None
+            for frame in the_frames:
+                if not self:
+                    break
+                toc = time.perf_counter()
+                if tic is not None:
+                    wait = max(0, tic + dt - toc)
+                    sleep(wait)
+                    # Our sleep makes this a little more accurate since time.sleep() can
+                    # take longer than wait
+                    # https://stackoverflow.com/questions/1133857
+                    toc += wait
+                tic = toc
+                self.frame += 1
+                yield frame
+
+    def __float__(self):
+        return self.fps
+
+
 class FPS:
     """Context manager to measure framerate and provide interrupt control.
 
     This can be used in two ways:
+
     1. As an iterator, which will run for the specified number of frames or until the
        timeout is exceeded;
     2. As flag that can be run while `bool(fps)`.  In this second usage, you must
@@ -668,38 +798,75 @@ class FPS:
     ---------
     frames : int | iterable
         Yields iterator or range.
-    timeout : float
-        Timeout in seconds.
-    tics : int
-        How many of the last updates will be used to calculate the fps.
+    timeout : float, None
+        Timeout in seconds.  If `len(frames)` is finite, then the default is -1
+        (corresponding to no timeout).
+    max_fps : float, None
+        If provided, then sleep to rate-limit the iterations to this maximum fps.
     unregister : bool
         If `True`, then call NoInterrupt.unregister() before the loop.
+    max_tics : int, None
+        Maximum number of last updates used to calculate the fps.  Will use all if None.
 
     Examples
     --------
-    >>> from time import sleep
     >>> import numpy as np
+    >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
+    >>> for t in fps:
+    ...     print(f"t={t:.1f}: fps={fps:.0f}")
+    ...     sleep(0.1)
+    t=0.0: fps=nan
+    t=0.1: fps=10...
+    t=0.2: fps=10...
+    t=0.3: fps=10...
+    t=0.4: fps=10...
+    t=0.5: fps=10...
+    t=0.6: fps=10...
+    t=0.7: fps=10...
+    t=0.8: fps=10...
+    t=0.9: fps=10...
+    >>> print(1/np.diff(fps.tics))
+    [9... 9... 9... 9... 9... 9... 9... 9... 9...]
+
+    This actually creates a context under the hood.  If you want to be explicit, you can
+    do something like this:
+
     >>> with FPS(frames=0.1*np.arange(10), timeout=10) as fps:
     ...     for t in fps:
-    ...         print(f"t={t:.1f}: fps={fps:}")
+    ...         print(f"t={t:.1f}: fps={fps:0.0f}")
     ...         sleep(0.1)
+    ...     print("Loop done!")
     ...     print(1/np.diff(fps.tics))
     t=0.0: fps=nan
-    t=0.1: fps=9...
-    t=0.2: fps=9...
-    t=0.3: fps=9...
-    t=0.4: fps=9...
-    t=0.5: fps=9...
-    t=0.6: fps=9...
-    t=0.7: fps=9...
-    t=0.8: fps=9...
-    t=0.9: fps=9...
+    t=0.1: fps=10...
+    t=0.2: fps=10...
+    t=0.3: fps=10...
+    t=0.4: fps=10...
+    t=0.5: fps=10...
+    t=0.6: fps=10...
+    t=0.7: fps=10...
+    t=0.8: fps=10...
+    t=0.9: fps=10...
+    Loop done!
+    [9... 9... 9... 9... 9... 9... 9... 9... 9...]
+
+    Note that you can get the results after if needed:
+
+    >>> print(f"{fps:.0f}")
+    10...
+
+    But you can't do this:
+
+    >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
+    >>> print(fps)
+    Traceback (most recent call last):
+       ...
+    ValueError: Unintialized FPS object: please use in a context or after a loop.
 
     If you don't need to report the actual performance, you can just use the FPS class
     as an iterator.  This will break only at the start of the loop if interrupted, or if
     the timeout is exceeded.
 
-    >>> from time import sleep
     >>> import numpy as np
     >>> for t in FPS(frames=0.1*np.arange(10), timeout=10):
     ...     print(f"t={t:.1f}")
@@ -716,76 +883,58 @@ class FPS:
     t=0.9
     """
 
-    def __init__(self, frames=200, timeout=5, tics=20, unregister=True):
+    _default_timeout = 10
+
+    def __init__(
+        self, frames=200, timeout=None, max_fps=None, unregister=True, max_tics=20
+    ):
         self.frames = frames
         self.timeout = timeout
-        self.tics = tics
+        self.max_tics = max_tics
+        self.max_fps = max_fps
         self.unregister = unregister
 
     def __enter__(self):
+        fps = FPS_Frames(
+            interrupted=None,
+            the_frames_or_frames=self.frames,
+            max_tics=self.max_tics,
+            max_fps=self.max_fps,
+        )
+        if fps.frames is None and self.timeout is None:
+            self.timeout = self._default_timeout
         self._interrupted = NoInterrupt(
             timeout=self.timeout, unregister=self.unregister
         )
-        interrupted = self._interrupted.__enter__()
-        fps = self.Frame(interrupted=interrupted, frames=self.frames, tics=self.tics)
+        fps.interrupted = self._interrupted.__enter__()
         return fps
 
     def __exit__(self, exc_type, exc_value, traceback):
         return self._interrupted.__exit__(exc_type, exc_value, traceback)
 
     def __iter__(self):
-        with self as frames:
-            for frame in frames:
+        with self as self._frames_obj:
+            for frame in self._frames_obj:
                 yield frame
 
-    class Frame:
-        def __init__(self, interrupted, frames, tics):
-            self.interrupted = interrupted
-            try:
-                self.the_frames = iter(frames)
-                try:
-                    self.frames = len(frames)
-                except TypeError:
-                    self.frames = None
+    def __str__(self):
+        """Delegate to self._frames if it exists."""
+        return str(self._frames_obj)
 
-            except TypeError:
-                self.the_frames = range(frames)
-                self.frames = frames
-            self._frame = 0
-            self.tic = time.time()
-            self.tics = collections.deque([self.tic], maxlen=tics)
+    def __format__(self, format_spec):
+        return self._frames_obj.__format__(format_spec)
 
-        def __bool__(self):
-            """True while running"""
-            return not bool(self.interrupted) and (
-                self.frames is None or self.frame < self.frames
+    @property
+    def tics(self):
+        return getattr(self._frames_obj, "tics")
+
+    def __getattr__(self, key):
+        if key == "_frames_obj":
+            raise ValueError(
+                f"Unintialized {self.__class__.__name__} object:"
+                + " please use in a context or after a loop."
             )
-
-        @property
-        def frame(self):
-            return self._frame
-
-        @frame.setter
-        def frame(self, frame):
-            if frame == self._frame + 1:
-                self.tics.append(time.time())
-            self._frame = frame
-
-        @property
-        def fps(self):
-            if len(self.tics) == 0:  # pragma: nocover
-                return 0  # Never happens if properly constructed.
-            elif len(self.tics) == 1:
-                return math.nan
-            else:
-                return (len(self.tics) - 1) / (self.tics[-1] - self.tics[0])
-
-        def __repr__(self):
-            return "{:.2f}".format(self.fps)
-
-        def __iter__(self):
-            for frame in self.the_frames:
-                if not self:
-                    break
-                yield frame
-                self.frame += 1
+        elif hasattr(self, "_frames_obj"):
+            return getattr(self._frames_obj, key)
+        else:
+            return super().__getattr__(key)

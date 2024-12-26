@@ -22,6 +22,60 @@ projects.  (Other projects should refer here for this discussion.)
   time.)
 * Fix bases to properly use GPU (sundered values etc.).
 
+# Simplified Approach (July 2023)
+
+My current simplified approach is as follows:
+
+1. Optionally use an `environment.yaml` file managed with [micromamba][] to setup the
+   base environment.
+2. Use `pip` (managed by another tool like [PDM][] or [Poetry][]) to provision pure
+   python dependencies.
+3. Control this with a `Makefile` that supports the following targets:
+
+   * **`make tools`**:
+     * Install necessary tools into `.local/bin/`.
+   * **`make init`**: 
+     * Initializes the environment.
+     * Installs the Jupyter kernel for the environment.
+   * **`make shell`**:
+     * Spawns a shell with an initialized environment (similar to `poetry shell`).
+   * **`make realclean`**:
+     * Remove the kernel, all environments, cache files etc.
+
+## Makefile
+
+If we use some form of [Conda][], [micromamba][] or [anaconda-project][], then we need
+the following commands, which we provide through appropriately defined variables.  For
+all of these, the `conda` command will actually be called with `$(CONDA_EXE)` which can be
+set to `mamba` if desired (but this does not work with `micromamba` for all commands).
+
+* `CREATE_ENV`: Create the virtual/conda environment.
+  * `conda env create -f environment.yaml -p <env_path>`
+  * `micromamba create -f environment.yaml -p <env_path>`
+  * `anaconda-project prepare [--spec <env_spec>]`
+  * `pdm ???`
+  * `poetry ???`
+* `UPDATE_ENV`: Update the virtual/conda environment.  This should be fast if the
+  environment is already up to date.
+  * `conda env update -f environment.yaml -p <env_path>`
+  * `micromamba update -f environment.yaml -p <env_path>`
+  * `anaconda-project prepare` (Not really needed - this is done before all commands).
+  * `pdm ???`
+  * `poetry ???`
+* `ACTIVATE_ENV`: Activate the virtual environment in the current shell.  We generally do
+  not want to do this, but will use this in the `make shell` target.
+  * `conda activate <env>`
+  * `micromamba activate <env>`
+  * `source anaconda-project activate <env>`???
+  * `pdm ???`
+  * `poetry ???`
+* `RUN`: Run a command in the environment.
+  * `conda run -p <env>`
+  * `micromamba run -p <env>`
+  * `CONDA_EXE=$(CONDA_EXE) anaconda-project run`
+  * `pdm run`
+  * `poetry run`
+
 # Tools
 
 When developing applications, one often needs a set of tools (see following section).
@@ -75,6 +129,59 @@ For now I am going with `environment.tools.yaml` as it seems the simplest to mai
   reliable way to manage project dependencies. Poetry uses a lock file to ensure
   repeatable installs and provides features such as dependency resolution, virtual
   environments, and build isolation. 
+* [micromamba][]: A fast and small alternative to [conda][].  It can be installed [as
+  follows](https://mamba.readthedocs.io/en/latest/installation.html#install-script):
+
+  ```bash
+  "${SHELL}" <(curl -L micro.mamba.pm/install.sh)`
+  ```
+  
+  This will install the executable into `~/.local/bin/micromamba`.  If you want to
+  control this, you must explicitly choose a download. See the results of `curl -L
+  micro.mamba.pm/install.sh` for an idea of how to modify this.  Currently I am using:
+  
+  ```bash
+  $(MICROMAMBA):
+  	"$(SHELL)" <(curl -L micro.mamba.pm/install.sh | \
+  	                     sed "s:~/.local/bin:$(dir $@):g" | \
+  	                     sed "s:\[ -t 0 \]:false:g" | \
+  	                     sed 's:YES="yes":YES="no":g')
+  ```
+  
+  [micromamba][] has some slight differences with [conda][], but is a very workable
+  replacement.
+  * There is not `micromamba env` like `conda env`.  One should just use `micromamba`.
+    However, this probably means that [`anaconda-client`][] is not supported: I have
+    not found a way of installing an environment from `anaconda.org` like `conda env
+    create mforbes/work`, which pulls from an environment spec hosted on Anaconda cloud.
+  * It seems that if you create an environment with `CONDA_SUBDIR=osx-64 micromamba`,
+    then, after that environment, it will pull from the correct subdir.  This is
+    different from (and better than) [conda][], which requires also running the rather
+    magic `conda config --env --set subdir $(CONDA_SUBDIR)` command.
+    
+    ```bash
+    CONDA_SUBDIR=osx-64 micromamba create -y -c defaults -p osx-64/ "python~=3.11"
+    CONDA_SUBDIR=osx-arm64 micromamba create -y -c defaults -p osx-arm64/ "python~=3.11"
+    micromamba install -c defaults -p osx-64/ numpy     # Pulls osx-64 version of numpy
+    micromamba install -c defaults -p osx-arm64/ numpy  # Pulls osx-arm64 version of numpy
+    ```
+    
+    In contrast, [conda][] needs additional machinations:
+    
+    ```
+    # Both of these pull the WRONG osx-arm64 version of numpy
+    conda install -c defaults -p osx-64/ numpy
+    conda run -p osx-64 conda install -c defaults -p osx-64/ numpy
+    
+    # This works... and we will use this to be careful.
+    CONDA_SUBDIR=osx-64 conda install -c defaults -p osx-64/ numpy
+    
+    # Otherwise, we need conda config... which annoyingly does not accept -p...
+    conda run -p osx-64 conda config --env --set subdir osx-64
+
+    # Now ONLY this one works:
+    conda run -p osx-64 conda install -c defaults -p osx-64/ numpy
+    ```
 * [Anaconda Project][]:  A tool for managing data science projects that provides an easy
   way to create, share, and reproduce data science workflows. It allows you to specify
   required packages and multiple Conda environments in an `anaconda-project.yaml` file.
@@ -85,10 +192,10 @@ For now I am going with `environment.tools.yaml` as it seems the simplest to mai
   install "black[jupytyer]"` in that environment is a convenient way of installing the
   extension).  (See [issue #26](https://github.com/drillan/jupyter-black/issues/26).)
 * [Jupytext][]: A Python package that provides two-way conversion between Jupyter
-  notebooks and several other text-based formats like Markdown (we generally use MyST
+  notebooks and several other text-based formats like Markdown (we generally use [MyST][]
   Markdown files).
 
-# Working Environment (Conda/pip and all that)
+# Working Environment (Conda/Pip and all that)
 
 Our goal is to be able to use [conda][] for packages that might require binary installs,
 such as `pyfftw`, `pyvista`, `numpy` etc., but allow [pip][], [PDM][], or [Poetry][] to
@@ -99,21 +206,95 @@ desires/features/issues:
    independent way.  Alternatives include using package managers (platform dependent)
    like `apt`, `macports`, or building from source, but this can be tricky.
    
-   A concrete example is [CuPy][] which requires very specific versions of the CUDA
+   A concrete example is [CuPy][] which requires very specific versions of the [CUDA][]
    toolkit, so generically upgrading to the latest might not be compatible.  [Conda][]
    allows one to resolve all of these issues **if** a package has been built.
 *  [Conda][] can be very slow/memory intensive, especially if searching `conda-forge`.
-   [Mamba][] can sometimes help, but is not always the solution.
+   [Mamba][] can sometimes help, but is not always the solution.  [Micromamba][] seems
+   to work very nicely.
    
    A concrete example is [CoCalc][] where even `conda search` can exhaust the memory since
    the default [Conda][] installation has a huge list of channels.  Reducing the number of
-   channels solved this problem -- [Mamba][] was not enough.
+   channels solved this problem.  [Mamba][] works too, but [Micromamba][] is much better.
    
    <details><summary>Sample CoCalc Session</summary>
    
-   ```bash
+   Consider the following `environment.tools.yaml` file:
+   
+   ```yaml
+   name: tools
+   channels:
+     - defaults
+   dependencies:
+     - python~=3.11
+     - pip
+     - pip:
+       - pipx
+       - black
+       - jupytext
    ```
    
+   
+   ```bash
+   $ conda clean --all --yes
+   $ time anaconda2022 && /usr/bin/time -v conda env create -f environment.tools.yaml -p envs/tools
+   Starting Anaconda Python environment
+   Run 'exit-anaconda' to return to the standard terminal
+
+   real	0m1.050s
+   user	0m0.720s
+   sys	0m0.246s
+   Collecting package metadata (repodata.json): - Command terminated by signal 9
+       Command being timed: "conda env create -f environment.tools.yaml -p envs/tools"
+       User time (seconds): 44.69
+       System time (seconds): 5.43
+       Percent of CPU this job got: 93%
+       Elapsed (wall clock) time (h:mm:ss or m:ss): 0:53.86
+       ...
+       Maximum resident set size (kbytes): 1905264 (1.8GB) 
+   ```
+   Crashes after running out of memory (~ 2GB).
+
+   ```bash
+   $ conda clean --all --yes
+   $ time anaconda2022 && /usr/bin/time -v mamba env create -f environment.tools.yaml -p envs/tools
+   Command being timed: "mamba env create -f environment.tools.yaml -p envs/tools"
+       User time (seconds): 35.37
+       Elapsed (wall clock) time (h:mm:ss or m:ss): 0:57.77
+       ...
+       Maximum resident set size (kbytes): 515596 (504MB)
+   ```
+   Uses 28% of 2GB.
+      
+   ```bash
+   $ rm -rf envs
+   $ micromamba clean --all --yes
+   $ /usr/bin/time -v micromamba create -y -f environment.tools.yaml -p envs/tools
+       Command being timed: "micromamba create -y -f environment.tools.yaml -p envs/tools"
+       User time (seconds): 10.49
+       System time (seconds): 2.43
+       Percent of CPU this job got: 59%
+       Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.58
+       ...
+       Maximum resident set size (kbytes): 66076 (65MB)
+   ```
+
+   This demonstrates that `micromamba` is a reasonable solution.  Even if we use
+   `conda-forge` (though this is about twice as slow and uses thrice as much
+   memory):
+
+   ```bash
+   $ rm -rf envs
+   $ micromamba clean --all --yes
+   $ /usr/bin/time -v micromamba create -y -f environment.tools.yaml -p envs/tools
+   Command being timed: "micromamba create -y -f environment.tools.yaml -p envs/tools"
+       User time (seconds): 21.59
+       System time (seconds): 3.75
+       Percent of CPU this job got: 54%
+       Elapsed (wall clock) time (h:mm:ss or m:ss): 0:46.38
+       ...
+       Maximum resident set size (kbytes): 207756 (203MB)
+   ```
    </details>
 *  [Anaconda Cloud][] is a very convenient way of distributing environments: 
 
@@ -132,7 +313,7 @@ desires/features/issues:
    I used to do this with my `work` environment, but when I switched to a new Mac with
    an [ARM][] processor, I started to run into major conflicts.  It turns our that most of
    these are caused by utilities like [coockiecutter][] and [black][] (which required
-   conflicting versions of [click]).
+   conflicting versions of [click][]).
    
    As a result, I now recommend separately installing utilities.  In principle, this can
    be done using [pipx][] and [condax][], but these are not very flexible right now, so
@@ -741,6 +922,189 @@ here: [Single-sourcing the package
 version](https://packaging.python.org/guides/single-sourcing-package-version).  I am
 going with option 5, which uses `importlib.metadata`.
 
+# Documentation ([Read the Docs][])
+
+We like to deploy our documentation on [Read the Docs][] (see e.g. [Math 583: Learning
+from Signals](https://iscimath-583-learning-from-signals.readthedocs.io/en/latest/)).
+Our documentation lives in the `Docs/` directory and is generally built with [Sphinx][]
+using the [Jupyter Book][] framework (see [How to replicate Jupyter Book’s functionality
+in Sphinx][]).
+
+To build the documentation, manually, activate the environment, then run `make html` in
+the documentation directory:
+
+```bash
+make shell
+cd Docs && make html
+```
+
+Alternatively, while actively working on the documentation, you can run:
+
+```bash
+make doc-server
+```
+
+This will use [`sphinx-autobuild`][] to build and serve the documentation locally on
+<http://127.0.0.1:8000>.  This documentation will be updated whenever you change files.
+
+> Caveat: If you documentation literally includes files like `README.md` from the
+> top-level, then editing these might not properly trigger a rebuild.  We try to
+> mitigate this, but it is buggy.  See details in the `Makefile` and `Docs/index.md`.
+
+To deploy the documentation on [Read the Docs][], push your source to [GitHub][] or [GitLab][],
+then link these to the appropriate project on [Read the Docs][].  Once you establish the
+appropriate web-hooks, [Read the Docs][] should automatically pull your changes when you
+push, and build the documentation.
+
+The documentation build process is controlled by the `.readthedocs.yaml` file.  We use
+the following format:
+
+```yaml
+# .readthedocs.yaml
+version: 2
+sphinx:
+   configuration: Docs/conf.py
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "mambaforge-4.10"
+  jobs:
+    post_create_environment:
+      - python3 -m ipykernel install --user --name math-583
+conda:
+  environment: environment.yaml
+```
+
+This augments the standard build process to register the `math-583` kernel used in the
+notebooks.  Otherwise, everything is specified in `environment.yaml`, which can include
+`.` as needed.
+
+If you need more control, you can do something like this:
+
+```yaml
+# .readthedocs.yaml
+version: 2
+sphinx:
+   configuration: Docs/conf.py
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3"
+  commands:
+    - make rtd
+```
+
+You must make sure that `make rtd` puts the generated documentation in `$READTHEDOCS_OUTPUT/html`.
+
+## Jupyter Book
+
+### Images
+
+There are several ways to include images in your documents. ([JB Images and figures][]).
+
+1. Use [MyST NB][] to generate the figures programmatically.  The output of the
+   code-cell will be the figure:
+   
+   ````markdown
+   ```{code-cell}
+   :tags: [hide-input]
+   
+   fig, ax = plt.subplots()
+   x = np.linspace(-1, 1)
+   ax.plot(x, x**2)
+   ```
+   ````
+   
+   For this to work, I usually include something like the following at the top of my
+   MyST files.
+   
+   ````markdown
+   ```{code-cell}
+   :tags: [hide-cell]
+
+   import mmf_setup; mmf_setup.nbinit()
+   from pathlib import Path
+   FIG_DIR = Path(mmf_setup.ROOT) / 'Docs/_images/'
+   os.makedirs(FIG_DIR, exist_ok=True)
+   import logging; logging.getLogger("matplotlib").setLevel(logging.CRITICAL)
+   %matplotlib inline
+   import numpy as np, matplotlib.pyplot as plt
+   try: from myst_nb import glue  # So this runs in plain notebooks without myst_nb
+   except ImportError: glue = None
+   ```
+   ````
+2. If you want more control over where the image appears, you can [glue][] it:
+
+   ````markdown
+   ```{code-cell}
+   :tags: [hide-input]
+   
+   fig, ax = plt.subplots()
+   x = np.linspace(-1, 1)
+   ax.plot(x, x**2)
+   if glue:  # So this runs in plain notebooks without myst_nb
+       glue("fig:parabola, fig)
+   ```
+   
+   Use it like this for a figure, or margin figure with a caption:
+   
+   ```{glue:figure} fig:parabola
+   :figclass: margin
+
+   This is a **caption**.  This figure is a parabola.
+   ```
+   ````
+   
+   *Note: this does not work across notebooks [MyST_NB issue #431][].*
+3. If you want to reference a figure from another document, you currently must save it.
+   I use `mmf_setup.ROOT` to locate this.  Here is code that allows you to do all of it.
+   
+   ````markdown
+   ```{code-cell}
+   :tags: [hide-input]
+   
+   fig, ax = plt.subplots()
+   x = np.linspace(-1, 1)
+   ax.plot(x, x**2)
+   plt.savefig(FIG_DIR / "parabola.svg")
+   ```
+   
+   Now you can use this with a standard `figure` environment.
+
+   ```{figure} /_images/parabola.svg
+   :figclass: margin
+
+   This is a **caption**.  This figure is a parabola.
+   ```
+   ````
+
+Here is complete code that does it all for reference.  (I prefer to break it up.)
+````markdown
+```{code-cell}
+:tags: [hide-input]
+
+import mmf_setup; mmf_setup.nbinit()
+from pathlib import Path
+FIG_DIR = Path(mmf_setup.ROOT) / 'Docs/_images/'
+os.makedirs(FIG_DIR, exist_ok=True)
+import logging; logging.getLogger("matplotlib").setLevel(logging.CRITICAL)
+%matplotlib inline
+import numpy as np, matplotlib.pyplot as plt
+try: from myst_nb import glue  # So this runs in plain notebooks without myst_nb
+except ImportError: glue = None
+
+fig, ax = plt.subplots()
+x = np.linspace(-1, 1)
+ax.plot(x, x**2)
+
+if glue:  # So this runs in plain notebooks without myst_nb
+    glue("fig:parabola, fig)
+
+plt.savefig(FIG_DIR / "parabola.svg")   # For HTML
+plt.savefig(FIG_DIR / "parabola.pdf")   # For LaTeX
+```
+````
+
 # Repositories
 
 Currently the main repository is on our own [Heptapod][] server, but I have enabled 
@@ -780,7 +1144,7 @@ Summary:
 
 With CI setup, we have the following badges:
 
-* Documentation at [Read the Docs](https://readthedocs.org):
+* Documentation at [Read the Docs][].
 
     [![Documentation Status][rtd_badge]][rtd]
 
@@ -1044,17 +1408,22 @@ To do this, we advocate the following procedure.
     conda activate _mmfutils; pytest
     ```
 
-    (`hg com` will automatically run tests after pip-installing everything in `setup.py` if you have linked the `.hgrc` file as discussed above, but the use of independent environments is preferred now.)
+    (`hg com` will automatically run tests after pip-installing everything in `setup.py`
+    if you have linked the `.hgrc` file as discussed above, but the use of independent
+    environments is preferred now.)
+
 4. **Update Docs**: Update the documentation if needed.  To generate new documentation run:
 
     ```bash
+    make shell
     cd doc
-    sphinx-apidoc -eTE ../mmfutils -o source
+    sphinx-apidoc -eTE ../src/mmfutils -o source
     rm source/mmfutils.*tests*
     ```
    
     * Include any changes at the bottom of this file (`doc/README.ipynb`).
-    * You may need to copy new figures to `README_files/` if the figure numbers have changed, and then `hg add` these while `hg rm` the old ones.
+    * You may need to copy new figures to `README_files/` if the figure numbers have
+      changed, and then `hg add` these while `hg rm` the old ones.
    
     Edit any new files created (titles often need to be added) and check that this looks good with
   
@@ -1063,7 +1432,12 @@ To do this, we advocate the following procedure.
     open build/html/index.html
     ```
      
-    Look especially for errors of the type "WARNING: document isn't included in any toctree".  This indicates that you probably need to add the module to an upper level `.. toctree::`.  Also look for "WARNING: toctree contains reference to document u'...' that doesn't have a title: no link will be generated".  This indicates you need to add a title to a new file.  For example, when I added the `mmf.math.optimize` module, I needed to update the following:
+    Look especially for errors of the type "WARNING: document isn't included in any
+    toctree".  This indicates that you probably need to add the module to an upper level
+    `.. toctree::`.  Also look for "WARNING: toctree contains reference to document
+    u'...' that doesn't have a title: no link will be generated".  This indicates you
+    need to add a title to a new file.  For example, when I added the
+    `mmf.math.optimize` module, I needed to update the following:
   
 [comment]: # (The rst generate is mucked up by this indented code block...)
 ```rst
@@ -1087,8 +1461,13 @@ To do this, we advocate the following procedure.
        :show-inheritance:
 ```
   
-5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to clean up the repo before you push.  Branches should generally be linear unless there is an exceptional reason to split development.
-6. **Release**: First edit `mmfutils/__init__.py` to update the version number by removing the `dev` part of the version number.  Commit only this change and then push only the branch you are working on:
+5. **Clean up History**: Run `hg histedit`, `hg rebase`, or `hg strip` as needed to
+   clean up the repo before you push.  Branches should generally be linear unless there
+   is an exceptional reason to split development.
+   
+6. **Release**: First edit `pyproject.toml` to update the version number by removing the
+   `dev` part of the version number.  Commit only this change and then push only the
+   branch you are working on:
 
     ```bash
     hg com -m "REL: <version>"
@@ -1098,7 +1477,10 @@ To do this, we advocate the following procedure.
    `default` on the release project. Review it, fix anything, then accept the merge
    request.  **Do not close the branch!** Unlike bitbucket, if you close the branch on
    Heptapod, it will vanish, breaking our [MyPI][] index.
-8. **Publish on PyPI**: Publish the released version on [PyPI](https://pypi.org/project/mmfutils/) using [twine](https://pypi.org/project/twine/)
+   
+8. **Publish on PyPI**: Publish the released version on
+   [PyPI](https://pypi.org/project/mmfutils/) using
+   [twine](https://pypi.org/project/twine/) 
 
     ```bash
     # Build the package.
@@ -1166,10 +1548,10 @@ issues.  Here are some recommendations:
      of doing this.  Once these interpreters are available in `PATH`, then [Nox][] will
      find them and create a virtual environment with the appropriate interpreter for testing.
      
-     I used to used [conda][], which is probably a good strategy on
-     Linux systems etc., but on my Mac M1 Max (ARM), I use [MacPorts][].  This step
-     *(only needs to be done once per system)*.  [PyEnv][] might be another option, but
-     I have had problems on my Mac OS X (see above).
+     I used to used [conda][], which is probably a good strategy on Linux systems etc.,
+     but on my Mac M1 Max (ARM), I use [MacPorts][].  This step *(only needs to be done
+     once per system)*.  [PyEnv][] might be another option, but I have had problems on
+     my Mac OS X (see above).
      
      Here is an example with [conda][]:
       
@@ -1500,12 +1882,386 @@ issues.  Here are some recommendations:
     ...
     ```
  
-## Issues:
+# Issues:
 
+## pyFFTW
+
+**TL;DR** Until several issues are fixed, use the following source to install pyFFTW:
+
+```
+PYFFTW_REPO="git+https://github.com/karlotness/pyFFTW.git@linker-flags"
+python3 -m pip install -v --no-cache "${PYFFTW_REPO}"
+```
+
+I was having lots of issues with [pyFFTW][] on my ARM Mac.  These include the following:
+
+* Poor performance - comparable or worse than NumPy.  This typically happens when the
+  incorrect FFTW library is found: i.e. if you have an incompatible or poorly built
+  version in an active Conda environment when you build.  Generally we recommend
+  installing `fftw` from `conda-forge`, but if you have bad performance, you might need
+  to recompile yourself.  See for example [fftw-feedstock issue #94](
+  https://github.com/conda-forge/fftw-feedstock/issues/94) and [fftw issue #129](
+  https://github.com/FFTW/fftw3/issues/129) which affected ARM platforms like the Mac OS
+  X M1 chip.
+  
+  <details>
+  
+  To install the [FFTW][] on my Mac, I downloaded the source, then ran (as `admin`):
+  
+  ```bash
+  MY_FLAGS="--enable-threads --enable-armv8-cntvct-el0 --prefix=/data/apps/fftw/3.3.10"
+  make clean
+  ./configure --enable-float $MY_FLAGS 
+  make -j8
+  make install
+  make clean
+  ./configure $MY_FLAGS
+  make -j8
+  make install
+  make clean
+  
+  pushd /data/apps/fftw/ && ln -s 3.3.10 current && popd
+  sudo mkdir -p /usr/local/lib
+  sudo mkdir -p /usr/local/bin
+  sudo mkdir -p /usr/local/include
+  
+  sudo ln -s /data/apps/fftw/current/lib/* /usr/local/lib/
+  sudo ln -s /data/apps/fftw/current/include/* /usr/local/include/
+  sudo ln -s /data/apps/fftw/current/bin/* /usr/local/bin/
+  ```
+  
+  This installs the float and double precision versions in `/data/apps/fftw/3.3.10`
+  which I then symlink to `/usr/local/lib`.  Note that ARM's do not have a separate long
+  double, so the `fftwl` library is not built here.
+  
+  
+  ```bash
+  # Custom compile of pyfftw
+  $ python testfftw.py 
+  Nxyz=(2, 64)
+  np    : 0.0014s (median 0.0014s)
+  pyfftw: 0.0216s (median 0.0216s)
+
+  Nxyz=(1200, 1200)
+  np    : 0.2019s (median 0.2028s)
+  pyfftw: 0.0821s (median 0.0824s)
+
+  Nxyz=(256, 256, 256)
+  np    : 0.0696s (median 0.0727s)
+  pyfftw: 0.0326s (median 0.0332s)
+  ```
+  
+  ```bash
+  # With conda-forge verions of pyfftw
+  $ python testfftw.py 
+  Nxyz=(2, 64)
+  np    : 0.0015s (median 0.0015s)
+  pyfftw: 0.0187s (median 0.0187s)
+
+  Nxyz=(1200, 1200)
+  np    : 0.2050s (median 0.2060s)
+  pyfftw: 0.0812s (median 0.0817s)
+
+  Nxyz=(256, 256, 256)
+  np    : 0.0698s (median 0.0698s)
+  pyfftw: 0.0952s (median 0.0984s)
+  ```
+
+  ```bash
+  # With conda-forge verions of pyfftw but forced recompile of pyfftw from source.
+  $ python testfftw.py
+  Nxyz=(2, 64)
+  np    : 0.0014s (median 0.0014s)
+  pyfftw: 0.0202s (median 0.0204s)
+
+  Nxyz=(1200, 1200)
+  np    : 0.1841s (median 0.1844s)
+  pyfftw: 0.0704s (median 0.0740s)
+
+  Nxyz=(256, 256, 256)
+  np    : 0.0701s (median 0.0723s)
+  pyfftw: 0.0335s (median 0.0344s)
+  ```
+
+  I use the following code to test:
+  
+  ```python
+  # testfftw.py
+  import os, time, timeit, numpy as np, pyfftw.builders
+
+  rng = np.random.default_rng(seed=2)
+
+  for Nxyz in [(2, 64), (1200,) * 2, (256,) * 3]:
+      print(f"{Nxyz=}")
+      psi = rng.normal(size=Nxyz) + rng.normal(size=Nxyz) * 1j
+
+      tic = time.time()
+      psi_t = np.fft.fftn(psi)
+      t = time.time() - tic
+      T, repeat = 3, 5  # Desired time for tests in s and number of repeats
+      number = max(1, int(T / t / repeat))
+
+      def test(fftn, label=""):
+          ts = timeit.repeat(
+              "fftn(psi)", globals=dict(psi=psi, fftn=fftn), repeat=repeat, number=number
+          )
+          print(f"{label:6}: {min(ts):.4f}s (median {np.median(ts):.4f}s)")
+
+      test(np.fft.fft, "np")
+
+      fftn = pyfftw.builders.fftn(
+          psi.copy(), threads=os.cpu_count(), planner_effort="FFTW_MEASURE"
+      )
+
+      assert np.allclose(fftn(psi), psi_t)
+
+      test(fftn, "pyfftw")
+      print()
+  ```
+  
+  The second number should be significantly smaller.  For example, with a custom built
+  [FFTW][] library on my Mac OS M1 Max, building [pyFFTW][] from source (see below), I
+  have (complex double transforms):
+  
+  ```bash
+  $ python testfftw.py 
+  np: 0.0214s
+  pyfftw: 0.0027s
+  ```
+  
+* Several new issues related to Cython 3.0 appeared in 2023: [issue
+  #362](https://github.com/pyFFTW/pyFFTW/issues/362) and [issue
+  #294](https://github.com/pyFFTW/pyFFTW/issues/294), and several related to paths
+  [issue #349](https://github.com/pyFFT/pyFFTW/issues/349) and [issue
+  #352](https://github.com/pyFFTW/pyFFTW/issues/352).  Most of these seem to be resolved
+  by [PR #363](https://github.com/pyFFTW/pyFFTW/pull/363), so I currently recommend
+  using that.
+  
 * Consider `pyFFTW`: if not using [Conda][], then this needs the FFTW libraries installed
   on the host platform, otherwise the install will fail.  How best to deal with this?
   My current solution is to provide these as extras, but it would be nice if there was a
   way to install if the libraries are present.
+
+* `error: Could not find any of the FFTW libraries`: this was mostly related to [issue
+   #303](https://github.com/pyFFTW/pyFFTW/issues/303) which is now fixed on `master`.
+   Until this is release, one can install from source:
+
+   ```bash
+   pip install git+https://github.com/pyFFTW/pyFFTW.git
+   ```
+
+   As for [issue #303](https://github.com/pyFFTW/pyFFTW/issues/303), here is what
+   changed: https://github.com/pyFFTW/pyFFTW/compare/v0.13.1..master.  You can probably
+   fix this by specifying `-Werror=implicit-function-declaration` somehow in your compiler flags.
+
+   Here is a typical example failure:
+
+   ```bash
+   micromamba create -y -c defaults -p envs/py3.11 python=3.11 fftw numpy Cython
+   eval "$(micromamba shell hook --shell=bash)" && micromamba activate envs/py3.11
+   python3 -m pip install --no-cache "pyfftw==0.13.1"
+   ```
+
+  <details>
+
+  ```bash
+  $ micromamba create -y -c defaults -p envs/py3.11 python=3.11 fftw numpy
+
+                                             __
+            __  ______ ___  ____ _____ ___  / /_  ____ _
+           / / / / __ `__ \/ __ `/ __ `__ \/ __ \/ __ `/
+          / /_/ / / / / / / /_/ / / / / / / /_/ / /_/ /
+         / .___/_/ /_/ /_/\__,_/_/ /_/ /_/_.___/\__,_/
+        /_/
+
+  pkgs/main/noarch                                              No change
+  pkgs/r/noarch                                                 No change
+  pkgs/r/osx-arm64                                              No change
+  pkgs/main/osx-arm64                                           No change
+
+  Transaction
+
+    Prefix: .../py3.11
+
+    Updating specs:
+
+     - python=3.11
+     - fftw
+     - numpy
+
+
+    Package               Version  Build               Channel         Size
+  ───────────────────────────────────────────────────────────────────────────
+    Install:
+  ───────────────────────────────────────────────────────────────────────────
+
+    + blas                    1.0  openblas            pkgs/main     Cached
+    + bzip2                 1.0.8  h620ffc9_4          pkgs/main     Cached
+    + ca-certificates  2023.05.30  hca03da5_0          pkgs/main     Cached
+    + fftw                  3.3.9  h1a28f6b_1          pkgs/main     Cached
+    + libcxx               14.0.6  h848a8c0_0          pkgs/main     Cached
+    + libffi                3.4.4  hca03da5_0          pkgs/main     Cached
+    + libgfortran           5.0.0  11_3_0_hca03da5_28  pkgs/main     Cached
+    + libgfortran5         11.3.0  h009349e_28         pkgs/main     Cached
+    + libopenblas          0.3.21  h269037a_0          pkgs/main     Cached
+    + llvm-openmp          14.0.6  hc6e5704_0          pkgs/main     Cached
+    + ncurses                 6.4  h313beb8_0          pkgs/main     Cached
+    + numpy                1.24.3  py311hb57d4eb_0     pkgs/main     Cached
+    + numpy-base           1.24.3  py311h1d85a46_0     pkgs/main     Cached
+    + openssl               3.0.8  h1a28f6b_0          pkgs/main     Cached
+    + pip                  23.1.2  py311hca03da5_0     pkgs/main     Cached
+    + python               3.11.3  hb885b13_1          pkgs/main     Cached
+    + readline                8.2  h1a28f6b_0          pkgs/main     Cached
+    + setuptools           67.8.0  py311hca03da5_0     pkgs/main     Cached
+    + sqlite               3.41.2  h80987f9_0          pkgs/main     Cached
+    + tk                   8.6.12  hb8d0fd4_0          pkgs/main     Cached
+    + tzdata                2023c  h04d1e81_0          pkgs/main     Cached
+    + wheel                0.38.4  py311hca03da5_0     pkgs/main     Cached
+    + xz                    5.4.2  h80987f9_0          pkgs/main     Cached
+    + zlib                 1.2.13  h5a0b063_0          pkgs/main     Cached
+
+    Summary:
+
+    Install: 24 packages
+
+    Total download: 0 B
+
+  ───────────────────────────────────────────────────────────────────────────
+
+
+
+  Transaction starting
+  Linking fftw-3.3.9-h1a28f6b_1
+  Linking ncurses-6.4-h313beb8_0
+  Linking xz-5.4.2-h80987f9_0
+  Linking zlib-1.2.13-h5a0b063_0
+  Linking blas-1.0-openblas
+  Linking libcxx-14.0.6-h848a8c0_0
+  Linking bzip2-1.0.8-h620ffc9_4
+  Linking libffi-3.4.4-hca03da5_0
+  Linking ca-certificates-2023.05.30-hca03da5_0
+  Linking llvm-openmp-14.0.6-hc6e5704_0
+  Linking readline-8.2-h1a28f6b_0
+  Linking tk-8.6.12-hb8d0fd4_0
+  Linking openssl-3.0.8-h1a28f6b_0
+  Linking libgfortran5-11.3.0-h009349e_28
+  Linking sqlite-3.41.2-h80987f9_0
+  Linking libgfortran-5.0.0-11_3_0_hca03da5_28
+  Linking libopenblas-0.3.21-h269037a_0
+  Linking tzdata-2023c-h04d1e81_0
+  Linking python-3.11.3-hb885b13_1
+  Linking wheel-0.38.4-py311hca03da5_0
+  Linking setuptools-67.8.0-py311hca03da5_0
+  Linking pip-23.1.2-py311hca03da5_0
+  Linking numpy-base-1.24.3-py311h1d85a46_0
+  Linking numpy-1.24.3-py311hb57d4eb_0
+
+  Transaction finished
+
+  ...
+  $ eval "$(micromamba shell hook --shell=bash)" && micromamba activate envs/py3.11
+  (py3) $ python3 -m pip install --no-cache pyfftw
+  Collecting pyfftw
+    Downloading pyFFTW-0.13.1.tar.gz (114 kB)
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 114.4/114.4 kB 1.5 MB/s eta 0:00:00
+    Installing build dependencies ... done
+    Getting requirements to build wheel ... done
+    Preparing metadata (pyproject.toml) ... done
+  Requirement already satisfied: numpy<2.0,>=1.20 in ./envs/py3.11/lib/python3.11/site-packages (from pyfftw) (1.24.3)
+  Building wheels for collected packages: pyfftw
+    Building wheel for pyfftw (pyproject.toml) ... error
+    error: subprocess-exited-with-error
+
+    × Building wheel for pyfftw (pyproject.toml) did not run successfully.
+    │ exit code: 1
+    ╰─> [71 lines of output]
+        running bdist_wheel
+        running build
+        running build_py
+        creating build
+        creating build/lib.macosx-11.1-arm64-3.11
+        creating build/lib.macosx-11.1-arm64-3.11/pyfftw
+        copying pyfftw/config.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw
+        copying pyfftw/_version.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw
+        copying pyfftw/__init__.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw
+        creating build/lib.macosx-11.1-arm64-3.11/pyfftw/builders
+        copying pyfftw/builders/builders.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/builders
+        copying pyfftw/builders/__init__.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/builders
+        copying pyfftw/builders/_utils.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/builders
+        creating build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/cache.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/__init__.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/scipy_fft.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/dask_fft.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/numpy_fft.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/scipy_fftpack.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        copying pyfftw/interfaces/_utils.py -> build/lib.macosx-11.1-arm64-3.11/pyfftw/interfaces
+        UPDATING build/lib.macosx-11.1-arm64-3.11/pyfftw/_version.py
+        set build/lib.macosx-11.1-arm64-3.11/pyfftw/_version.py to '0.13.1'
+        running build_ext
+        DEBUG:__main__:Link FFTW dynamically
+        DEBUG:__main__:Compiler include_dirs: ['./envs/py3.11/include/python3.11']
+        DEBUG:__main__:3.11.3 (main, May 15 2023, 18:01:31) [Clang 14.0.6 ]
+        DEBUG:__main__:Sniffer include_dirs: ['/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include', '/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw', '/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include', './envs/py3.11/include']
+        DEBUG:__main__:objects: []
+        DEBUG:__main__:libraries: []
+        DEBUG:__main__:include dirs: ['/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include', '/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw', '/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include', './envs/py3.11/include']
+        DEBUG:__main__:clang -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw -I/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include -I./envs/py3.11/include -I./envs/py3.11/include/python3.11 -c /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-5ht27cq0/None.c -o /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-5ht27cq0/None.o
+
+        DEBUG:__main__:clang /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-5ht27cq0/None.o -L./envs/py3.11/lib -o /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-5ht27cq0/a.out
+
+        DEBUG:__main__:Checking with includes ['fftw3.h']...ok
+        DEBUG:__main__:objects: []
+        DEBUG:__main__:libraries: ['fftw3']
+        DEBUG:__main__:include dirs: ['/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include', '/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw', '/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include', './envs/py3.11/include']
+        /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-hfaar1y4/fftw_plan_dft.c:2:17: error: implicit declaration of function 'fftw_plan_dft' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+                        fftw_plan_dft();
+                        ^
+        1 error generated.
+        WARNING:__main__:Compilation error: command '/usr/bin/clang' failed with exit code 1
+        DEBUG:__main__:clang -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw -I/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include -I./envs/py3.11/include -I./envs/py3.11/include/python3.11 -c /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-hfaar1y4/fftw_plan_dft.c -o /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-hfaar1y4/fftw_plan_dft.o
+
+        DEBUG:__main__:Checking for fftw_plan_dft...no
+        DEBUG:__main__:objects: []
+        DEBUG:__main__:libraries: ['fftw3f']
+        DEBUG:__main__:include dirs: ['/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include', '/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw', '/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include', './envs/py3.11/include']
+        /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-f8ktlj7y/fftwf_plan_dft.c:2:17: error: implicit declaration of function 'fftwf_plan_dft' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+                        fftwf_plan_dft();
+                        ^
+        1 error generated.
+        WARNING:__main__:Compilation error: command '/usr/bin/clang' failed with exit code 1
+        DEBUG:__main__:clang -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw -I/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include -I./envs/py3.11/include -I./envs/py3.11/include/python3.11 -c /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-f8ktlj7y/fftwf_plan_dft.c -o /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-f8ktlj7y/fftwf_plan_dft.o
+
+        DEBUG:__main__:Checking for fftwf_plan_dft...no
+        DEBUG:__main__:objects: []
+        DEBUG:__main__:libraries: ['fftw3l']
+        DEBUG:__main__:include dirs: ['/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include', '/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw', '/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include', './envs/py3.11/include']
+        /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-nkofnks4/fftwl_plan_dft.c:2:17: error: implicit declaration of function 'fftwl_plan_dft' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+                        fftwl_plan_dft();
+                        ^
+        1 error generated.
+        WARNING:__main__:Compilation error: command '/usr/bin/clang' failed with exit code 1
+        DEBUG:__main__:clang -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -fPIC -O2 -isystem ./envs/py3.11/include -arch arm64 -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/include -I/tmp-dir/pip-install-uosc4e24/pyfftw_cae63f92cf0343b4bb3308a3d5308afe/pyfftw -I/tmp-dir/pip-build-env-jifbhuv5/overlay/lib/python3.11/site-packages/numpy/core/include -I./envs/py3.11/include -I./envs/py3.11/include/python3.11 -c /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-nkofnks4/fftwl_plan_dft.c -o /var/folders/m7/dnr91tjs4gn58_t3k8zp_g000000gr/T/pyfftw-nkofnks4/fftwl_plan_dft.o
+
+        DEBUG:__main__:Checking for fftwl_plan_dft...no
+        DEBUG:__main__:{'HAVE_DOUBLE': False, 'HAVE_DOUBLE_OMP': False, 'HAVE_DOUBLE_THREADS': False, 'HAVE_DOUBLE_MULTITHREADING': False, 'HAVE_DOUBLE_MPI': False, 'HAVE_SINGLE': False, 'HAVE_SINGLE_OMP': False, 'HAVE_SINGLE_THREADS': False, 'HAVE_SINGLE_MULTITHREADING': False, 'HAVE_SINGLE_MPI': False, 'HAVE_LONG': False, 'HAVE_LONG_OMP': False, 'HAVE_LONG_THREADS': False, 'HAVE_LONG_MULTITHREADING': False, 'HAVE_LONG_MPI': False, 'HAVE_MPI': False}
+        error: Could not find any of the FFTW libraries
+        [end of output]
+
+    note: This error originates from a subprocess, and is likely not a problem with pip.
+    ERROR: Failed building wheel for pyfftw
+  Failed to build pyfftw
+  ERROR: Could not build wheels for pyfftw, which is required to install pyproject.toml-based projects
+  ```
+  </details>
+
+## Sleep
+
+Sleeping with `time.sleep()` is [not very
+accurate](https://stackoverflow.com/questions/1133857/how-accurate-is-pythons-time-sleep).
+This causes various FPS tests to fail.  See that thread (and the code in
+`misc/PlotSleepBehavior.py`) for some possible solutions.
+
 
 * How to manage one definitive version?  The [current suggestion][] is to use
   `importlib.metadata`:
@@ -1780,7 +2536,9 @@ make: *** [python.exe] Error 1
 [Anaconda Project]: https://github.com/Anaconda-Platform/anaconda-project
 [Read the Docs]: https://readthedocs.org/
 [CuPy]: https://cupy.dev
+[CUDA]: <https://developer.nvidia.com/cuda-toolkit> "CUDA Toolkit"
 [Mamba]: https://github.com/mamba-org/mamba
+[Micromamba]: <https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html>
 [CoCalc]: https://cocalc.com
 [Anaconda]: https://www.anaconda.com
 [Anaconda Cloud]: https://www.anaconda.cloud
@@ -1793,6 +2551,7 @@ make: *** [python.exe] Error 1
 [MacPorts]: https://www.macports.org/
 [Rosetta]: https://support.apple.com/en-us/HT211861
 [PyFFTW]: https://github.com/pyFFTW/pyFFTW
+[FFTW]: https://www.fftw.org/
 [SciPy]: https://scipy.org/
 [mercurial]: https://www.mercurial-scm.org/
 [git]: https://git-scm.com/
@@ -1803,7 +2562,17 @@ make: *** [python.exe] Error 1
 [PDM]: <https://pdm.fming.dev/>
 [Poetry]: <https://python-poetry.org/>
 [Anaconda Project]: <https://anaconda-project.readthedocs.io/en/latest/>
+[anaconda-client]: <https://github.com/Anaconda-Platform/anaconda-client>
 [Black]: <https://black.readthedocs.io/en/stable/>
 [Nbconvert]: <https://nbconvert.readthedocs.io/en/latest/>
-
+[Read the Docs]: <https://readthedocs.org>
 [against unbound versions]: https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea
+[Jupyter Book]: <https://jupyterbook.org/> "Books with Jupyter"
+[How to replicate Jupyter Book’s functionality in Sphinx]: 
+  <https://jupyterbook.org/en/stable/explain/sphinx.html#how-to-replicate-jupyter-books-functionality-in-sphinx>
+[Sphinx]: <https://www.sphinx-doc.org/>
+[`sphinx-autobuild`]: <https://github.com/executablebooks/sphinx-autobuild>
+[JB Images and figures]: <https://jupyterbook.org/en/stable/content/figures.html>
+[MyST NB]: <https://myst-nb.readthedocs.io/en/latest/>
+[MyST_NB issue #431]: <https://github.com/executablebooks/MyST-NB/issues/431>
+[glue]: <https://myst-nb.readthedocs.io/en/latest/render/glue.html>
