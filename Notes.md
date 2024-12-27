@@ -1473,6 +1473,7 @@ To do this, we advocate the following procedure.
     hg com -m "REL: <version>"
     hg push -b .
    ```
+   
 7. **Pull Request**: Create a pull request on the development fork from your branch to
    `default` on the release project. Review it, fix anything, then accept the merge
    request.  **Do not close the branch!** Unlike bitbucket, if you close the branch on
@@ -1493,7 +1494,10 @@ To do this, we advocate the following procedure.
     twine upload dist/*
     ```
 
-9. **Build Conda Package**: This will run all the tests in a fresh environment as specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`, `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to be built is specified in `conda_build_config.yaml`.
+9. **Build Conda Package**: This will run all the tests in a fresh environment as
+   specified by `meta.yaml`.  Make sure that the dependencies in `meta.yaml`,
+   `environment.yml`, and `setup.py` are consistent.  Note that the list of versions to
+   be built is specified in `conda_build_config.yaml`. 
 
     ```bash
     conda build .
@@ -1502,7 +1506,8 @@ To do this, we advocate the following procedure.
     anaconda upload --all /data/apps/conda/conda-bld/noarch/mmfutils-0.5.0-py_0.tar.bz2
     ```
    
-10. **Start new branch**: On the same development branch (not `default`), increase the version number in `mmfutils/__init__.py` and add `dev`: i.e.:
+10. **Start new branch**: On the same development branch (not `default`), increase the
+    version number in `mmfutils/__init__.py` and add `dev`: i.e.: 
 
     ```python
     __version__ = '0.5.1dev'
