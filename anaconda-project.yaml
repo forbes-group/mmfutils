@@ -1,0 +1,17 @@
+name: _mmfutils
+channels:
+  - defaults
+dependencies:
+  - python~=3.11
+  - ipykernel
+
+  # Better to install these from conda for performance.
+  - numpy>=1.15.4
+  - numba
+  - cython
+  
+  - pip
+  - pip:
+    # For best performance, we must build pyfftw with pip.
+    - pyfftw>=0.13.1
+    - .[test,doc]

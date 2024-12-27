@@ -12,6 +12,66 @@ choices I have made regarding things such as file hierarchy, packaging tools etc
 intend for this file to document my choices and discussions about these issues for all
 projects.  (Other projects should refer here for this discussion.)
 
+<details><summary>Table of Contents</summary>
+<!-- START doctoc generated TOC please keep comment here to allow auto update
+     DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE:
+     
+     make toc
+-->
+
+- [To Do](#to-do)
+- [General Principles](#general-principles)
+- [Working Environment (Conda/pip and all that)](#working-environment-condapip-and-all-that)
+  - [Option 1 (Recommendation as of March 2023)](#option-1-recommendation-as-of-march-2023)
+  - [Option 2 (experimental)](#option-2-experimental)
+    - [Caveats](#caveats)
+  - [Option 3 (old recommendation)](#option-3-old-recommendation)
+  - [Option 3 (incomplete)](#option-3-incomplete)
+    - [Testing for Option 2](#testing-for-option-2)
+  - [Option 3](#option-3)
+  - [References](#references)
+  - [Reproducible Computing](#reproducible-computing)
+    - [Conda-Pack](#conda-pack)
+- [Packaging](#packaging)
+  - [Distribution](#distribution)
+  - [To Do](#to-do-1)
+  - [Version Number](#version-number)
+- [Repositories](#repositories)
+  - [Badges](#badges)
+  - [Continuous Integration (CI)](#continuous-integration-ci)
+  - [References](#references-1)
+- [Testing](#testing)
+  - [`tests/__init__.py`](#tests__init__py)
+  - [Nox](#nox)
+    - [Matrix Testing](#matrix-testing)
+    - [Gotchas](#gotchas)
+  - [Documentation](#documentation)
+- [Profiling (Incomplete)](#profiling-incomplete)
+- [Releases](#releases)
+- [`mmfutils`: This Package](#mmfutils-this-package)
+  - [Dependencies](#dependencies)
+  - [The Development Process: Makefiles](#the-development-process-makefiles)
+    - [Details](#details)
+      - [Conda and Anaconda Project](#conda-and-anaconda-project)
+    - [Things that Did Not Work](#things-that-did-not-work)
+  - [PDM](#pdm)
+  - [Poetry](#poetry)
+  - [Soft Dependencies](#soft-dependencies)
+  - [Issues:](#issues)
+  - [References](#references-2)
+- [Testing](#testing-1)
+  - [Issues:](#issues-1)
+- [GitHub](#github)
+  - [Issues:](#issues-2)
+- [[CoCalc][]](#cocalc)
+  - [Implementation Details](#implementation-details)
+- [Reference](#reference)
+  - [Conda Issues](#conda-issues)
+  - [Packaging](#packaging-1)
+- [Odds and Ends](#odds-and-ends)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+</details>
 
 # To Do
 
@@ -21,6 +81,147 @@ projects.  (Other projects should refer here for this discussion.)
   I have a branch for each version, but this means I need to specify the latest one each
   time.)
 * Fix bases to properly use GPU (sundered values etc.).
+
+# TL;DR
+
+Getting started should be as easy as:
+
+1. Cloning the project (or initializing with [our cookiecutter templates][]).
+2. (Optional) `make tools` and adding the appropriate folder to your path. *(This is not
+   implemented yet: currently you should install your tools with your OS package
+   managers, [pipx][] etc.)*
+3. `make shell`: This launches a shell which should have everything installed so you can
+   just start working.
+4. `make realclean`: Cleanup everything as much as possible.
+
+To support this, our project structure uses the following files:
+
+* `Makefile`: We use [GNU make][] to collect "wisdom" about how to build, install,
+  activate, etc. our development environments. In an effort to be platform and tool
+  agnostic, these may get complicated, but they will contain lots of useful
+  information.  Useful commands include:
+  * `make shell`: Starts a shell with everything needed for work.
+  * `make realclean`: Cleans up as much as possible.  As close as possible to a fresh checkout.
+* [`pyproject.toml`][]: Most of our work is based on Python, and this is
+  [the standard][pyproject.toml] way to specify dependencies and configure python.
+  Various ([too many!][How to improve Python packaging]) tool exist for helping update
+  this. Currently we recommend [PDM][] (was previously [Poetry][], but they do not
+  [support this standard][poetry#3332].)  We follow [Scikit-HEP's
+  recommendation](https://scikit-hep.org/developer/packaging#extras-lowmedium-priority)
+  that the extras `test`, `docs`, and `dev` be defined here, though the latter may be
+  managed by a tool like [PDM][].
+* `anaconda-project.yaml`: Many of our projects require something for which installing
+  with [conda][] is easiest.  ([PyFFTW][] and [CuPy][] are obvious examples, but even
+  [NumPy][] with [MKL][] optimizations is included.)  In principle, this file can
+  replace the `Makefile` and [`pyproject.toml`][], but this does not work for us (see
+  below).
+
+[poetry#3332]: <https://github.com/python-poetry/poetry/issues/3332>
+[PEP-631]: <https://peps.python.org/pep-0631/>
+[`pyproject.toml`]: 
+  <https://packaging.python.org/en/latest/specifications/declaring-project-metadata>
+
+# Tools
+
+I generally make sure I have the following tools installed globally.  I do this with
+[pipx][] using a different account (`admin`) on my computer so I don't accidentally muck
+these up.  I also keep my `base` [Conda][] environment in this account for the same
+reason.  For complete details see [mac-os-x][].
+
+```bash
+# On Mac OS X using MacPorts:
+ssh admin # My alias to login as `admin`
+conda install -n base pipx
+port install git gmake pandoc myrepos graphviz
+port install python37 python38 python39 python310 python311
+for app in cookiecutter pdm poetry yapf black nox    \
+           nbdime jupytext nbstripout                \
+           poetry2conda conda-lock conda-pack condax \
+           sphobjinv rst-to-myst twine               \ 
+           mercurial mmf_setup snakeviz              \
+           grip; do pipx install ${app}; done
+pipx inject nox nox-poetry poetry 
+pipx inject pdm pdm-shell
+pipx inject mercurial hg-git hg-evolve
+```
+
+You may not need all of these.
+
+In addition, you will likely need to install compilers and development tools, and
+[TeX Live][] for making publication-quality plots.
+
+In the future, the tools (except for [TeX Live][] and compilers) needed for the project
+will be able to be installed locally with `make tools`.
+
+# Python Dependencies
+
+The pure python dependencies should be specified in [`pyproject.toml`][].  If you are
+developing a package to publish on [PyPI][], then this should contain **all**
+dependencies.  We currently manage this file with [PDM][], e.g.:
+
+```bash
+make shell
+pdm add uncertainties
+pdm add -G test pytest-cov
+pdm add -G docs sphinx
+pdm add --dev ipython
+...
+```
+
+In addition to the development dependencies specified in `[tool.pdm.dev-dependencies]`,
+one should generally include the `test` and `docs` extras.  For our work, we also often
+use the following:
+
+* `perf`: Tools for high-performance computing that might be difficult to install, so we
+  make them optional.  [PyFFTW][], [Numba][], and [PyCUDA][] are good examples.  Note
+  that, from a development perspective, these are often provided in the [Conda][]
+  environment, but are needed here if you want your package to be [pip][]-installable
+  from [PyPI][].  Some extra effort is needed to make sure that the versions specified
+  in [`anaconda-project.yaml`][] are consistent with the versions here.
+  
+  Now that I know about [recursive optional dependencies in Python][], I am considering
+  splitting these into `gpu`, `pyfftw`, `numba`, etc.
+* `full`: All functional dependencies.  I.e. everything except `docs` and `test`.  Note:
+  if you include packages here or in `perf`, you should be sure to make sure that these
+  do not break imports.  For example (see `src/mmfutils/performance/fft.py` for example):
+  
+  ```python
+  try:
+      import pyfftw
+  except ImportError:
+      warnings.warn("Could not import pyfftw... falling back to numpy")
+      pyfftw = None
+  ```
+  
+  An exception is if there is a particular sub-module that obviously depends on this
+  feature, then it is probably okay for that to just fail on import.
+* `all`: Everything including `docs` and `test`.  Perhaps this should always be spelled
+
+    ```toml
+    all = [
+        "mmfutils[full,test,docs]"
+    ]
+    ```
+    
+    with `mmfutils` replaced by the package name?  (I don't think `".[full,test.docs]"`
+    is supported.)
+
+After you have finished editing [`pyproject.toml`][], you should check the dependencies
+with your tool of choice, for example:
+
+```bash
+make shell
+pdm update
+```
+
+# [Conda][] Dependencies
+
+The development environment will generally be created with [Anaconda Project][] as
+specified in the [`anaconda-project.yaml`][] file.  A couple of notes about this:
+
+* If you change the default field `packages:` to `dependencies:`, then you can just use
+  `conda env create -f anaconda-project.yaml`, which can be useful on CI.  We do this.
+* 
 
 # Simplified Approach (July 2023)
 
@@ -796,14 +997,82 @@ archived and reinstalled elsewhere.  At the very least, `conda-pack` provides a 
 the code installed, failing if any files installed by [Conda][] have been overwritten or
 are installed twice.
 
+# Packaging
 
-# Distribution
+Some examples of packages we manage and their features:
+
+* [sphinxcontrib-zopeext][zopeext]: A pure python package that must test against an incomplete
+  matrix of versions of Python and Sphinx.  Hosted on [GitHub][] and is thus a
+  reasonable place to look at their versions of CI.
+  
+  [![zopeext Test badge][]][zopeext GitHub Tests Workflow]
+  [![zopeext PyPI badge][]][zopeext PyPI link]
+  [![zopeext gh: tag badge][]][zopeext gh: tags]
+  [![zopeext Coverage badge][]][zopeext Coverage link]
+  [![zopeext Documentation status badge][]][zopeext Documentation link]
+  [![zopeext Python versions badge][]][zopeext PyPI link]
+  [![zopeext open-ssf badge][]][zopeext open-ssf link]
+  [![zopeext gh: tag badge][]][zopeext gh: tags]
+  [![zopeext gh: forks badge][]][zopeext gh: forks]
+  [![zopeext gh: contributors badge][]][zopeext gh: contributors]
+  [![zopeext gh: stars badge][]][zopeext gh: stars]
+  [![zopeext gh: issues badge][]][zopeext gh: issues]
+* [mmf-setup][]: A package for helping with development.  Has a script `mmf_setup` that
+  will setup and environment on [CoCalc][], and has options for installing and
+  configuring [Mercurial][], Jupyter notebooks, and customizing the import path.
+* [mmfutils][]: This package.
+
+[zopeext]: <https://github.com/sphinx-contrib/zopeext>
+[zopeext Test badge]: 
+  <https://github.com/sphinx-contrib/zopeext/actions/workflows/tests.yaml/badge.svg>
+[zopeext GitHub Tests Workflow]: 
+  <https://github.com/sphinx-contrib/zopeext/actions/workflows/tests.yaml>
+[zopeext PyPI badge]: 
+  <https://img.shields.io/pypi/v/sphinxcontrib-zopeext?logo=python&logoColor=FBE072">
+[zopeext Coverage badge]: 
+  <https://coveralls.io/repos/github/sphinx-contrib/zopeext/badge.svg?branch=main>
+[zopeext Coverage link]: 
+  <https://coveralls.io/github/sphinx-contrib/zopeext?branch=main>
+[zopeext Documentation status badge]:
+  <https://readthedocs.org/projects/zopeext/badge/?version=latest> 
+[zopeext Documentation link]:  <https://zopeext.readthedocs.io/en/latest/?badge=latest>
+[zopeext Python versions badge]:
+  <https://img.shields.io/pypi/pyversions/sphinxcontrib-zopeext?logo=python&logoColor=FBE072>
+[zopeext PyPI link]:
+  <https://pypi.org/project/sphinxcontrib-zopeext/>
+[zopeext open-ssf badge]: 
+  <https://api.securityscorecards.dev/projects/github.com/sphinx-contrib/zopeext/badge>
+[zopeext open-ssf link]:
+  <https://deps.dev/pypi/sphinxcontrib-zopeext>
+[zopeext gh: forks badge]:
+  <https://img.shields.io/github/forks/sphinx-contrib/zopeext.svg?logo=github>
+[zopeext gh: forks]:
+  <https://github.com/sphinx-contrib/zopeext/network/members>
+[zopeext gh: contributors badge]: 
+  <https://img.shields.io/github/contributors/sphinx-contrib/zopeext.svg?logo=github>
+[zopeext gh: contributors]:
+  <https://github.com/sphinx-contrib/zopeext/graphs/contributors>
+[zopeext gh: stars badge]:
+  <https://img.shields.io/github/stars/sphinx-contrib/zopeext.svg?logo=github>
+[zopeext gh: stars]:
+  <https://github.com/sphinx-contrib/zopeext/stargazers>
+[zopeext gh: tag badge]:
+  <https://img.shields.io/github/v/tag/sphinx-contrib/zopeext?logo=github>
+[zopeext gh: tags]:
+  <https://github.com/sphinx-contrib/zopeext/tags>
+[zopeext gh: issues badge]:
+  <https://img.shields.io/github/issues/sphinx-contrib/zopeext?logo=github>
+[zopeext gh: issues]:
+  <https://github.com/sphinx-contrib/zopeext/issues>
+
+
+## Distribution
 
 In general, we will try to distribute projects on [PyPI][] and this will be the primary
 mode if distribution.  To use such projects in a [Conda][] environment, just use `pip`:
 
-```yml
-# environment.yml
+```yaml
+# environment.yaml
 ...
 [dependencies]
   ...
@@ -813,18 +1082,6 @@ mode if distribution.  To use such projects in a [Conda][] environment, just use
     ...
 ```
 
-## Private Release (`--find-links`)
-
-To make packages available before their release on [PyPI][], one can make use of the
-[`-f, --find-links
-<url>`](https://pip.pypa.io/en/stable/cli/pip_wheel/?highlight=find-links#cmdoption-f)
-option of `pip`.  If this points to a webpage with links, then these links can define
-how to get a package from source etc.  I maintain my own set of links in my [MyPI][]
-project.  Unfortunately, until [issue
-#22572 *(gitlab is completely unusable without javascript.)*](https://gitlab.com/gitlab-org/gitlab/-/issues/22572) is resolved, GitLab-based
-sites are useless for this purpose, so we rely on mirroring through GitHub.
-
-# Packaging
 ## To Do
 
 * Consider a two-branch model so that one can easily update to the latest development
@@ -832,22 +1089,6 @@ sites are useless for this purpose, so we rely on mirroring through GitHub.
   and we should have a release branch?  (Thinking about testing and badges... currently
   I have a branch for each version, but this means I need to specify the latest one each
   time.)
-
-## Distribution
-
-In general, we will try to distribute projects on [PyPI][] and this will be the primary
-mode if distribution.  To use such projects in a [Conda][] environment, just use `pip`:
-
-```yml
-# environment.yml
-...
-[dependencies]
-  ...
-  - pip
-  - pip:
-    - mmfutils>=0.6
-    ...
-```
 
 To make packages available before their release on [PyPI][], one can make use of the
 [`-f, --find-links
@@ -1194,13 +1435,61 @@ displayed in the appropriate badges.
 The main difficulty I had was a need for a full LaTeX installation.  This is now
 working with `apt-get texlive-full`, but could probably be simplified, just updating the
 packages we really need for testing ([`mathpazo`][], [`siunitx`][], and [`type1cm`][] were
-issues when just using the smaller `texlive` package.)
+issues when just using the smaller [`texlive`][TeX Live] package.)
 
 [`mathpazo`]: <https://ctan.org/pkg/mathpazo> "mathpazo – Fonts to typeset mathematics to match Palatino"
 [`siunitx`]: <https://ctan.org/pkg/siunitx> "siunitx – A comprehensive (SI) units package"
 [`type1cm`]: <https://ctan.org/pkg/type1cm> "type1cm – Arbitrary size font selection in LaTeX"
 
+
+### Coverage
+
+For general coverage, it is enough to install [`pytest-cov`][], but this does not work
+so well for CI.
+
+For [GitHub][], see [How to Ditch Codecov for Python
+Projects](https://hynek.me/articles/ditch-codecov-python/) and the [Hypermodern GitHub
+workflow][].  This is a little tricky, because the tests are run in separate machines.
+The coverage reports need to be labeled individually, then uploaded as artifacts, and
+finally combined after all tests are run.  Following the [Hypermodern GitHub
+workflow][], we include a `coverage` session in `noxfile.py`.  Here ate some potential
+gotchas.
+
+* You need to have at least the following in your `pyproject.toml` file:
+  ```toml
+  [tool.coverage.run]
+  relative_files = true     # Remove the .nox/test-3-10 etc. prefix.
+  parallel = true           # Needed to generate .coverage.* files for each process
+  source = ["mmfutils"]     # This the installed package.
+  ```
+* Be careful with [`pytest-cov`][]: It will generate reports and eat the coverage files
+  that you are trying to combine.  I think I recommend not using this, and relying on [Nox][].
+* If you put the reports in a directory, you must specify this.
+
+[Hypermodern GitHub workflow]:
+  <https://github.com/cjolowicz/cookiecutter-hypermodern-python/blob/main/%7B%7Bcookiecutter.project_name%7D%7D/.github/workflows/tests.yml>
+
+
+
+* https://docs.gitlab.com/ee/user/project/badges.html
+
+Old:
+
+For [GitHub][] one can use [Codecov][]. To do this, sign in, the link your [GitHub][]
+account.  Once you give permissions, you can then add public repos.  You will need to
+add the `CODECOV_TOKEN` token as a repository secret.  Once this is done, you can add
+the following to your `.github/workflows/tests.yaml` workflow:
+
+```yaml
+- name: Upload coverage reports to Codecov
+  uses: codecov/codecov-action@v3
+```
+
+[Codecov]: <https://app.codecov.io/>
+
 ## References
+* https://stackoverflow.com/questions/67482906/show-coverage-in-github-pr: Discussion of
+  how to get coverage reports to show in pull requests on [GitHub][].
 * https://cjolowicz.github.io/posts/hypermodern-python-06-ci-cd/
 * https://docs.github.com/en/actions/guides/setting-up-continuous-integration-using-workflow-templates
 
@@ -1325,6 +1614,37 @@ or using the environment defined in `environment.yml`:
 cond activate _mmfutils
 pytest
 ```
+
+### Matrix Testing
+
+Here is an example `noxfile.py` to test a "matrix" of versions, with some exceptions
+that do not work:
+    
+```python
+# noxfile.py
+import nox
+
+python_versions = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+sphinx_versions = {_p: ["4.5.0", "5.3.0", "6.1.3"] for _p in python_versions}
+excluded_versions = {("3.7", "6.1.3")}
+python_sphinx = [
+    (python, sphinx)
+    for python in python_versions
+    for sphinx in sphinx_versions[python]
+    if (python, sphinx) not in excluded_versions
+]
+
+@nox.session(reuse_venv=True)
+@nox.parametrize("python,sphinx", python_sphinx)
+def test(session, sphinx):
+    session.install(".[test]", f"sphinx[test]~={sphinx}")
+    session.run("pytest", "tests")
+```
+
+I would really like to programmatically determine the allowed versions from
+[`pyproject.toml`][], and there is an option for doing this with poetry (see [this
+discussion](https://github.com/cjolowicz/nox-poetry/discussions/289)) but I have not
+found something that works with [PDM][].  (I asked [here]())
 
 ### Gotchas
 
@@ -1522,9 +1842,223 @@ To do this, we advocate the following procedure.
        
 11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
+`mmfutils`: This Package
+========================
 
-Poetry
-======
+Here we have details about this package specifically.  *Note: I think I am recommending
+[PDM][] for package management but have not completely decided, so wherever you see [PDM][]
+referenced below, please consider that this might change to [Poetry][], [Hatch][], or
+something similar in the future.*
+
+## Dependencies
+
+We specify project dependencies in three places:
+
+* `anaconda-project.yaml`: This contains any dependencies that should be installed with
+  [Conda][], especially binary dependencies.  In principle, this provides a complete
+  solution with both [Conda][] and [Pip][] sections as well as the ability to define
+  custom commands.  I played with this for a while, and it can be quite convenient, but
+  once dependencies become sufficiently complicated, it becomes advantageous to used
+  [PDM][] or [Poetry][] to manage the python dependencies in [`pyproject.toml`][].  If you
+  are starting from scratch (i.e. not using our [cookiecutters][]
+  
+  As we discuss below, we can include python-version specific dependencies in
+  sub-environments if needed.  We might be able to also specify some platform-dependent
+  dependencies in sub-environments but have not yet explored this.
+  
+  In principle, `anaconda-project add-packages` could be used for this, but currently
+  this can cause problems, so we recommend just editing `anaconda-project.yaml` by hand
+  for now.  This should be pretty minimal: things like `pyfftw` or `cupy` that have
+  tight integration with binary packages.
+
+
+## The Development Process: Makefiles
+
+We currently drive our development process with [GNU make][] as specified in the project
+`Makefile`.  This encodes all of our "wisdom" about platform dependence etc.  We
+specifically provide the following targets:
+
+* `make init`: Initialize the environment and make sure packages are up to date.
+* `make shell`: Depends on `make init` and then open a shell that one can use to run
+  commands in the project such as `jupyter notebook`, or `pytest`. This is most similar
+  to `poetry shell`.
+* `make qshell`: Do this quickly without checking.  This will create the environment if
+  needed (`make dev`) but will not check or update an existing environment.
+* `make clean`: Remove most intermediate files.  Often this will leave environments
+  available so that it is easy to resume work, but will remove temporary files, log
+  files, etc.
+* `make realclean`: Remove as much as possible, including all environments, installed
+  kernels etc.  This should be the equivalent of "get everything except the source off
+  of my computer and reclaim as much disk space as possible".  After this command, you
+  should be very close to 
+* `make test`: This should run all of the tests in the development environment.
+* `make doc-server`: If the project has documentation, then this launch the
+  documentation server.
+* `make dev`: This builds the development environment.  It is not intended to be used
+  explicitly, but is done by many other commands like `make shell`.  Currently, this is
+  done as follows:
+  1. Some form of `conda` is used to create an environment in `envs/`.  This will
+     contain a version of `python` as well as any libraries that may be needed (`fftw`,
+     `cuda` etc.)
+  2. `PDM` or `poetry` will be instructed to use this environment and will install the
+     project and its dev dependencies.
+* `make info`: Print debugging information.
+
+### Details
+
+We support several options defined by the following flags:
+* `USE_ANACONDA_PROJECT`: Use [Anaconda Project][] to build environments.
+* `USE_PDM`: Use [PDM][] to install pure python packages.
+* `USE_POETRY`: Use [Poetry][] to install pure python packages.
+
+Only one of `USE_PDM` or `USE_POETRY` should be true, but these can be used with or
+without `USE_ANACONDA_PROJECT`.
+
+Some environmental variables need to be exported to subcommands.  To do this, we must
+enclose commands in parentheses:
+
+```bash
+$ CONDA_SUBDIR=osx-64 pdm run echo $CONDA_SUBDIR
+
+$ (export CONDA_SUBDIR=osx-64 && pdm run echo $CONDA_SUBDIR)
+osx-64
+```
+
+
+#### Conda and Anaconda Project
+To build the [Conda][] environments we use [Anaconda Project][] for a couple of
+reasons.  First, we can specify all of our dependencies and it still functions like an
+`environment.yaml` file, as long as we rename `packages:` to `dependencies:`.  Second,
+this allows us to customize environments for different versions of python.  Our
+`Makefile` runs `anaconda-project add-env-spec`, which will fill these out if they were
+not initially provided by the project.
+
+We then install the development tools into this environment using [PDM][], [Poetry][],
+or [Pip][]. *Initially I tried simply using the conda environment for the interpreter
+with a custom virtual environment managed by these tools, but this fails in many cases.
+For example, even if we install [PyFFTW][] in the conda environment, these tools cannot
+compile it because the underlying `fftw` library does not exist. One must then be
+careful that everything matches so that the `PDM`/`Poetry` install accepts it.*
+
+In principle, the `anaconda-project.yaml` file can replace the `Makefile` (by defining
+`commands`) and [`pyproject.toml`][] (using the `pip:` section of `dependencies:`), but this
+does not work for us in all cases.  For example, on my new [ARM][] Mac, I sometimes need
+to create an environment using `CONDA_SUBDIR=osx-x64` (Intel) as opposed to
+`CONDA_SUBDIR=osx-arm64`.  Until issue [anaconda-project#392][] is resolved, the only
+way for this to work is for this to be set **before** calling `anaconda-project`, but I
+can't remember this, so I want this codified in my `Makefile`.  This may be a viable
+option in the future.
+
+[anaconda-project#392]: <https://github.com/Anaconda-Platform/anaconda-project/issues/392>
+
+
+One can control the version
+  of python by setting `DEV_PYTHON_VER`.  
+  
+[GNU make]: <https://www.gnu.org/software/make/manual/make.html>
+
+Our development process is outlined in `Makefile`, and works as follows.  First we
+explain in simple terms:
+
+* We use `conda` to create a development environment in `envs/name-py3.9`.
+with the 
+
+### Things that Did Not Work
+
+* Creating a [conda][] environment with binary dependencies, but then just using the
+  conda-installed python in other virtual environments.  For example, creating a conda
+  environment with [pyfftw][] would not allow one to build [pyfftw][] from source.  The
+  [moral](https://fosstodon.org/@tacaswell/109548682896553945) is that [Conda][]
+  environments need to be activated to work.  The only case where we break this
+  assumption is when we use [Conda][] to install **only** python for [nox][] to use.  I
+  think in this case it would be better to get [nox][] to do this on its own, but am not
+  yet sure how to deal with platform dependence. 
+  
+  (The specific issue was that, on my new Mac M1 Max with an ARM processor, sometimes I
+  needed to use Rosetta i.e. `CONDA_SUBDIR=osx-x64` as opposed to
+  `CONDA_SUBDIR=osx-arm64`.  Another issue, now resolved, was that the ARM version of
+  Python 3.11 was only available on `conda-forge`, but I try to avoid included
+  `conda-forge` in my channels for performance reasons.)
+
+* With my [zopeext][] project, I tried to support a variety of different versions of
+  Python and Sphinx.  Unfortunately, there seems to be no good way of doing this:
+  * There is no simple "matrix" of versions that work together.  For example, consider
+    Python 3.7 and Sphinx 3.4.3:
+  
+    ```bash
+    $ python3.7 -m venv .venv
+    $ . .venv/bin/activate
+    (.venv) $ pip install sphinx[test]==3.4.3
+    (.venv) $ python3.7 -c "import sphinx.testing.fixtures"
+    Traceback (most recent call last):
+      ...
+      File ".../.venv/lib/python3.7/site-packages/sphinx/util/rst.py", line 21, in <module>
+        from jinja2 import Environment, environmentfilter
+    ImportError: cannot import name 'environmentfilter' from 'jinja2' (.../.venv/lib/python3.7/site-packages/jinja2/__init__.py)
+    ```
+    
+    To resolve this, one needs to pin `jinja2<3.0.0`...
+    
+    ```bash
+    (.venv) $ pip install --upgrade "sphinx[test]==3.4.3" "jinja2<3.0.0"
+    (.venv) $ python3.7 -c "import sphinx.testing.fixtures"
+    Traceback (most recent call last):
+       ...
+      File ".../.venv/lib/python3.7/site-packages/jinja2/filters.py", line 13, in <module>
+        from markupsafe import soft_unicode
+    ImportError: cannot import name 'soft_unicode' from 'markupsafe' (.../.venv/lib/python3.7/site-packages/markupsafe/__init__.py)
+    ```
+    ... and, if `jinja2<3.0.0`, then we need `markupsafe<2.1.0`.
+    
+    ```bash
+    (.venv) $ pip install --upgrade "sphinx[test]==3.4.3" "jinja2<3.0.0" "markupsafe<2.1.0"
+    ```
+    
+    Of course, I only want to do this if the user insists on installing
+    `sphinx<=3.4.3`. I have no idea how to do this, or even if it is possible.
+
+  My current resolution is that I should simply not try to provide such backwards
+  compatibility in python.  If someone needs this, they can install older versions of my
+  packages, (hopefully they have a lock file with all of the appropriate dependencies),
+  and moving forward, I just use lower bound constraints.  Of course, with such a
+  change, I would release a new minor version, and indicate clearly in the change log
+  which versions are no longer supported.
+
+    
+.
+## PDM
+
+We currently [PDM][] for managing the dependencies.  Pure python dependencies should be
+specified in the [`pyproject.toml`][] file, whose format is discussed here:
+
+* [Declaring project metadata (from PEP 621)][]
+* [`pyproject,toml`][]
+
+[Declaring project metadata (from PEP 621)]:
+  <https://packaging.python.org/en/latest/specifications/declaring-project-metadata/>
+
+### Issues
+
+Although [PDM][] is possibly the best current option, there are still many unresolved
+issues as of March 2023:
+
+* [#46: Dependencies get overriden when there are multiple versions of different
+  markers][pdm#46]: This explains why it is so hard to support multiple versions of
+  python.
+  
+
+[pdm#46]: <https://github.com/pdm-project/pdm/issues/46>
+## Poetry
+
+DEPRECATED: We no longer use [Poetry][] for several reasons, preferring [PDM][] instead:
+
+1. They strongly advocate using upper bound constraints, we causes real problems.  See
+   Henry Schreiner's discussion [Should You Use Upper Bound Version
+   Constraints](https://iscinumpy.dev/post/bound-version-constraints/) for a nice
+   discussion.
+2. They do not follow the standards, so the [`pyproject,toml`][] file they generate is not
+   compliant.
+   
 
 * TL;DR: With the current project, you can do all of this with:
 
@@ -1726,6 +2260,8 @@ following:
 * [![Issue](https://img.shields.io/github/issues/detail/state/python-poetry/poetry/1724)](
   https://github.com/python-poetry/poetry/issues/1724)
   "Document use of current conda env"
+
+## References
 
 
 Testing
@@ -2307,7 +2843,7 @@ This causes various FPS tests to fail.  See that thread (and the code in
   importlib.metadata.PackageNotFoundError: mmfutils
   ```
   
-  The work-around is as follows.  (We could fallback to VCS maybe?  Or look in `pyproject.toml`?).
+  The work-around is as follows.  (We could fallback to VCS maybe?  Or look in [`pyproject.toml`][]?).
   
   ```python
   try:
@@ -2522,16 +3058,23 @@ make: *** Waiting for unfinished jobs....
 make: *** [python.exe] Error 1
 ```
 
+# References
+
+* [Recursive Optional Dependencies in Python][] (Hynek Schlawack):
+
 <!-- Links -->
-[Physics 581]: <https://gitlab.com/wsu-courses/physics-581-physics-inspired-computation> "Physics 581: Physics Inspired Computation course GitLab project."
+[Physics 581]: <https://gitlab.com/wsu-courses/physics-581-physics-inspired-computation>
+  "Physics 581: Physics Inspired Computation course GitLab project."
 [Conda]: <https://docs.conda.io> "Conda"
 [Fil]: <https://pythonspeed.com/products/filmemoryprofiler/> "The Fil memory profiler for Python"
 [Heptapod]: <https://heptapod.net> "Heptapod website"
-[Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/> "Hypermodern Python"
+[Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/>
+  "Hypermodern Python"
 [MyPI]: <https://alum.mit.edu/www/mforbes/mypi/> "MyPI: My personal package index"
 [Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
 [PDM]: <https://pdm.fming.dev/latest/>
 [Poetry]: <https://poetry.eustace.io> "Python packaging and dependency management made easy."
+[Hatch]: <https://hatch.pypa.io/latest/>
 [PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [PyEnv]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
@@ -2581,3 +3124,13 @@ make: *** [python.exe] Error 1
 [MyST NB]: <https://myst-nb.readthedocs.io/en/latest/>
 [MyST_NB issue #431]: <https://github.com/executablebooks/MyST-NB/issues/431>
 [glue]: <https://myst-nb.readthedocs.io/en/latest/render/glue.html>
+
+[against unbound versions]: 
+  <https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea>
+[How to improve Python packaging]:
+  <https://chriswarrick.com/blog/2023/01/15/how-to-improve-python-packaging/>
+[mac-os-x]: <https://swan.physics.wsu.edu/forbes/draft/mac-os-x/>
+[TeX Live]: <https://www.tug.org/texlive/>
+[MacTeX]: <https://www.tug.org/mactex>
+[Recursive Optional Dependencies in Python]: 
+  <https://hynek.me/articles/python-recursive-optional-dependencies/>

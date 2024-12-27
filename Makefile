@@ -35,6 +35,7 @@ endif
 
 DEV_ENV ?= $(ENVS)/py$(DEV_PYTHON_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
+CONDA_UPDATE_DEV = $(ANACONDA_PROJECT) prepare --env-spec $(DEV_ENV_SPEC)
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
 # ------- Top-level targets  -------
@@ -54,6 +55,14 @@ endif
 
 test: dev
 	$(CONDA_ACTIVATE_DEV) && pytest
+
+shell: dev
+	$(CONDA_UPDATE_DEV)
+	$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
+	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
+
+qshell: dev
+	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
 
 README.rst: doc/README.ipynb
 	jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
@@ -88,9 +97,8 @@ clean:
 	$(RM) -r doc/README_files/
 	$(RM) *.html
 
-realclean: clean
-	$(RM) -r .nox .conda $(ENVS) $(BIN)
-	$(RM) -r build
+######################################################################
+# Development Environments etc.
 
 dev: $(DEV_ENV)
 ifeq ($(USE_POETRY), true)
@@ -110,7 +118,11 @@ ifneq ($(USE_MICROMAMBA), true)
   endif
 endif
 	mkdir -p $(BIN)
-	ln -fs $(abspath $@/bin/python3.11) $(BIN)/
+	ln -fs $(abspath $@/bin/python$*) $(BIN)/
+	@# Upgrade pip: https://github.com/conda/conda/issues/11931
+	@# Install pdm: https://github.com/pdm-project/pdm/discussions/1758#discussioncomment-5333094
+	$(CONDA_ACTIVATE_DEV) && pip install --upgrade pip pdm setuptools
+	$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 
 $(ENVS)/py%: environment.yaml pyproject.toml
 	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "python=$*"
@@ -120,9 +132,25 @@ ifneq ($(USE_MICROMAMBA), true)
   endif
 endif
 	mkdir -p $(BIN)
-	ln -fs $(abspath $@/bin/python$*) $(BIN)/
+	ln -fs $(abspath $</bin/python$*) $@
 
-.PHONY: help usage dev test clean realclean
+
+clean:
+	-coverage erase
+	$(RM) -r fil-result
+	find . -type d -name "htmlcov"  -exec $(RM) -r {} +
+	find . -type d -name "__pycache__" -exec $(RM) -r {} +
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	$(RM) -r src/mmfutils.egg-info
+	$(RM) -r doc/README_files/
+	$(RM) *.html
+
+realclean: clean
+	$(RM) -r .nox .conda $(ENVS) $(BIN)
+	$(RM) -r build
+
+.PHONY: help usage shell dev test clean realclean
 
 
 
@@ -137,7 +165,7 @@ arround this, we use various stratgies for installing python appropriately using
 for example.
 
 Variables:
-   DEV_PYTHON_VER: (= "$(DEV_PYTHON_VER)")
+   DEV_PY: (= "$(DEV_PY)")
                      Version of python for development.
    PY_VERS: (= "$(PY_VERS)")
                      Versions of python to install in ENVS_DIR
@@ -160,6 +188,14 @@ Variables:
                      Binary directory to symlink locally install versions of python.
                      Add this to the path so that nox will find them.
 
+   PDM_EXTRAS: (= "$(PDM_EXTRAS)")
+                     Extras (groups) for PDM to install in the DEV_ENV.  Typically this
+                     is `-d -G :all` for everything, but on some platforms or with
+                     advanced versions of `PY_VER` you may to restrict this.  If you do
+                     need to restruct this, I recommend adding some conditional code here
+                     for future records.  If you change this, don't forget to include the
+                     dev dependencies (`-d`) unless they are also problematic.
+
 Computed variables (cannot be overwritten on command line)
 	 CONDA_ACTIVATE_DEV:(= "$(CONDA_ACTIVATE_DEV)")
                      Command to activate the development environment.
@@ -167,8 +203,11 @@ Computed variables (cannot be overwritten on command line)
                      All environments that will be made.
 
 Initialization:
+   make shell        Spawn a shell after building and checking the dev environment.
+   make qshell       Quickly spawn a shell.  Environment not checked (created if needed).
    make dev          Initialize the development environment and setup poetry.
-   make $(ENVS)      Initialize all environments.
+   make $(ENVS)
+                     Initialize all environments.
 
 Testing:
    make test         Runs the general tests in the dev environment.
