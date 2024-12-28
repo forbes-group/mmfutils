@@ -13,15 +13,20 @@ intend for this file to document my choices and discussions about these issues f
 projects.  (Other projects should refer here for this discussion.)
 
 <details><summary>Table of Contents</summary>
-<!-- START doctoc generated TOC please keep comment here to allow auto update
-     DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE:
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
      
-     make toc
--->
 
 - [To Do](#to-do)
-- [General Principles](#general-principles)
-- [Working Environment (Conda/pip and all that)](#working-environment-condapip-and-all-that)
+- [TL;DR](#tldr)
+- [Tools](#tools)
+- [Python Dependencies](#python-dependencies)
+- [[Conda][] Dependencies](#conda-dependencies)
+- [Simplified Approach (July 2023)](#simplified-approach-july-2023)
+  - [Makefile](#makefile)
+- [Tools](#tools-1)
+  - [Useful Tools](#useful-tools)
+- [Working Environment (Conda/Pip and all that)](#working-environment-condapip-and-all-that)
   - [Option 1 (Recommendation as of March 2023)](#option-1-recommendation-as-of-march-2023)
   - [Option 2 (experimental)](#option-2-experimental)
     - [Caveats](#caveats)
@@ -36,9 +41,13 @@ projects.  (Other projects should refer here for this discussion.)
   - [Distribution](#distribution)
   - [To Do](#to-do-1)
   - [Version Number](#version-number)
+- [Documentation ([Read the Docs][])](#documentation-read-the-docs)
+  - [Jupyter Book](#jupyter-book)
+    - [Images](#images)
 - [Repositories](#repositories)
   - [Badges](#badges)
   - [Continuous Integration (CI)](#continuous-integration-ci)
+    - [Coverage](#coverage)
   - [References](#references-1)
 - [Testing](#testing)
   - [`tests/__init__.py`](#tests__init__py)
@@ -55,6 +64,7 @@ projects.  (Other projects should refer here for this discussion.)
       - [Conda and Anaconda Project](#conda-and-anaconda-project)
     - [Things that Did Not Work](#things-that-did-not-work)
   - [PDM](#pdm)
+    - [Issues](#issues)
   - [Poetry](#poetry)
   - [Soft Dependencies](#soft-dependencies)
   - [Issues:](#issues)
@@ -62,13 +72,21 @@ projects.  (Other projects should refer here for this discussion.)
 - [Testing](#testing-1)
   - [Issues:](#issues-1)
 - [GitHub](#github)
-  - [Issues:](#issues-2)
+- [Issues:](#issues-2)
+  - [pyFFTW](#pyfftw)
+  - [Sleep](#sleep)
 - [[CoCalc][]](#cocalc)
   - [Implementation Details](#implementation-details)
 - [Reference](#reference)
   - [Conda Issues](#conda-issues)
-  - [Packaging](#packaging-1)
+  - [Black Issues](#black-issues)
+  - [PDM Issues](#pdm-issues)
+  - [Poetry Issues](#poetry-issues)
+  - [PipX Issues](#pipx-issues)
+  - [CondaX Issues](#condax-issues)
+  - [CoCalc Issues](#cocalc-issues)
 - [Odds and Ends](#odds-and-ends)
+- [References](#references-3)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 </details>
@@ -92,7 +110,8 @@ Getting started should be as easy as:
    managers, [pipx][] etc.)*
 3. `make shell`: This launches a shell which should have everything installed so you can
    just start working.
-4. `make realclean`: Cleanup everything as much as possible.
+4. `make doc-server`: Build and launch the documentation server.
+5. `make realclean`: Cleanup everything as much as possible.
 
 To support this, our project structure uses the following files:
 
@@ -110,11 +129,11 @@ To support this, our project structure uses the following files:
   recommendation](https://scikit-hep.org/developer/packaging#extras-lowmedium-priority)
   that the extras `test`, `docs`, and `dev` be defined here, though the latter may be
   managed by a tool like [PDM][].
-* `anaconda-project.yaml`: Many of our projects require something for which installing
+* `environment.yaml`: Many of our projects require something for which installing
   with [conda][] is easiest.  ([PyFFTW][] and [CuPy][] are obvious examples, but even
-  [NumPy][] with [MKL][] optimizations is included.)  In principle, this file can
-  replace the `Makefile` and [`pyproject.toml`][], but this does not work for us (see
-  below).
+  [NumPy with MKL][] optimizations is included.)  In principle, with [Anaconda
+  Project][], an equivalent `anaconda-project.yaml` file can replace the `Makefile`
+  and [`pyproject.toml`][], but this does not work for us (see below).
 
 [poetry#3332]: <https://github.com/python-poetry/poetry/issues/3332>
 [PEP-631]: <https://peps.python.org/pep-0631/>
@@ -130,7 +149,7 @@ reason.  For complete details see [mac-os-x][].
 
 ```bash
 # On Mac OS X using MacPorts:
-ssh admin # My alias to login as `admin`
+ssh conda # My alias to login as `conda`
 conda install -n base pipx
 port install git gmake pandoc myrepos graphviz
 port install python37 python38 python39 python310 python311
@@ -153,11 +172,20 @@ In addition, you will likely need to install compilers and development tools, an
 In the future, the tools (except for [TeX Live][] and compilers) needed for the project
 will be able to be installed locally with `make tools`.
 
+In [our cookiecutter templates][], we are experimenting with ways of installing these
+locally with the Makefile through a command like `make tools`, or as needed.  This is
+still a bit of a work in progress.
+
 # Python Dependencies
 
 The pure python dependencies should be specified in [`pyproject.toml`][].  If you are
 developing a package to publish on [PyPI][], then this should contain **all**
-dependencies.  We currently manage this file with [PDM][], e.g.:
+dependencies.
+
+
+## [PDM][]
+
+We currently manage this file with [PDM][], e.g.:
 
 ```bash
 make shell
@@ -177,7 +205,7 @@ use the following:
   that, from a development perspective, these are often provided in the [Conda][]
   environment, but are needed here if you want your package to be [pip][]-installable
   from [PyPI][].  Some extra effort is needed to make sure that the versions specified
-  in [`anaconda-project.yaml`][] are consistent with the versions here.
+  in `environment.yaml` are consistent with the versions here.
   
   Now that I know about [recursive optional dependencies in Python][], I am considering
   splitting these into `gpu`, `pyfftw`, `numba`, etc.
@@ -216,16 +244,8 @@ pdm update
 
 # [Conda][] Dependencies
 
-The development environment will generally be created with [Anaconda Project][] as
-specified in the [`anaconda-project.yaml`][] file.  A couple of notes about this:
-
-* If you change the default field `packages:` to `dependencies:`, then you can just use
-  `conda env create -f anaconda-project.yaml`, which can be useful on CI.  We do this.
-* 
-
-# Simplified Approach (July 2023)
-
-My current simplified approach is as follows:
+The development environment will generally be created with [micromamba][] as specified
+in the `environment.yaml` file.  My current simplified approach is as follows:
 
 1. Optionally use an `environment.yaml` file managed with [micromamba][] to setup the
    base environment.
@@ -277,6 +297,45 @@ set to `mamba` if desired (but this does not work with `micromamba` for all comm
   * `pdm run`
   * `poetry run`
 
+# Managing Multiple Versions of Python
+
+Supporting multiple versions of python is painful -- especially ensuring that tests
+pass.  Consider dropping support for [versions past their
+end-of-life](https://devguide.python.org/versions/) if at all possible.  The general
+strategy is to add conditional `python_requires` entries as needed keep everything
+working with previous python versions.
+
+As far as I can tell, there are no tools like [PDM][] or [Poetry][] that do this
+automatically.  Instead, you must use these to deduce set of working versions.  I do
+this by slowly building up set of working versions in a temporary project.
+
+```bash
+mkdir tmp && cd tmp
+for ver in 3.9 3.10 3.11 3.12 3.13; do
+  rm -rf pyproject.toml pdm.lock .pdm-python .venv
+  pdm init --python "${ver}" -n  # Start with the lowest version you want to support.
+  pdm add numba                  # Try adding the most difficult package. 
+  grep numba pyproject.toml 
+done
+
+```
+
+Note 
+
+## Testing
+
+To test against multiple versions, we use [Nox][], which is configured in `noxfile.py`.
+For this to work, we must have the desired versions of python installed.  This can be
+done globally (using the `test` session), using `conda` (using the `test_conda`
+session), or using `make envs/py3.9` (I do this on my ARM Mac OS X for example).
+
+Ultimately we would like these tests to run [GitHub][] and/or [GitLab][] with CI.  For
+the former, it is best to use a [GitHub matrix][] as this will independently run tests
+for each desired version of python.  As far as I can tell, the information about which
+versions to include in this matrix must be duplicated here.
+
+[GitHub matrix]: <https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-python#using-multiple-python-versions>
+
 # Tools
 
 When developing applications, one often needs a set of tools (see following section).
@@ -317,8 +376,7 @@ For now I am going with `environment.tools.yaml` as it seems the simplest to mai
 * [Nox][]: a command-line tool that automates testing in multiple Python environments,
   similar to tox, but using a standard Python file for configuration.  Nox is configured
   via a `noxfile.py` file.
-* [Jupytext][]: Converts notebooks.  More of a development tool, but often used in `make
-  sync`.
+* [Jupytext][]: Converts notebooks.  More of a development tool, but often used in `make sync`.
 * [Nbconvert][]: Similar and needed by [Jupytext][], but cannot be installed in the same
   environment with [PipX][].
 * [PDM][]: a Python package management tool that allows you to manage your project
@@ -807,7 +865,7 @@ environment.  We could code something into the [`Makefile`](Makefile).
 
 If you do not need to install any additional packages with [conda][], and cannot afford
 the disk space issues, then you can create a virtual environment [venv][].  I recommend
-managing this with [Poetry]:
+managing this with [Poetry][]:
 
 ```bash
 cd <project>
@@ -1413,7 +1471,6 @@ With CI setup, we have the following badges:
 [ci_badge]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml/badge.svg?branch=topic%2F0.6.0%2Fgithub_ci>
 [ci]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml>
 
-[black]: https://github.com/psf/black
 [black_img]: https://img.shields.io/badge/code%20style-black-000000.svg
 
 
@@ -3071,18 +3128,15 @@ make: *** [python.exe] Error 1
 [Hypermodern Python]: <https://cjolowicz.github.io/posts/hypermodern-python-01-setup/>
   "Hypermodern Python"
 [MyPI]: <https://alum.mit.edu/www/mforbes/mypi/> "MyPI: My personal package index"
-[Nox]: <https://nox.thea.codes> "Nox: Flexible test automation"
 [PDM]: <https://pdm.fming.dev/latest/>
 [Poetry]: <https://poetry.eustace.io> "Python packaging and dependency management made easy."
 [Hatch]: <https://hatch.pypa.io/latest/>
 [PyPI]: <https://pypi.org> "PyPI: The Python Package Index"
 [`minconda`]: <https://docs.conda.io/en/latest/miniconda.html> "Miniconda"
 [PyEnv]: <https://github.com/pyenv/pyenv> "Simple Python Version Management: pyenv"
-[pytest]: <https://docs.pytest.org> "pytest"
 [venv]: <https://docs.python.org/3/library/venv.html> "Creation of virtual environments"
 [`conda-pack`]: <https://conda.github.io/conda-pack/> "Command line tool for creating archives of conda environments"
-[Anaconda Project]: https://github.com/Anaconda-Platform/anaconda-project
-[Read the Docs]: https://readthedocs.org/
+[Read the Docs]: <https://readthedocs.org>
 [CuPy]: https://cupy.dev
 [CUDA]: <https://developer.nvidia.com/cuda-toolkit> "CUDA Toolkit"
 [Mamba]: https://github.com/mamba-org/mamba
@@ -3090,9 +3144,10 @@ make: *** [python.exe] Error 1
 [CoCalc]: https://cocalc.com
 [Anaconda]: https://www.anaconda.com
 [Anaconda Cloud]: https://www.anaconda.cloud
+[Anaconda Project]: <https://anaconda-project.readthedocs.io/en/latest/>
+[anaconda-client]: <https://github.com/Anaconda-Platform/anaconda-client>
 [ARM]: https://www.arm.com
 [cookiecutter]: https://github.com/cookiecutter/cookiecutter
-[black]: https://github.com/psf/black
 [click]: https://click.palletsprojects.com
 [pipx]: https://pypa.github.io/pipx/
 [condax]: https://github.com/mariusvniekerk/condax
@@ -3104,16 +3159,11 @@ make: *** [python.exe] Error 1
 [mercurial]: https://www.mercurial-scm.org/
 [git]: https://git-scm.com/
 [Jupytext]: <https://jupytext.readthedocs.io/en/latest/>
-[Nox]: <https://nox.thea.codes/en/stable/>
-[PyTest]: <https://docs.pytest.org/en/latest/>
+[Nox]: <https://nox.thea.codes/en/stable/> "Nox: Flexible test automation"
+[PyTest]: <https://docs.pytest.org/en/latest/> "pytest"
 [Coverage]: <https://coverage.readthedocs.io/en/latest>
-[PDM]: <https://pdm.fming.dev/>
-[Poetry]: <https://python-poetry.org/>
-[Anaconda Project]: <https://anaconda-project.readthedocs.io/en/latest/>
-[anaconda-client]: <https://github.com/Anaconda-Platform/anaconda-client>
 [Black]: <https://black.readthedocs.io/en/stable/>
 [Nbconvert]: <https://nbconvert.readthedocs.io/en/latest/>
-[Read the Docs]: <https://readthedocs.org>
 [against unbound versions]: https://python-poetry.org/docs/faq/#why-are-unbound-version-constraints-a-bad-idea
 [Jupyter Book]: <https://jupyterbook.org/> "Books with Jupyter"
 [How to replicate Jupyter Book’s functionality in Sphinx]: 
@@ -3134,3 +3184,11 @@ make: *** [python.exe] Error 1
 [MacTeX]: <https://www.tug.org/mactex>
 [Recursive Optional Dependencies in Python]: 
   <https://hynek.me/articles/python-recursive-optional-dependencies/>
+[our cookiecutter templates]: <https://gitlab.com/forbes-group/cookiecutters>
+[pyproject.toml]: <https://packaging.python.org/en/latest/guides/writing-pyproject-toml/>
+[NumPy]: <https://numpy.org/>
+[NumPy with MKL]: <https://numpy.org/install/#numpy-packages--accelerated-linear-algebra-libraries>
+[Numba]:  <https://numba.pydata.org>
+[PyCUDA]: <https://mathema.tician.de/software/pycuda/>
+[cupy]: <https://cupy.dev>
+[pip]: <https://pip.pypa.io/en/stable/>

@@ -6,7 +6,7 @@ import nox
 
 # These are the version of python we will test against by default.  You can override
 # this when calling nox, and the Makefile does this.
-python_versions = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 # import sys
 # sys.path.append(".")

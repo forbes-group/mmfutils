@@ -9,6 +9,10 @@ CHANNEL ?= conda-forge
 
 ENVS ?= envs
 BIN ?= build/bin
+PDM ?= pdm
+
+# Customize extras here pip install .[$(EXTRAS)]
+EXTRAS ?= test,doc
 
 # Set to true if you want to use poetry shell etc.
 
@@ -35,7 +39,6 @@ endif
 
 DEV_ENV ?= $(ENVS)/py$(DEV_PYTHON_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
-CONDA_UPDATE_DEV = $(ANACONDA_PROJECT) prepare --env-spec $(DEV_ENV_SPEC)
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
 # ------- Top-level targets  -------
@@ -50,16 +53,12 @@ shell: dev
 ifeq ($(USE_POETRY), true)
 	poetry shell
 else
+	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
 endif
 
 test: dev
 	$(CONDA_ACTIVATE_DEV) && pytest
-
-shell: dev
-	$(CONDA_UPDATE_DEV)
-	$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
-	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
 
 qshell: dev
 	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
@@ -86,17 +85,6 @@ FSWATCH ?= fswatch -e ".*" -i "$<" -o .
 	$(PANDOC) && $(OPEN_BROWSER)
 	$(FSWATCH) | while read num; do $(PANDOC) && $(OPEN_BROWSER); done
 
-clean:
-	-coverage erase
-	$(RM) -r fil-result
-	find . -type d -name "htmlcov"  -exec $(RM) -r {} +
-	find . -type d -name "__pycache__" -exec $(RM) -r {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	$(RM) -r src/mmfutils.egg-info
-	$(RM) -r doc/README_files/
-	$(RM) *.html
-
 ######################################################################
 # Development Environments etc.
 
@@ -105,7 +93,7 @@ ifeq ($(USE_POETRY), true)
 	poetry env use $(DEV_ENV)/bin/python$(DEV_PYTHON_VER)
 	poetry install -E test -E doc
 else
-	$(CONDA_ACTIVATE_DEV) && python3 -m pip install -e .[test,doc]
+	$(CONDA_ACTIVATE_DEV) && python3 -m pip install $(PIP_INSTALL_ARGS) .[$(strip  $(EXTRAS))]
 endif
 
 $(ENVS): $(ALL_ENVS)
@@ -133,7 +121,6 @@ ifneq ($(USE_MICROMAMBA), true)
 endif
 	mkdir -p $(BIN)
 	ln -fs $(abspath $</bin/python$*) $@
-
 
 clean:
 	-coverage erase
@@ -188,6 +175,11 @@ Variables:
                      Binary directory to symlink locally install versions of python.
                      Add this to the path so that nox will find them.
 
+   EXTRAS: (= "$(EXTRAS)")
+                     Extras to install with the project.  The defalt is `all`, which
+                     includes everything needed to make the documentation, testing,
+                     for running notebooks, etc.  If you just need to run the package,
+                     Then you might like to make this `full` or `full,tests` to simplify.
    PDM_EXTRAS: (= "$(PDM_EXTRAS)")
                      Extras (groups) for PDM to install in the DEV_ENV.  Typically this
                      is `-d -G :all` for everything, but on some platforms or with

@@ -21,16 +21,14 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-
-
-[tool.poetry.dependencies]
 requires-python = ">=3.9,<3.14"
 dependencies = [
   'zope.interface >= 5.5.2',
   'husl >= 4.0.3',
-  'uncertainties >= 3.1.7',
   'importlib-metadata >= 4.13.0; python_version < "3.8"',
+  "uncertainties >= 3.2.2",
 ]
 
 # Optional dependencies for testing, building the docs, etc.
@@ -44,10 +42,10 @@ test = [
   #'persist >= 3.1',
   'psutil >= 5.9.4',
   'pytest-rerunfailures >= 11.1.2',
-  'mmfutils[full,docs]',
+  'mmfutils[full,doc]',
 ]
 
-docs = [
+doc = [
   'nbconvert >=7.2.7',
   'docutils >= 0.18.1',
   #docutils' >=0.20.1',
@@ -65,12 +63,12 @@ pyfftw = [
   # On my Mac OS ARM, I need to install from source for performance.
   # TODO: Not sure how to specify this on PyPI.
   'pyFFTW >= 0.13.0; python_version <"3.8"',
-  'pyFFTW @ git+https://github.com/pyFFTW/pyFFTW.git#egg=master; python_version > "3.8"',
+  'pyFFTW @ git+https://github.com/pyFFTW/pyFFTW.git#egg=master ; python_version > "3.8"',
 ]
 
 numba = [
-  'numba >= 0.56.4; python_version < "3.8"',
-  'numba >= 0.57.0; python_version >= "3.8"',
+  "numba >= 0.56.4; python_version < '3.8'",
+  "numba >= 0.60.0; python_version >= '3.8' and python_version < '3.13'",
 ]
 
 perf = [
@@ -101,7 +99,7 @@ full = [
 ]
 
 all = [
-    "mmfutils[full,test,docs,notebook]",
+    "mmfutils[full,test,doc,notebook]",
 ]
 
 [tool.pdm]
