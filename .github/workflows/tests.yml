@@ -6,12 +6,29 @@ name: Tests
 on: [push]
 
 jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install TeXLive
+        run: |
+          sudo apt-get --option="APT::Acquire::Retries=3" update 
+          sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          architecture: x64
+      - name: Install nox
+        run: |
+          pip install nox==2024.10.9
+      
   tests:
+    needs: setup-environment
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      fail-fast: false
         
     steps:
     - uses: actions/checkout@v4
@@ -30,9 +47,8 @@ jobs:
     #    python-version: ${{ matrix.python-version }}
     #    architecture: x64
     # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
-    - run: sudo apt-get --option="APT::Acquire::Retries=3" update 
-    - run: sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
-    - run: pip install nox==2024.10.9
+    # - run: sudo apt-get --option="APT::Acquire::Retries=3" update 
+    # - run: sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
     - name: Run nox
       run: nox -s test-${{ matrix.python-version }}
       shell: micromamba-shell {0}
