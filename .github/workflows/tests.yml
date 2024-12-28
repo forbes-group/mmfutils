@@ -12,7 +12,12 @@ jobs:
       - name: Install TeXLive
         run: |
           sudo apt-get --option="APT::Acquire::Retries=3" update 
-          sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
+          #sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg libfftw3-dev
+          #sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
+          #sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
+          #     awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
+          #     tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
+          
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -20,7 +25,7 @@ jobs:
           architecture: x64
       - name: Install nox
         run: |
-          pip install nox==2024.10.9
+          pipx install nox==2024.10.9
       
   tests:
     needs: setup-environment
