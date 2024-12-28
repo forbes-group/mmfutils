@@ -26,6 +26,15 @@ jobs:
       - name: Install nox
         run: |
           pipx install nox==2024.10.9
+      - name: Save environment marker
+        run: |
+          echo "Environment setup complete." > setup-complete.txt
+      
+      - name: Upload environment artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: setup-environment
+          path: setup-complete.txt
       
   tests:
     needs: setup-environment
@@ -36,6 +45,10 @@ jobs:
       fail-fast: false
         
     steps:
+    - name: Download environment artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: setup-environment
     - uses: actions/checkout@v4
     - uses: mamba-org/setup-micromamba@v2
       # https://github.com/mamba-org/setup-micromamba
