@@ -1,5 +1,5 @@
-DEV_PYTHON_VER ?= 3.11
-PY_VERS ?= 3.7 3.8 3.9 3.10 3.11 3.12
+DEV_PYTHON_VER ?= 3.9
+PY_VERS ?= 3.9 3.10 3.11 3.12 3.13
 PANDOC_FLAGS ?= --toc --standalone
 
 USE_MICROMAMBA ?= true
@@ -121,6 +121,9 @@ ifneq ($(USE_MICROMAMBA), true)
 endif
 	mkdir -p $(BIN)
 	ln -fs $(abspath $</bin/python$*) $@
+
+pdm.lock: environment.yaml pyproject.toml
+	$(CONDA_ACTIVATE_DEV) && for py in $(PY_VERS); do $(PDM) lock --python="$${py}.*" --append; done
 
 clean:
 	-coverage erase

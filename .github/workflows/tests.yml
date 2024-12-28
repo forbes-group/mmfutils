@@ -35,6 +35,7 @@ jobs:
     - name: Install TeXLive
       run: |        
         sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
+        # https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf
         #sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
         #  awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
         #  tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`

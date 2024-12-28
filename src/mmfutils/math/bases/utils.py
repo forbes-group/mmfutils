@@ -109,7 +109,7 @@ def idst(F, axis=-1):
     return sp.fftpack.dst(F, **args) / (2.0 * N)
 
 
-if Version(sp.__version__) < Version("0.16.0"):
+if Version(sp.__version__) < Version("0.16.0"):  # pragma: nocover
     # Scipy pre 0.16.0 cannot handle complex inputs.
     dst_real, idst_real = dst, idst
 

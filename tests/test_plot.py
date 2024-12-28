@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 
 from mmfutils import plot as mmfplt
 
+import pytest
+
 
 class TestMidpointNormalize(object):
     def test_mask(self):
@@ -45,3 +47,36 @@ class TestContour(object):
 
         c = mmfplt.colors.color_complex(z)
         mmfplt.imcontourf(x, y, c)
+
+
+class TestErrorBars:
+    """Test errorbar plots.
+
+    These mostly just check that the code executes.  (Testing plot generation is hard.)
+    """
+
+    def test_error_line(self):
+        x = np.linspace(0, 5)
+        y = x**2
+        dy = 0.1 * np.sin(x)
+        mmfplt.error_line(x, y, dy)
+
+    def test_plot_err(self):
+        x = np.linspace(0, 5)
+        y = x**2
+        dy = 0.1 * np.sin(x)
+        dx = 0.1 * np.cos(x)
+        with pytest.raises(ValueError) as e:
+            mmfplt.plot_err(x, y, abs(dy), dx)
+        assert e.value.args[0] == "'xerr' must not contain negative values"
+        with pytest.raises(ValueError) as e:
+            mmfplt.plot_err(x, y, dy, abs(dx))
+        assert e.value.args[0] == "'yerr' must not contain negative values"
+        mmfplt.plot_err(x, y, abs(dy), abs(dx))
+
+    def test_plot_errorbars(self):
+        x = np.linspace(0, 5)
+        y = x**2
+        dy = 0.1 * np.sin(x)
+        dx = 0.1 * np.cos(x)
+        mmfplt.plot_errorbars(x, y, dy, dx)

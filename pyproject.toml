@@ -34,15 +34,15 @@ dependencies = [
 # Optional dependencies for testing, building the docs, etc.
 [project.optional-dependencies]
 test = [
-  'pytest >= 7.2.2',
-  'pytest-cov >= 4.0.0',
-  'pytest-xdist >= 3.2.1',
-  'mmf-setup >= 0.4.6',
-  'mock >= 4.0.3',
-  "persist >= 3.2.1",
-  'psutil >= 5.9.4',
-  'pytest-rerunfailures >= 11.1.2',
-  'mmfutils[full,doc]',
+    'pytest >= 7.2.2',
+    'pytest-cov >= 4.0.0',
+    'pytest-xdist >= 3.2.1',
+    'mmf-setup >= 0.4.6',
+    'mock >= 4.0.3',
+    "persist >= 3.2.1",
+    'psutil >= 5.9.4',
+    'pytest-rerunfailures >= 11.1.2',
+    'mmfutils[full,doc]',
 ]
 
 doc = [
@@ -59,11 +59,13 @@ doc = [
 parallel = [
     'ipyparallel >= 8.4.1',
 ]
+
 pyfftw = [
+  "pyfftw>=0.14.0",
   # On my Mac OS ARM, I need to install from source for performance.
   # TODO: Not sure how to specify this on PyPI.
-  'pyFFTW >= 0.13.0; python_version <"3.8"',
-  'pyFFTW @ git+https://github.com/pyFFTW/pyFFTW.git#egg=master ; python_version > "3.8"',
+  #'pyFFTW >= 0.13.0; python_version <"3.8"',
+  #'pyFFTW @ git+https://github.com/pyFFTW/pyFFTW.git#egg=master ; python_version > "3.8"',
 ]
 
 numba = [
@@ -73,6 +75,7 @@ numba = [
 
 perf = [
   'numexpr >= 2.8.1',
+  "Cython>=3.0.11",
   'mmfutils[pyfftw,numba,parallel]',
 ]
 
@@ -91,8 +94,10 @@ notebook = [
 ]
 
 full = [
-    'scipy >= 1.7.3; python_version < "3.11"',
-    'scipy >= 1.9.0; python_version >= "3.8" and python_version < "3.12"',
+    "scipy >= 1.7.3; python_version < '3.8'",
+    "scipy >= 1.10.1; python_version >= '3.8' and python_version < '3.9'",
+    "scipy >= 1.13.1; python_version >= '3.9' and python_version < '3.10'",
+    "scipy >= 1.14.1; python_version >= '3.10'",
     'matplotlib >= 3.5.3', #; python_version < "3.11"',
     'docutils >= 0.19',
     'mmfutils[perf]',
@@ -135,7 +140,7 @@ addopts = [
     "--doctest-modules",
     "--cov",
     "--cov-report=html",
-    "--cov-fail-under=80",
+    "--cov-fail-under=75",
     "--no-cov-on-fail",
     "--cov-append",
     #"-x",

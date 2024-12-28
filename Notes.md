@@ -302,11 +302,38 @@ set to `mamba` if desired (but this does not work with `micromamba` for all comm
 Supporting multiple versions of python is painful -- especially ensuring that tests
 pass.  Consider dropping support for [versions past their
 end-of-life](https://devguide.python.org/versions/) if at all possible.  The general
-strategy is to add conditional `python_requires` entries as needed keep everything
-working with previous python versions.
+strategy is to add conditional `python_version` entries as needed keep everything
+working with previous python versions.  For example, to keep scipy working, one might
+include the following:
+
+```toml
+scipy = [
+    "scipy >= 1.7.3; python_version < '3.8'",
+    "scipy >= 1.10.1; python_version >= '3.8' and python_version < '3.9'",
+    "scipy >= 1.13.1; python_version >= '3.9' and python_version < '3.10'",
+    "scipy >= 1.14.1; python_version >= '3.10'",
+]
+```
 
 As far as I can tell, there are no tools like [PDM][] or [Poetry][] that do this
-automatically.  Instead, you must use these to deduce set of working versions.  I do
+automatically.  This is an [acknowledged limition of
+PDM](https://frostming.com/en/2024/pdm-lock-strategy/#conditional-dependencies) and also
+makes locking difficult  The workaround is to [lock targets][], generating either a
+bunch of lock files, or merging these into one.  Thus, you might do the following:
+```bash
+pdm lock --python="3.9.*" --append
+pdm lock --python="3.10.*" --append
+pdm lock --python="3.11.*" --append
+pdm lock --python="3.12.*" --append
+pdm lock --python="3.13.*" --append
+```
+
+We provide a target `make pdm.lock` that does this.
+
+[lock targets]: <https://pdm-project.org/en/latest/usage/lock-targets/>
+
+
+Instead, you must use these to deduce set of working versions.  I do
 this by slowly building up set of working versions in a temporary project.
 
 ```bash
