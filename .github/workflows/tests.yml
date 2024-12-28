@@ -6,36 +6,6 @@ name: Tests
 on: [push]
 
 jobs:
-  setup-environment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install TeXLive
-        run: |
-          sudo apt-get --option="APT::Acquire::Retries=3" update 
-          #sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg libfftw3-dev
-          #sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
-          #sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
-          #     awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
-          #     tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
-          
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.11
-          architecture: x64
-      - name: Install nox
-        run: |
-          pipx install nox==2024.10.9
-      - name: Save environment marker
-        run: |
-          echo "Environment setup complete." > setup-complete.txt
-      
-      - name: Upload environment artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: setup-environment
-          path: setup-complete.txt
-      
   tests:
     needs: setup-environment
     runs-on: ubuntu-latest
@@ -45,10 +15,6 @@ jobs:
       fail-fast: false
         
     steps:
-    - name: Download environment artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: setup-environment
     - uses: actions/checkout@v4
     - uses: mamba-org/setup-micromamba@v2
       # https://github.com/mamba-org/setup-micromamba
@@ -60,13 +26,27 @@ jobs:
         init-shell: bash
         cache-environment: true
         post-cleanup: 'all'
+    - name: Install Linux Tools
+      run: |        
+        # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
+        #sudo apt-get --option="APT::Acquire::Retries=3" update 
+        #sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg libfftw3-dev
+    - name: Install TeXLive
+      #run: |        
+        #sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
+        #sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
+          #     awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
+          #     tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
+      
     #- uses: actions/setup-python@v5
     #  with:
     #    python-version: ${{ matrix.python-version }}
     #    architecture: x64
-    # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
-    # - run: sudo apt-get --option="APT::Acquire::Retries=3" update 
-    # - run: sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full ffmpeg libfftw3-dev
+    - name: Install nox
+      run: |
+        pipx install nox==2024.10.9
+      shell: micromamba-shell {0}
     - name: Run nox
-      run: nox -s test-${{ matrix.python-version }}
+      run: |
+        nox -s test-${{ matrix.python-version }}
       shell: micromamba-shell {0}
