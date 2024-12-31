@@ -389,6 +389,41 @@ issue but gets us badges.  This seems to require one workflow file for each vers
 python, so we generate these from our Makefile.
 
 
+![Python 3.9 test results][py3.9 badge]
+![Python 3.10 test results][py3.10 badge]
+![Python 3.11 test results][py3.11 badge]
+![Python 3.12 test results][py3.12 badge]
+![Python 3.13 test results][py3.13 badge]
+
+![Python 3.9 test results][gh3.9 badge]
+![Python 3.10 test results][gh3.10 badge]
+![Python 3.11 test results][gh3.11 badge]
+![Python 3.12 test results][gh3.12 badge]
+![Python 3.13 test results][gh3.13 badge]
+
+
+
+[py3.9 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=py3.9>
+[py3.10 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=py3.10>
+[py3.11 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=py3.11>
+[py3.12 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=py3.12>
+[py3.13 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=py3.13>
+
+
+[gh3.9 badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.9.yaml/badge.svg>
+[gh3.10 badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.10.yaml/badge.svg>
+[gh3.11 badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.11.yaml/badge.svg>
+[gh3.12 badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.12.yaml/badge.svg>
+[gh3.13 badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.13.yaml/badge.svg>
+
+[py3.9 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.9.yaml>
+[py3.10 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.10.yaml>
+[py3.11 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.11.yaml>
+[py3.12 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.12.yaml>
+[py3.13 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.13.yaml>
+
+
+
 [cache APT packages]: <https://stackoverflow.com/questions/59269850/caching-apt-packages-in-github-actions-workflow>
 [Status badges for matrix builds]: <https://github.com/orgs/community/discussions/52616>
 [reusable workflows]: <https://docs.github.com/en/actions/sharing-automations/reusing-workflows>
@@ -396,6 +431,8 @@ python, so we generate these from our Makefile.
 [GitHub matrix]: <https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-python#using-multiple-python-versions>
 [`texlive-full` without all the beef]: <https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf>
   
+
+
 
 # Tools
 
