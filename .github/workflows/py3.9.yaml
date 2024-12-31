@@ -1,0 +1,7 @@
+name: python-3.9
+on: push
+jobs:
+  test-python-3-9:
+    uses: ./.github/workflows/tests.yaml
+    with:
+      python_version: '3.9'

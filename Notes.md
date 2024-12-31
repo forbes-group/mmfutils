@@ -356,12 +356,46 @@ For this to work, we must have the desired versions of python installed.  This c
 done globally (using the `test` session), using `conda` (using the `test_conda`
 session), or using `make envs/py3.9` (I do this on my ARM Mac OS X for example).
 
-Ultimately we would like these tests to run [GitHub][] and/or [GitLab][] with CI.  For
-the former, it is best to use a [GitHub matrix][] as this will independently run tests
-for each desired version of python.  As far as I can tell, the information about which
-versions to include in this matrix must be duplicated here.
+Ultimately we would like these tests to run [GitHub][] and/or [GitLab][] with CI.  A
+simple solution is to just provision and run [Nox][], but this has the disadvantage
+that, if any version of python fails the tests, then the test just fails.
 
+
+### GitHub CI
+A natural strategy for running multiple tests is a [GitHub matrix][].  This works, but
+has several limitations:
+
+* Now you get a report of which individual tests fail, but I don't know how to
+  incorporate this into status badges. There is a discussion about [status badges for
+  matrix builds][], but as of 2025, this seems not to be implemented.  In this
+  discussion, the suggestion is made to use [reusable workflows][] with individual
+  badges for each workflow.  We discuss this approach below.
+* This strategy requires provisioning multiple tests.  In the case of this project, we
+  need to install some LaTeX so that matplotlib tests work.  From a development
+  perspective, the easiest approach is to `apt-get install texlive-full`, but this
+  requires multiple independent downloads of ~6GB of data which is slow and wasteful.  I
+  don't have a good solution for this yet but expect there is something:
+  * There is support for [GitHub caching][], but you need to specify exactly what is to
+    be cached, and it is trivial how to [cache APT packages][], but this discussion has
+    some suggestions.
+  * There is probably a solution if one first builds a Docker container, then uses this
+    as the base environment.
+  * Another strategy is to minimize the provisioning.  For `texlive-full`, the following
+    might help: [`texlive-full` without all the beef][].  We could also manually
+    minimize the packages, but this might be a lot of work.
+    
+Our current approach uses [reusable workflows][].  This does not help with the caching
+issue but gets us badges.  This seems to require one workflow file for each version of
+python, so we generate these from our Makefile.
+
+
+[cache APT packages]: <https://stackoverflow.com/questions/59269850/caching-apt-packages-in-github-actions-workflow>
+[Status badges for matrix builds]: <https://github.com/orgs/community/discussions/52616>
+[reusable workflows]: <https://docs.github.com/en/actions/sharing-automations/reusing-workflows>
+[GitHub caching]: <https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows>
 [GitHub matrix]: <https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-python#using-multiple-python-versions>
+[`texlive-full` without all the beef]: <https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf>
+  
 
 # Tools
 
