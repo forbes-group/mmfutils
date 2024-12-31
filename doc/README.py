@@ -8,7 +8,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.4
+#       jupytext_version: 1.16.6
 #   kernelspec:
 #     display_name: Python [conda env:work]
 #     language: python
@@ -39,6 +39,27 @@
 #
 # [![Documentation Status](https://readthedocs.org/projects/mmfutils/badge/?version=latest)](https://mmfutils.readthedocs.io/en/latest/?badge=latest)
 # [![Build Status](https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg)](https://cloud.drone.io/forbes-group/mmfutils)
+#
+# **Test Status**
+#
+# [![Python 3.9 test results][py3.9 badge]][py3.9 workflow]
+# [![Python 3.10 test results][py3.10 badge]][py3.10 workflow]
+# [![Python 3.11 test results][py3.11 badge]][py3.11 workflow]
+# [![Python 3.12 test results][py3.12 badge]][py3.12 workflow]
+# [![Python 3.13 test results][py3.13 badge]][py3.13 workflow]
+#
+# [py3.9 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.9.yaml?label=3.9&logo=GitHub>
+# [py3.10 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.10.yaml?label=3.10&logo=GitHub>
+# [py3.11 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.11.yaml?label=3.11&logo=GitHub>
+# [py3.12 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.12.yaml?label=3.12&logo=GitHub>
+# [py3.13 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=3.13&logo=GitHub>
+#
+# [py3.9 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.9.yaml>
+# [py3.10 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.10.yaml>
+# [py3.11 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.11.yaml>
+# [py3.12 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.12.yaml>
+# [py3.13 workflow]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.13.yaml>
+
 
 # ## Installing
 
@@ -498,6 +519,7 @@ HTML(coverage)
 # # Change Log
 
 # ## REL: 0.6.7
+#
 # * Add derivative `d=1` support for step and mstep.  Remove floating point warning.
 # * Improved FPS context: better sleeping timing and default timeout behavior.
 # * Drop support for python 3.9 and below.  (Could work, but dependencies need careful
