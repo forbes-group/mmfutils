@@ -102,7 +102,7 @@ define _workflow_file
 name: python-V.XX
 on: push
 jobs:
-  test-python-V-XX:
+  pyV-XX:
     uses: ./.github/workflows/tests.yaml
     with:
       python_version: 'V.XX'
@@ -110,8 +110,8 @@ endef
 
 export _workflow_file
 
-$(GITHUB_CI_DIR)/python_%.yaml:
-	echo "$$_workflow_file" | sed "s/V.XX/$*/g" | sed "s/V-XX/$(subst .,-,$*)/g" > $@
+$(GITHUB_CI_DIR)/python_%.yaml: Makefile
+	echo "$$_workflow_file" | sed "s/V\.XX/$*/g" | sed "s/V-XX/$(subst .,-,$*)/g" > $@
 
 workflows: $(GITHUB_CI_FILES)
 

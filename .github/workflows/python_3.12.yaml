@@ -3,7 +3,7 @@
 name: python-3.12
 on: push
 jobs:
-  test-python-3.12:
+  py3-12:
     uses: ./.github/workflows/tests.yaml
     with:
       python_version: '3.12'
