@@ -70,7 +70,8 @@ qshell: dev
 	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
 
 README.rst: doc/README.ipynb
-	jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
+	# Not sure why we need the ../ for --output=
+	jupyter nbconvert --to=rst --output=../README.rst doc/README.ipynb
 
 
 %.html: %.rst
