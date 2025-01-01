@@ -402,8 +402,6 @@ python, so we generate these from our Makefile.
 [![Python 3.13 test results][gh3.13 badge]][py3.13 workflow]
 
 
-
-
 [py3.9 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.9.yaml?label=3.9&logo=GitHub>
 [py3.10 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.10.yaml?label=3.10&logo=GitHub>
 [py3.11 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.11.yaml?label=3.11&logo=GitHub>
