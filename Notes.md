@@ -1176,6 +1176,30 @@ Some examples of packages we manage and their features:
   configuring [Mercurial][], Jupyter notebooks, and customizing the import path.
 * [mmfutils][]: This package.
 
+  [![Python 3.9 test results][py3.9 badge]][py3.9 workflow]
+  [![Python 3.10 test results][py3.10 badge]][py3.10 workflow]
+  [![Python 3.11 test results][py3.11 badge]][py3.11 workflow]
+  [![Python 3.12 test results][py3.12 badge]][py3.12 workflow]
+  [![Python 3.13 test results][py3.13 badge]][py3.13 workflow]
+
+  [![Python 3.9 test results][gh3.9 badge]][py3.9 workflow]
+  [![Python 3.10 test results][gh3.10 badge]][py3.10 workflow]
+  [![Python 3.11 test results][gh3.11 badge]][py3.11 workflow]
+  [![Python 3.12 test results][gh3.12 badge]][py3.12 workflow]
+  [![Python 3.13 test results][gh3.13 badge]][py3.13 workflow]
+
+  [![mmfutils PyPI badge][]][mmfutils PyPI link]
+  [![mmfutils gh: tag badge][]][mmfutils gh: tags]
+  [![mmfutils Coverage badge][]][mmfutils Coverage link]
+  [![mmfutils Documentation status badge][]][mmfutils Documentation link]
+  [![mmfutils Python versions badge][]][mmfutils PyPI link]
+  [![mmfutils open-ssf badge][]][mmfutils open-ssf link]
+  [![mmfutils gh: tag badge][]][mmfutils gh: tags]
+  [![mmfutils gh: forks badge][]][mmfutils gh: forks]
+  [![mmfutils gh: contributors badge][]][mmfutils gh: contributors]
+  [![mmfutils gh: stars badge][]][mmfutils gh: stars]
+  [![mmfutils gh: issues badge][]][zopeext gh: issues]
+
 [zopeext]: <https://github.com/sphinx-contrib/zopeext>
 [zopeext Test badge]: 
   <https://github.com/sphinx-contrib/zopeext/actions/workflows/tests.yaml/badge.svg>
@@ -1220,6 +1244,45 @@ Some examples of packages we manage and their features:
   <https://github.com/sphinx-contrib/zopeext/issues>
 
 
+[mmfutils]: <https://github.com/forbes-group/mmfutils>
+[mmfutils PyPI badge]: 
+  <https://img.shields.io/pypi/v/mmfutils?logo=python&logoColor=FBE072">
+[mmfutils Coverage badge]: 
+  <https://coveralls.io/repos/github/forbes-group/mmfutils/badge.svg?branch=main>
+[mmfutils Coverage link]: 
+  <https://coveralls.io/github/forbes-group/mmfutils?branch=main>
+[mmfutils Documentation status badge]:
+  <https://readthedocs.org/projects/mmfutils/badge/?version=latest> 
+[mmfutils Documentation link]:  <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
+[mmfutils Python versions badge]:
+  <https://img.shields.io/pypi/pyversions/mmfutils?logo=python&logoColor=FBE072>
+[mmfutils PyPI link]:
+  <https://pypi.org/project/mmfutils/>
+[mmfutils open-ssf badge]: 
+  <https://api.securityscorecards.dev/projects/github.com/forbes-group/mmfutils/badge>
+[mmfutils open-ssf link]:
+  <https://deps.dev/pypi/mmfutils>
+[mmfutils gh: forks badge]:
+  <https://img.shields.io/github/forks/forbes-group/mmfutils.svg?logo=github>
+[mmfutils gh: forks]:
+  <https://github.com/forbes-group/mmfutils/network/members>
+[mmfutils gh: contributors badge]: 
+  <https://img.shields.io/github/contributors/forbes-group/mmfutils.svg?logo=github>
+[mmfutils gh: contributors]:
+  <https://github.com/forbes-group/mmfutils/graphs/contributors>
+[mmfutils gh: stars badge]:
+  <https://img.shields.io/github/stars/forbes-group/mmfutils.svg?logo=github>
+[mmfutils gh: stars]:
+  <https://github.com/forbes-group/mmfutils/stargazers>
+[mmfutils gh: tag badge]:
+  <https://img.shields.io/github/v/tag/forbes-group/mmfutils?logo=github>
+[mmfutils gh: tags]:
+  <https://github.com/forbes-group/mmfutils/tags>
+[mmfutils gh: issues badge]:
+  <https://img.shields.io/github/issues/forbes-group/mmfutils?logo=github>
+[mmfutils gh: issues]:
+  <https://github.com/forbes-group/mmfutils/issues>
+  
 ## Distribution
 
 In general, we will try to distribute projects on [PyPI][] and this will be the primary
@@ -1504,7 +1567,7 @@ plt.savefig(FIG_DIR / "parabola.pdf")   # For LaTeX
 
 Currently the main repository is on our own [Heptapod][] server, but I have enabled 
 `Settings/Repository/Mirroring repositories` to push to a public GitHub mirror
-https://github.com/forbes-group/mmfutils/.  This required getting a personal token from GitHub
+<https://github.com/forbes-group/mmfutils/>.  This required getting a personal token from GitHub
 as [described
 here](https://hg.iscimath.org/help/user/project/repository/repository_mirroring#setting-up-a-push-mirror-from-gitlab-to-github).
 I chose to `Mirror only protected branches` to keep things clean, but this means that
@@ -1522,15 +1585,17 @@ reviews.  For this one, I mirror everything.
 
 Summary:
 
-* https://hg.iscimath.org/forbes-group/mmfutils: Main development repository (Mercurial)
+* <https://hg.iscimath.org/forbes-group/mmfutils>: Main development repository (Mercurial)
   running on our hosted [Heptapod][] server.  This is where
   [Issues](https://hg.iscimath.org/forbes-group/mmfutils/-issues), [Merge
   Requests](https://hg.iscimath.org/forbes-group/mmfutils/-/merge_requests) etc. should
-  be reported here.
-* https://github.com/forbes-group/mmfutils: Main public mirror (Git) for releases.  Protected
+  be reported here.  **Note:** To access this, you must connect to the swan server and
+  forward the connections.
+* <https://github.com/forbes-group/mmfutils>: Main public mirror (Git) for releases.  Protected
   branches are automatically pushed here.  No development work should be done here: this
-  is just for public access, and to use GitHub's CI tools.
-* https://github.com/mforbes/mmfutils-fork: My development fork (Git).  Everything is
+  is just for public access, and to use GitHub's CI tools.  This is where badges are
+  pulled from etc.
+* <https://github.com/mforbes/mmfutils-fork>: My development fork (Git).  Everything is
   pushed here to use GitHub's CI tools during development.  Should not be used for
   anything else.
 
@@ -1543,20 +1608,35 @@ With CI setup, we have the following badges:
 
     [![Documentation Status][rtd_badge]][rtd]
 
-* Testing at [DroneIO](https://cloud.drone.io) and with GitHub actions:
-    
-    [![DroneIO Build Status][drone_badge]][drone]
-    [![Tests][ci_badge]][ci]
+* Testing with GitHub actions.  The first set of badges are with <https://shields.io>:
 
-* Code quality testing at [lgtm](https://lgtm.com):
+  [![Python 3.9 test results][py3.9 badge]][py3.9 workflow]
+  [![Python 3.10 test results][py3.10 badge]][py3.10 workflow]
+  [![Python 3.11 test results][py3.11 badge]][py3.11 workflow]
+  [![Python 3.12 test results][py3.12 badge]][py3.12 workflow]
+  [![Python 3.13 test results][py3.13 badge]][py3.13 workflow]
 
-    [![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
-    [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
+  The second set are direct from GitHub, but are a bit unruly:
+  
+  [![Python 3.9 test results][gh3.9 badge]][py3.9 workflow]
+  [![Python 3.10 test results][gh3.10 badge]][py3.10 workflow]
+  [![Python 3.11 test results][gh3.11 badge]][py3.11 workflow]
+  [![Python 3.12 test results][gh3.12 badge]][py3.12 workflow]
+  [![Python 3.13 test results][gh3.13 badge]][py3.13 workflow]
 
 * Style:
 
     [![Code style: black][black_img]][black]
 
+* *(Obsolete)* Testing at [DroneIO](https://cloud.drone.io) and with GitHub actions:
+    
+    [![DroneIO Build Status][drone_badge]][drone]
+    [![Tests][ci_badge]][ci]
+
+* *(Obsolete)* Code quality testing at [lgtm](https://lgtm.com):
+
+    [![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
+    [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
 
 [rtd_badge]: <https://readthedocs.org/projects/mmfutils/badge/?version=latest>
 [rtd]: <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
@@ -1605,7 +1685,7 @@ Projects](https://hynek.me/articles/ditch-codecov-python/) and the [Hypermodern 
 workflow][].  This is a little tricky, because the tests are run in separate machines.
 The coverage reports need to be labeled individually, then uploaded as artifacts, and
 finally combined after all tests are run.  Following the [Hypermodern GitHub
-workflow][], we include a `coverage` session in `noxfile.py`.  Here ate some potential
+workflow][], we include a `coverage` session in `noxfile.py`.  Here are some potential
 gotchas.
 
 * You need to have at least the following in your `pyproject.toml` file:
@@ -1624,7 +1704,11 @@ gotchas.
 
 
 
-* https://docs.gitlab.com/ee/user/project/badges.html
+* <https://docs.gitlab.com/ee/user/project/badges.html>
+
+
+
+
 
 Old:
 
@@ -1844,46 +1928,65 @@ fil-profile run test_script.py
 
 We try to keep the repository clean with the following properties:
 
-1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the latest stable release.
-2. Each release has its own named branch so that e.g. `hg up 0.5.0` will get the right thing.  Note: this should update to the development branch, *not* the default branch so that any work committed will not pollute the development branch (which would violate the previous point).
+1. The default branch is stable: i.e. if someone runs `hg clone`, this will pull the
+   latest stable release.
+2. Minor version numbers each have their own named branch.  *(We used to use a named
+   branch for each release, but named branches and tags conflict, so we now only use
+   named branches for the minor versions, and use tags for each release.)*
+3. We use topics for each release.  Thus, branch `0.7` would contain topic `0.7.0` until
+   this is released.  Upon release, we tag the topic so that `hg up 0.5.0` will get the right
+   thing.  Note: this should update to the development branch, *not* the default branch
+   so that any work committed will not pollute the default branch (which would
+   violate point 1).
 
 To do this, we advocate the following procedure.
 
-1. **Update to Correct Branch**: Make sure this is the correct development branch, not the default branch by explicitly updating:
+1. **Update to Correct Branch**: Make sure this is the correct development branch, not
+   the default branch by explicitly updating:
 
     ```bash
     hg up <version>
     ```
    
-    (Compare with `hg up default` which should take you to the default branch instead.)
-2. **Work**: Do your work, committing as required with messages as shown in the repository with the following keys:
-
+   This should update to the branch or topic. *(Compare with `hg up default` which
+   should take you to the default branch instead.)*
+2. **Work**: Do your work, committing as required with messages as shown in the
+   repository with the following keys: 
     * `DOC`: Documentation changes.
     * `API`: Changes to the exising API.  This could break old code.
-    * `EHN`: Enhancement or new functionality. Without an `API` tag, these should not break existing codes.
+    * `EHN`: Enhancement or new functionality. Without an `API` tag, these should not
+      break existing codes. 
     * `BLD`: Build system changes (`setup.py`, `requirements.txt` etc.)
     * `TST`: Update tests, code coverage, etc.
     * `BUG`: Address an issue as filed on the issue tracker.
     * `BRN`: Start a new branch (see below).
     * `REL`: Release (see below).
-    * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is useful when testing things like the rendering of documentation on bitbucket etc. where you need to push an incomplete set of files.  Please collapse and strip these eventually when you get things working.
-    * `CHK`: Checkpoints.  These should not be pushed to bitbucket!
-3. **Tests**: Make sure the tests pass.  Comprehensive tests should be run with `nox`:
+    * `WIP`: Work in progress.  Do not depend on these!  They will be stripped.  This is
+      useful when testing things like the rendering of documentation etc. where you need
+      to push an incomplete set of files.  Please collapse and strip these eventually
+      when you get things working.
+    * `CHK`: Checkpoints.  These should not be pushed.
+3. **Tests**: Make sure the tests pass.  Comprehensive tests should be run with `make test`:
    
-    ```bash
-    nox
-    ```
+   ```bash
+   make test
+   ```
+    
+   *(This just runs `nox`, but gives an opportunity to do other things if needed, like
+   installing `nox` for example.)*
    
-    Quick tests while developing can be run with the `_mmfutils` environment:
+   Quick tests while developing can be run with `make shell`:
    
-    ```bash
-    conda env update --file environment.yml
-    conda activate _mmfutils; pytest
-    ```
+   ```bash
+   make shell
+   pytest
+   ```
 
-    (`hg com` will automatically run tests after pip-installing everything in `setup.py`
-    if you have linked the `.hgrc` file as discussed above, but the use of independent
-    environments is preferred now.)
+   You can optionally specify a different version of python by setting `DEV_PY_VER`:
+
+   ```bash
+   DEV_PY_VER=3.10 make shell
+   ```
 
 4. **Update Docs**: Update the documentation if needed.  To generate new documentation run:
 
@@ -1891,7 +1994,6 @@ To do this, we advocate the following procedure.
     make shell
     cd doc
     sphinx-apidoc -eTE ../src/mmfutils -o source
-    rm source/mmfutils.*tests*
     ```
    
     * Include any changes at the bottom of this file (`doc/README.ipynb`).
@@ -2178,14 +2280,13 @@ with the
   which versions are no longer supported.
 
     
-.
 ## PDM
 
 We currently [PDM][] for managing the dependencies.  Pure python dependencies should be
 specified in the [`pyproject.toml`][] file, whose format is discussed here:
 
 * [Declaring project metadata (from PEP 621)][]
-* [`pyproject,toml`][]
+* [`pyproject.toml`][]
 
 [Declaring project metadata (from PEP 621)]:
   <https://packaging.python.org/en/latest/specifications/declaring-project-metadata/>
@@ -3288,3 +3389,4 @@ make: *** [python.exe] Error 1
 [PyCUDA]: <https://mathema.tician.de/software/pycuda/>
 [cupy]: <https://cupy.dev>
 [pip]: <https://pip.pypa.io/en/stable/>
+[`pytest-cov`]: <https://github.com/pytest-dev/pytest-cov>

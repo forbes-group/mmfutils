@@ -7,6 +7,7 @@ is enabled but cannot be found.  Just go:
 >>> from mmfutils.performance.numexpr import numexpr
 
 """
+
 __all__ = ["numexpr"]
 
 numexpr = False
@@ -16,16 +17,19 @@ try:
     # These convolutions are needed to deal with a common failure mode: If the
     # MKL libraries cannot be found, then the whole python process crashes with
     # a library error.  We test this in a separate process and if it fails, we
-    # disable the MKL.
+    # disable the MKL.  The target function must be in a separate module, otherwise we
+    # will get
+    # RuntimeError:
+    #   An attempt has been made to start a new process before the
+    #   current process has finished its bootstrapping phase.
+    #   ...
+    #   To fix this issue, refer to the "Safe importing of main module"
+    #   section in https://docs.python.org/3/library/multiprocessing.html
     import multiprocessing
-
-    def check(q):  # pragma: nocover
-        import numexpr
-
-        q.put(numexpr.get_vml_version())
+    from . import _numexpr_import_check
 
     q = multiprocessing.Queue()
-    _p = multiprocessing.Process(target=check, args=[q])
+    _p = multiprocessing.Process(target=_numexpr_import_check.check, args=[q])
     _p.start()
     _p.join()
     if q.empty():  # pragma: nocover

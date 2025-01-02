@@ -3,7 +3,7 @@
 # https://github.com/orgs/community/discussions/52616
 # https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-python#using-multiple-python-versions
 
-name: Tests
+name: Run Tests
 
 on:
   # workflow_call is a required field of the "on" property,
@@ -55,3 +55,10 @@ jobs:
       - name: Run Tests
         run: nox -p ${{ inputs.python_version }}
         shell: micromamba-shell {0}
+      #- name: Upload coverage data
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: coverage-data-${{ inputs.python_version }}
+      #    path: .coverage.*
+      #    include-hidden-files: true
+      #    if-no-files-found: ignore

@@ -10,6 +10,7 @@ the following form:
    e^{a\nabla^2} y(r) &= \frac{r_0^d}{\sqrt{r_0^2+2a}^d}
    e^{-r^2/(r_0^2+2a)/2}
 """
+
 import gc
 import os
 import psutil
@@ -87,12 +88,7 @@ class ExactGaussian(object):
     @property
     def d2y(self):
         """Exact Laplacian with factor"""
-        return (
-            self.factor
-            * self.y
-            * (self.r**2 - self.d * self.r_0**2)
-            / self.r_0**4
-        )
+        return self.factor * self.y * (self.r**2 - self.d * self.r_0**2) / self.r_0**4
 
     @property
     def grad_dot_grad(self):
@@ -331,6 +327,7 @@ class TestPeriodicBasis(ConvolutionTests):
     This net neutrality is the only thing that makes sense physically.
 
     """
+
     Basis = bases.PeriodicBasis
     dim = 3
     Q = 8.0
@@ -580,7 +577,7 @@ class TestCylindricalBasis(LaplacianTests):
     Nm = 5  # Number of functions to test
     Nn = 5  # Used when functions are compared
 
-    # Enough points for trapz to give answers to 4 digits.
+    # Enough points for trapezoid to give answers to 4 digits.
     R = np.linspace(0.0, Lxr[1] * 3.0, 10000)
 
     @pytest.fixture
@@ -601,10 +598,10 @@ class TestCylindricalBasis(LaplacianTests):
         R = self.R
         for _m in range(self.Nm):
             Fm = b._F(_m, R)
-            assert np.allclose(np.trapz(abs(Fm) ** 2, R), 1.0, rtol=1e-3)
+            assert np.allclose(np.trapezoid(abs(Fm) ** 2, R), 1.0, rtol=1e-3)
             for _n in range(_m + 1, self.Nn):
                 Fn = b._F(_n, R)
-                assert np.allclose(np.trapz(Fm.conj() * Fn, R), 0.0, atol=1e-3)
+                assert np.allclose(np.trapezoid(Fm.conj() * Fn, R), 0.0, atol=1e-3)
 
     def test_derivatives(self, basis):
         """Test the derivatives of the basis functions."""
@@ -655,9 +652,7 @@ class TestCylindricalBasis(LaplacianTests):
         assert np.allclose((basis.metric * n).sum(), exact.N_3D)
         n_1D = basis.integrate1(n).ravel()
         r0 = exact.r_0
-        n_1D_exact = (
-            exact.A**2 * (np.pi * r0**2 * np.exp(-(x**2) / r0**2)).ravel()
-        )
+        n_1D_exact = exact.A**2 * (np.pi * r0**2 * np.exp(-(x**2) / r0**2)).ravel()
         assert np.allclose(n_1D, n_1D_exact)
 
     def test_integrate2(self, basis, exact):
@@ -667,9 +662,7 @@ class TestCylindricalBasis(LaplacianTests):
         y = np.linspace(0, r.max(), 50)[None, :]
         n_2D = basis.integrate2(n, y=y)
         r0 = exact.r_0
-        n_2D_exact = exact.A**2 * (
-            np.sqrt(np.pi) * r0 * np.exp(-(x**2 + y**2) / r0**2)
-        )
+        n_2D_exact = exact.A**2 * (np.sqrt(np.pi) * r0 * np.exp(-(x**2 + y**2) / r0**2))
         assert np.allclose(n_2D, n_2D_exact, rtol=0.01, atol=0.01)
 
 

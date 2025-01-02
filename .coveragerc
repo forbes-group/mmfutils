@@ -1,9 +1,0 @@
-[run]
-parallel = True
-source =
-    mmfutils
-omit =
-    */tests/*
-
-[html]
-directory = build/_coverage
