@@ -25,7 +25,7 @@ os.environ["PYTHONNOUSERSITE"] = "1"
 # By default, we only execute the conda tests because the others required various python
 # interpreters to be installed.  The other tests can be run, e.g., with `nox -s test` if
 # desired.
-nox.options.sessions = ["test_conda"]
+nox.options.sessions = ["test"]
 
 args = dict(python=python_versions, reuse_venv=True)
 
