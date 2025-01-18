@@ -1,3 +1,6 @@
+SHELL = /bin/bash
+_SHELL = $(notdir $(SHELL))
+
 DEV_PY_VER ?= 3.12
 PY_VERS ?= 3.9 3.10 3.11 3.12 3.13
 PANDOC_FLAGS ?= --toc --standalone
@@ -27,12 +30,14 @@ EDITABLE ?= true
 ifeq ($(USE_MICROMAMBA), true)
   CONDA ?= $(CONDA_PRE) micromamba
 	CONDA_ENV = $(CONDA)
-  CONDA_ACTIVATE ?= eval "$$(micromamba shell hook --shell=bash)" && micromamba activate
+  _MICROMAMBA = eval "$$(micromamba shell hook --shell=bash 2> /dev/null)" && micromamba
 else
   CONDA ?= $(CONDA_PRE) conda
 	CONDA_ENV = $(CONDA) env
-  CONDA_ACTIVATE ?= source $$($(CONDA) info --base)/etc/profile.d/conda.sh && $(CONDA) activate
+  _MICROMAMBA = source $$($(CONDA) info --base)/etc/profile.d/conda.sh && $(CONDA)
 endif
+
+CONDA_ACTIVATE ?= $(_MICROMAMBA) activate
 
 # We need special effects for 
 ifeq ($(USE_ROSETTA), true)
@@ -44,6 +49,7 @@ endif
 
 DEV_ENV ?= $(ENVS)/py$(DEV_PY_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
+_RUN = $(_MICROMAMBA) run -p $(DEV_ENV)
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
 # ------- Top-level targets  -------
@@ -56,18 +62,23 @@ usage:
 
 shell: dev
 	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
-	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
+	$(_RUN) bash --init-file .init-file.bash
 
 test: dev
 	$(CONDA_ACTIVATE_DEV) && pytest
 
 qshell: dev
-	$(CONDA_ACTIVATE_DEV) && bash --init-file .init-file.bash
+	$(_RUN) bash --init-file .init-file.bash
+
+# ------- Documentation  -----
+DOC_REQUIREMENTS =
+
+html: dev
+	$(_RUN) make -C doc/ html
 
 README.rst: doc/README.ipynb
 	# Not sure why we need the ../ for --output=
 	jupyter nbconvert --to=rst --output=../README.rst doc/README.ipynb
-
 
 %.html: %.rst
 	rst2html5.py $< > $@
@@ -88,6 +99,8 @@ FSWATCH ?= fswatch -e ".*" -i "$<" -o .
 %.html: %.md
 	$(PANDOC) && $(OPEN_BROWSER)
 	$(FSWATCH) | while read num; do $(PANDOC) && $(REFRESH_BROWSER); done
+
+.PHONY: html
 
 ######################################################################
 # GitHub Workflows
@@ -238,7 +251,9 @@ Maintenance:
    make realclean    Remove all envs, etc.
 
 Documentation:
+   make html         Build the Sphinx documentation.
    make README.rst   Generate the README.rst file from doc/README.ipynb
+   make Notes.html   Build and serve Notes.md
 
 endef
 export HELP_MESSAGE

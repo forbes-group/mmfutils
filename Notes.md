@@ -19,11 +19,15 @@ projects.  (Other projects should refer here for this discussion.)
 
 - [To Do](#to-do)
 - [TL;DR](#tldr)
+  - [GitLab](#gitlab)
 - [Tools](#tools)
 - [Python Dependencies](#python-dependencies)
+  - [[PDM][]](#pdm)
 - [[Conda][] Dependencies](#conda-dependencies)
-- [Simplified Approach (July 2023)](#simplified-approach-july-2023)
   - [Makefile](#makefile)
+- [Managing Multiple Versions of Python](#managing-multiple-versions-of-python)
+  - [Testing](#testing)
+    - [GitHub CI](#github-ci)
 - [Tools](#tools-1)
   - [Useful Tools](#useful-tools)
 - [Working Environment (Conda/Pip and all that)](#working-environment-condapip-and-all-that)
@@ -49,7 +53,7 @@ projects.  (Other projects should refer here for this discussion.)
   - [Continuous Integration (CI)](#continuous-integration-ci)
     - [Coverage](#coverage)
   - [References](#references-1)
-- [Testing](#testing)
+- [Testing](#testing-1)
   - [`tests/__init__.py`](#tests__init__py)
   - [Nox](#nox)
     - [Matrix Testing](#matrix-testing)
@@ -69,7 +73,7 @@ projects.  (Other projects should refer here for this discussion.)
   - [Soft Dependencies](#soft-dependencies)
   - [Issues:](#issues)
   - [References](#references-2)
-- [Testing](#testing-1)
+- [Testing](#testing-2)
   - [Issues:](#issues-1)
 - [GitHub](#github)
 - [Issues:](#issues-2)
@@ -142,17 +146,26 @@ To support this, our project structure uses the following files:
 
 # Tools
 
-I generally make sure I have the following tools installed globally.  I do this with
-[pipx][] using a different account (`admin`) on my computer so I don't accidentally muck
-these up.  I also keep my `base` [Conda][] environment in this account for the same
-reason.  For complete details see [mac-os-x][].
+I generally make sure I have the following tools installed globally.  These will need to
+be included on any docker images used for testing (CI) although some of them can be
+installed by the `Makefile`.  See `.gitlab-ci.yml` for what is currently needed.
+
+## Mac OS X
+
+On my computer, I install most of these with [MacPorts][] or with [pipx][] if they are
+python based.  I do this using a different account (`admin`) on my computer so I don't
+accidentally muck these up.  I also keep my `base` [Conda][] environment in this account
+for the same reason.  For complete details see [mac-os-x][].
 
 ```bash
 # On Mac OS X using MacPorts:
-ssh conda # My alias to login as `conda`
-conda install -n base pipx
+ssh admin  # My alias to login as `admin`
 port install git gmake pandoc myrepos graphviz
 port install python37 python38 python39 python310 python311
+exit
+
+ssh conda  # My alias to login as `conda`
+conda install -n base pipx
 for app in cookiecutter pdm poetry yapf black nox    \
            nbdime jupytext nbstripout                \
            poetry2conda conda-lock conda-pack condax \
@@ -162,9 +175,11 @@ for app in cookiecutter pdm poetry yapf black nox    \
 pipx inject nox nox-poetry poetry 
 pipx inject pdm pdm-shell
 pipx inject mercurial hg-git hg-evolve
+exit
 ```
 
-You may not need all of these.
+
+You may not need all of these for all packages.
 
 In addition, you will likely need to install compilers and development tools, and
 [TeX Live][] for making publication-quality plots.
@@ -2538,9 +2553,6 @@ provides a list of versions that might be installed.
   determining the widest dependency requirements with tests.  Something like: run tests
   with extreme versions of various libraries, bisecting to find boundaries.
 
-GitHub
-======
-
 [Poetry][] has great promise, but is currently a bit of a pain due to some unresolved
 issues.  Here are some recommendations:
 
@@ -2677,6 +2689,44 @@ issues.  Here are some recommendations:
     ...
     ```
  
+GitHub
+======
+
+You can [skip GitHub CI][] by including `[skip ci]` in a commit message.  This will also
+[skip GitLab CI][].  To skip only GitHub, use `[no ci]`.
+
+[skip GitHub CI] <https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/skipping-workflow-runs>
+
+GitLab
+======
+
+You can [skip GitLab CI][] by including `[skip ci]` in your commit message.
+
+[skip GitLab CI] <https://docs.gitlab.com/ee/ci/pipelines/#skip-a-pipeline>
+
+## Protected Branches
+
+
+[GitLab][] as a mechanism to protect branches.  If you try to do any history editing
+(`hg amend` etc.) on these branches, then when you push, you will get a warning:
+
+```
+warning: failed to update ...; pre-receive hook declined
+```
+
+Generally you should work on unprotected branches (i.e. topics in mercurial), then merge
+these in once you are done, but if you need to do this, you can visit
+[Settings/Repository/Protected branches][] on your [GitLab][] project, and then toggle
+`Allowed to force push`.  This will allow you to `hg push -fr .` for example.
+
+[Settings/Repository/Protected branches]: <
+  https://gitlab.com/forbes-group/mmfutils/-/settings/repository#js-protected-branches-settings>
+
+Issues
+======
+
+
+
 # Issues:
 
 ## pyFFTW
