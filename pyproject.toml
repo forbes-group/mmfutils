@@ -21,8 +21,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 dependencies = [
   'zope.interface >= 5.5.2',
   'husl >= 4.0.3',
@@ -73,6 +74,7 @@ pyfftw = [
 numba = [
   "numba >= 0.56.4; python_version < '3.8'",
   "numba >= 0.60.0; python_version >= '3.8' and python_version < '3.13'",
+  "numba >= 0.61.0rc1; python_version >= '3.13'", 
 ]
 
 perf = [
