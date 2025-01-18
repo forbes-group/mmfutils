@@ -74,7 +74,7 @@ for data in get_data():
     plot_data(data)
 # -
 
-# One slight downside of this approach is that the data computed is no longer in the global scope which may not be so desireable for interactive work.  (It is *much* better for development though).  To allow for the usual workflow, in the previous code I have included a line to update a local dictionary.  This functionality is also provided by a decorator in my [`mmfutils` package](https://bitbucket.org/mforbes/mmfutils-fork) (version 0.4.5 or higher).
+# One slight downside of this approach is that the data computed is no longer in the global scope which may not be so desireable for interactive work.  (It is *much* better for development though).  To allow for the usual workflow, in the previous code I have included a line to update a local dictionary.  This functionality is also provided by a decorator in my [`mmfutils` package](https://gitlab.com/forbes-group/mmfutils) (version 0.4.5 or higher).
 
 # +
 from mmfutils.debugging import debug

@@ -1600,12 +1600,13 @@ reviews.  For this one, I mirror everything.
 
 Summary:
 
-* <https://hg.iscimath.org/forbes-group/mmfutils>: Main development repository (Mercurial)
-  running on our hosted [Heptapod][] server.  This is where
-  [Issues](https://hg.iscimath.org/forbes-group/mmfutils/-issues), [Merge
-  Requests](https://hg.iscimath.org/forbes-group/mmfutils/-/merge_requests) etc. should
-  be reported here.  **Note:** To access this, you must connect to the swan server and
-  forward the connections.
+* <https://gitlab.com/forbes-group/mmfutils>: Main development repository.  This is
+  where [Issues](https://gitlab.com/forbes-group/mmfutils/-/issues), [Merge
+  Requests](https://gitlab.com/forbes-group/mmfutils/-/merge_requests) etc. should
+  be reported here.
+  
+  **Note:** This was copied using repository export from our [Heptapod][] server
+  <https://hg.iscimath.org/forbes-group/mmfutils>.
 * <https://github.com/forbes-group/mmfutils>: Main public mirror (Git) for releases.  Protected
   branches are automatically pushed here.  No development work should be done here: this
   is just for public access, and to use GitHub's CI tools.  This is where badges are
@@ -1613,6 +1614,9 @@ Summary:
 * <https://github.com/mforbes/mmfutils-fork>: My development fork (Git).  Everything is
   pushed here to use GitHub's CI tools during development.  Should not be used for
   anything else.
+* <https://hg.iscimath.org/forbes-group/mmfutils>: Old development repository
+  (Mercurial) running on our hosted [Heptapod][] server.  Should not be used any more.
+  **Note:** To access this, you must connect to the swan server and forward the connections.
 
 
 ## Badges
@@ -1659,8 +1663,8 @@ With CI setup, we have the following badges:
 
 [drone_badge]: <https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg>
 [drone]: https://cloud.drone.io/forbes-group/mmfutils
-[ci_badge]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml/badge.svg?branch=topic%2F0.6.0%2Fgithub_ci>
-[ci]: <https://github.com/mforbes/mmfutils-fork/actions/workflows/tests.yml>
+[ci_badge]: <https://github.com/forbes-group/mmfutils/actions/workflows/tests.yml/badge.svg?branch=topic%2F0.6.0%2Fgithub_ci>
+[ci]: <https://github.com/mforbes/forbes-group/mmfutils/actions/workflows/tests.yml>
 
 [black_img]: https://img.shields.io/badge/code%20style-black-000000.svg
 
@@ -1669,7 +1673,7 @@ With CI setup, we have the following badges:
 [lgtm_mmfutils_badge]: <https://img.shields.io/lgtm/grade/python/g/forbes-group/mmfutils.svg?logo=lgtm&logoWidth=18>
 
 [lgtm_mmfutils_fork]: <https://lgtm.com/projects/g/forbes-group/mmfutils/context:python>
-[lgtm_mmfutils_fork_badge]: <https://img.shields.io/lgtm/grade/python/g/mforbes/mmfutils-fork.svg?logo=lgtm&logoWidth=18> 
+[lgtm_mmfutils_fork_badge]: <https://img.shields.io/lgtm/grade/python/g/forbes-group/mmfutils.svg?logo=lgtm&logoWidth=18> 
 
 ## Continuous Integration (CI)
 
@@ -2700,9 +2704,24 @@ You can [skip GitHub CI][] by including `[skip ci]` in a commit message.  This w
 GitLab
 ======
 
-You can [skip GitLab CI][] by including `[skip ci]` in your commit message.
+## Mirroring Repositories
 
-[skip GitLab CI] <https://docs.gitlab.com/ee/ci/pipelines/#skip-a-pipeline>
+You can mirror a repository from, e.g. [GitLab][] (or [Heptapod][]) to [GitHub][] using
+[GitLab push mirroring][]. This allows you to use [GitHub CI](#github-ci) for example:
+
+1. [Get a personal token from GitHub][]. *([Settings/Developer settings/Personal access
+   tokens/Fine-grained tokens](https://github.com/settings/personal-access-tokens))*.
+   This must have read-write access for **contents**.  Store the generated token `github_pat_...`
+2. Add the mirrored repository.
+   * **Git repository URL:** `https://github.com/forbes-group/mmfutils`
+   * **Authentication method:** `Username and Password`
+   * **Username:** `mforbes`
+   * **Password:** `github_pat_*`
+   * Optional: `Mirror only protected branches`
+   
+[Get a personal token from GitHub]: <https://docs.gitlab.com/ee/user/project/repository/mirror/push.html#set-up-a-push-mirror-from-gitlab-to-github>
+[GitLab push mirroring]: <https://docs.gitlab.com/ee/user/project/repository/mirror/push.html>
+
 
 ## Protected Branches
 
@@ -2719,6 +2738,35 @@ these in once you are done, but if you need to do this, you can visit
 [Settings/Repository/Protected branches][] on your [GitLab][] project, and then toggle
 `Allowed to force push`.  This will allow you to `hg push -fr .` for example.
 
+## CI
+
+The [GitLab CI][] is configured in `.gitlab-ci.yml`.
+
+You can [skip GitLab CI][] by including `[skip ci]` in your commit message.
+
+### Documentation
+
+
+
+image: ubuntu:24.10
+
+build-docs:
+  script:
+    - apt-get update && apt-get install -y build-essential curl wget git libfftw3-dev pandoc
+                                           #ffmpeg texlive-full
+    # - EXTRAS=doc make tools
+    - bash <(curl -L micro.mamba.pm/install.sh)
+    # - source ~/.bashrc  # This does not work in CI for some reason.  Not a login shell?
+    - export PATH=/root/.local/bin/:${PATH}
+    - EXTRAS=doc make html
+    - mv doc/build/html public
+  pages: true  # specifies that this is a Pages job
+  artifacts:
+    paths:
+      - public
+
+[GitLab CI]: <https://docs.gitlab.com/ee/ci/>
+[skip GitLab CI] <https://docs.gitlab.com/ee/ci/pipelines/#skip-a-pipeline>
 [Settings/Repository/Protected branches]: <
   https://gitlab.com/forbes-group/mmfutils/-/settings/repository#js-protected-branches-settings>
 

@@ -10,7 +10,7 @@ tools, and a patch for including
 in a notebook.
 
 (Note: If this file does not render properly, try viewing it through
-`nbviewer.org <http://nbviewer.ipython.org/urls/bitbucket.org/mforbes/mmfutils-fork/raw/tip/doc/README.ipynb>`__)
+`nbviewer.org <https://nbviewer.org/urls/gitlab.com/forbes-group/mmfutils/-/raw/branch/default/doc/README.ipynb>`__)
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -18,7 +18,9 @@ in a notebook.
 
 -  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
    (will forward).
--  https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the
+-  https://gitlab.com/forbes-group/mmfutils: Current, in case the
+   permalink fails.
+-  https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the
    permalink fails.
 -  https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
