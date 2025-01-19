@@ -2747,7 +2747,7 @@ You can [skip GitLab CI][] by including `[skip ci]` in your commit message.
 ### Documentation
 
 
-
+```
 image: ubuntu:24.10
 
 build-docs:
@@ -2764,11 +2764,35 @@ build-docs:
   artifacts:
     paths:
       - public
+```
+
+### Docker Images
+
+To run various tests etc. we need to base our CI on a docker image.  This then needs to
+be provisioned, which can consume a lot of resources (especially with `texlive-full`).
+To minimize the need to do this, we build our own docker image that is provisioned and
+use this.  I am following the tutorial [GitLab CI - Create a Docker image and upload it to GitLab and
+Docker Hub][] to do this.
+
+1. Create a project where you want to define and store the image.
+2. Clone the project and edit the `Dockerfile`.
+3. 
+
+[GitLab CI - Create a Docker image and upload it to GitLab and Docker Hub]: <https://www.youtube.com/watch?v=HCuBdbuJdTU&ab_channel=Tobi%27sDeveloperCorner)
+
+
+
+
 
 [GitLab CI]: <https://docs.gitlab.com/ee/ci/>
 [skip GitLab CI] <https://docs.gitlab.com/ee/ci/pipelines/#skip-a-pipeline>
 [Settings/Repository/Protected branches]: <
   https://gitlab.com/forbes-group/mmfutils/-/settings/repository#js-protected-branches-settings>
+
+### Running Locally
+
+See <https://stackoverflow.com/a/36358790/1088938>
+
 
 Issues
 ======
