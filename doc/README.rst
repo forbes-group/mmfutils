@@ -2049,6 +2049,15 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.7.0
+----------
+
+-  Fully support Python 3.9 through 3.13 with working tests on GitHub
+   CI. (Resolves issue #34.)
+-  Working documentation build on GitLab CI.
+-  Provide a len() method for FPS() so that it works better with
+   e.g. tqdm.
+
 REL: 0.6.7
 ----------
 
