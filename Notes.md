@@ -2065,7 +2065,7 @@ To do this, we advocate the following procedure.
 
     ```bash
     hg com -m "REL: <version>"
-    hg push -b .
+    hg push -r .
    ```
    
 7. **Pull Request**: Create a pull request on the development fork from your branch to
