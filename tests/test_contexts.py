@@ -427,3 +427,13 @@ class TestFPS:
         with contexts.FPS(frames=[], unregister=unregister) as fps:
             assert np.isnan(fps.fps)
             assert len(fps.tics) == 1
+
+    def test_len(self):
+        """Test that FPS() provides a length (issue 35).
+
+        This makes it work nicely with tqdm.
+        """
+        assert len(contexts.FPS(10)) == 10
+        with pytest.raises(TypeError) as e:
+            len(contexts.FPS(itertools.count()))
+        assert e.value.args[0] == "object of type 'FPS' has no len()"

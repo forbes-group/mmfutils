@@ -10,7 +10,7 @@ tools, and a patch for including
 in a notebook.
 
 (Note: If this file does not render properly, try viewing it through
-`nbviewer.org <http://nbviewer.ipython.org/urls/bitbucket.org/mforbes/mmfutils-fork/raw/tip/doc/README.ipynb>`__)
+`nbviewer.org <https://nbviewer.org/urls/gitlab.com/forbes-group/mmfutils/-/raw/branch/default/doc/README.ipynb>`__)
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -18,7 +18,9 @@ in a notebook.
 
 -  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
    (will forward).
--  https://hg.iscimath.org/forbes-group/mmfutils: Current, in case the
+-  https://gitlab.com/forbes-group/mmfutils: Current, in case the
+   permalink fails.
+-  https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the
    permalink fails.
 -  https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
@@ -27,12 +29,24 @@ https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
 
 **Build Status**
 
-|Documentation Status| |Build Status|
+|Documentation Status| |Build Status| |Python 3.9 test results| |Python
+3.10 test results| |Python 3.11 test results| |Python 3.12 test results|
+|Python 3.13 test results|
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/mmfutils/badge/?version=latest
    :target: https://mmfutils.readthedocs.io/en/latest/?badge=latest
 .. |Build Status| image:: https://cloud.drone.io/api/badges/forbes-group/mmfutils/status.svg
    :target: https://cloud.drone.io/forbes-group/mmfutils
+.. |Python 3.9 test results| image:: https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.9.yaml?label=3.9&logo=GitHub
+   :target: https://github.com/forbes-group/mmfutils/actions/workflows/python_3.9.yaml
+.. |Python 3.10 test results| image:: https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.10.yaml?label=3.10&logo=GitHub
+   :target: https://github.com/forbes-group/mmfutils/actions/workflows/python_3.10.yaml
+.. |Python 3.11 test results| image:: https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.11.yaml?label=3.11&logo=GitHub
+   :target: https://github.com/forbes-group/mmfutils/actions/workflows/python_3.11.yaml
+.. |Python 3.12 test results| image:: https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.12.yaml?label=3.12&logo=GitHub
+   :target: https://github.com/forbes-group/mmfutils/actions/workflows/python_3.12.yaml
+.. |Python 3.13 test results| image:: https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=3.13&logo=GitHub
+   :target: https://github.com/forbes-group/mmfutils/actions/workflows/python_3.13.yaml
 
 Installing
 ----------
@@ -277,7 +291,7 @@ functionality with ``ObjectMixin``:
 
 .. parsed-literal::
 
-    ObjectBase pickle:  4396 bytes
+    ObjectBase pickle:  4397 bytes
     ObjectMixin pickle: 103 bytes
 
 
@@ -291,8 +305,8 @@ Note, however, that the speed of copying is significantly impacted:
 
 .. parsed-literal::
 
-    2.99 µs ± 141 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
-    29.8 µs ± 951 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    1.12 μs ± 33.2 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
+    8.98 μs ± 168 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
 
 
 Another use case applies when ``init()`` is expensive. If :math:`x` and
@@ -441,7 +455,7 @@ Container Examples
 
     AttributeError                            Traceback (most recent call last)
 
-    Input In [15], in <cell line: 3>()
+    Cell In[15], line 3
           1 c1 = pickle.loads(pickle.dumps(c))
           2 print(c1)
     ----> 3 c1.large_temporary_array
@@ -546,7 +560,6 @@ Here is a broken implementation. We muck up the arguments to ``add``:
         print("{0.__class__.__name__}: {0}".format(e))
 
 
-
 .. parsed-literal::
 
     BrokenMethodImplementation: The object <class '__main__.AdderBroken'> has failed to implement interface __main__.IAdder: The contract of __main__.IAdder.add(other) is violated because 'AdderBroken.add(self, one, another)' requires too many arguments.
@@ -576,7 +589,7 @@ defined in ``__init__()``:
 
 .. parsed-literal::
 
-    BrokenImplementation: The object <__main__.AdderBroken object at 0x11558c1c0> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
+    BrokenImplementation: The object <__main__.AdderBroken object at 0x115ac5a90> has failed to implement interface __main__.IAdder: The __main__.IAdder.value attribute was not provided.
 
 
 Finally, a working instance:
@@ -626,7 +639,7 @@ to provide a mechanism for documentating interfaces in a notebook.
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="generator" content="Docutils 0.21.2: https://docutils.sourceforge.io/" />
     <title>&lt;string&gt;</title>
     
     <div class="document">
@@ -686,6 +699,16 @@ profile name, and can be started or stopped from this class:
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
+    2024-12-31 16:40:49.374 [IPController] Hub listening on tcp://127.0.0.1:65099 for registration.
+    2024-12-31 16:40:49.374 [IPController] Hub using DB backend: DictDB
+    2024-12-31 16:40:49.626 [IPController] hub::created hub
+    2024-12-31 16:40:49.627 [IPController] writing connection info to /Users/mforbes/.ipython/profile_default/security/ipcontroller-client.json
+    2024-12-31 16:40:49.627 [IPController] writing connection info to /Users/mforbes/.ipython/profile_default/security/ipcontroller-engine.json
+    2024-12-31 16:40:49.628 [IPController] task::using Python leastload Task scheduler
+    2024-12-31 16:40:49.993 [IPController] Heartmonitor beating every 3000ms
+    2024-12-31 16:40:50.296 [broadcast-00] BroadcastScheduler 00 started
+    2024-12-31 16:40:50.297 [broadcast-0] BroadcastScheduler 0 started
+    2024-12-31 16:40:50.298 [broadcast-01] BroadcastScheduler 01 started
     Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
@@ -700,11 +723,9 @@ profile name, and can be started or stopped from this class:
 
 .. parsed-literal::
 
-    2022-06-07 11:37:19.290 [IPClusterStop] Stopping cluster 
-    2022-06-07 11:37:19.290 [IPClusterStop] Stopping controller
-    2022-06-07 11:37:19.432 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8883, 'identifier': 'ipcontroller-8934'}
-    2022-06-07 11:37:19.434 [IPClusterStop] Stopping engine(s): 1654627030
-    2022-06-07 11:37:19.857 [IPClusterStop] engine set stopped 1654627030: {'engines': {'0': {'exit_code': None, 'pid': 8896, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 8897, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 8898, 'identifier': '2'}}, 'exit_code': None}
+    2024-12-31 16:40:56.878 [IPClusterStop] Stopping cluster 
+    2024-12-31 16:40:56.878 [IPClusterStop] Stopping controller
+    2024-12-31 16:40:56.964 [IPClusterStop] Stopping engine(s): 1735688450
 
 
 .. parsed-literal::
@@ -733,16 +754,29 @@ the context and shutting down the cluster!
 .. parsed-literal::
 
     INFO:root:Starting cluster: ipcluster start --daemonize --quiet --profile=default --n=3
+    2024-12-31 16:41:18.017 [IPController] Hub listening on tcp://127.0.0.1:65265 for registration.
+    2024-12-31 16:41:18.018 [IPController] Hub using DB backend: DictDB
+    2024-12-31 16:41:18.273 [IPController] hub::created hub
+    2024-12-31 16:41:18.273 [IPController] writing connection info to /Users/mforbes/.ipython/profile_default/security/ipcontroller-client.json
+    2024-12-31 16:41:18.275 [IPController] writing connection info to /Users/mforbes/.ipython/profile_default/security/ipcontroller-engine.json
+    2024-12-31 16:41:18.275 [IPController] task::using Python leastload Task scheduler
+    2024-12-31 16:41:18.307 [IPController] Heartmonitor beating every 3000ms
+    2024-12-31 16:41:18.597 [broadcast-01] BroadcastScheduler 01 started
+    2024-12-31 16:41:18.598 [broadcast-00] BroadcastScheduler 00 started
+    2024-12-31 16:41:18.598 [broadcast-0] BroadcastScheduler 0 started
+    2024-12-31 16:41:18.625 [task] Task scheduler started [leastload]
+    2024-12-31 16:41:18.625 [IPController] client::client b'\x00\x80\x00A\xaa' requested 'connection_request'
+    2024-12-31 16:41:18.625 [IPController] client::client [b'\x00\x80\x00A\xaa'] connected
+    2024-12-31 16:41:18.628 [IPController] heartbeat::waiting for subscription
+    2024-12-31 16:41:18.629 [IPController] heartbeat::subscription started
     Leaving cluster running: /Users/mforbes/.ipython/profile_default/security/cluster-.json
     INFO:root:waiting for 3 engines
     INFO:root:0 of 3 running
     INFO:root:3 of 3 running
     INFO:root:Stopping cluster: ipcluster stop --profile=default
-    2022-06-07 11:38:27.128 [IPClusterStop] Stopping cluster 
-    2022-06-07 11:38:27.129 [IPClusterStop] Stopping controller
-    2022-06-07 11:38:27.279 [IPClusterStop] Controller stopped: {'exit_code': None, 'pid': 8997, 'identifier': 'ipcontroller-9044'}
-    2022-06-07 11:38:27.281 [IPClusterStop] Stopping engine(s): 1654627098
-    2022-06-07 11:38:27.710 [IPClusterStop] engine set stopped 1654627098: {'engines': {'0': {'exit_code': None, 'pid': 9010, 'identifier': '0'}, '1': {'exit_code': None, 'pid': 9011, 'identifier': '1'}, '2': {'exit_code': None, 'pid': 9015, 'identifier': '2'}}, 'exit_code': None}
+    2024-12-31 16:41:25.512 [IPClusterStop] Stopping cluster 
+    2024-12-31 16:41:25.512 [IPClusterStop] Stopping controller
+    2024-12-31 16:41:25.599 [IPClusterStop] Stopping engine(s): 1735688478
 
 
 .. parsed-literal::
@@ -822,21 +856,21 @@ then it will match these to the shape of ``z``). Matplotlib now provides
 
 .. parsed-literal::
 
-    CPU times: user 10 ms, sys: 2.64 ms, total: 12.7 ms
-    Wall time: 12.7 ms
-    CPU times: user 101 ms, sys: 1.65 ms, total: 103 ms
-    Wall time: 104 ms
-    CPU times: user 135 ms, sys: 6.21 ms, total: 141 ms
-    Wall time: 141 ms
-    CPU times: user 3.59 ms, sys: 176 µs, total: 3.77 ms
-    Wall time: 3.74 ms
+    CPU times: user 6.26 ms, sys: 1.87 ms, total: 8.13 ms
+    Wall time: 8.85 ms
+    CPU times: user 31.3 ms, sys: 3.68 ms, total: 35 ms
+    Wall time: 200 ms
+    CPU times: user 47.7 ms, sys: 2.04 ms, total: 49.8 ms
+    Wall time: 49.6 ms
+    CPU times: user 1.3 ms, sys: 43 μs, total: 1.34 ms
+    Wall time: 1.35 ms
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.collections.QuadMesh at 0x1241e3850>
+    <matplotlib.collections.QuadMesh at 0x122f6cb00>
 
 
 
@@ -886,8 +920,8 @@ phase of a complex wavefunction.
 
 .. parsed-literal::
 
-    (<matplotlib.contour.QuadContourSet at 0x12506ca60>,
-     <matplotlib.contour.QuadContourSet at 0x124036dc0>)
+    (<matplotlib.contour.QuadContourSet at 0x12362f590>,
+     <matplotlib.contour.QuadContourSet at 0x1255c57c0>)
 
 
 
@@ -953,30 +987,30 @@ Complete code coverage information is provided in
 .. raw:: html
 
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Coverage report</title>
-        <link rel="icon" sizes="32x32" href="favicon_32.png">
-        <link rel="stylesheet" href="style.css" type="text/css">
-        <script type="text/javascript" src="coverage_html.js" defer></script>
+        <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
+        <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
+        <script src="coverage_html_cb_6fb7b396.js" defer></script>
     </head>
     <body class="indexfile">
     <header>
         <div class="content">
             <h1>Coverage report:
-                <span class="pc_cov">82%</span>
+                <span class="pc_cov">86%</span>
             </h1>
             <aside id="help_panel_wrapper">
                 <input id="help_panel_state" type="checkbox">
                 <label for="help_panel_state">
-                    <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts" />
+                    <img id="keyboard_icon" src="keybd_closed_cb_ce680311.png" alt="Show/hide keyboard shortcuts">
                 </label>
                 <div id="help_panel">
                     <p class="legend">Shortcuts on this page</p>
                     <div class="keyhelp">
                         <p>
-                            <kbd>n</kbd>
+                            <kbd>f</kbd>
                             <kbd>s</kbd>
                             <kbd>m</kbd>
                             <kbd>x</kbd>
@@ -995,11 +1029,20 @@ Complete code coverage information is provided in
                 </div>
             </aside>
             <form id="filter_container">
-                <input id="filter" type="text" value="" placeholder="filter..." />
+                <input id="filter" type="text" value="" placeholder="filter...">
+                <div>
+                    <input id="hide100" type="checkbox" >
+                    <label for="hide100">hide covered</label>
+                </div>
             </form>
+            <h2>
+                    <a class="button current">Files</a>
+                    <a class="button" href="function_index.html">Functions</a>
+                    <a class="button" href="class_index.html">Classes</a>
+            </h2>
             <p class="text">
-                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
-                created at 2022-06-07 11:36 -0700
+                <a class="nav" href="https://coverage.readthedocs.io/en/7.6.10">coverage.py v7.6.10</a>,
+                created at 2024-12-29 01:07 -0800
             </p>
         </div>
     </header>
@@ -1007,254 +1050,961 @@ Complete code coverage information is provided in
         <table class="index" data-sortable>
             <thead>
                 <tr class="tablehead" title="Click to sort">
-                    <th class="name left" aria-sort="none" data-shortcut="n">Module</th>
-                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="s">statements</th>
-                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="m">missing</th>
-                    <th aria-sort="none" data-default-sort-order="descending" data-shortcut="x">excluded</th>
-                    <th class="right" aria-sort="none" data-shortcut="c">coverage</th>
+                    <th id="file" class="name left" aria-sort="none" data-shortcut="f">File<span class="arrows"></span></th>
+                    <th id="statements" aria-sort="none" data-default-sort-order="descending" data-shortcut="s">statements<span class="arrows"></span></th>
+                    <th id="missing" aria-sort="none" data-default-sort-order="descending" data-shortcut="m">missing<span class="arrows"></span></th>
+                    <th id="excluded" aria-sort="none" data-default-sort-order="descending" data-shortcut="x">excluded<span class="arrows"></span></th>
+                    <th id="coverage" class="right" aria-sort="none" data-shortcut="c">coverage<span class="arrows"></span></th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6___init___py.html">src/mmfutils/__init__.py</a></td>
-                    <td>20</td>
-                    <td>4</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="16 20">80%</td>
-                </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_containers_py.html">src/mmfutils/containers.py</a></td>
-                    <td>113</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/__init__.py</a></td>
+                    <td>18</td>
                     <td>2</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="111 113">98%</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_contexts_py.html">src/mmfutils/contexts.py</a></td>
-                    <td>199</td>
-                    <td>25</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_containers_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/containers.py</a></td>
+                    <td>113</td>
                     <td>0</td>
-                    <td class="right" data-ratio="174 199">87%</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="113 113">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_debugging_py.html">src/mmfutils/debugging.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_contexts_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/contexts.py</a></td>
+                    <td>313</td>
+                    <td>28</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="285 313">91%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_debugging_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/debugging.py</a></td>
                     <td>49</td>
                     <td>0</td>
                     <td>3</td>
                     <td class="right" data-ratio="49 49">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_interface_py.html">src/mmfutils/interface.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_interface_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
-                    <td>15</td>
+                    <td>16</td>
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78___init___py.html">src/mmfutils/math/__init__.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_eb8720e8ec2674ec___init___py.html">src/mmfutils/math/bases/__init__.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d5c69074a1ed3391___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/bases/__init__.py</a></td>
                     <td>2</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="2 2">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_eb8720e8ec2674ec_bases_py.html">src/mmfutils/math/bases/bases.py</a></td>
-                    <td>458</td>
-                    <td>58</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d5c69074a1ed3391_bases_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/bases/bases.py</a></td>
+                    <td>463</td>
+                    <td>59</td>
                     <td>0</td>
-                    <td class="right" data-ratio="400 458">87%</td>
+                    <td class="right" data-ratio="404 463">87%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_eb8720e8ec2674ec_interfaces_py.html">src/mmfutils/math/bases/interfaces.py</a></td>
-                    <td>37</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d5c69074a1ed3391_interfaces_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/bases/interfaces.py</a></td>
+                    <td>41</td>
                     <td>0</td>
                     <td>0</td>
-                    <td class="right" data-ratio="37 37">100%</td>
+                    <td class="right" data-ratio="41 41">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_eb8720e8ec2674ec_utils_py.html">src/mmfutils/math/bases/utils.py</a></td>
-                    <td>40</td>
-                    <td>11</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d5c69074a1ed3391_utils_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/bases/utils.py</a></td>
+                    <td>28</td>
                     <td>0</td>
-                    <td class="right" data-ratio="29 40">72%</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="28 28">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78_bessel_py.html">src/mmfutils/math/bessel.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c_bessel_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/bessel.py</a></td>
                     <td>132</td>
                     <td>0</td>
                     <td>14</td>
                     <td class="right" data-ratio="132 132">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78_differentiate_py.html">src/mmfutils/math/differentiate.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c_differentiate_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/differentiate.py</a></td>
                     <td>61</td>
+                    <td>2</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="61 61">100%</td>
+                    <td class="right" data-ratio="59 61">97%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_6c95154c693d83f3___init___py.html">src/mmfutils/math/integrate/__init__.py</a></td>
-                    <td>212</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_f46b66d8c9e48fc7___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/integrate/__init__.py</a></td>
+                    <td>215</td>
                     <td>12</td>
                     <td>16</td>
-                    <td class="right" data-ratio="200 212">94%</td>
+                    <td class="right" data-ratio="203 215">94%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78_linalg_py.html">src/mmfutils/math/linalg.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c_linalg_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/linalg.py</a></td>
                     <td>12</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="12 12">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78_special_py.html">src/mmfutils/math/special.py</a></td>
-                    <td>26</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c_special_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/special.py</a></td>
+                    <td>42</td>
+                    <td>12</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="26 26">100%</td>
+                    <td class="right" data-ratio="30 42">71%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_3e34d5763a905f78_wigner_py.html">src/mmfutils/math/wigner.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_a3d06838b9c8763c_wigner_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/math/wigner.py</a></td>
                     <td>20</td>
-                    <td>17</td>
+                    <td>2</td>
                     <td>0</td>
-                    <td class="right" data-ratio="3 20">15%</td>
+                    <td class="right" data-ratio="18 20">90%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_optimize_py.html">src/mmfutils/optimize.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_optimize_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/optimize.py</a></td>
                     <td>26</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="26 26">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_parallel_py.html">src/mmfutils/parallel.py</a></td>
-                    <td>128</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_parallel_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/parallel.py</a></td>
+                    <td>129</td>
                     <td>5</td>
                     <td>8</td>
-                    <td class="right" data-ratio="123 128">96%</td>
+                    <td class="right" data-ratio="124 129">96%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_904e42d388a55e09___init___py.html">src/mmfutils/performance/__init__.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_29592a65330e2fe5___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/performance/__init__.py</a></td>
+                    <td>19</td>
                     <td>0</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="0 0">100%</td>
+                    <td class="right" data-ratio="19 19">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_904e42d388a55e09_blas_py.html">src/mmfutils/performance/blas.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_29592a65330e2fe5_blas_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/performance/blas.py</a></td>
                     <td>58</td>
                     <td>0</td>
                     <td>6</td>
                     <td class="right" data-ratio="58 58">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_904e42d388a55e09_fft_py.html">src/mmfutils/performance/fft.py</a></td>
-                    <td>92</td>
-                    <td>58</td>
-                    <td>6</td>
-                    <td class="right" data-ratio="34 92">37%</td>
-                </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_904e42d388a55e09_numexpr_py.html">src/mmfutils/performance/numexpr.py</a></td>
-                    <td>9</td>
-                    <td>0</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_29592a65330e2fe5_fft_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/performance/fft.py</a></td>
+                    <td>168</td>
+                    <td>5</td>
                     <td>7</td>
-                    <td class="right" data-ratio="9 9">100%</td>
+                    <td class="right" data-ratio="163 168">97%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_904e42d388a55e09_threads_py.html">src/mmfutils/performance/threads.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_29592a65330e2fe5_numexpr_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/performance/numexpr.py</a></td>
                     <td>9</td>
                     <td>0</td>
                     <td>8</td>
                     <td class="right" data-ratio="9 9">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6___init___py.html">src/mmfutils/plot/__init__.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_29592a65330e2fe5_threads_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/performance/threads.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/__init__.py</a></td>
                     <td>5</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="5 5">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_animation_py.html">src/mmfutils/plot/animation.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_animation_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/animation.py</a></td>
                     <td>81</td>
-                    <td>19</td>
+                    <td>18</td>
                     <td>0</td>
-                    <td class="right" data-ratio="62 81">77%</td>
+                    <td class="right" data-ratio="63 81">78%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_cmaps_py.html">src/mmfutils/plot/cmaps.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_cmaps_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/cmaps.py</a></td>
                     <td>10</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="10 10">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_colors_py.html">src/mmfutils/plot/colors.py</a></td>
-                    <td>85</td>
-                    <td>8</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_colors_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/colors.py</a></td>
+                    <td>84</td>
+                    <td>7</td>
                     <td>0</td>
-                    <td class="right" data-ratio="77 85">91%</td>
+                    <td class="right" data-ratio="77 84">92%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_contour_py.html">src/mmfutils/plot/contour.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_contour_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/contour.py</a></td>
                     <td>63</td>
                     <td>24</td>
                     <td>0</td>
                     <td class="right" data-ratio="39 63">62%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_errors_py.html">src/mmfutils/plot/errors.py</a></td>
-                    <td>78</td>
-                    <td>67</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_errors_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/errors.py</a></td>
+                    <td>79</td>
+                    <td>27</td>
                     <td>0</td>
-                    <td class="right" data-ratio="11 78">14%</td>
+                    <td class="right" data-ratio="52 79">66%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_publish_py.html">src/mmfutils/plot/publish.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_publish_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/publish.py</a></td>
+                    <td>326</td>
+                    <td>137</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="189 326">58%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_406f9e27329eddcd_rasterize_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/plot/rasterize.py</a></td>
+                    <td>23</td>
+                    <td>6</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="17 23">74%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3172abb41a3a9bc6___init___py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/solve/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3172abb41a3a9bc6_broyden_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/solve/broyden.py</a></td>
+                    <td>325</td>
+                    <td>66</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="259 325">80%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_d79ac605fce24c24_testing_py.html">.nox/test-3-10/lib/python3.10/site-packages/mmfutils/testing.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/__init__.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_containers_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/containers.py</a></td>
+                    <td>113</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="113 113">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_contexts_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/contexts.py</a></td>
+                    <td>313</td>
+                    <td>28</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="285 313">91%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_debugging_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/debugging.py</a></td>
+                    <td>49</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td class="right" data-ratio="49 49">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_interface_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/interface.py</a></td>
+                    <td>77</td>
+                    <td>0</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="77 77">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_4accd1b72b07cbde___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/bases/__init__.py</a></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="2 2">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_4accd1b72b07cbde_bases_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/bases/bases.py</a></td>
+                    <td>463</td>
+                    <td>59</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="404 463">87%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_4accd1b72b07cbde_interfaces_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/bases/interfaces.py</a></td>
+                    <td>41</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="41 41">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_4accd1b72b07cbde_utils_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/bases/utils.py</a></td>
+                    <td>28</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="28 28">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45_bessel_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/bessel.py</a></td>
+                    <td>132</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="132 132">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45_differentiate_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/differentiate.py</a></td>
+                    <td>61</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="59 61">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1082079def8de7e7___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/integrate/__init__.py</a></td>
+                    <td>215</td>
+                    <td>12</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="203 215">94%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45_linalg_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/linalg.py</a></td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="12 12">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45_special_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/special.py</a></td>
+                    <td>42</td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="30 42">71%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_2ab4bfb8124a6a45_wigner_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/math/wigner.py</a></td>
+                    <td>20</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="18 20">90%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_optimize_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/optimize.py</a></td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="26 26">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_parallel_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/parallel.py</a></td>
+                    <td>129</td>
+                    <td>5</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="124 129">96%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_20a77a2883a54c23___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/performance/__init__.py</a></td>
+                    <td>19</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="19 19">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_20a77a2883a54c23_blas_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/performance/blas.py</a></td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td>6</td>
+                    <td class="right" data-ratio="58 58">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_20a77a2883a54c23_fft_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/performance/fft.py</a></td>
+                    <td>168</td>
+                    <td>5</td>
+                    <td>7</td>
+                    <td class="right" data-ratio="163 168">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_20a77a2883a54c23_numexpr_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/performance/numexpr.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_20a77a2883a54c23_threads_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/performance/threads.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/__init__.py</a></td>
+                    <td>5</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="5 5">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_animation_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/animation.py</a></td>
+                    <td>81</td>
+                    <td>16</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="65 81">80%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_cmaps_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/cmaps.py</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="10 10">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_colors_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/colors.py</a></td>
+                    <td>84</td>
+                    <td>7</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="77 84">92%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_contour_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/contour.py</a></td>
+                    <td>63</td>
+                    <td>24</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="39 63">62%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_errors_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/errors.py</a></td>
+                    <td>79</td>
+                    <td>27</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="52 79">66%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_publish_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/publish.py</a></td>
+                    <td>326</td>
+                    <td>137</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="189 326">58%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_7348379a055a9ba7_rasterize_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/plot/rasterize.py</a></td>
+                    <td>23</td>
+                    <td>6</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="17 23">74%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e8e3792c39eb018a___init___py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/solve/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e8e3792c39eb018a_broyden_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/solve/broyden.py</a></td>
+                    <td>325</td>
+                    <td>66</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="259 325">80%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_37318ec43babbc61_testing_py.html">.nox/test-3-11/lib/python3.11/site-packages/mmfutils/testing.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/__init__.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_containers_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/containers.py</a></td>
+                    <td>113</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="113 113">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_contexts_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/contexts.py</a></td>
+                    <td>312</td>
+                    <td>27</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="285 312">91%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_debugging_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/debugging.py</a></td>
+                    <td>49</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td class="right" data-ratio="49 49">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_interface_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/interface.py</a></td>
+                    <td>77</td>
+                    <td>0</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="77 77">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_c3712e7c3a436e01___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/bases/__init__.py</a></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="2 2">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_c3712e7c3a436e01_bases_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/bases/bases.py</a></td>
+                    <td>463</td>
+                    <td>59</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="404 463">87%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_c3712e7c3a436e01_interfaces_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/bases/interfaces.py</a></td>
+                    <td>41</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="41 41">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_c3712e7c3a436e01_utils_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/bases/utils.py</a></td>
+                    <td>28</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="28 28">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242_bessel_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/bessel.py</a></td>
+                    <td>132</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="132 132">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242_differentiate_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/differentiate.py</a></td>
+                    <td>61</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="59 61">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_bf5d796325f94311___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/integrate/__init__.py</a></td>
+                    <td>215</td>
+                    <td>12</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="203 215">94%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242_linalg_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/linalg.py</a></td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="12 12">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242_special_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/special.py</a></td>
+                    <td>42</td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="30 42">71%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_1f41b71b360dc242_wigner_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/wigner.py</a></td>
+                    <td>20</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="18 20">90%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_optimize_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/optimize.py</a></td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="26 26">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_parallel_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/parallel.py</a></td>
+                    <td>129</td>
+                    <td>5</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="124 129">96%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_292b785e7e29d698___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/performance/__init__.py</a></td>
+                    <td>19</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="19 19">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_292b785e7e29d698_blas_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/performance/blas.py</a></td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td>6</td>
+                    <td class="right" data-ratio="58 58">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_292b785e7e29d698_fft_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/performance/fft.py</a></td>
+                    <td>168</td>
+                    <td>5</td>
+                    <td>7</td>
+                    <td class="right" data-ratio="163 168">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_292b785e7e29d698_numexpr_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/performance/numexpr.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_292b785e7e29d698_threads_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/performance/threads.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/__init__.py</a></td>
+                    <td>5</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="5 5">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_animation_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/animation.py</a></td>
+                    <td>81</td>
+                    <td>18</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="63 81">78%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_cmaps_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/cmaps.py</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="10 10">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_colors_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/colors.py</a></td>
+                    <td>84</td>
+                    <td>7</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="77 84">92%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_contour_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/contour.py</a></td>
+                    <td>63</td>
+                    <td>24</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="39 63">62%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_errors_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/errors.py</a></td>
+                    <td>79</td>
+                    <td>27</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="52 79">66%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_publish_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/publish.py</a></td>
+                    <td>326</td>
+                    <td>137</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="189 326">58%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_97c7e4624ef219ca_rasterize_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/rasterize.py</a></td>
+                    <td>23</td>
+                    <td>6</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="17 23">74%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_f3231d1114133c0b___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/solve/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_f3231d1114133c0b_broyden_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/solve/broyden.py</a></td>
+                    <td>325</td>
+                    <td>66</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="259 325">80%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_430eb520d66b91e6_testing_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/testing.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/__init__.py</a></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="16 18">89%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_containers_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/containers.py</a></td>
+                    <td>113</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="113 113">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_contexts_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/contexts.py</a></td>
+                    <td>312</td>
+                    <td>27</td>
+                    <td>2</td>
+                    <td class="right" data-ratio="285 312">91%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_debugging_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/debugging.py</a></td>
+                    <td>49</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td class="right" data-ratio="49 49">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_interface_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/interface.py</a></td>
+                    <td>77</td>
+                    <td>0</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="77 77">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/__init__.py</a></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="0 0">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e4da03c3f7bf123e___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/bases/__init__.py</a></td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="2 2">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e4da03c3f7bf123e_bases_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/bases/bases.py</a></td>
+                    <td>463</td>
+                    <td>59</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="404 463">87%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e4da03c3f7bf123e_interfaces_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/bases/interfaces.py</a></td>
+                    <td>41</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="41 41">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_e4da03c3f7bf123e_utils_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/bases/utils.py</a></td>
+                    <td>28</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="28 28">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00_bessel_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/bessel.py</a></td>
+                    <td>131</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td class="right" data-ratio="131 131">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00_differentiate_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/differentiate.py</a></td>
+                    <td>61</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="59 61">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_434a14a59d2b7650___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/integrate/__init__.py</a></td>
+                    <td>213</td>
+                    <td>12</td>
+                    <td>16</td>
+                    <td class="right" data-ratio="201 213">94%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00_linalg_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/linalg.py</a></td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="12 12">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00_special_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/special.py</a></td>
+                    <td>42</td>
+                    <td>12</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="30 42">71%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_82e13d4a02664b00_wigner_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/math/wigner.py</a></td>
+                    <td>20</td>
+                    <td>2</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="18 20">90%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_optimize_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/optimize.py</a></td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="26 26">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_parallel_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/parallel.py</a></td>
+                    <td>128</td>
+                    <td>5</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="123 128">96%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_fceb832163e82c1b___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/performance/__init__.py</a></td>
+                    <td>19</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="19 19">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_fceb832163e82c1b_blas_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/performance/blas.py</a></td>
+                    <td>58</td>
+                    <td>0</td>
+                    <td>6</td>
+                    <td class="right" data-ratio="58 58">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_fceb832163e82c1b_fft_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/performance/fft.py</a></td>
+                    <td>168</td>
+                    <td>5</td>
+                    <td>7</td>
+                    <td class="right" data-ratio="163 168">97%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_fceb832163e82c1b_numexpr_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/performance/numexpr.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_fceb832163e82c1b_threads_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/performance/threads.py</a></td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td class="right" data-ratio="9 9">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/__init__.py</a></td>
+                    <td>5</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="5 5">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_animation_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/animation.py</a></td>
+                    <td>81</td>
+                    <td>18</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="63 81">78%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_cmaps_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/cmaps.py</a></td>
+                    <td>10</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="10 10">100%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_colors_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/colors.py</a></td>
+                    <td>85</td>
+                    <td>8</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="77 85">91%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_contour_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/contour.py</a></td>
+                    <td>63</td>
+                    <td>24</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="39 63">62%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_errors_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/errors.py</a></td>
+                    <td>78</td>
+                    <td>26</td>
+                    <td>0</td>
+                    <td class="right" data-ratio="52 78">67%</td>
+                </tr>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_publish_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/publish.py</a></td>
                     <td>327</td>
                     <td>139</td>
                     <td>0</td>
                     <td class="right" data-ratio="188 327">57%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_rasterize_py.html">src/mmfutils/plot/rasterize.py</a></td>
-                    <td>29</td>
-                    <td>1</td>
+                <tr class="region">
+                    <td class="name left"><a href="z_3622dda1e2759c5f_rasterize_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/plot/rasterize.py</a></td>
+                    <td>23</td>
+                    <td>6</td>
                     <td>0</td>
-                    <td class="right" data-ratio="28 29">97%</td>
+                    <td class="right" data-ratio="17 23">74%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_741a542e2fc1e4b6_sparkline_py.html">src/mmfutils/plot/sparkline.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_46d366db1deca0d6___init___py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/solve/__init__.py</a></td>
                     <td>0</td>
                     <td>0</td>
                     <td>0</td>
                     <td class="right" data-ratio="0 0">100%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_b8e9249e6a4792af___init___py.html">src/mmfutils/solve/__init__.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_46d366db1deca0d6_broyden_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/solve/broyden.py</a></td>
+                    <td>325</td>
+                    <td>66</td>
                     <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="0 0">100%</td>
+                    <td class="right" data-ratio="259 325">80%</td>
                 </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_b8e9249e6a4792af_broyden_py.html">src/mmfutils/solve/broyden.py</a></td>
-                    <td>319</td>
-                    <td>64</td>
-                    <td>0</td>
-                    <td class="right" data-ratio="255 319">80%</td>
-                </tr>
-                <tr class="file">
-                    <td class="name left"><a href="d_5f1563ee9ba979c6_testing_py.html">src/mmfutils/testing.py</a></td>
+                <tr class="region">
+                    <td class="name left"><a href="z_24cb80c982ce9cd7_testing_py.html">.nox/test-3-9/lib/python3.9/site-packages/mmfutils/testing.py</a></td>
                     <td>18</td>
                     <td>2</td>
                     <td>2</td>
@@ -1264,10 +2014,10 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>2795</td>
-                    <td>516</td>
-                    <td>85</td>
-                    <td class="right" data-ratio="2279 2795">82%</td>
+                    <td>12068</td>
+                    <td>1656</td>
+                    <td>424</td>
+                    <td class="right" data-ratio="10412 12068">86%</td>
                 </tr>
             </tfoot>
         </table>
@@ -1278,16 +2028,16 @@ Complete code coverage information is provided in
     <footer>
         <div class="content">
             <p>
-                <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4.1</a>,
-                created at 2022-06-07 11:36 -0700
+                <a class="nav" href="https://coverage.readthedocs.io/en/7.6.10">coverage.py v7.6.10</a>,
+                created at 2024-12-29 01:07 -0800
             </p>
         </div>
         <aside class="hidden">
-            <a id="prevFileLink" class="nav" href="d_5f1563ee9ba979c6_testing_py.html"/>
-            <a id="nextFileLink" class="nav" href="d_5f1563ee9ba979c6___init___py.html"/>
-            <button type="button" class="button_prev_file" data-shortcut="["/>
-            <button type="button" class="button_next_file" data-shortcut="]"/>
-            <button type="button" class="button_show_hide_help" data-shortcut="?"/>
+            <a id="prevFileLink" class="nav" href="z_24cb80c982ce9cd7_testing_py.html"></a>
+            <a id="nextFileLink" class="nav" href="z_d79ac605fce24c24___init___py.html"></a>
+            <button type="button" class="button_prev_file" data-shortcut="["></button>
+            <button type="button" class="button_next_file" data-shortcut="]"></button>
+            <button type="button" class="button_show_hide_help" data-shortcut="?"></button>
         </aside>
     </footer>
     </body>
@@ -1298,6 +2048,34 @@ Complete code coverage information is provided in
 
 Change Log
 ==========
+
+REL: 0.7.0
+----------
+
+-  Fully support Python 3.9 through 3.13 with working tests on GitHub
+   CI. (Resolves issue #34.)
+-  Working documentation build on GitLab CI.
+-  Provide a len() method for FPS() so that it works better with
+   e.g. tqdm.
+
+REL: 0.6.7
+----------
+
+-  Add derivative ``d=1`` support for step and mstep. Remove floating
+   point warning.
+-  Improved FPS context: better sleeping timing and default timeout
+   behavior.
+-  Drop support for python 3.9 and below. (Could work, but dependencies
+   need careful thought and version pinning.)
+-  Added IBasisCutoff to allow working with the Galerkin projected GPE.
+-  Updated some tests to work with new Numpy formatting (See `NEP
+   51 <https://numpy.org/neps/nep-0051-scalar-representation.html>`__.)
+-  Fixed broken rasterization in contourf but should be unnecessary in
+   the future (see
+   https://github.com/matplotlib/matplotlib/issues/27669).
+-  Improved ``performance.auto_timeit``.
+-  Revert to installing pyfftw from default repo now that `issue
+   303 <https://github.com/pyFFTW/pyFFTW/issues/303>`__ is fixed.
 
 REL: 0.6.6
 ----------

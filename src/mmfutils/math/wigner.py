@@ -3,6 +3,7 @@
 This module contains some FFT-based routines for computing the
 Wigner-Ville distribution.
 """
+
 import numpy as np
 
 from mmfutils.performance.fft import fft, ifft
@@ -51,4 +52,4 @@ def wigner_ville(psi, dt=1, make_analytic=False, skip=1, pad=True):
     P = 2 * fft(Psi, axis=-1).real[:N, :] * dt
     P = np.fft.fftshift(P, axes=-1)
     ws = np.fft.fftshift(ws)
-    return ws, P * dt
+    return ws, N * P * dt

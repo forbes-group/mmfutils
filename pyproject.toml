@@ -1,154 +1,127 @@
-[tool.poetry]
+[project]
 name = "mmfutils"
-version = "0.6.7"
+version = "0.7.0"
 description = "Small set of utilities: containers and interfaces."
-authors = ["Michael McNeil Forbes <michael.forbes+python@gmail.com>"]
-license = "BSD-3"
+license = {text = "BSD-3-Clause"}
+authors = [
+  {name = "Michael McNeil Forbes", email = "michael.forbes+python@gmail.com>"},
+]
 readme = "description.md"
-repository = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils"
-documentation = "http://mmfutils.readthedocs.org"
+repository = "https://gitlab.com/forbes-group/mmfutils"
+documentation = "http://mmfutils.readthedocs.org/"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-
-
-[tool.poetry.dependencies]
-python = ">3.9,<3.14"
-"zope.interface" = ">=5.4.0"
-husl = ">=4.0.3"
-importlib-metadata = {version = ">=4.13.0", python="<3.8"}
+requires-python = ">=3.9,<3.14"
+dependencies = [
+  'zope.interface >= 5.5.2',
+  'husl >= 4.0.3',
+  'importlib-metadata >= 4.13.0; python_version < "3.8"',
+  "uncertainties >= 3.2.2",
+]
 
 # Optional dependencies for testing, building the docs, etc.
-Sphinx = { version = ">=5.0", optional = true}
-ipyparallel = {version = ">=8.4.1", optional = true}
-mmf-setup = {version = ">=0.4.6", optional = true}
-mock = {version = ">=4.0.3", optional = true}
-nbconvert = {version = ">=7.2.7", optional = true}
-numba = [
-    {version = ">=0.56.4", python = "<3.8", optional = true},
-    {version = ">=0.57.0", python = ">=3.8", optional = true}
-]
-numexpr = {version = ">=2.8.1", optional = true}
-persist = {version = ">=3.0", optional = true}
-psutil = {version = ">=5.9.1", optional = true}
-pyFFTW = [
-    {version = ">=0.13.0", python = "<3.8", optional = true},
-    # Depend on source until the fix for https://github.com/pyFFTW/pyFFTW/issues/303 is released
-    #{version = ">0.13.1", python = ">=3.8", optional = true}
-    #{ git = "https://github.com/pyFFTW/pyFFTW.git", branch= "master", python = ">=3.8", optional = true}
-    # See https://github.com/pyFFTW/pyFFTW/pull/363
-    #{ git = "https://github.com/karlotness/pyFFTW.git", branch = "linker-flags", python = ">=3.8", optional = true}
-]
-pytest = {version = ">=7.1.2", optional = true}
-pytest-cov = {version = ">=3.0.0", optional = true}
-#docutils = {version = ">=0.20.1", optional = true}
-docutils = {version = ">=0.18.1", optional = true}
-sphinx-rtd-theme = {version = ">=1.2.1", optional = true}
-sphinxcontrib-zopeext = {version = ">=0.4.3", optional = true}
-uncertainties = {version = ">=3.1.5", optional = true}
-pytest-rerunfailures = {version = ">=11.1.2", optional = true}
-
-# https://numpy.org/doc/stable/release/1.22.0-notes.html#python-3-7-is-no-longer-supported
-numpy = [
-    {version = ">=1.20.2,<1.22.0", python="<3.8", optional = true},
-    {version = ">=1.23.5", python=">=3.8", optional = true},
-]
-
-# https://matplotlib.org/stable/api/prev_api_changes/api_changes_3.6.0.html#increase-to-minimum-supported-versions-of-dependencies
-matplotlib = [
-    {version = ">=3.5.3", python="<3.8", optional = true},
-    {version = ">=3.6.2", python=">=3.8", optional = true},
-]
-scipy = [
-    {version = ">=1.7.3", python=">=3.7,<3.8", optional = true},
-    {version = ">=1.8.1", python=">=3.8", optional = true},
-    {version = ">=1.10.1", python=">=3.11", optional = true},
-]
-
-sympy = [
-    {version = ">=1.12", python=">=3.8", optional = true},
-]
-jupytext = {version = ">=1.14.7", optional = true }
-notebook = {version = ">=6.5.4", optional = true }
-ipywidgets = {version = ">=8.0.6", optional = true}
-more-itertools = "^10.1.0"
-
-[tool.poetry.extras]
-all = [
-    "docutils",                 # Used by interfaces
-    "uncertainties",            # Used by optimize
-    "ipyparallel",              # Used by parallel
-    "matplotlib",               # Used by plot
-    "pyFFTW",                   # Used by performance
-    "numexpr",                  # Used by performance
-    "scipy",                    # Used by math, solve, plot, optimize, performance
-    # "numba",  # Only used for ssum... which is a proof of principle.
-]
+[project.optional-dependencies]
 test = [
-    "pytest",
-    "pytest-cov",
-    "pytest-flake8",
-    "pytest-xdist",
-    "pytest-rerunfailures",
-    "ipyparallel",
-    "persist",
-    "scipy",
-    "matplotlib",
-    "numexpr",
-    "uncertainties",
-    "pyFFTW",
-    "numba",
-    "docutils",
-    "psutil",
-
-    "jupytext",
-    "notebook",
-    "ipywidgets",
-    "sympy",
+    'pytest >= 7.2.2',
+    'pytest-cov >= 4.0.0',
+    'pytest-xdist >= 3.2.1',
+    'mmf-setup >= 0.4.6',
+    'mock >= 4.0.3',
+    "persist >= 3.2.1",
+    'psutil >= 5.9.4',
+    'pytest-rerunfailures >= 11.1.2',
+    'mmfutils[full,doc]',
 ]
 
 doc = [
-    "Sphinx",
-    "mock",
-    #"sphinx-rtd-theme",
-    "sphinxcontrib.zopeext",
-    "numpy",
-    "matplotlib",
-    "mmf_setup",
-    "nbconvert",
+  'nbconvert >=7.2.7',
+  'docutils >= 0.18.1',
+  'mock >= 4.0.3',
+  #docutils' >=0.20.1',
+  # 'sphinx < 5.0.0'
+  'sphinx >= 7.1.2; python_version < "3.9"',
+  'sphinx >= 7.2.6; python_version >= "3.9"',
+  'sphinx-rtd-theme >= 1.2.1',
+  'sphinxcontrib-zopeext >= 0.4.3',
+  'matplotlib >= 3.5.3', #; python_version < "3.11"',
 ]
 
-[tool.poetry.urls]
-"Issues" = "https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues"
-"Git Mirror" = "https://github.com/forbes-group/mmfutils"
-
-[tool.poetry.dev-dependencies]
-ipython = [
-    {version = ">=7.34.0", python="<3.8"},
-    {version = "*", python=">=3.8"}
+parallel = [
+    'ipyparallel >= 8.4.1',
 ]
-traitlets = { version = "*", python = ">=3.8" }
-nbconvert = ">=7.2.7"
-pandoc = ">=2.3"
 
+pyfftw = [
+  "pyfftw>=0.14.0",
+  # On my Mac OS ARM, I need to install from source for performance.
+  # TODO: Not sure how to specify this on PyPI.
+  #'pyFFTW >= 0.13.0; python_version <"3.8"',
+  #"pyfftw>=0.14.0 ; sys_platform != 'darwin' or platform_machine != 'arm64'",
+  #"pyFFTW @ git+https://github.com/pyFFTW/pyFFTW.git#egg=master ; python_version > '3.8' and sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
 
-#black = ">=21.4b2"
-#mercurial = { version = ">=5.7.1", optional = true }
-#hg-git = { version = ">=0.10.0", optional = true }
-#hg-evolve = { version = ">=10.3.1", optional = true }
-#nbconvert = ">=6.0.7"
+numba = [
+  "numba >= 0.56.4; python_version < '3.8'",
+  "numba >= 0.60.0; python_version >= '3.8' and python_version < '3.13'",
+  "numba >= 0.61.0rc1; python_version >= '3.13'", 
+]
 
-# These are installed by mmf_setup, but we include them here for demonstration purposes.
-# [tools.poetry.scripts]
-# mmf_setup = "mmf_setup.cli.mmf_setup:main"
-# mmf_initial_setup = "mmf_setup.cli.mmf_initial_setup:main"
+perf = [
+  'numexpr >= 2.8.1',
+  "Cython>=3.0.11",
+  'mmfutils[pyfftw,numba,parallel]',
+]
+
+# Support for jupyter notebooks with extensions.
+notebook = [
+    'black >= 23.12.1',
+    'notebook < 7',
+    'jupytext >= 1.16.1',
+    'RISE >= 5.7.1',
+    'jupyter-contrib-nbextensions >= 0.7.0',
+    'nbclassic >= 1.0.0',
+    'jupyter-console>=6.6.3',
+    'jupyter-server<2',  # https://github.com/jupyter/notebook/issues/6702
+    'ipywidgets>=8.1.5',
+    'tqdm',
+]
+
+full = [
+    "scipy >= 1.7.3; python_version < '3.8'",
+    "scipy >= 1.10.1; python_version >= '3.8' and python_version < '3.9'",
+    "scipy >= 1.13.1; python_version >= '3.9' and python_version < '3.10'",
+    "scipy >= 1.14.1; python_version >= '3.10'",
+    'matplotlib >= 3.5.3', #; python_version < "3.11"',
+    'docutils >= 0.19',
+    'mmfutils[perf]',
+]
+
+all = [
+    "mmfutils[full,test,doc,notebook]",
+]
+
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "ipython >= 7.34.0",
+    "nbconvert >= 7.2.7",
+    "pandoc >= 2.3",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 ######################################################################
 # PyTest
@@ -183,6 +156,15 @@ doctest_optionflags = [
     "ELLIPSIS",
     "NORMALIZE_WHITESPACE"
     ]
+
+[tool.coverage.run]
+relative_files = true  # Remove the .nox/test-3-10 etc. prefix.
+#parallel = true        # Needed to generate .coverage.* files for each process
+source = ["mmfutils"]  # This the installed package.
+omit = ["*/tests/*"]   # Don't cover tests.
+
+[tool.coverage.html]
+directory = "build/_coverage"
 
 ######################################################################
 # Black

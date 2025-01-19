@@ -7,7 +7,7 @@ package:
 source:
   path: .
   #hg_rev: {{ version }}
-  #hg_url: ssh://bitbucket.org/mforbes/mmfutils-fork
+  #hg_url: https://gitlab.com/forbes-group/mmfutils
 
 build:
   number: 0
@@ -60,10 +60,10 @@ test:
     - pytest -n4
 
 about:
-  home: https://bitbucket.org/mforbes/mmfutils
+  home: https://gitlab.com/forbes-group/mmfutils
   license: BSD
   license_family: BSD
   license_file: LICENSE.txt
   summary: Small set of utilities, containers, and interfaces.
-  doc_url: http://mmfutils.readthedocs.org
-  dev_url: https://bitbucket.org/mforbes/mmfutils-fork
+  doc_url: https://mmfutils.readthedocs.io/en/latest/
+  dev_url: https://gitlab.com/forbes-group/mmfutils

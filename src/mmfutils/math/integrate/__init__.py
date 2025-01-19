@@ -2,6 +2,7 @@
 """
 
 import itertools
+from functools import reduce
 import logging
 import warnings
 
@@ -64,7 +65,7 @@ def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL, limit=1000, points=None, **k
             epsrel=epsrel,
             limit=limit,
             points=points,
-            **kwargs
+            **kwargs,
         )
     else:
         midp = max(points)
@@ -78,7 +79,7 @@ def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL, limit=1000, points=None, **k
             epsrel=epsrel,
             limit=limit,
             points=points,
-            **kwargs
+            **kwargs,
         )
 
         (y1, err1) = sp.integrate.quad(
@@ -91,7 +92,7 @@ def quad(f, a, b, epsabs=_ABS_TOL, epsrel=_REL_TOL, limit=1000, points=None, **k
             epsrel=epsrel,
             limit=limit,
             points=None,
-            **kwargs
+            **kwargs,
         )
         y = y0 + y1
         err = err0 + err1
@@ -588,8 +589,10 @@ def ssum_python(xs):
     >>> N = 10000
     >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
-    >>> (float(ssum_python(l)[0]) - ans, sum(l) - ans)
+    >>> (float(ssum_python(l)[0]) - ans, reduce(float.__add__, l) - ans)
     (0.0, -5632.0)
+
+    Note: As of python 12, it seems like the builtin sum(l) does this.
     """
     sum = 0.0
     carry = 0.0
@@ -615,7 +618,7 @@ if numba:
         >>> N = 10000
         >>> l = np.array([(10.0*n)**3.0 for n in reversed(range(N+1))])
         >>> ans = 250.0*((N + 1.0)*N)**2
-        >>> (float(ssum_numba(l)[0]) - ans, float(sum(l)) - ans)
+        >>> (float(ssum_numba(l)[0]) - ans, float(reduce(float.__add__, l) - ans))
         (0.0, -5632.0)
 
         Should run less than 8 times slower than a regular sum.
@@ -662,7 +665,7 @@ def ssum(xs):
     >>> N = 10000
     >>> l = [(10.0*n)**3.0 for n in reversed(range(N+1))]
     >>> ans = 250.0*((N + 1.0)*N)**2
-    >>> (float(ssum(l)[0]) - ans, sum(l) - ans)
+    >>> (float(ssum(l)[0]) - ans, reduce(float.__add__, l) - ans)
     (0.0, -5632.0)
 
     Here is an example of the Harmonic series.  Series such as these

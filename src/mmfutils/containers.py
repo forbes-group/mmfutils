@@ -484,8 +484,8 @@ class ContainerDict(Container, abc.MutableMapping):
     >>> c['a'] = 2
     >>> c.a
     2
-    >>> OrderedDict(c)
-    OrderedDict([('a', 2), ('b', 'Hi')])
+    >>> list(OrderedDict(c).items())
+    [('a', 2), ('b', 'Hi')]
     """
 
     # Methods required by abc.Iterable

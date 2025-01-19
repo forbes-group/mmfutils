@@ -5,7 +5,8 @@ mergemarkers = detailed
 
 [paths]
 #default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
-default = ssh://heptapod/forbes-group/mmfutils
+#default = ssh://heptapod/forbes-group/mmfutils
+default = git@gitlab.com:forbes-group/mmfutils.git
 
 # Default to the current revision (`.`) when pushing to `default`. 
 default:pushrev = .
@@ -16,6 +17,7 @@ qcom = commit
 [hooks]
 pre-commit.readme = jupyter nbconvert --to=rst --output=README.rst doc/README.ipynb
 pre-commit.black = hg status -ma | cut -c3- | grep ".py$" | while read f; do black "$f"; done
+pre-commit.workflows = make workflows
 #pre-commit.runtests = python -O setup.py test
 
 [commands]

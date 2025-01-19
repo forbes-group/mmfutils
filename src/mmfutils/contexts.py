@@ -698,21 +698,35 @@ class FPS_Frames:
 
     def __init__(self, interrupted, the_frames_or_frames, max_fps, max_tics):
         self.interrupted = interrupted
-
-        try:  # Do we have a length?
-            self.frames = len(the_frames_or_frames)
-            self.the_frames = the_frames_or_frames
-        except TypeError:  # No.  Infinite/indefinite or number
-            try:
-                self.the_frames = iter(the_frames_or_frames)
-                self.frames = None
-            except TypeError:  # Not an iterator.  Delegate to range().
-                self.the_frames = range(the_frames_or_frames)
-                self.frames = the_frames_or_frames
-
+        self.frames, self.the_frames = self.get_frames_and_the_frames(
+            the_frames_or_frames
+        )
         self.max_tics = max_tics
         self.max_fps = max_fps
         self._reset()
+
+    @staticmethod
+    def get_frames_and_the_frames(the_frames_or_frames):
+        """Return `(frames, the_frames)`.
+
+        Returns
+        -------
+        frames : int or None
+            Number of frames if finite or know, otherwise None.
+        the_frames : iterable
+            The actual frames.
+        """
+        try:  # Do we have a length?
+            frames = len(the_frames_or_frames)
+            the_frames = the_frames_or_frames
+        except TypeError:  # No.  Infinite/indefinite or number
+            try:
+                the_frames = iter(the_frames_or_frames)
+                frames = None
+            except TypeError:  # Not an iterator.  Delegate to range().
+                the_frames = range(the_frames_or_frames)
+                frames = the_frames_or_frames
+        return frames, the_frames
 
     def _reset(self):
         self._frame = -1
@@ -938,3 +952,9 @@ class FPS:
             return getattr(self._frames_obj, key)
         else:
             return super().__getattr__(key)
+
+    def __len__(self):
+        frames, the_frames = FPS_Frames.get_frames_and_the_frames(self.frames)
+        if frames is None:
+            raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+        return frames

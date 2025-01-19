@@ -4,6 +4,10 @@ import subprocess
 
 import nox
 
+# These are the version of python we will test against by default.  You can override
+# this when calling nox, and the Makefile does this.
+python_versions = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
 # import sys
 # sys.path.append(".")
 # from noxutils import get_versions
@@ -21,9 +25,9 @@ os.environ["PYTHONNOUSERSITE"] = "1"
 # By default, we only execute the conda tests because the others required various python
 # interpreters to be installed.  The other tests can be run, e.g., with `nox -s test` if
 # desired.
-nox.options.sessions = ["test_conda"]
+nox.options.sessions = ["test"]
 
-args = dict(python=["3.7", "3.8", "3.9", "3.10", "3.11"], reuse_venv=True)
+args = dict(python=python_versions, reuse_venv=True)
 
 # Note: On new Mac's (ARM) one must use test for python <3.8, unless special effort is
 # made to ensure conda chooses the correct channel:

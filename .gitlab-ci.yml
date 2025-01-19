@@ -1,0 +1,16 @@
+image: ubuntu:24.10
+
+build-docs:
+  script:
+    - apt-get update && apt-get install -y build-essential curl wget git libfftw3-dev pandoc
+                                           #ffmpeg texlive-full
+    # - EXTRAS=doc make tools
+    - bash <(curl -L micro.mamba.pm/install.sh)
+    # - source ~/.bashrc  # This does not work in CI for some reason.  Not a login shell?
+    - export PATH=/root/.local/bin/:${PATH}
+    - EXTRAS=doc make html
+    - mv doc/build/html public
+  pages: true  # specifies that this is a Pages job
+  artifacts:
+    paths:
+      - public

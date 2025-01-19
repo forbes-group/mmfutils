@@ -1078,7 +1078,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         shape_xyz = n.shape[:-1] + (Ny, Nz)
         rs = np.sqrt(y.ravel()[bcast_y] ** 2 + z[bcast_z] ** 2)
         n_xyz = (abs(self.Psi(np.sqrt(n), (x, rs.ravel()))) ** 2).reshape(shape_xyz)
-        n_2D = 2 * np.trapz(n_xyz, z, axis=-1)
+        n_2D = 2 * np.trapezoid(n_xyz, z, axis=-1)
         return n_2D
 
 
@@ -1480,6 +1480,6 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
         shape_xyz = n.shape[:-1] + (Ny, Nz)
         rs = np.sqrt(y.ravel()[bcast_y] ** 2 + z[bcast_z] ** 2)
         n_xyz = (abs(self.Psi(np.sqrt(n), (x, rs.ravel()))) ** 2).reshape(shape_xyz)
-        n_2D = 2 * np.trapz(n_xyz, z, axis=-1)
+        n_2D = 2 * np.trapezoid(n_xyz, z, axis=-1)
         return n_2D
 '''
