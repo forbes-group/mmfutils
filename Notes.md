@@ -1471,6 +1471,17 @@ You must make sure that `make rtd` puts the generated documentation in `$READTHE
 
 ## Jupyter Book
 
+### API Documentation
+
+We use [`sphinx.ext.autodoc`][] to document our source code.  This requires that you
+provide a skeleton for your API documentation.  For example, you might include:
+
+```{markdown}
+:::{automodule}
+```
+
+[`sphinx.ext.autodoc`]: <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>
+
 ### Images
 
 There are several ways to include images in your documents. ([JB Images and figures][]).
@@ -2074,7 +2085,13 @@ To do this, we advocate the following procedure.
    Heptapod, it will vanish, breaking our [MyPI][] index.
    
 8. **Publish on PyPI**: Publish the released version on
-   [PyPI](https://pypi.org/project/mmfutils/) using
+   [PyPI](https://pypi.org/project/mmfutils/) using [PDM][]:
+   
+   ```bash
+   pdm publish
+   ```
+   
+   
    [twine](https://pypi.org/project/twine/) 
 
     ```bash
