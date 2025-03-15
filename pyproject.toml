@@ -7,7 +7,7 @@ authors = [
   {name = "Michael McNeil Forbes", email = "michael.forbes+python@gmail.com>"},
 ]
 readme = "description.md"
-repository = "https://gitlab.com/forbes-group/mmfutils"
+repository = "https://gitlab.com/ColdAtoms/utilities/mmfutils"
 documentation = "http://mmfutils.readthedocs.org/"
 classifiers = [
     "Development Status :: 4 - Beta",

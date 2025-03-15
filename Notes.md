@@ -1611,9 +1611,9 @@ reviews.  For this one, I mirror everything.
 
 Summary:
 
-* <https://gitlab.com/forbes-group/mmfutils>: Main development repository.  This is
-  where [Issues](https://gitlab.com/forbes-group/mmfutils/-/issues), [Merge
-  Requests](https://gitlab.com/forbes-group/mmfutils/-/merge_requests) etc. should
+* <https://gitlab.com/ColdAtoms/utilities/mmfutils>: Main development repository.  This is
+  where [Issues](https://gitlab.com/ColdAtoms/utilities/mmfutils/-/issues), [Merge
+  Requests](https://gitlab.com/ColdAtoms/utilities/mmfutils/-/merge_requests) etc. should
   be reported here.
   
   **Note:** This was copied using repository export from our [Heptapod][] server
@@ -2804,7 +2804,7 @@ Docker Hub][] to do this.
 [GitLab CI]: <https://docs.gitlab.com/ee/ci/>
 [skip GitLab CI] <https://docs.gitlab.com/ee/ci/pipelines/#skip-a-pipeline>
 [Settings/Repository/Protected branches]: <
-  https://gitlab.com/forbes-group/mmfutils/-/settings/repository#js-protected-branches-settings>
+  https://gitlab.com/ColdAtoms/utilities/mmfutils/-/settings/repository#js-protected-branches-settings>
 
 ### Running Locally
 

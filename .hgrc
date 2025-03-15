@@ -6,7 +6,7 @@ mergemarkers = detailed
 [paths]
 #default = ssh://git@hg.iscimath.org:11022/forbes-group/mmfutils
 #default = ssh://heptapod/forbes-group/mmfutils
-default = git@gitlab.com:forbes-group/mmfutils.git
+default = git@gitlab.com:coldatoms/utilities/mmfutils.git
 
 # Default to the current revision (`.`) when pushing to `default`. 
 default:pushrev = .

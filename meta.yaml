@@ -60,10 +60,10 @@ test:
     - pytest -n4
 
 about:
-  home: https://gitlab.com/forbes-group/mmfutils
+  home: https://gitlab.com/ColdAtoms/utilities/mmfutils
   license: BSD
   license_family: BSD
   license_file: LICENSE.txt
   summary: Small set of utilities, containers, and interfaces.
   doc_url: https://mmfutils.readthedocs.io/en/latest/
-  dev_url: https://gitlab.com/forbes-group/mmfutils
+  dev_url: https://gitlab.com/ColdAtoms/utilities/mmfutils

@@ -10,7 +10,7 @@ tools, and a patch for including
 in a notebook.
 
 (Note: If this file does not render properly, try viewing it through
-`nbviewer.org <https://nbviewer.org/urls/gitlab.com/forbes-group/mmfutils/-/raw/branch/default/doc/README.ipynb>`__)
+`nbviewer.org <https://nbviewer.org/urls/gitlab.com/coldatoms/utilities/mmfutils/-/raw/branch/default/doc/README.ipynb>`__)
 
 **Documentation:** http://mmfutils.readthedocs.org
 
@@ -18,7 +18,7 @@ in a notebook.
 
 -  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
    (will forward).
--  https://gitlab.com/forbes-group/mmfutils: Current, in case the
+-  https://gitlab.com/ColdAtoms/utilities/mmfutils: Current, in case the
    permalink fails.
 -  https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the
    permalink fails.
@@ -65,7 +65,7 @@ repositories:
 .. code:: bash
 
    python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
-   python3 -m pip install git+https://github.com/forbes-group/mmfutils
+   python3 -m pip install git+https://gitlab.com/coldatoms/utilities/mmfutils
 
 Usage
 =====
