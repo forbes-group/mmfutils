@@ -415,6 +415,10 @@ class TestPeriodicBasis(ConvolutionTests):
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
+            dy = get_gradient(exact.y, kx=1.2 * basis.kx)
+            dy[0] /= 1.2
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
     def test_Lz(self, memoization_GB):
         """Test Lz"""
         N = 64
@@ -550,6 +554,10 @@ class TestCartesianBasis(ConvolutionTests):
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
+            dy = get_gradient(exact.y, kx=1.2 * basis.kx)
+            dy[0] /= 1.2
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
     def test_memory(self, get_mem_MB):
         """Regression for issue #29: excessive memory usage."""
         # 4.0MB/complex state,
@@ -644,6 +652,10 @@ class TestCylindricalBasis(LaplacianTests):
         for exact.A in [(0.5 + 0.5j), exact.A]:
             dy = get_gradient(exact.y)[0]
             dy_exact = exact.get_dy(x)
+            assert np.allclose(dy, dy_exact, atol=1e-7)
+
+            dy = get_gradient(exact.y, kx=1.2 * basis.kx)[0]
+            dy /= 1.2
             assert np.allclose(dy, dy_exact, atol=1e-7)
 
     def test_integrate1(self, basis, exact):

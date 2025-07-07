@@ -144,6 +144,92 @@ To support this, our project structure uses the following files:
 [`pyproject.toml`]: 
   <https://packaging.python.org/en/latest/specifications/declaring-project-metadata>
 
+# Example Projects
+
+The following projects serve as examples of some of these features. Bold features are
+working, others have been attempted but might have issues.  Badges included where available.
+
+* [mmfutils][]: **[GitLab][mmfutils]**, **Docs**, **GitHub CI and automatic mirroring**, Coverage, **PyPI**, **[PDM][]**
+
+  [![Documentation Status][mmfutils rtd_badge]][mmfutils rtd]
+  [![Documentation Status][mmfutils rtd_badge_]][mmfutils rtd_]
+  [![Tests py3.9][mmfutils py3.9 badge]][mmfutils py3.9]
+  [![Tests py3.10][mmfutils py3.10 badge]][mmfutils py3.10]
+  [![Tests py3.11][mmfutils py3.11 badge]][mmfutils py3.11]
+  [![Tests py3.12][mmfutils py3.12 badge]][mmfutils py3.12]
+  [![Tests py3.13][mmfutils py3.13 badge]][mmfutils py3.13]
+  [![Pypi][mmfutils PyPI_badge]][mmfutils PyPI]
+  [![Python versions][mmfutils PyPI_versions]][mmfutils PyPI]
+
+  - Docs working on special topic: needs release.
+  - Example of testing against multiple versions of python independently with multiple
+    jobs on GitHub. *(See `.github/workflows/`).*  This is probably not very efficient,
+    but works as a proof of concept.
+  - Example of docs built and hosted on [GitLab
+    pages](https://coldatoms.gitlab.io/utilities/mmfutils/). *(see `.gitlab-ci.yml`.)*
+  
+* [mmf-setup][]: **[GitLab][mmf-setup]**, Docs, **GitHub CI**, Coverage, **PyPI**,
+  **[Poetry][]**
+  
+
+  [![Documentation Status][mmf-setup rtd_badge]][mmf-setup rtd]
+  [![Tests][mmf-setup ci_badge]][mmf-setup ci]
+  [![codecov.io][mmf-setup codecov_badge]][mmf-setup codecov]
+  [![Pypi][mmf-setup PyPI_badge]][mmf-setup PyPI]
+  [![Python versions][mmf-setup PyPI_versions]][mmf-setup PyPI]
+
+* [pytimeode][]: **[GitLab][pytimeode]**, Coverage, **[PDM][]**
+
+* [gpe][]: **[GitLab][gpe]**, **Docs**, **GitHub CI**, Coverage, **PyPI**, **[PDM][]**,
+  **[cookiecutter][our cookiecutter templates]**
+  
+
+  [![Documentation Status][gpe rtd_badge]][gpe rtd]
+  [![Tests][gpe ci_badge]][gpe ci]
+  [![Coverage][gpe ci_coverage_badge]][gpe ci]
+
+[pytimeode]: <https://gitlab.com/coldatoms/pytimeode>
+[gpe]: <https://gitlab.com/coldatoms/gpe>
+[gpe rtd_badge]: <https://readthedocs.org/projects/gpe/badge/?version=latest>
+[gpe rtd]: <https://gpe.readthedocs.io/en/latest/?badge=latest>
+[gpe ci_badge]: <https://gitlab.com/coldatoms/gpe/badges/main/pipeline.svg>
+[gpe ci_coverage_badge]: <https://gitlab.com/coldatoms/gpe/badges/main/coverage.svg>
+[gpe ci]: <https://gitlab.com/coldatoms/gpe/-/pipelines>
+
+[mmfutils]: <https://gitlab.com/coldatoms/utilities/mmfutils>
+[mmfutils rtd_badge]: <https://readthedocs.org/projects/mmfutils/badge/?version=latest>
+[mmfutils rtd]: <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
+[mmfutils rtd_badge_]: <https://readthedocs.org/projects/mmfutils/badge/?version=topic-0.7-ci>
+[mmfutils rtd_]: <https://mmfutils.readthedocs.io/en/latest/?badge=topic-0.7-ci>
+[mmfutils py3.9 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.9.yaml?label=3.9&logo=GitHub>
+[mmfutils py3.9]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.9.yaml>
+[mmfutils py3.10 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.10.yaml?label=3.10&logo=GitHub>
+[mmfutils py3.10]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.10.yaml>
+[mmfutils py3.11 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.11.yaml?label=3.11&logo=GitHub>
+[mmfutils py3.11]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.11.yaml>
+[mmfutils py3.12 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.12.yaml?label=3.12&logo=GitHub>
+[mmfutils py3.12]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.12.yaml>
+[mmfutils py3.13 badge]: <https://img.shields.io/github/actions/workflow/status/forbes-group/mmfutils/python_3.13.yaml?label=3.13&logo=GitHub>
+[mmfutils py3.13]: <https://github.com/forbes-group/mmfutils/actions/workflows/python_3.13.yaml>
+[mmfutils PyPI]: <https://pypi.org/project/mmfutils/>
+[mmfutils PyPI_badge]: <https://img.shields.io/pypi/v/mmfutils.svg>
+[mmfutils PyPI_versions]: <https://img.shields.io/pypi/pyversions/mmfutils.svg>
+
+[mmf-setup]: <https://gitlab.com/coldatoms/utilities/mmf-setup>
+[mmf-setup rtd_badge]: <https://readthedocs.org/projects/mmf-setup/badge/?version=latest>
+[mmf-setup rtd]: <https://mmf-setup.readthedocs.io/en/latest/?badge=latest>
+[mmf-setup ci_badge]: <https://github.com/mforbes/mmf-setup-fork/actions/workflows/tests.yml/badge.svg>
+[mmf-setup ci]: <https://github.com/mforbes/mmf-setup-fork/actions/workflows/tests.yml>
+[mmf-setup black]: <https://github.com/psf/black>
+[black_img]: <https://img.shields.io/badge/code%20style-black-000000.svg>
+[mmf-setup codecov]: <https://codecov.io/github/mforbes/mmf-setup-fork/branch/default>
+[mmf-setup codecov_badge]: <https://codecov.io/github/mforbes/mmf-setup-fork/coverage.svg?branch=default>
+[mmf-setup PyPI]: <https://pypi.org/project/mmf-setup>
+[mmf-setup PyPI_badge]: <https://img.shields.io/pypi/v/mmf-setup.svg>
+[mmf-setup PyPI_versions]: <https://img.shields.io/pypi/pyversions/mmf-setup.svg>
+
+[pytimeode]: <https://github.com/forbes-group/pytimeode>
+
 # Tools
 
 I generally make sure I have the following tools installed globally.  These will need to
@@ -208,6 +294,7 @@ pdm add uncertainties
 pdm add -G test pytest-cov
 pdm add -G docs sphinx
 pdm add --dev ipython
+make lock
 ...
 ```
 
@@ -256,6 +343,8 @@ with your tool of choice, for example:
 make shell
 pdm update
 ```
+
+See also [Managing Multiple Versions of Python](#managing-multiple-versions-of-python).
 
 # [Conda][] Dependencies
 
@@ -331,7 +420,7 @@ scipy = [
 ```
 
 As far as I can tell, there are no tools like [PDM][] or [Poetry][] that do this
-automatically.  This is an [acknowledged limition of
+automatically. This is an [acknowledged limition of
 PDM](https://frostming.com/en/2024/pdm-lock-strategy/#conditional-dependencies) and also
 makes locking difficult  The workaround is to [lock targets][], generating either a
 bunch of lock files, or merging these into one.  Thus, you might do the following:
@@ -347,7 +436,6 @@ We provide a target `make pdm.lock` that does this.
 
 [lock targets]: <https://pdm-project.org/en/latest/usage/lock-targets/>
 
-
 Instead, you must use these to deduce set of working versions.  I do
 this by slowly building up set of working versions in a temporary project.
 
@@ -362,7 +450,104 @@ done
 
 ```
 
-Note 
+
+```{bash}
+mkdir tmp && cd tmp
+pdm init --python "3.12.*" -n
+sed -i '' "s/dependencies = \[\]/dependencies = [\n]/g" pyproject.toml
+for py in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
+  sed -i '' "s/requires-python = ['\"].*['\"]/requires-python = '==${py}.*'/g" pyproject.toml
+  rm -f pdm.lock
+  pdm add numpy
+  sed -i '' "s/ \"numpy>=\([^\"]*\)\"/ #'numpy>=\1; python_version == \"${py}.*\"',/g" pyproject.toml
+done
+grep numpy pyproject.toml
+```
+
+This produces:
+```
+    #'numpy>=1.24.4; python_version == "3.8.*"',
+    #'numpy>=2.0.2; python_version == "3.9.*"',
+    #'numpy>=2.2.4; python_version == "3.10.*"',
+    #'numpy>=2.2.4; python_version == "3.11.*"',
+    #'numpy>=2.2.4; python_version == "3.12.*"',
+    #'numpy>=2.2.4; python_version == "3.13.*"',
+```
+suggesting the following dependencies in `pyproject.toml`:
+
+```{toml}
+...
+dependencies = [
+    'numpy >= 1.24.4; python_version == "3.8.*"',
+    'numpy >= 2.0.2; python_version == "3.9.*"',
+    'numpy >= 2.2.4; python_version >= "3.10"',
+]
+```
+
+### Multiple Python Versions
+
+To support multiple versions of python, you might need to use `pdm add` to get to lowest
+version compatible.  Notes: this might required you to first delete your lock file
+`pdm.lock`, and you might also want to use `--no-sync` so it does not need to try to
+install the packages.  (Do this if you are running `pdm` globally, but not in your
+project.)
+
+```{bash}
+rm -f pdm.lock
+pdm add numpy --no-sync
+```
+
+<details><summary>Old Notes (not needed after PDM version 2.23.1)</summary>
+**Note:** As of (at least) [pdm][] version 2.23.1, things have been much better.  The following
+notes are just in case, and motivated by previous limitations.
+
+It can be difficult to get `pyproject.toml` right if you want to support multiple
+versions of python.  Here are some tips.
+
+1. Once things are working, you should be able to generate a lock file.  We do this with
+   `make lock` which essentially does the following:
+  
+   ```{bash}
+   for py in 3.10 3.11 3.12 3.13; do
+       pdm lock -G all --python="==${py}.*" --append
+   done
+```
+
+1. Try removing all the packages **and the `pdm.lock` file**, then use
+
+   ```{bash}
+   rm -f pdm.lock
+   pdm add numpy --no-sync  # --no-sync does not try to install it
+   ```
+
+   If this works with your widest version range, you are done.
+2. 
+  
+*(This is customized by `PY_VERS = 3.10 3.11 3.12 3.13` and `PDM_EXTRAS_TO_LOCK =
+all` in the actual production `Makefile`.)*
+
+If you have difficulty, I recommend starting from the lowest supported version and
+working up (possibly dropping the `-G all` at first).  I.e.:
+
+```{bash}
+pdm lock --python="==3.10.*"
+pdm lock --python="==3.11.*"
+pdm lock --python="==3.12.*"
+...
+```
+
+If you want PDM to help recommend versions, then change `requires-python =
+">=3.10,<3.11"` in `pyproject.toml` and run `pdm add <package>` (after removing the
+lockfile `pdm.lock`).  This should then tell you which versions work with python 3.10.
+Once you have this, you can add code like the following to your `dependencies` list:
+
+```{toml}
+dependencies = [
+    'numpy >= 1.24.4; python_version < "3.9"',
+    'numpy >= 1.26.4; python_version >= "3.12"'
+]
+```
+</details>
 
 ## Testing
 
