@@ -118,16 +118,44 @@ class IBasisKx(IBasis):
         exp : bool
            If `True`, then compute the exponential of the laplacian.
            This is used for split evolvers.
-        k2x : None, array
+        kx2 : None, array
            Replacement for the default `kx2=kx**2` used when computing the
            "laplacian".
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
-           the the FFT.  This the the phase that should be removed.  Note: to
-           compensate, the momenta should be shifted as well::
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
 
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+        """
+
+    def get_gradient(y, kx=None, twist_phase_x=None):
+        """Return the gradient of `y`.
+
+        Parameters
+        ----------
+        kx : None, array
+           Replacement for the default `kx` including twists etc.
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
+
+              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
         """
 
 

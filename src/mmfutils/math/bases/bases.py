@@ -321,8 +321,14 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
-           the the FFT.  This the the phase that should be removed.  Note: to
-           compensate, the momenta should be shifted as well::
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
 
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
@@ -352,7 +358,8 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         if yt is None:
             yt = self.fftn(y)
         x, y = self.xyz[:2]
-        kx, ky = self._pxyz[:2]
+        # kx, ky = self._pxyz[:2]
+        kx, ky = self._pxyz_derivative[:2]
         return x * self.ifftn(ky * yt) - y * self.ifftn(kx * yt)
 
     # We need these wrappers because the state may have additional
@@ -385,12 +392,42 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             x_smooth = x_smooth.real
         return x_smooth
 
-    def get_gradient(self, y):
+    def get_gradient(self, y, kx=None, twist_phase_x=None):
+        """Return the gradient of `y`.
+
+        Parameters
+        ----------
+        kx : None, array
+           Replacement for the default `kx` including twists etc.
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
+
+              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
+        """
         # TODO: Check this for the highest momentum issue.
-        return [
+        if twist_phase_x is not None:
+            twist_phase_x = self.xp.asarray(twist_phase_x)
+            y = y / twist_phase_x
+
+        ks = [k for k in self._pxyz_derivative]
+        if kx is not None:
+            ks[0] = kx
+        grad_y = [
             self.ifft(1j * _p * self.fft(y, axis=_i), axis=_i)
-            for _i, _p in enumerate(self._pxyz_derivative)
+            for _i, _p in enumerate(ks)
         ]
+        if twist_phase_x is not None:
+            grad_y[0] *= twist_phase_x
+        return grad_y
 
     def get_divergence(self, ys):
         # TODO: Check this for the highest momentum issue.
@@ -779,8 +816,14 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
-           the the FFT.  This the the phase that should be removed.  Note: to
-           compensate, the momenta should be shifted as well::
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
 
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
@@ -793,10 +836,38 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
     ######################################################################
 
-    def get_gradient(self, y):
-        """Returns the gradient along the x axis."""
-        kx = self.kx
-        return [self.ifft(1j * kx * self.fft(y)), NotImplemented]
+    def get_gradient(self, y, kx=None, twist_phase_x=None):
+        """Return the gradient of y along the x axis.
+
+        Parameters
+        ----------
+        kx : None, array
+           Replacement for the default `kx` including twists etc.
+        twist_phase_x : array, optional
+           To implement twisted boundary conditions, one needs to remove an
+           overall phase from the wavefunction rendering it periodic for use
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
+
+              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
+        """
+        if twist_phase_x is not None:
+            twist_phase_x = self.xp.asarray(twist_phase_x)
+            y = y / twist_phase_x
+
+        if kx is None:
+            kx = self.kx
+
+        grad_y = [self.ifft(1j * kx * self.fft(y)), NotImplemented]
+        if twist_phase_x is not None:
+            grad_y[0] *= twist_phase_x
+        return grad_y
 
     def apply_Lz(self, y, hermitian=False):
         raise NotImplementedError
@@ -1181,8 +1252,14 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
         twist_phase_x : array, optional
            To implement twisted boundary conditions, one needs to remove an
            overall phase from the wavefunction rendering it periodic for use
-           the the FFT.  This the the phase that should be removed.  Note: to
-           compensate, the momenta should be shifted as well::
+           the FFT.  This is the phase that should be removed.
+
+           In many cases, this will **not** be needed since the stored wavefunction will
+           generally be the periodic version, and the `twist_phase_x` will only be
+           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
+           `set_psi()`.)
+
+           Note: to compensate, the momenta should be shifted as well::
 
               -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
