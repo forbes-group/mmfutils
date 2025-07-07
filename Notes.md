@@ -2256,11 +2256,12 @@ To do this, we advocate the following procedure.
    is an exceptional reason to split development.
    
 6. **Release**: First edit `pyproject.toml` to update the version number by removing the
-   `dev` part of the version number.  Commit only this change and then push only the
-   branch you are working on:
+   `dev` part of the version number.  Add a bookmark so this becomes a git branch.
+   Commit only this change and then push only the branch you are working on:
 
     ```bash
     hg com -m "REL: <version>"
+    hg bookmark 0.7.1 -r .
     hg push -r .
    ```
    
@@ -2303,20 +2304,19 @@ To do this, we advocate the following procedure.
     ```
    
 10. **Start new branch**: On the same development branch (not `default`), increase the
-    version number in `mmfutils/__init__.py` and add `dev`: i.e.: 
+    version number in `mmfutils/pyproject.toml` and add `dev0`: i.e.: 
 
     ```python
-    __version__ = '0.5.1dev'
+    __version__ = '0.7.2.dev0'
     ```
        
     Then create this branch and commit this:
   
     ```bash
-    hg branch "0.5.1"
-    hg com -m "BRN: Started branch 0.5.1"
+    hg bookmark "0.7.2"
+    hg com -m "BRN: Started branch 0.7.2"
+    hg push -r .
     ```
-       
-11. Optional: Update any `setup.py` files that depend on your new features/fixes etc.
 
 `mmfutils`: This Package
 ========================
