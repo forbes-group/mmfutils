@@ -7,11 +7,11 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.16.6
+    jupytext_version: 1.17.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
 ---
 
 # MMF Utils
@@ -22,7 +22,7 @@ Small set of utilities: containers and interfaces.
 
 This package provides some utilities that I tend to rely on during development.  Presently it includes some convenience containers, plotting tools, and a patch for including [zope.interface](http://docs.zope.org/zope.interface/) documentation in a notebook.
 
-(Note: If this file does not render properly, try viewing it through [nbviewer.org](https://nbviewer.org/urls/gitlab.com/forbes-group/mmfutils/-/raw/branch/default/doc/README.ipynb))
+(Note: If this file does not render properly, try viewing it through [nbviewer.org](https://nbviewer.org/urls/gitlab.com/coldatoms/utilities/mmfutils/-/raw/branch/default/doc/README.ipynb))
 
 **Documentation:**
    http://mmfutils.readthedocs.org
@@ -30,7 +30,7 @@ This package provides some utilities that I tend to rely on during development. 
 **Source:**
 
  * https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink (will forward).
- * https://gitlab.com/forbes-group/mmfutils: Current, in case the permalink fails.
+ * https://gitlab.com/ColdAtoms/utilities/mmfutils: Current, in case the permalink fails.
  * https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the permalink fails.
  * https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
@@ -76,7 +76,7 @@ or, if you need to install from source, you can get it from one of the repositor
 
 ```bash
 python3 -m pip install hg+https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils
-python3 -m pip install git+https://github.com/forbes-group/mmfutils
+python3 -m pip install git+https://gitlab.com/coldatoms/utilities/mmfutils
 ```
 
 +++
@@ -597,6 +597,14 @@ HTML(coverage)
 ```
 
 # Change Log
+
++++
+
+## REL: 0.7.1
+
+* Updated `mmfutils.math.bases.interfaces.IBasisKx` to have `get_gradient` and provided support for this in `PeriodicBasis` and `CylindricalBasis`.
+
++++
 
 ## REL: 0.7.0
 
