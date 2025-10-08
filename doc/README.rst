@@ -16,13 +16,13 @@ in a notebook.
 
 **Source:**
 
--  https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
-   (will forward).
--  https://gitlab.com/ColdAtoms/utilities/mmfutils: Current, in case the
-   permalink fails.
--  https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the
-   permalink fails.
--  https://github.com/forbes-group/mmfutils: Public read-only mirror.
+- https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils: Permalink
+  (will forward).
+- https://gitlab.com/ColdAtoms/utilities/mmfutils: Current, in case the
+  permalink fails.
+- https://hg.iscimath.org/forbes-group/mmfutils: Old, in case the
+  permalink fails.
+- https://github.com/forbes-group/mmfutils: Public read-only mirror.
 
 **Issues:**
 https://alum.mit.edu/www/mforbes/hg/forbes-group/mmfutils/issues
@@ -121,14 +121,14 @@ and ``__setstate__()`` methods for pickling which pickle only the
 ``__init__()`` but will call ``init()`` giving objects a chance to
 restore the computed attributes from pickles.
 
--  **Note:** *Before using, consider if these features are really needed
-   – with all such added functionality comes additional potential
-   failure modes from side-interactions. The ``ObjectBase`` class is
-   quite simple, and therefore quite safe, while ``Object`` adds
-   additional functionality with potential side-effects. For example, a
-   side-effect of support for pickles is that ``copy.copy()`` will also
-   invoke ``init()`` when copying might instead be much faster. Thus, we
-   recommend only using ``ObjectBase`` for efficient code.*
+- **Note:** *Before using, consider if these features are really needed
+  – with all such added functionality comes additional potential failure
+  modes from side-interactions. The ``ObjectBase`` class is quite
+  simple, and therefore quite safe, while ``Object`` adds additional
+  functionality with potential side-effects. For example, a side-effect
+  of support for pickles is that ``copy.copy()`` will also invoke
+  ``init()`` when copying might instead be much faster. Thus, we
+  recommend only using ``ObjectBase`` for efficient code.*
 
 Object Example
 ^^^^^^^^^^^^^^
@@ -356,29 +356,28 @@ Classes from the python standard
 library <https://docs.python.org/2/library/collections.html#collections-abstract-base-classes>`__.
 The following containers are provided:
 
--  ``Container``: Bare-bones container extending the ``Sized``,
-   ``Iterable``, and ``Container`` abstract ase classes (ABCs) from the
-   standard ``containers`` library.
--  ``ContainerList``: Extension that acts like a tuple/list satisfying
-   the ``Sequence`` ABC from the ``containers`` library (but not the
-   ``MutableSequence`` ABC. Although we allow setting and deleting
-   items, we do not provide a way for insertion, which breaks this
-   interface.)
--  ``ContainerDict``: Extension that acts like a dict satisfying the
-   ``MutableMapping`` ABC from the ``containers`` library.
+- ``Container``: Bare-bones container extending the ``Sized``,
+  ``Iterable``, and ``Container`` abstract ase classes (ABCs) from the
+  standard ``containers`` library.
+- ``ContainerList``: Extension that acts like a tuple/list satisfying
+  the ``Sequence`` ABC from the ``containers`` library (but not the
+  ``MutableSequence`` ABC. Although we allow setting and deleting items,
+  we do not provide a way for insertion, which breaks this interface.)
+- ``ContainerDict``: Extension that acts like a dict satisfying the
+  ``MutableMapping`` ABC from the ``containers`` library.
 
 These were designed with the following use cases in mind:
 
--  Returning data from a function associating names with each data. The
-   resulting ``ContainerList`` will act like a tuple, but will support
-   attribute access. Note that the order will be lexicographic. One
-   could use a dictionary, but attribute access with tab completion is
-   much nicer in an interactive session. The ``containers.nametuple``
-   generator could also be used, but this is somewhat more complicated
-   (though might be faster). Also, named tuples are immutable - here we
-   provide a mutable object that is picklable etc. The choice between
-   ``ContainerList`` and ``ContainerDict`` will depend on subsequent
-   usage. Containers can be converted from one type to another.
+- Returning data from a function associating names with each data. The
+  resulting ``ContainerList`` will act like a tuple, but will support
+  attribute access. Note that the order will be lexicographic. One could
+  use a dictionary, but attribute access with tab completion is much
+  nicer in an interactive session. The ``containers.nametuple``
+  generator could also be used, but this is somewhat more complicated
+  (though might be faster). Also, named tuples are immutable - here we
+  provide a mutable object that is picklable etc. The choice between
+  ``ContainerList`` and ``ContainerDict`` will depend on subsequent
+  usage. Containers can be converted from one type to another.
 
 Container Examples
 ^^^^^^^^^^^^^^^^^^
@@ -802,18 +801,18 @@ various components will not be imported by default.
 
 Here is a brief description of the components:
 
--  ``mmfutils.performance.blas``: Provides an interface to a few of the
-   scipy BLAS wrappers. Very incomplete (only things I currently need).
--  ``mmfutils.performance.fft``: Provides an interface to the
-   `FFTW <http://www.fftw.org>`__ using ``pyfftw`` if it is available.
-   Also enables the planning cache and setting threads so you can better
-   control your performance.
--  ``mmfutils.performance.numexpr``: Robustly imports numexpr and
-   disabling the VML. (If you don’t do this carefully, it will crash
-   your program so fast you won’t even get a traceback.)
--  ``mmfutils.performance.threads``: Provides some hooks for setting the
-   maximum number of threads in a bunch of places including the MKL,
-   numexpr, and fftw.
+- ``mmfutils.performance.blas``: Provides an interface to a few of the
+  scipy BLAS wrappers. Very incomplete (only things I currently need).
+- ``mmfutils.performance.fft``: Provides an interface to the
+  `FFTW <http://www.fftw.org>`__ using ``pyfftw`` if it is available.
+  Also enables the planning cache and setting threads so you can better
+  control your performance.
+- ``mmfutils.performance.numexpr``: Robustly imports numexpr and
+  disabling the VML. (If you don’t do this carefully, it will crash your
+  program so fast you won’t even get a traceback.)
+- ``mmfutils.performance.threads``: Provides some hooks for setting the
+  maximum number of threads in a bunch of places including the MKL,
+  numexpr, and fftw.
 
 Plotting
 --------
@@ -2052,94 +2051,94 @@ Change Log
 REL: 0.7.1
 ----------
 
--  Updated ``mmfutils.math.bases.interfaces.IBasisKx`` to have
-   ``get_gradient`` and provided support for this in ``PeriodicBasis``
-   and ``CylindricalBasis``.
+- Updated ``mmfutils.math.bases.interfaces.IBasisKx`` to have
+  ``get_gradient`` and provided support for this in ``PeriodicBasis``
+  and ``CylindricalBasis``.
 
 REL: 0.7.0
 ----------
 
--  Fully support Python 3.9 through 3.13 with working tests on GitHub
-   CI. (Resolves issue #34.)
--  Working documentation build on GitLab CI.
--  Provide a len() method for FPS() so that it works better with
-   e.g. tqdm.
+- Fully support Python 3.9 through 3.13 with working tests on GitHub CI.
+  (Resolves issue #34.)
+- Working documentation build on GitLab CI.
+- Provide a len() method for FPS() so that it works better with
+  e.g. tqdm.
 
 REL: 0.6.7
 ----------
 
--  Add derivative ``d=1`` support for step and mstep. Remove floating
-   point warning.
--  Improved FPS context: better sleeping timing and default timeout
-   behavior.
--  Drop support for python 3.9 and below. (Could work, but dependencies
-   need careful thought and version pinning.)
--  Added IBasisCutoff to allow working with the Galerkin projected GPE.
--  Updated some tests to work with new Numpy formatting (See `NEP
-   51 <https://numpy.org/neps/nep-0051-scalar-representation.html>`__.)
--  Fixed broken rasterization in contourf but should be unnecessary in
-   the future (see
-   https://github.com/matplotlib/matplotlib/issues/27669).
--  Improved ``performance.auto_timeit``.
--  Revert to installing pyfftw from default repo now that `issue
-   303 <https://github.com/pyFFTW/pyFFTW/issues/303>`__ is fixed.
+- Add derivative ``d=1`` support for step and mstep. Remove floating
+  point warning.
+- Improved FPS context: better sleeping timing and default timeout
+  behavior.
+- Drop support for python 3.9 and below. (Could work, but dependencies
+  need careful thought and version pinning.)
+- Added IBasisCutoff to allow working with the Galerkin projected GPE.
+- Updated some tests to work with new Numpy formatting (See `NEP
+  51 <https://numpy.org/neps/nep-0051-scalar-representation.html>`__.)
+- Fixed broken rasterization in contourf but should be unnecessary in
+  the future (see
+  https://github.com/matplotlib/matplotlib/issues/27669).
+- Improved ``performance.auto_timeit``.
+- Revert to installing pyfftw from default repo now that `issue
+  303 <https://github.com/pyFFTW/pyFFTW/issues/303>`__ is fixed.
 
 REL: 0.6.6
 ----------
 
--  Fix issue #31: FFT falbacks should work even if pyfftw is not
-   installed. (Monkeypatch this case in ``test_performance_fft.py``)
--  Fix issue #32: Make copy of arrays before calling pyfftw builders for
-   the convenience functions to ensure that everything works, even if
-   they are not ``WRITEABLE``.
+- Fix issue #31: FFT falbacks should work even if pyfftw is not
+  installed. (Monkeypatch this case in ``test_performance_fft.py``)
+- Fix issue #32: Make copy of arrays before calling pyfftw builders for
+  the convenience functions to ensure that everything works, even if
+  they are not ``WRITEABLE``.
 
 REL: 0.6.5
 ----------
 
--  Fix issue #30: measure fft performance and fallback to numpy (with a
-   warning) if it is faster than pyfftw.
+- Fix issue #30: measure fft performance and fallback to numpy (with a
+  warning) if it is faster than pyfftw.
 
 REL: 0.6.4
 ----------
 
--  Support python 3.7.13 through 3.11.
--  Fix some tests.
--  Add ``contexts.FPS`` which is generally preferred to ``NoInterrupt``.
--  Add a ``timeout=`` argument to contexts.
--  Unbind versions.
--  Fix a couple of bugs in ``math.bases.bases.py``:
+- Support python 3.7.13 through 3.11.
+- Fix some tests.
+- Add ``contexts.FPS`` which is generally preferred to ``NoInterrupt``.
+- Add a ``timeout=`` argument to contexts.
+- Unbind versions.
+- Fix a couple of bugs in ``math.bases.bases.py``:
 
-   -  Actually use ``memoization_GB``.
-   -  ``PeriodicBasis.kx`` is now a property.
+  - Actually use ``memoization_GB``.
+  - ``PeriodicBasis.kx`` is now a property.
 
 REL: 0.6.3
 ----------
 
--  Fix some dependencies.
+- Fix some dependencies.
 
 REL: 0.6.2
 ----------
 
--  Fix some issues with GPU and PeriodicBases.
--  Add warning to FFT plans about data ownership.
--  Include some Sparkline demonstrations.
--  Drop support for Python 3.6. (Still no support for 3.10).
+- Fix some issues with GPU and PeriodicBases.
+- Add warning to FFT plans about data ownership.
+- Include some Sparkline demonstrations.
+- Drop support for Python 3.6. (Still no support for 3.10).
 
 REL: 0.6.0
 ----------
 
--  Use Poetry for dependency management.
--  Update to ``src/mmfutils`` layout.
--  Better testing and coverage, including GitHub CI.
--  Odd-numbered lattices are now centered at 0.
--  Added ``fftw`` extra.
+- Use Poetry for dependency management.
+- Update to ``src/mmfutils`` layout.
+- Better testing and coverage, including GitHub CI.
+- Odd-numbered lattices are now centered at 0.
+- Added ``fftw`` extra.
 
 REL: 0.5.4
 ----------
 
--  Drop support for Python 3.5.
--  Use `Nox <https://nox.thea.codes>`__ for testing (see
-   `Notes.md <../Notes.md>`__)
+- Drop support for Python 3.5.
+- Use `Nox <https://nox.thea.codes>`__ for testing (see
+  `Notes.md <../Notes.md>`__)
 
 REL: 0.5.3
 ----------
@@ -2154,71 +2153,70 @@ REL: 0.5.1
 
 API changes:
 
--  Split ``mmfutils.containers.Object`` into ``ObjectBase`` which is
-   simple and ``ObjectMixin`` which provides the picking support.
-   Demonstrate in docs how the pickling can be useful, but slows
-   copying.
+- Split ``mmfutils.containers.Object`` into ``ObjectBase`` which is
+  simple and ``ObjectMixin`` which provides the picking support.
+  Demonstrate in docs how the pickling can be useful, but slows copying.
 
 REL: 0.5.0
 ----------
 
 API changes:
 
--  Python 3 support only.
--  ``mmfutils.math.bases.interface`` renamed to
-   ``mmfutils.math.bases.interfaces``.
--  Added default class-variable attribute support to
-   e\ ``mmfutils.containers.Object``.
--  Minor enhancements to ``mmfutils.math.bases.PeriodicBasis`` to
-   enhance GPU support.
--  Added ``mmfutils.math.bases.interfaces.IBasisLz`` and support in
-   ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating frames.
--  Cleanup of build environment and tests.
+- Python 3 support only.
+- ``mmfutils.math.bases.interface`` renamed to
+  ``mmfutils.math.bases.interfaces``.
+- Added default class-variable attribute support to
+  e\ ``mmfutils.containers.Object``.
+- Minor enhancements to ``mmfutils.math.bases.PeriodicBasis`` to enhance
+  GPU support.
+- Added ``mmfutils.math.bases.interfaces.IBasisLz`` and support in
+  ``mmfutils.math.bases.bases.PeriodicBasis`` for rotating frames.
+- Cleanup of build environment and tests.
 
-   -  Single environment ``_mmfutils`` now used for testing and
-      documentation.
+  - Single environment ``_mmfutils`` now used for testing and
+    documentation.
 
 REL: 0.4.13
 -----------
 
 API changes:
 
--  Use ``@implementer()`` class decorator rather than
-   ``classImplements`` or ``implements`` in all interfaces.
--  Improve ``NoInterrupt`` context. Added ``NoInterrupt.unregister()``:
-   this allows ``NoInterrupt`` to work in a notebook cell even when the
-   signal handlers are reset. (But only works in that one cell.)
--  Added Abel transform ``integrate2`` to Cylindrical bases.
+- Use ``@implementer()`` class decorator rather than ``classImplements``
+  or ``implements`` in all interfaces.
+- Improve ``NoInterrupt`` context. Added ``NoInterrupt.unregister()``:
+  this allows ``NoInterrupt`` to work in a notebook cell even when the
+  signal handlers are reset. (But only works in that one cell.)
+- Added Abel transform ``integrate2`` to Cylindrical bases.
 
 Issues:
 
--  Resolved issue #22: Masked arrays work with ``imcontourf`` etc.
--  Resolved issue #23: ``NoInterrupt`` works well except in notebooks
-   due to `ipykernel issue
-   #328 <https://github.com/ipython/ipykernel/issues/328>`__.
--  Resolved issue #24: Python 3 is now fully supported and tested.
+- Resolved issue #22: Masked arrays work with ``imcontourf`` etc.
+- Resolved issue #23: ``NoInterrupt`` works well except in notebooks due
+  to `ipykernel issue
+  #328 <https://github.com/ipython/ipykernel/issues/328>`__.
+- Resolved issue #24: Python 3 is now fully supported and tested.
 
 REL: 0.4.10
 -----------
 
 API changes:
 
--  Added ``contourf``, ``error_line``, and ``ListCollections`` to
-   ``mmfutils.plot``.
--  Added Python 3 support (still a couple of issues such as
-   ``mmfutils.math.integrate.ssum_inline``.)
--  Added ``mmf.math.bases.IBasisKx`` and update ``lagrangian`` in bases
-   to accept ``k2`` and ``kx2`` for modified dispersion control (along
-   x).
--  Added ``math.special.ellipkinv``.
--  Added some new ``mmfutils.math.linalg`` tools.
+- Added ``contourf``, ``error_line``, and ``ListCollections`` to
+  ``mmfutils.plot``.
+- Added Python 3 support (still a couple of issues such as
+  ``mmfutils.math.integrate.ssum_inline``.)
+- Added ``mmf.math.bases.IBasisKx`` and update ``lagrangian`` in bases
+  to accept ``k2`` and ``kx2`` for modified dispersion control (along
+  x).
+- Added ``math.special.ellipkinv``.
+- Added some new ``mmfutils.math.linalg`` tools.
 
 Issues:
 
--  Resolved issue #20: ``DyadicSum`` and
-   ``scipy.optimize.nonlin.Jacobian``
--  Resolved issue #22: imcontourf now respects masked arrays.
--  Resolved issue #24: Support Python 3.
+- Resolved issue #20: ``DyadicSum`` and
+  ``scipy.optimize.nonlin.Jacobian``
+- Resolved issue #22: imcontourf now respects masked arrays.
+- Resolved issue #24: Support Python 3.
 
 REL: 0.4.9
 ----------
@@ -2230,25 +2228,25 @@ REL: 0.4.7
 
 API changes:
 
--  Added ``mmfutils.interface.describe_interface()`` for inserting
-   interfaces into documentation.
--  Added some DVR basis code to ``mmfutils.math.bases``.
--  Added a diverging colormap and some support in ``mmfutils.plot``.
--  Added a Wigner Ville distribution computation in
-   ``mmfutils.math.wigner``
--  Added ``mmfutils.optimize.usolve`` and ``ubrentq`` for finding roots
-   with ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
-   support.
+- Added ``mmfutils.interface.describe_interface()`` for inserting
+  interfaces into documentation.
+- Added some DVR basis code to ``mmfutils.math.bases``.
+- Added a diverging colormap and some support in ``mmfutils.plot``.
+- Added a Wigner Ville distribution computation in
+  ``mmfutils.math.wigner``
+- Added ``mmfutils.optimize.usolve`` and ``ubrentq`` for finding roots
+  with ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+  support.
 
 Issues:
 
--  Resolve issue #8: Use
-   ```ipyparallel`` <https://github.com/ipython/ipyparallel>`__ now.
--  Resolve issue #9: Use `pytest <https://pytest.org>`__ rather than
-   ``nose`` (which is no longer supported).
--  Resolve issue #10: PYFFTW wrappers now support negative ``axis`` and
-   ``axes`` arguments.
--  Address issue #11: Preliminary version of some DVR basis classes.
--  Resolve issue #12: Added solvers with
-   ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
-   support.
+- Resolve issue #8: Use
+  ```ipyparallel`` <https://github.com/ipython/ipyparallel>`__ now.
+- Resolve issue #9: Use `pytest <https://pytest.org>`__ rather than
+  ``nose`` (which is no longer supported).
+- Resolve issue #10: PYFFTW wrappers now support negative ``axis`` and
+  ``axes`` arguments.
+- Address issue #11: Preliminary version of some DVR basis classes.
+- Resolve issue #12: Added solvers with
+  ```uncertanties`` <https://pythonhosted.org/uncertainties/>`__
+  support.
