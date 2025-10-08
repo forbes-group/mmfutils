@@ -64,8 +64,9 @@ shell: dev
 	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 	$(_RUN) bash --init-file .init-file.bash
 
+PYTESTARGS ?= -n 10
 test: dev
-	$(CONDA_ACTIVATE_DEV) && pytest
+	$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
 
 qshell: dev
 	$(_RUN) bash --init-file .init-file.bash

@@ -33,23 +33,26 @@ class IBasisMinimal(Interface):
     metric = Attribute("The metric")
     k_max = Attribute("Maximum momentum (used for determining cutoffs)")
 
-    def laplacian(y, factor=1.0, exp=False):
+    def laplacian(y, factor=1.0, factors=None, exp=False):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Parameters
         ----------
-        factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+        factor : float | None
+            Additional factor (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float] | None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers.
         """
 
 
 class IBasis(IBasisMinimal):
-    def grad_dot_grad(a, b):
+    def grad_dot_grad(a, b, factors=None):
         """Return the grad(y1).dot(grad(y2)).
 
         I.e. laplacian(y) = grad_dot_grad(y, y)
@@ -69,10 +72,10 @@ class IBasis(IBasisMinimal):
 
 
 class IBasisWithConvolution(IBasis):
-    def convolve_coulomb(y, form_factors):
+    def convolve_coulomb(y, form_factors, factors=None):
         """Convolve y with the form factors without any images"""
 
-    def convolve(y, Ck):
+    def convolve(y, Ck, factors=None):
         """Convolve y with Ck"""
 
 
@@ -84,7 +87,7 @@ class IBasisExtended(IBasis):
         """Return a set of iterators over the quantum numbers for the
         basis."""
 
-    def get_laplacian(qns):
+    def get_laplacian(qns, factors=None):
         """Return the matrix representation of the laplacian for the
         specified quantum numbers.
 
@@ -100,62 +103,49 @@ class IBasisKx(IBasis):
     example, modified dispersion relations in the x direction such as might
     arise with artificial gauge fields (Spin-Orbit Coupled BEC's for
     example).
+
+    Two versions of the momenta are provided: :attr:`kx` is used for the laplacian,
+    while `kx_derivative` is used for gradients.  Most ks are paired - one positive and
+    one negative, but when the basis contains an even number of abscissa, the highest
+    momentum point is unpaired.  This is set to zero in `kx_derivative` to ensure that,
+    e.g., the derivative of a real function is real.
+
+    To implement twisted boundary conditions, one should pass `kx` and `kx2` as needed
+    modified with `kx + twist/Lx` where `twist` is the angle of the twist.
     """
 
     kx = Attribute("Momenta in x direction")
+    kx_derivative = Attribute("Momenta in x direction suitable for differentiation")
     Lx = Attribute("Length of box in x direction")
     Nx = Attribute("Number of abscissa in x direction")
 
-    def laplacian(y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(y, factor=1.0, factors=None, exp=False, kx2=None):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Parameters
         ----------
-        factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+        factor : float, Li
+            Additional factor(s) (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across multiple components.
+        factors : [float], None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers.
         kx2 : None, array
-           Replacement for the default `kx2=kx**2` used when computing the
-           "laplacian".
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+            Replacement for the default `kx2=kx**2` used when computing the
+            "laplacian".
         """
 
-    def get_gradient(y, kx=None, twist_phase_x=None):
+    def get_gradient(y, kx=None, factors=None):
         """Return the gradient of `y`.
 
         Parameters
         ----------
         kx : None, array
-           Replacement for the default `kx` including twists etc.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
+            Replacement for the default `kx` including twists etc.
         """
 
 
@@ -180,21 +170,24 @@ class IBasisLz(IBasis):
     def apply_Lz_hbar(y):
         """Apply `Lz/hbar` to `y`."""
 
-    def laplacian(y, factor=1.0, exp=False, kwz2=0):
+    def laplacian(y, factor=1.0, factors=None, exp=False, kwz2=0):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Parameters
         ----------
         factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+            Additional factor (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float], None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.  Only allowed to be `True`
-           if `kwz2 == 0`.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers.  Only allowed to be `True`
+            if `kwz2 == 0`.
         kwz2 : None, float
-           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
+            Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
 
 
@@ -203,9 +196,9 @@ class BasisMixin(object):
     IBasisMinimal
     """
 
-    def grad_dot_grad(self, a, b):
+    def grad_dot_grad(self, a, b, factors=None):
         """Return the grad(a).dot(grad(b))."""
-        laplacian = self.laplacian
+        laplacian = functools.partial(self.laplacian, factors=factors)
         return (laplacian(a * b) - laplacian(a) * b - a * laplacian(b)) / 2.0
 
     @property

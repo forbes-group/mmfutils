@@ -1,5 +1,6 @@
 import itertools
 import math
+from warnings import warn
 
 import numpy as np
 import scipy.fftpack
@@ -25,7 +26,45 @@ sp = scipy
 
 _TINY = np.finfo(float).tiny
 
-__all__ = ["SphericalBasis", "PeriodicBasis", "CartesianBasis", "interfaces"]
+__all__ = [
+    "SphericalBasis",
+    "PeriodicBasis",
+    "CartesianBasis",
+    "CylindricalBasis",
+    "interfaces",
+]
+
+
+def _raise_twist_err(self, _kw):
+    """Helper to raise an informative TypeError if kw is not empty."""
+    if not _kw:
+        return True
+    if "twist" in _kw:
+        warn("Don't use twist - pass kx2 and kx instead", DeprecationWarning)
+        raise NotImplementedError(
+            "twist was removed in mmfutils==0.7.2: pass kx2 and kx instead"
+        )
+    if "boost_px" in _kw or "boost_pxyz" in _kw:
+        warn("Don't use boost_px* - ", DeprecationWarning)
+        raise NotImplementedError(
+            "boost_px* was removed in mmfutils==0.7.2: pass kx2 and kx instead"
+        )
+    if _kw:
+        raise TypeError(
+            "{}.__init__() got unexpected keyword argument(s) {}".format(
+                self.__class__.__name__, list(_kw.keys())
+            )
+        )
+
+
+def _raise_factors_err(factors, **kw):
+    """Helper to raise informative ValueError if factors is not None with kw"""
+    kw = {k: v for k, v in kw.items() if v is not None}
+    if kw and factors is not None and not np.allclose(factors, 1.0):
+        raise ValueError(
+            f"Cannot set {factors=} with {kw=}. You must include the factors yourself."
+        )
+    return True
 
 
 @implementer(IBasisWithConvolution)
@@ -53,22 +92,35 @@ class SphericalBasis(ObjectBase, BasisMixin):
         self.metric = 4 * np.pi * r**2 * dx
         self.k_max = k.max()
 
-    def laplacian(self, y, factor=1.0, exp=False):
+    def laplacian(self, y, factor=None, factors=None, exp=False):
         """Return the laplacian of `y` times `factor` or the
         exponential of this.
 
         Arguments
         ---------
-        factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+        factor : float | None
+            Additional factor(s) (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float] | None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers.
         """
         r = self.xyz[0]
-        K = -factor * self._pxyz[0] ** 2
+        if factors is None:
+            pxyz = self._pxyz
+        else:
+            pxyz = [f * p for f, p in zip(factors, self._pxyz)]
+
+        if factor is None:
+            sign = -1
+        else:
+            sign = -factor
+        K = sign * pxyz[0] ** 2
+
         if exp:
             K = np.exp(K)
 
@@ -82,16 +134,20 @@ class SphericalBasis(ObjectBase, BasisMixin):
 
         return res
 
-    def coulomb_kernel(self, k):
+    def coulomb_kernel(self, k, factors=None):
         """Form for the truncated Coulomb kernel."""
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         D = 2 * self.R
         return 4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k**2).filled(D**2 / 2.0)
 
-    def convolve_coulomb(self, y, form_factors=[]):
+    def convolve_coulomb(self, y, form_factors=(), factors=None):
         """Modified Coulomb convolution to include form-factors (if provided).
 
         This version implemented a 3D spherically symmetric convolution.
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         y = np.asarray(y)
         r = self.xyz[0]
         N, R = self.N, self.R
@@ -99,14 +155,16 @@ class SphericalBasis(ObjectBase, BasisMixin):
         # Padded arrays with trailing _
         ry_ = np.concatenate([r * y, np.zeros(y.shape, dtype=y.dtype)], axis=-1)
         k_ = np.pi * (0.5 + np.arange(2 * N)) / (2 * R)
-        K = prod([_K(k_) for _K in [self.coulomb_kernel] + form_factors])
+        K = prod([_K(k_) for _K in (self.coulomb_kernel,) + tuple(form_factors)])
         return idst(K * dst(ry_))[..., :N] / r
 
-    def convolve(self, y, C=None, Ck=None):
+    def convolve(self, y, C=None, Ck=None, factors=None):
         """Return the periodic convolution `int(C(x-r)*y(r),r)`.
 
         Note: this is the 3D convolution.
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         r = self.xyz[0]
         k = self._pxyz[0]
         N, R = self.N, self.R
@@ -138,9 +196,6 @@ class PeriodicBasis(ObjectBase, BasisMixin):
        Axes in array y which correspond to the x, y, ... axes here.
        This is required for cases where y has additional dimensions.
        The default is the last dim axes (best for performance).
-    boost_pxyz : float
-       Momentum of moving frame.  Momenta are shifted by this, which
-       corresponds to working in a boosted frame with velocity `vx = px/m`.
     smoothing_cutoff : float
        Fraction of maximum momentum used in the function smooth().  The current
        implementation is a spherically symmetric truncation in momentum space.  A
@@ -169,19 +224,17 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         Lxyz,
         symmetric_lattice=False,
         axes=None,
-        boost_pxyz=None,
         smoothing_cutoff=0.8,
         memoization_GB=0.5,
         _test=False,
+        **_kw,
     ):
+        assert _raise_twist_err(self, _kw)
         self.symmetric_lattice = symmetric_lattice
         self.Nxyz = np.asarray(Nxyz)
         self.Lxyz = np.asarray(Lxyz)
         self.smoothing_cutoff = smoothing_cutoff
         self.memoization_GB = memoization_GB
-        if boost_pxyz is None:
-            boost_pxyz = np.zeros_like(self.Lxyz)
-        self.boost_pxyz = np.asarray(boost_pxyz)
         if axes is None:
             axes = np.arange(-self.dim, 0)
         self.axes = np.asarray(axes)
@@ -203,13 +256,6 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         self._pxyz = tuple(
             map(self.xp.asarray, get_kxyz(Nxyz=self.Nxyz, Lxyz=self.Lxyz))
         )
-
-        # Add boosts
-        if self.boost_pxyz is not None:
-            self._pxyz = [
-                _p - _b
-                for (_p, _b) in zip(self._pxyz, self.xp.asarray(self.boost_pxyz))
-            ]
 
         self.metric = np.prod(self.Lxyz / self.Nxyz)
         self.k_max = np.array([float(abs(_p).max()) for _p in self._pxyz])
@@ -243,7 +289,8 @@ class PeriodicBasis(ObjectBase, BasisMixin):
 
             # Zero out odd highest frequency component.
             for _N, _p in zip(self.Nxyz, self.__pxyz_derivative):
-                _p.ravel()[_N // 2] = 0.0
+                if _N % 2 == 0:
+                    _p.ravel()[_N // 2] = 0.0
         return self.__pxyz_derivative
 
     @property
@@ -256,10 +303,6 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         return self.__smoothing_factor
 
     @property
-    def kx(self):
-        return self._pxyz[0]
-
-    @property
     def Lx(self):
         return self.Lxyz[0]
 
@@ -267,79 +310,99 @@ class PeriodicBasis(ObjectBase, BasisMixin):
     def Nx(self):
         return self.Nxyz[0]
 
-    def _apply_K(self, yt, kx2=None, k2=None, exp=False, factor=1.0):
+    def _apply_K(self, yt, kx2=None, k2=None, exp=False, factor=None, factors=None):
         """Apply `K` or `exp(K)` to the `yt=fftn(y)`."""
         if not exp and k2 is None and self._k2_kx2_kyz2 is None:
             # Special memory-limited processing... slow.
+            if factors is None:
+                pxyz = self._pxyz
+            else:
+                pxyz = [f * p for f, p in zip(factors, self._pxyz)]
+
             if kx2 is None:
-                kx2 = self._pxyz[0] ** 2
-            k2s = [kx2] + [_p**2 for _p in self._pxyz[1:]]
-            return -factor * sum(_k2 * yt for _k2 in k2s)
+                kx2 = pxyz[0] ** 2
+            k2s = [kx2] + [_p**2 for _p in pxyz[1:]]
+
+            if factor is None:
+                sign = -1
+            else:
+                sign = -factor
+            K = sign * sum(_k2 * yt for _k2 in k2s)
+
+            return K
         elif k2 is None and self._k2_kx2_kyz2 is None:
             raise NotImplementedError("Must be able to memoize if exp=True")
         else:
             if k2 is None:
-                _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
-                if kx2 is None:
-                    k2 = _k2
+                if factors is None:
+                    _k2, _kx2, _kyz2 = self._k2_kx2_kyz2
+                    if kx2 is None:
+                        k2 = _k2
+                    else:
+                        kx2 = self.xp.asarray(kx2)
+                        k2 = kx2 + _kyz2
                 else:
-                    kx2 = self.xp.asarray(kx2)
-                    k2 = kx2 + _kyz2
+                    k2 = sum((f * p) ** 2 for f, p in zip(factors, self._pxyz))
             else:
                 k2 = self.xp.asarray(k2)
                 assert kx2 is None
 
-            K = -factor * k2
+            if factor is None:
+                sign = -1
+            else:
+                sign = -factor
+
+            K = sign * k2
+
             if exp:
                 K = self.xp.exp(K)
             return K * yt
 
+    ######################################################################
+    # Required by IBasisKx
+    @property
+    def kx(self):
+        return self._pxyz[0]
+
+    @property
+    def kx_derivative(self):
+        return self._pxyz_derivative[0]
+
     def laplacian(
-        self, y, factor=1.0, exp=False, kx2=None, k2=None, kwz2=0, twist_phase_x=None
+        self, y, factor=None, factors=None, exp=False, kx2=None, k2=None, kwz2=0, **_kw
     ):
         """Return the laplacian of `y` times `factor` or the exponential of this.
 
         Arguments
         ---------
-        factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+        factor : float | None
+            Additional factor(s) (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float] | None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers. Only allowed to be `True`
-           if `kwz2 == 0`.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers. Only allowed to be `True`
+            if `kwz2 == 0`.
         kx2 : array, optional
-           Replacement for the default `kx2=kx**2` used when computing the
-           "laplacian".  This would allow you, for example, to implement a
-           modified dispersion relationship like ``1-cos(kx)`` rather than
-           ``kx**2``.
+            Replacement for the default `kx2=kx**2` used when computing the
+            "laplacian".  This would allow you, for example, to implement a
+            modified dispersion relationship like ``1-cos(kx)`` rather than
+            ``kx**2``.
         kwz2 : None, float
-           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
+            Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         k2 : array, optional
-           Replacement for `k2 = kx**2 + ky**2 + kz**2`.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+            Replacement for `k2 = kx**2 + ky**2 + kz**2`.
         """
-        if twist_phase_x is not None:
-            twist_phase_x = self.xp.asarray(twist_phase_x)
-            y = y / twist_phase_x
+        assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors=factors, kx2=kx2, k2=k2)
 
         # Apply K
         yt = self.fftn(y)
         laplacian_y = self.ifftn(
-            self._apply_K(yt, kx2=kx2, k2=k2, exp=exp, factor=factor)
+            self._apply_K(yt, kx2=kx2, k2=k2, exp=exp, factor=factor, factors=factors)
         )
 
         if kwz2 != 0:
@@ -349,9 +412,38 @@ class PeriodicBasis(ObjectBase, BasisMixin):
                 )
             laplacian_y += 2 * kwz2 * factor * self.apply_Lz_hbar(y, yt=yt)
 
-        if twist_phase_x is not None:
-            laplacian_y *= twist_phase_x
         return laplacian_y
+
+    def get_gradient(self, y, factors=None, kx=None, **_kw):
+        """Return the gradient of `y`.
+
+        Parameters
+        ----------
+        kx : None | array-like
+            Replacement for the default `kx` including twists etc.
+        factors : None | [float]
+            Scale factors.  Note: we only compute the first `len(factors)`
+            gradients.
+        """
+        assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors=factors, kx=kx)
+
+        # TODO: Check this for the highest momentum issue.
+        ks = [k for k in self._pxyz_derivative]
+        if factors is not None:
+            assert kx is None or factors[0] == 1
+            ks = [f * k for f, k in zip(factors, ks)]
+        if kx is not None:
+            assert factors is None or factors[0] == 1
+            ks[0] = kx
+        grad_y = [
+            self.ifft(1j * _p * self.fft(y, axis=_i), axis=_i)
+            for _i, _p in enumerate(ks)
+        ]
+        return grad_y
+
+    # End Required Methods
+    ######################################################################
 
     def apply_Lz_hbar(self, y, yt=None):
         """Apply `Lz/hbar` to `y`."""
@@ -392,48 +484,16 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             x_smooth = x_smooth.real
         return x_smooth
 
-    def get_gradient(self, y, kx=None, twist_phase_x=None):
-        """Return the gradient of `y`.
-
-        Parameters
-        ----------
-        kx : None, array
-           Replacement for the default `kx` including twists etc.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
-        """
+    def get_divergence(self, ys, factors=None):
         # TODO: Check this for the highest momentum issue.
-        if twist_phase_x is not None:
-            twist_phase_x = self.xp.asarray(twist_phase_x)
-            y = y / twist_phase_x
+        if factors is None:
+            pxyz = self._pxyz_derivative
+        else:
+            pxyz = [p * f for p, f in zip(self._pxyz_derivative, factors)]
 
-        ks = [k for k in self._pxyz_derivative]
-        if kx is not None:
-            ks[0] = kx
-        grad_y = [
-            self.ifft(1j * _p * self.fft(y, axis=_i), axis=_i)
-            for _i, _p in enumerate(ks)
-        ]
-        if twist_phase_x is not None:
-            grad_y[0] *= twist_phase_x
-        return grad_y
-
-    def get_divergence(self, ys):
-        # TODO: Check this for the highest momentum issue.
         return sum(
             self.ifft(1j * _p * self.fft(_y, axis=_i), axis=_i)
-            for _i, (_p, _y) in enumerate(zip(self._pxyz_derivative, ys))
+            for _i, (_p, _y) in enumerate(zip(pxyz, ys))
         )
 
     @staticmethod
@@ -443,7 +503,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         inds[n] = slice(None)
         return inds
 
-    def coulomb_kernel(self, k):
+    def coulomb_kernel(self, k, factors=None):
         """Form for the Coulomb kernel.
 
         The normalization here is that the k=0 component is set to
@@ -451,10 +511,14 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         constant background removed so that the net charge in the unit
         cell is zero.
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         return 4 * np.pi * np.ma.divide(1.0, k**2).filled(0.0)
 
-    def convolve_coulomb(self, y, form_factors=[]):
+    def convolve_coulomb(self, y, form_factors=(), factors=None):
         """Periodic convolution with the Coulomb kernel."""
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         y = np.asarray(y)
 
         # This broadcasts to the appropriate size if there are
@@ -464,10 +528,10 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         # b_cast = [None] * (dim - len(N)) + [slice(None)]*dim
 
         k = np.sqrt(sum(_k**2 for _k in self._pxyz))
-        Ck = prod([_K(k) for _K in [self.coulomb_kernel] + form_factors])
+        Ck = prod([_K(k) for _K in (self.coulomb_kernel,) + tuple(form_factors)])
         return self.ifftn(Ck * self.fftn(y))
 
-    def convolve(self, y, C=None, Ck=None):
+    def convolve(self, y, C=None, Ck=None, factors=None):
         """Return the periodic convolution `int(C(x-r)*y(r),r)`.
 
         Arguments
@@ -481,6 +545,8 @@ class PeriodicBasis(ObjectBase, BasisMixin):
            momentum space.  Assumed to be spherically symmetric (will be passed
            only the magnitude `k`)
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         if Ck is None:
             Ck = self.fftn(C)
         else:
@@ -501,24 +567,24 @@ class CartesianBasis(PeriodicBasis):
     Parameters
     ----------
     Nxyz : (Nx, Ny, ...)
-       Number of lattice points in basis.
+        Number of lattice points in basis.
     Lxyz : (Lx, Ly, ...)
-       Size of each dimension (length of box and radius)
+        Size of each dimension (length of box and radius)
     symmetric_lattice: bool
-       If True, then shift the lattice so that it is symmetric about
-       the origin.  The default is to ensure that there is a lattice
-       point at the origin which will make the lattice asymmetric for
-       even Nxyz.
+        If True, then shift the lattice so that it is symmetric about
+        the origin.  The default is to ensure that there is a lattice
+        point at the origin which will make the lattice asymmetric for
+        even Nxyz.
     axes : (int, int, ...)
-       Axes in array y which correspond to the x, y, ... axes here.
-       This is required for cases where y has additional dimensions.
-       The default is the last dim axes (best for performance).
+        Axes in array y which correspond to the x, y, ... axes here.
+        This is required for cases where y has additional dimensions.
+        The default is the last dim axes (best for performance).
     fast_coulomb : bool
-       If `True`, use the fast Coulomb algorithm which is slightly less
-       accurate but much faster.
+        If `True`, use the fast Coulomb algorithm which is slightly less
+        accurate but much faster.
     memoization_GB : float
-       Memoization threshold.  If memoizing factors like the momentum and smoothing
-       factor would exceed this threshold, then memoization is disabled.
+        Memoization threshold.  If memoizing factors like the momentum and smoothing
+        factor would exceed this threshold, then memoization is disabled.
     """
 
     def __init__(
@@ -542,7 +608,7 @@ class CartesianBasis(PeriodicBasis):
             _test=_test,
         )
 
-    def convolve_coulomb_fast(self, y, form_factors=[], correct=False):
+    def convolve_coulomb_fast(self, y, form_factors=(), factors=None, correct=False):
         r"""Return the approximate convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
@@ -587,6 +653,8 @@ class CartesianBasis(PeriodicBasis):
           and it should consist only of higher multipoles, so the contamination
           should be small.
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         y = np.asarray(y)
         L = np.asarray(self.Lxyz)
         dim = len(L)
@@ -611,7 +679,7 @@ class CartesianBasis(PeriodicBasis):
                 V += dV.real
         return V
 
-    def convolve_coulomb_exact(self, y, form_factors=[], method="sum"):
+    def convolve_coulomb_exact(self, y, form_factors=(), factors=None, method="sum"):
         r"""Return the convolution `int(C(x-r)*y(r),r)` where
 
         .. math::
@@ -638,6 +706,8 @@ class CartesianBasis(PeriodicBasis):
         .. math::
            4\pi(1-\cos\sqrt{3}Lk)/k^2
         """
+        if factors is not None:
+            raise NotImplementedError("Convolution with {factors=} not yet supported")
         y = np.asarray(y)
         L = np.asarray(self.Lxyz)
         dim = len(L)
@@ -687,11 +757,15 @@ class CartesianBasis(PeriodicBasis):
                 "method=%s not implemented: use 'sum' or 'pad'" % (method,)
             )
 
-    def convolve_coulomb(self, y, form_factors=[], **kw):
+    def convolve_coulomb(self, y, form_factors=(), factors=None, **kw):
         if self.fast_coulomb:
-            return self.convolve_coulomb_fast(y, form_factors=form_factors, **kw)
+            return self.convolve_coulomb_fast(
+                y, form_factors=form_factors, factors=factors, **kw
+            )
         else:
-            return self.convolve_coulomb_exact(y, form_factors=form_factors, **kw)
+            return self.convolve_coulomb_exact(
+                y, form_factors=form_factors, factors=factors, **kw
+            )
 
 
 @implementer(IBasis, IBasisKx)
@@ -704,27 +778,26 @@ class CylindricalBasis(ObjectBase, BasisMixin):
     Parameters
     ----------
     Nxr : (Nx, Nr)
-       Number of lattice points in basis.
+        Number of lattice points in basis.
     Lxr : (L, R)
-       Size of each dimension (length of box and radius)
-    twist : float
-       Twist (angle) in periodic dimension.  This adds a constant offset to the
-       momenta allowing one to study Bloch waves.
-    boost_px : float
-       Momentum of moving frame (along the x axis).  Momenta are shifted by
-       this, which corresponds to working in a boosted frame with velocity
-       `vx = boost_px/m`.
+        Size of each dimension (length of box and radius)
     axes : (int, int)
-       Axes in array y which correspond to the x and r axes here.
-       This is required for cases where y has additional dimensions.
-       The default is the last two axes (best for performance).
+        Axes in array y which correspond to the x and r axes here.
+        This is required for cases where y has additional dimensions.
+        The default is the last two axes (best for performance).
     """
 
     _d = 2  # Dimension of spherical part (see nu())
 
-    def __init__(self, Nxr, Lxr, twist=0, boost_px=0, axes=(-2, -1), symmetric_x=True):
-        self.twist = twist
-        self.boost_px = np.asarray(boost_px)
+    def __init__(
+        self,
+        Nxr,
+        Lxr,
+        axes=(-2, -1),
+        symmetric_x=True,
+        **_kw,
+    ):
+        assert _raise_twist_err(self, _kw)
         self.Nxr = np.asarray(Nxr)
         self.Lxr = np.asarray(Lxr)
         self.symmetric_x = symmetric_x
@@ -735,11 +808,21 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         Lx, R = self.Lxr
         x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr, symmetric_lattice=self.symmetric_x)[0]
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
-        self.kx = kx0 + float(self.twist) / Lx - self.boost_px
+
+        # Required for IBasisKx
+
+        self.kx = kx0
+
+        Nx = self.Nxr[0]
+        if Nx % 2 == 0:
+            # Zero out highest momentum
+            self.kx_derivative = self.kx.copy()
+            self.kx_derivative[Nx // 2] = 0.0
+        else:
+            self.kx_derivative = self.kx
+
         self._kx0 = kx0
         self._kx2 = self.kx**2
-
-        self.y_twist = np.exp(1j * self.twist * x / Lx)
 
         Nx, Nr = self.Nxr
 
@@ -784,6 +867,10 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         self._K_data = []
 
     @property
+    def xr(self):
+        return self.xyz
+
+    @property
     def Lx(self):
         return self.Lxr[0]
 
@@ -793,109 +880,112 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
     ######################################################################
     # IBasisMinimal: Required methods
-    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(self, y, factor=None, factors=None, exp=False, kx2=None, **_kw):
         r"""Return the laplacian of y.
 
         Arguments
         ---------
-        factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+        factor : float | None
+            Additional factor(s) (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float] | None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
-           If `True`, then compute the exponential of the laplacian.
-           This is used for split evolvers. Only allowed to be `True`
-           if `kwz2 == 0`.
+            If `True`, then compute the exponential of the laplacian.
+            This is used for split evolvers. Only allowed to be `True`
+            if `kwz2 == 0`.
         kx2 : array, optional
-           Replacement for the default `kx2=kx**2` used when computing the
-           "laplacian".  This would allow you, for example, to implement a
-           modified dispersion relationship like ``1-cos(kx)`` rather than
-           ``kx**2``.
+            Replacement for the default `kx2=kx**2` used when computing the
+            "laplacian".  This would allow you, for example, to implement a
+            modified dispersion relationship like ``1-cos(kx)`` rather than
+            ``kx**2``.
         kwz2 : float
-           Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
+            Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
+        assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
+        if factor is None:
+            factor = 1.0
         if not exp:
-            return self.apply_K(y=y, kx2=kx2, twist_phase_x=twist_phase_x) * (-factor)
+            return self.apply_K(y=y, factors=factors, kx2=kx2) * (-factor)
         else:
-            return self.apply_exp_K(
-                y=y, factor=-factor, kx2=kx2, twist_phase_x=twist_phase_x
-            )
+            return self.apply_exp_K(y=y, factor=-factor, factors=factors, kx2=kx2)
 
     ######################################################################
-
-    def get_gradient(self, y, kx=None, twist_phase_x=None):
+    # IBasisKx: Required methods and attributes
+    def get_gradient(self, y, factors=None, kx=None, **_kw):
         """Return the gradient of y along the x axis.
 
         Parameters
         ----------
         kx : None, array
-           Replacement for the default `kx` including twists etc.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              1j*twist_phase_x*ifft((kx+k_twist)*fft(y/twist_phase_x)
+            Replacement for the default `kx` including twists etc.
+        factors : None | [float]
+            Scale factors.  Note: we only compute the first `len(factors)`
+            gradients.
         """
-        if twist_phase_x is not None:
-            twist_phase_x = self.xp.asarray(twist_phase_x)
-            y = y / twist_phase_x
-
+        assert _raise_twist_err(self, _kw)
+        if factors is not None:
+            assert kx is None or factors[0] == 1
+            kx = factors[0] * kx
         if kx is None:
             kx = self.kx
+        else:
+            assert factors is None or factors[0] == 1
 
         grad_y = [self.ifft(1j * kx * self.fft(y)), NotImplemented]
-        if twist_phase_x is not None:
-            grad_y[0] *= twist_phase_x
         return grad_y
+
+    # End Required Methods
+    ######################################################################
 
     def apply_Lz(self, y, hermitian=False):
         raise NotImplementedError
 
-    def apply_Px(self, y, hermitian=False):
-        r"""Apply the Pz operator to y without any px.
+    def apply_Px(self, y, factors=None, hermitian=False):
+        r"""Apply the Px operator to y without any px.
 
         Requires :attr:`_pxyz` to be defined.
         """
-        return self.y_twist * self.ifft(self._kx0 * self.fft(y / self.y_twist))
+        kx = self._kx0
+        if factors is not None:
+            kx = kx * factors[0]
+        return self.ifft(kx * self.fft(y))
 
-    def apply_exp_K(self, y, factor, kx2=None, twist_phase_x=None):
+    def apply_exp_K(self, y, factor, factors=None, kx2=None, **_kw):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
+        assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
+        if factor is None:
+            factor = 1.0
+
+        if factors is not None:
+            factor_x = factors[0] ** 2 * factor
+            factor_r = factors[1] ** 2 * factor
+        else:
+            factor_x = factor_r = factor
+
         if kx2 is None:
             kx2 = self._Kx
+
+        # Check if we have compute this already in the _K_data cache.
         _K_data_max_len = 3
         ind = None
-        for _i, (_f, _d) in enumerate(self._K_data):
-            if np.allclose(factor, _f):
+        for _i, (key, _d) in enumerate(self._K_data):
+            if np.allclose((factor_x, factor_r), key):
                 ind = _i
-        if ind is None:
+
+        if ind is None:  # If not, compute
             _r1, _r2, V, d = self._Kr_diag
-            exp_K_r = _r1 * np.dot(V * np.exp(factor * d), V.T) * _r2
-            exp_K_x = np.exp(factor * kx2)
+            exp_K_r = _r1 * np.dot(V * np.exp(factor_r * d), V.T) * _r2
+            exp_K_x = np.exp(factor_x * kx2)
             K_data = (exp_K_r, exp_K_x)
-            self._K_data.append((factor, K_data))
+            key = (factor_x, factor_r)
+            self._K_data.append((key, K_data))
             ind = -1
             while len(self._K_data) > _K_data_max_len:
                 # Reduce storage
@@ -903,35 +993,30 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
         K_data = self._K_data[ind][1]
         exp_K_r, exp_K_x = K_data
-        if twist_phase_x is None or self.twist == 0:
-            tmp = self.ifft(exp_K_x * self.fft(y))
-        else:
-            if twist_phase_x is None:
-                twist_phase_x = self.y_twist
-            tmp = twist_phase_x * self.ifft(exp_K_x * self.fft(y / twist_phase_x))
+        tmp = self.ifft(exp_K_x * self.fft(y))
         return np.einsum("...ij,...yj->...yi", exp_K_r, tmp)
 
-    def apply_K(self, y, kx2=None, twist_phase_x=None):
+    def apply_K(self, y, factors=None, kx2=None, **_kw):
         r"""Return `K*y` where `K = k**2/2`"""
         # Here is how the indices work:
+        assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
         if kx2 is None:
             kx2 = self._Kx
+            if factors is not None:
+                kx2 = kx2 * factors[0] ** 2
 
-        if twist_phase_x is None or self.twist == 0:
-            yt = self.fft(y)
-            yt *= kx2
-            yt = self.ifft(yt)
-        else:
-            if twist_phase_x is None:
-                twist_phase_x = self.y_twist
-            yt = self.fft(y / twist_phase_x)
-            yt *= kx2
-            yt = self.ifft(yt)
-            yt *= twist_phase_x
+        yt = self.fft(y)
+        yt *= kx2
+        yt = self.ifft(yt)
 
         # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
         # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
-        yt += np.dot(y, self._Kr.T)
+        if factors is None:
+            yt += np.dot(y, self._Kr.T)
+        else:
+            yt += np.dot(y, self._Kr.T) * factors[1] ** 2
+
         return yt
 
     ######################################################################
@@ -1072,7 +1157,13 @@ class CylindricalBasis(ObjectBase, BasisMixin):
            stay the same.)
         return_matrix : bool
            If True, then return the extrapolation matrix F so that
-           ``Psi = np.dot(psi, F)``
+           ``Psi = np.dot(psi, F)``.  This matrix is simply the appropriate basis
+           functions evaluated on the new abscissa, so when dotted into the
+           coefficients, this is equivalent to evaluating the spectral representation on
+           a new set of abscissa (in the radial direction).
+
+           Note that `psi` here is the transform of the wavefunction -- coefficients in
+           the spectral basis -- whereas `Psi` will be in the position representation.
         """
         x, r0 = self.xyz
         n = np.arange(r0.size)[:, None]
@@ -1229,15 +1320,18 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
 
     ######################################################################
     # IBasisMinimal: Required methods
-    def laplacian(self, y, factor=1.0, exp=False, kx2=None, twist_phase_x=None):
+    def laplacian(self, y, factor=1.0, factors=None, exp=False, kx2=None, **_kw):
         r"""Return the laplacian of y.
 
         Arguments
         ---------
         factor : float
-           Additional factor (mostly used with `exp=True`).  The
-           implementation must be careful to allow the factor to
-           broadcast across the components.
+            Additional factor (mostly used with `exp=True`).  The
+            implementation must be careful to allow the factor to
+            broadcast across the components.
+        factors : [float] | None
+            Tuple of scale factors for each dimension.  Allows for independent scaling
+            of each direction (used in expanding reference frames).
         exp : bool
            If `True`, then compute the exponential of the laplacian.
            This is used for split evolvers. Only allowed to be `True`
@@ -1249,25 +1343,13 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
            ``kx**2``.
         kwz2 : float
            Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
-        twist_phase_x : array, optional
-           To implement twisted boundary conditions, one needs to remove an
-           overall phase from the wavefunction rendering it periodic for use
-           the FFT.  This is the phase that should be removed.
-
-           In many cases, this will **not** be needed since the stored wavefunction will
-           generally be the periodic version, and the `twist_phase_x` will only be
-           applied when requesting the actual wavefunction (i.e. in `get_psi()` or
-           `set_psi()`.)
-
-           Note: to compensate, the momenta should be shifted as well::
-
-              -factor * twist_phase_x*ifft((k+k_twist)**2*fft(y/twist_phase_x)
         """
+        assert _raise_twist_err(self, _kw)
         if not exp:
-            return self.apply_K(y=y, kx2=kx2, twist_phase_x=twist_phase_x) * (-factor)
+            return self.apply_K(y=y, kx2=kx2) * (-factor)
         else:
             return self.apply_exp_K(
-                y=y, factor=-factor, kx2=kx2, twist_phase_x=twist_phase_x
+                y=y, factor=-factor, kx2=kx2_phase_x
             )
 
     ######################################################################
@@ -1285,12 +1367,13 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
 
         Requires :attr:`_pxyz` to be defined.
         """
-        return self.y_twist * self.ifft(self._kx0 * self.fft(y / self.y_twist))
+        return self.ifft(self._kx0 * self.fft(y))
 
-    def apply_exp_K(self, y, factor, kx2=None, twist_phase_x=None):
+    def apply_exp_K(self, y, factor, kx2=None, **_kw):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
+        assert _raise_twist_err(self, _kw)
         if kx2 is None:
             kx2 = self._Kx
         _K_data_max_len = 3
@@ -1311,31 +1394,19 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
 
         K_data = self._K_data[ind][1]
         exp_K_r, exp_K_x = K_data
-        if twist_phase_x is None or self.twist == 0:
-            tmp = self.ifft(exp_K_x * self.fft(y))
-        else:
-            if twist_phase_x is None:
-                twist_phase_x = self.y_twist
-            tmp = twist_phase_x * self.ifft(exp_K_x * self.fft(y / twist_phase_x))
+        tmp = self.ifft(exp_K_x * self.fft(y))
         return np.einsum("...ij,...yj->...yi", exp_K_r, tmp)
 
-    def apply_K(self, y, kx2=None, twist_phase_x=None):
+    def apply_K(self, y, kx2=None, **_kw):
         r"""Return `K*y` where `K = k**2/2`"""
+        assert _raise_twist_err(self, _kw)
         # Here is how the indices work:
         if kx2 is None:
             kx2 = self._Kx
 
-        if twist_phase_x is None or self.twist == 0:
-            yt = self.fft(y)
-            yt *= kx2
-            yt = self.ifft(yt)
-        else:
-            if twist_phase_x is None:
-                twist_phase_x = self.y_twist
-            yt = self.fft(y / twist_phase_x)
-            yt *= kx2
-            yt = self.ifft(yt)
-            yt *= twist_phase_x
+        yt = self.fft(y)
+        yt *= kx2
+        yt = self.ifft(yt)
 
         # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
         # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
