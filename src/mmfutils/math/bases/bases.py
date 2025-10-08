@@ -867,6 +867,10 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         self._K_data = []
 
     @property
+    def xr(self):
+        return self.xyz
+
+    @property
     def Lx(self):
         return self.Lxr[0]
 
@@ -876,7 +880,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
     ######################################################################
     # IBasisMinimal: Required methods
-    def laplacian(self, y, factor=1.0, factors=None, exp=False, kx2=None, **_kw):
+    def laplacian(self, y, factor=None, factors=None, exp=False, kx2=None, **_kw):
         r"""Return the laplacian of y.
 
         Arguments
@@ -901,6 +905,9 @@ class CylindricalBasis(ObjectBase, BasisMixin):
             Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
         assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
+        if factor is None:
+            factor = 1.0
         if not exp:
             return self.apply_K(y=y, factors=factors, kx2=kx2) * (-factor)
         else:
@@ -952,19 +959,33 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         `K_data` is `None`.
         """
         assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
+        if factor is None:
+            factor = 1.0
+
+        if factors is not None:
+            factor_x = factors[0] ** 2 * factor
+            factor_r = factors[1] ** 2 * factor
+        else:
+            factor_x = factor_r = factor
+
         if kx2 is None:
             kx2 = self._Kx
+
+        # Check if we have compute this already in the _K_data cache.
         _K_data_max_len = 3
         ind = None
-        for _i, (_f, _d) in enumerate(self._K_data):
-            if np.allclose(factor, _f):
+        for _i, (key, _d) in enumerate(self._K_data):
+            if np.allclose((factor_x, factor_r), key):
                 ind = _i
-        if ind is None:
+
+        if ind is None:  # If not, compute
             _r1, _r2, V, d = self._Kr_diag
-            exp_K_r = _r1 * np.dot(V * np.exp(factor * d), V.T) * _r2
-            exp_K_x = np.exp(factor * kx2)
+            exp_K_r = _r1 * np.dot(V * np.exp(factor_r * d), V.T) * _r2
+            exp_K_x = np.exp(factor_x * kx2)
             K_data = (exp_K_r, exp_K_x)
-            self._K_data.append((factor, K_data))
+            key = (factor_x, factor_r)
+            self._K_data.append((key, K_data))
             ind = -1
             while len(self._K_data) > _K_data_max_len:
                 # Reduce storage
@@ -979,8 +1000,11 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         r"""Return `K*y` where `K = k**2/2`"""
         # Here is how the indices work:
         assert _raise_twist_err(self, _kw)
+        assert _raise_factors_err(factors, kx2=kx2)
         if kx2 is None:
             kx2 = self._Kx
+            if factors is not None:
+                kx2 = kx2 * factors[0] ** 2
 
         yt = self.fft(y)
         yt *= kx2
@@ -988,7 +1012,11 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
         # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
         # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
-        yt += np.dot(y, self._Kr.T)
+        if factors is None:
+            yt += np.dot(y, self._Kr.T)
+        else:
+            yt += np.dot(y, self._Kr.T) * factors[1] ** 2
+
         return yt
 
     ######################################################################

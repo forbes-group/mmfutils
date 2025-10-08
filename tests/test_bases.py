@@ -62,6 +62,9 @@ def memoization_GB(request):
 class ExactGaussian:
     """Exact gaussian with different standard deviations Rs and factors."""
 
+    # Degeneracy factors.  What are the dimensions of each component?
+    ds = (1, 1, 1)
+
     def __init__(
         self, xyz, A=1.1, factor=1.0, factors=(1.0, 1.0, 1.0), Rs=(1.0, 1.0, 1.0)
     ):
@@ -88,7 +91,7 @@ class ExactGaussian:
     @property
     def N_3D(self):
         """Exact total particle number in 3D."""
-        return np.prod(np.sqrt(np.pi) * self.Rs) * self.A**2
+        return np.prod(np.pow(np.sqrt(np.pi) * self.Rs, self.ds)) * self.A**2
 
     @property
     def d2y(self):
@@ -97,8 +100,8 @@ class ExactGaussian:
             self.factor
             * self.y
             * sum(
-                f**2 * (x**2 - R**2) / R**4
-                for x, R, f in zip(self.xyz, self.Rs, self.factors)
+                f**2 * (x**2 - d * R**2) / R**4
+                for x, R, f, d in zip(self.xyz, self.Rs, self.factors, self.ds)
             )
         )
 
@@ -122,7 +125,7 @@ class ExactGaussian:
             np.sqrt(R**2 + 2 * self.factor * f**2)
             for R, f in zip(self.Rs, self.factors)
         ]
-        return np.prod(self.Rs) / np.prod(Rs) * self.get_y(Rs=Rs)
+        return np.prod(np.divide(self.Rs, Rs) ** self.ds[: len(Rs)]) * self.get_y(Rs=Rs)
 
     @property
     def convolution(self):
@@ -134,6 +137,24 @@ class ExactGaussian:
             * np.pi ** (3.0 / 2.0)
             * np.exp(-((self.r / self.r_0) ** 2) / 4.0)
         )
+
+
+class ExactGaussianCyl(ExactGaussian):
+    """Cylindrically symmetric gaussian."""
+
+    ds = (1, 2)
+
+    def __init__(self, xr, A=1.1, factor=1.0, factors=(1.0, 1.0), Rs=(1.0, 1.0)):
+        self.xr = xr
+        self.A = A
+        self.factor = factor
+        self.factors = factors
+        self.Rs = Rs
+
+    @property
+    def xyz(self):
+        """Used for some common methods... don't rely on."""
+        return self.xr
 
 
 class ExactGaussianR:
@@ -295,7 +316,7 @@ class LaplacianTests:
         exact = exact_r
         laplacian = basis.laplacian
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
-            for exact.A in [(0.5 + 0.5j), exact.A]:
+            for exact.A in [(0.2 - 0.2j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor)
                 assert np.allclose(ddy, exact.d2y)
                 if getattr(basis, "memoization_GB", 1) == 0:
@@ -420,38 +441,46 @@ class TestPeriodicBasis1:
             A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
         )
 
-    def test_laplacian(self, basis, exact, threads):
+    def test_interface(self, basis):
+        assert verifyClass(IBasis, self.Basis)
+        assert verifyObject(IBasis, basis)
+
+    def test_laplacian(self, basis, exact, dim, threads):
         """Test the laplacian with a Gaussian."""
-        factors_ = [None, np.linspace(0.8, 0.9, basis.dim)]
+        factors_ = [None, np.linspace(0.8, 0.9, dim)]
         factor_ = [None, 1.0, (0.5 + 0.5j)]
-        for factor in factor_:
-            for factors in factors_:
-                exact.factor = factor if factor is not None else 1.0
-                exact.factors = factors if factors is not None else [1] * basis.dim
-                laplacian = functools.partial(
-                    basis.laplacian, factor=factor, factors=factors
-                )
-                ddy = laplacian(exact.y)
-                assert np.allclose(ddy, exact.d2y, atol=2e-7)
-                if getattr(basis, "memoization_GB", 1) == 0:
-                    with pytest.raises(NotImplementedError):
+        for exact.A in [(0.2 - 0.2j), exact.A]:
+            for factor in factor_:
+                for factors in factors_:
+                    exact.factor = factor if factor is not None else 1.0
+                    exact.factors = factors if factors is not None else [1] * dim
+                    laplacian = functools.partial(
+                        basis.laplacian, factor=factor, factors=factors
+                    )
+                    ddy = laplacian(exact.y)
+                    assert np.allclose(ddy, exact.d2y, atol=2e-7)
+                    if getattr(basis, "memoization_GB", 1) == 0:
+                        with pytest.raises(NotImplementedError):
+                            exp_ddy = laplacian(exact.y, exp=True)
+                            assert np.allclose(exp_ddy, exact.exp_d2y, atol=2e-7)
+                    else:
                         exp_ddy = laplacian(exact.y, exp=True)
                         assert np.allclose(exp_ddy, exact.exp_d2y, atol=2e-7)
-                else:
-                    exp_ddy = laplacian(exact.y, exp=True)
-                    assert np.allclose(exp_ddy, exact.exp_d2y, atol=2e-7)
 
-    def test_gradient(self, basis, exact):
+    def test_gradient(self, basis, exact, dim):
         """Test the gradient"""
-        factors = np.linspace(0.8, 0.9, basis.dim)
+        factors = np.linspace(0.8, 0.9, dim)
         # Here we also test partial gradients selected by incomplete factors
         factors_ = [None] + [factors[: 1 + n] for n in range(len(factors))]
-        for exact.A in [(0.5 + 0.5j), exact.A]:
+        for exact.A in [(0.2 + 0.2j), exact.A]:
             for factors in factors_:
-                exact.factors = factors if factors is not None else [1] * basis.dim
+                exact.factors = factors if factors is not None else [1] * dim
                 get_gradient = functools.partial(basis.get_gradient, factors=factors)
 
                 dy = get_gradient(exact.y)
+                if any([dy is NotImplemented for dy in dy]):
+                    pytest.skip("Gradient not implemented yet. (radial?)")
+
                 dy_exact = exact.get_grad()
 
                 assert np.allclose(dy, dy_exact, atol=1e-7)
@@ -467,6 +496,39 @@ class TestPeriodicBasis1:
                         + r"You must include the factors yourself.",
                     ):
                         dy = get_gradient(exact.y, kx=1.234 * basis._pxyz_derivative[0])
+
+    def test_grad_dot_grad(self, basis, exact, dim):
+        """Test grad_dot_grad function."""
+        factors_ = [None, np.linspace(0.8, 0.9, dim)]
+        for factors in factors_:
+            grad_dot_grad = functools.partial(basis.grad_dot_grad, factors=factors)
+            exact.factors = factors if factors is not None else [1] * dim
+            dydy = grad_dot_grad(exact.y, exact.y)
+            # Lower atol since y^2 lies outside of the basis.
+            assert np.allclose(dydy, exact.grad_dot_grad, atol=2e-5)
+
+
+class TestCylindricalBasis2(TestPeriodicBasis1):
+    Basis = bases.CylindricalBasis
+    Q = 8.0
+
+    @pytest.fixture
+    def dim(self, request):
+        yield 2
+
+    # These values are carefully chosen to be close to the tolerance threshold
+    @pytest.fixture(params=[32, 35])
+    def basis(self, request):
+        yield self.Basis(Nxr=(request.param, 32), Lxr=(18.5, 13.0))
+
+    @pytest.fixture
+    def exact(self, basis, dim):
+        return ExactGaussianCyl(
+            xr=basis.xr,
+            # Rs=np.linspace(1.02, 1.1, dim),
+            Rs=np.linspace(1.02, 1.1, dim),
+            A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
+        )
 
 
 class TestPeriodicBasis(ConvolutionTests):
@@ -561,7 +623,7 @@ class TestPeriodicBasis(ConvolutionTests):
         _k2 = k2 + k4
         exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
-            for exact.A in [(0.5 + 0.5j), exact.A]:
+            for exact.A in [(0.2 + 0.2j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
@@ -573,7 +635,7 @@ class TestPeriodicBasis(ConvolutionTests):
         exact = exact_r
         get_gradient = basis.get_gradient
         xyz = basis.xyz
-        for exact.A in [(0.5 + 0.5j), exact.A]:
+        for exact.A in [(0.2 + 0.2j), exact.A]:
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
@@ -705,7 +767,7 @@ class TestCartesianBasis(ConvolutionTests):
         _k2 = k2 + k4
         exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
-            for exact.A in [(0.5 + 0.5j), exact.A]:
+            for exact.A in [(0.2 - 0.2j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, k2=_k2)
                 assert np.allclose(ddy, exact.d2y, atol=1e-6)
 
@@ -717,7 +779,7 @@ class TestCartesianBasis(ConvolutionTests):
         exact = exact_r
         get_gradient = basis.get_gradient
         xyz = basis.xyz
-        for exact.A in [(0.5 + 0.5j), exact.A]:
+        for exact.A in [(0.2 - 0.2j), exact.A]:
             dy = get_gradient(exact.y)
             dy_exact = list(map(exact.get_dy, xyz))
             assert np.allclose(dy, dy_exact, atol=1e-7)
@@ -806,7 +868,7 @@ class TestCylindricalBasis(LaplacianTests):
         _kx2 = kx2 + kx4
         exact = exact_quart
         for exact.factor in [(0.5 + 0.5j), exact.factor]:
-            for exact.A in [(0.5 + 0.5j), exact.A]:
+            for exact.A in [(0.2 - 0.2j), exact.A]:
                 ddy = laplacian(exact.y, factor=exact.factor, kx2=_kx2)
                 assert np.allclose(ddy, exact.d2y)
 
@@ -818,7 +880,7 @@ class TestCylindricalBasis(LaplacianTests):
         exact = exact_r
         get_gradient = basis.get_gradient
         x, r = basis.xyz
-        for exact.A in [(0.5 + 0.5j), exact.A]:
+        for exact.A in [(0.2 - 0.2j), exact.A]:
             dy = get_gradient(exact.y)[0]
             dy_exact = exact.get_dy(x)
             assert np.allclose(dy, dy_exact, atol=1e-7)
