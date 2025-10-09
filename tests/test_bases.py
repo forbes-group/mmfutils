@@ -11,10 +11,12 @@ the following form:
    e^{-r^2/(r_0^2+2a)/2}
 """
 
+import contextlib
 import functools
 import gc
 import os
 import psutil
+import re
 
 import numpy as np
 import scipy.special
@@ -467,6 +469,29 @@ class TestPeriodicBasis1:
                         exp_ddy = laplacian(exact.y, exp=True)
                         assert np.allclose(exp_ddy, exact.exp_d2y, atol=2e-7)
 
+    def test_laplacian_kx2(self, basis, exact, dim, threads):
+        """Test the laplacian with a Gaussian using custom kx."""
+        exact_factors = np.linspace(0.8, 0.9, dim)
+        factors = np.linspace(0.8, 0.9, dim)
+        kx2 = (factors[0] * basis.kx) ** 2
+        factors[0] = 1.0
+        factor_ = [None, 1.0, (0.5 + 0.5j)]
+        for exact.A in [(0.2 - 0.2j), exact.A]:
+            for factor in factor_:
+                exact.factor = factor if factor is not None else 1.0
+                exact.factors = exact_factors
+                laplacian = functools.partial(
+                    basis.laplacian, factor=factor, factors=factors, kx2=kx2
+                )
+                ddy = laplacian(exact.y)
+                assert np.allclose(ddy, exact.d2y, atol=2e-7)
+                try:
+                    exp_ddy = laplacian(exact.y, exp=True)
+                    assert np.allclose(exp_ddy, exact.exp_d2y, atol=2e-7)
+                except NotImplementedError:
+                    # Known error
+                    assert basis.__class__ is bases.PeriodicBasis
+
     def test_gradient(self, basis, exact, dim):
         """Test the gradient"""
         factors = np.linspace(0.8, 0.9, dim)
@@ -914,6 +939,15 @@ class TestCylindricalBasis(LaplacianTests):
 class TestCoverage:
     """Walk down some error branches for coverage."""
 
+    # These values are carefully chosen to be close to the tolerance threshold
+    @pytest.fixture
+    def basis_p(self):
+        yield bases.PeriodicBasis(Nxyz=(16,), Lxyz=(18.5,))
+
+    @pytest.fixture
+    def basis_c(self):
+        yield
+
     def test_convolve_coulomb_exact(self, memoization_GB):
         dim = 1
         basis = bases.CartesianBasis(
@@ -924,3 +958,60 @@ class TestCoverage:
         exact = ExactGaussianR(r=abs(basis.xyz[0]), d=dim)
         with pytest.raises(NotImplementedError):
             basis.convolve_coulomb_exact(exact.y, method="unknown")
+
+    def test_raise_twist_err(self, basis_p, basis_c):
+        for Basis, kw in [
+            (bases.PeriodicBasis, dict(Nxyz=(16,), Lxyz=(18.5,))),
+            (bases.CylindricalBasis, dict(Nxr=(16, 8), Lxr=(18.5, 13.0))),
+        ]:
+            basis = Basis(**kw)
+            for Error, arg, match in [
+                (
+                    NotImplementedError,
+                    dict(twist=1),
+                    "twist was removed in mmfutils==0.7.2: pass kx2 and kx instead",
+                ),
+                (
+                    NotImplementedError,
+                    dict(boost_px=1),
+                    "boost_px* was removed in mmfutils==0.7.2: pass kx2 and kx instead",
+                ),
+                (
+                    NotImplementedError,
+                    dict(boost_pxyz=1),
+                    "boost_px* was removed in mmfutils==0.7.2: pass kx2 and kx instead",
+                ),
+                (
+                    TypeError,
+                    dict(unknown=1),
+                    "{}.{{name}}() got unexpected keyword argument(s) ['unknown']".format(
+                        Basis.__name__
+                    ),
+                ),
+            ]:
+                with pytest.raises(
+                    Error, match=re.escape(match.format(name="__init__"))
+                ):
+                    Basis(**arg, **kw)
+
+                with pytest.raises(
+                    Error, match=re.escape(match.format(name="laplacian"))
+                ):
+                    basis.laplacian(y=None, **arg)
+
+                with pytest.raises(
+                    Error, match=re.escape(match.format(name="get_gradient"))
+                ):
+                    basis.get_gradient(y=None, **arg)
+
+                if hasattr(basis, "apply_exp_K"):
+                    with pytest.raises(
+                        Error, match=re.escape(match.format(name="apply_exp_K"))
+                    ):
+                        basis.apply_exp_K(y=None, factor=1, **arg)
+
+                if hasattr(basis, "apply_K"):
+                    with pytest.raises(
+                        Error, match=re.escape(match.format(name="apply_K"))
+                    ):
+                        basis.apply_K(y=None, **arg)
