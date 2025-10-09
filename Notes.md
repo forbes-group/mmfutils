@@ -2277,8 +2277,7 @@ To do this, we advocate the following procedure.
    pdm publish
    ```
    
-   
-   [twine](https://pypi.org/project/twine/) 
+   Old instructions using [twine](https://pypi.org/project/twine/):
 
     ```bash
     # Build the package.

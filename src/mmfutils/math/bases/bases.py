@@ -35,7 +35,7 @@ __all__ = [
 ]
 
 
-def _raise_twist_err(self, _kw):
+def _raise_twist_err(self, _kw, name="__init__"):
     """Helper to raise an informative TypeError if kw is not empty."""
     if not _kw:
         return True
@@ -51,8 +51,8 @@ def _raise_twist_err(self, _kw):
         )
     if _kw:
         raise TypeError(
-            "{}.__init__() got unexpected keyword argument(s) {}".format(
-                self.__class__.__name__, list(_kw.keys())
+            "{}.{}() got unexpected keyword argument(s) {}".format(
+                self.__class__.__name__, name, list(_kw.keys())
             )
         )
 
@@ -60,7 +60,14 @@ def _raise_twist_err(self, _kw):
 def _raise_factors_err(factors, **kw):
     """Helper to raise informative ValueError if factors is not None with kw"""
     kw = {k: v for k, v in kw.items() if v is not None}
+    if "kx2" in kw and "k2" in kw:
+        raise ValueError("Cannot set both kx2 and k2.  Set only k2.")
     if kw and factors is not None and not np.allclose(factors, 1.0):
+        if "kx2" in kw and np.allclose(factors[0], 1.0):
+            # We can set kx2 and factors in this case
+            kw.pop("kx2")
+            if not kw:  # But not with other arguments
+                return True
         raise ValueError(
             f"Cannot set {factors=} with {kw=}. You must include the factors yourself."
         )
@@ -342,7 +349,14 @@ class PeriodicBasis(ObjectBase, BasisMixin):
                         kx2 = self.xp.asarray(kx2)
                         k2 = kx2 + _kyz2
                 else:
-                    k2 = sum((f * p) ** 2 for f, p in zip(factors, self._pxyz))
+                    f_ks = list(zip(factors, self._pxyz))
+                    _kyz2 = sum((f * k) ** 2 for f, k in f_ks[1:])
+                    if kx2 is None:
+                        f0, k0 = f_ks[0]
+                        kx2 = (f0 * k0) ** 2
+                    else:
+                        kx2 = self.xp.asarray(kx2)
+                    k2 = kx2 + _kyz2
             else:
                 k2 = self.xp.asarray(k2)
                 assert kx2 is None
@@ -396,7 +410,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
         k2 : array, optional
             Replacement for `k2 = kx**2 + ky**2 + kz**2`.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="laplacian")
         assert _raise_factors_err(factors=factors, kx2=kx2, k2=k2)
 
         # Apply K
@@ -425,7 +439,7 @@ class PeriodicBasis(ObjectBase, BasisMixin):
             Scale factors.  Note: we only compute the first `len(factors)`
             gradients.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="get_gradient")
         assert _raise_factors_err(factors=factors, kx=kx)
 
         # TODO: Check this for the highest momentum issue.
@@ -904,7 +918,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         kwz2 : float
             Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="laplacian")
         assert _raise_factors_err(factors, kx2=kx2)
         if factor is None:
             factor = 1.0
@@ -926,7 +940,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
             Scale factors.  Note: we only compute the first `len(factors)`
             gradients.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="get_gradient")
         if factors is not None:
             assert kx is None or factors[0] == 1
             kx = factors[0] * kx
@@ -958,7 +972,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="apply_exp_K")
         assert _raise_factors_err(factors, kx2=kx2)
         if factor is None:
             factor = 1.0
@@ -999,7 +1013,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
     def apply_K(self, y, factors=None, kx2=None, **_kw):
         r"""Return `K*y` where `K = k**2/2`"""
         # Here is how the indices work:
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="apply_K")
         assert _raise_factors_err(factors, kx2=kx2)
         if kx2 is None:
             kx2 = self._Kx
@@ -1344,7 +1358,7 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
         kwz2 : float
            Angular velocity of the frame expressed as `kwz2 = m*omega_z/hbar`.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="laplacian")
         if not exp:
             return self.apply_K(y=y, kx2=kx2) * (-factor)
         else:
@@ -1373,7 +1387,7 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
         r"""Return `exp(K*factor)*y` or return precomputed data if
         `K_data` is `None`.
         """
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="apply_exp_K")
         if kx2 is None:
             kx2 = self._Kx
         _K_data_max_len = 3
@@ -1399,7 +1413,7 @@ class SphericalDVRBasis(ObjectBase, BasisMixin):
 
     def apply_K(self, y, kx2=None, **_kw):
         r"""Return `K*y` where `K = k**2/2`"""
-        assert _raise_twist_err(self, _kw)
+        assert _raise_twist_err(self, _kw, name="apply_K")
         # Here is how the indices work:
         if kx2 is None:
             kx2 = self._Kx
