@@ -1,6 +1,6 @@
 [project]
 name = "mmfutils"
-version = "0.7.3.dev0"
+version = "0.7.3"
 description = "Small set of utilities: containers and interfaces."
 license = {text = "BSD-3-Clause"}
 authors = [
