@@ -1593,6 +1593,13 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.7.4
+----------
+
+- Resolve issue #38: Interpolation functions
+  ``mmfutils.math.bases.CylindricalBasis.get_Psi`` and ``Psi`` were
+  incorrectly scaling the wavefunction.
+
 REL: 0.7.3
 ----------
 

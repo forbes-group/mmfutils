@@ -85,6 +85,10 @@ class SphericalBasis(ObjectBase, BasisMixin):
     us to compute the Coulomb interaction for example.
     """
 
+    xp = np  # For later customization using e.g. GPUs.
+    _dst = staticmethod(dst)
+    _idst = staticmethod(idst)
+
     def __init__(self, N, R):
         self.N = N
         self.R = R
@@ -92,11 +96,11 @@ class SphericalBasis(ObjectBase, BasisMixin):
 
     def init(self):
         dx = self.R / self.N
-        r = np.arange(1, self.N + 1) * dx
-        k = np.pi * (0.5 + np.arange(self.N)) / self.R
+        r = self.xp.arange(1, self.N + 1) * dx
+        k = self.xp.pi * (0.5 + self.xp.arange(self.N)) / self.R
         self.xyz = [r]
         self._pxyz = [k]
-        self.metric = 4 * np.pi * r**2 * dx
+        self.metric = 4 * self.xp.pi * r**2 * dx
         self.k_max = k.max()
 
     def laplacian(self, y, factor=None, factors=None, exp=False):
@@ -129,12 +133,12 @@ class SphericalBasis(ObjectBase, BasisMixin):
         K = sign * pxyz[0] ** 2
 
         if exp:
-            K = np.exp(K)
+            K = self.xp.exp(K)
 
-        ys = [y.real, y.imag] if np.iscomplexobj(y) else [y]
+        ys = [y.real, y.imag] if self.xp.iscomplexobj(y) else [y]
         res = [idst(K * dst(r * _y)) / r for _y in ys]
 
-        if np.iscomplexobj(y):
+        if self.xp.iscomplexobj(y):
             res = res[0] + 1j * res[1]
         else:
             res = res[0]
@@ -146,7 +150,12 @@ class SphericalBasis(ObjectBase, BasisMixin):
         if factors is not None:
             raise NotImplementedError("Convolution with {factors=} not yet supported")
         D = 2 * self.R
-        return 4 * np.pi * np.ma.divide(1.0 - np.cos(k * D), k**2).filled(D**2 / 2.0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return (
+                4
+                * self.xp.pi
+                * self.xp.where(k == 0, D**2 / 2.0, (1.0 - self.xp.cos(k * D)) / k**2)
+            )
 
     def convolve_coulomb(self, y, form_factors=(), factors=None):
         """Modified Coulomb convolution to include form-factors (if provided).
@@ -155,15 +164,17 @@ class SphericalBasis(ObjectBase, BasisMixin):
         """
         if factors is not None:
             raise NotImplementedError("Convolution with {factors=} not yet supported")
-        y = np.asarray(y)
+        y = self.xp.asarray(y)
         r = self.xyz[0]
         N, R = self.N, self.R
 
         # Padded arrays with trailing _
-        ry_ = np.concatenate([r * y, np.zeros(y.shape, dtype=y.dtype)], axis=-1)
-        k_ = np.pi * (0.5 + np.arange(2 * N)) / (2 * R)
+        ry_ = self.xp.concatenate(
+            [r * y, self.xp.zeros(y.shape, dtype=y.dtype)], axis=-1
+        )
+        k_ = self.xp.pi * (0.5 + self.xp.arange(2 * N)) / (2 * R)
         K = prod([_K(k_) for _K in (self.coulomb_kernel,) + tuple(form_factors)])
-        return idst(K * dst(ry_))[..., :N] / r
+        return self._idst(K * self._dst(ry_))[..., :N] / r
 
     def convolve(self, y, C=None, Ck=None, factors=None):
         """Return the periodic convolution `int(C(x-r)*y(r),r)`.
@@ -178,10 +189,13 @@ class SphericalBasis(ObjectBase, BasisMixin):
         R_N = R / N
         if Ck is None:
             C0 = (self.metric * C).sum()
-            Ck = np.ma.divide(2 * np.pi * R_N * dst(r * C), k).filled(C0)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                Ck = self.xp.where(
+                    k == 0, C0, 2 * self.xp.pi * R_N * self._dst(r * C) / k
+                )
         else:
             Ck = Ck(k)
-        return idst(Ck * dst(r * y)) / r
+        return self._idst(Ck * self._dst(r * y)) / r
 
 
 @implementer(IBasisWithConvolution, IBasisKx, IBasisLz, IBasisCutoff)
@@ -801,6 +815,8 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         The default is the last two axes (best for performance).
     """
 
+    xp = np  # For later customization using e.g. GPUs.
+
     _d = 2  # Dimension of spherical part (see nu())
 
     def __init__(
@@ -986,17 +1002,17 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         if kx2 is None:
             kx2 = self._Kx
 
-        # Check if we have compute this already in the _K_data cache.
+        # Check if we have computed this already in the _K_data cache.
         _K_data_max_len = 3
         ind = None
         for _i, (key, _d) in enumerate(self._K_data):
-            if np.allclose((factor_x, factor_r), key):
+            if self.xp.allclose((factor_x, factor_r), key):
                 ind = _i
 
         if ind is None:  # If not, compute
             _r1, _r2, V, d = self._Kr_diag
-            exp_K_r = _r1 * np.dot(V * np.exp(factor_r * d), V.T) * _r2
-            exp_K_x = np.exp(factor_x * kx2)
+            exp_K_r = _r1 * self.xp.dot(V * self.xp.exp(factor_r * d), V.T) * _r2
+            exp_K_x = self.xp.exp(factor_x * kx2)
             K_data = (exp_K_r, exp_K_x)
             key = (factor_x, factor_r)
             self._K_data.append((key, K_data))
@@ -1008,7 +1024,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         K_data = self._K_data[ind][1]
         exp_K_r, exp_K_x = K_data
         tmp = self.ifft(exp_K_x * self.fft(y))
-        return np.einsum("...ij,...yj->...yi", exp_K_r, tmp)
+        return self.xp.einsum("...ij,...yj->...yi", exp_K_r, tmp)
 
     def apply_K(self, y, factors=None, kx2=None, **_kw):
         r"""Return `K*y` where `K = k**2/2`"""
@@ -1027,9 +1043,9 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         # C <- alpha*B*A + beta*C    A = A^T  zSYMM or zHYMM but not supported
         # maybe cvxopt.blas?  Actually, A is not symmetric... so be careful!
         if factors is None:
-            yt += np.dot(y, self._Kr.T)
+            yt += self.xp.dot(y, self._Kr.T)
         else:
-            yt += np.dot(y, self._Kr.T) * factors[1] ** 2
+            yt += self.xp.dot(y, self._Kr.T) * factors[1] ** 2
 
         return yt
 
@@ -1183,7 +1199,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         n = np.arange(r0.size)[:, None]
 
         # Here is the transform matrix
-        _F = (np.sqrt(r) * self._F(n, r)) / (np.sqrt(r0.T) * self._F(n, r0.T))
+        _F = (self._F(n, r) / np.sqrt(r)) / (self._F(n, r0.T) / np.sqrt(r0.T))
 
         if return_matrix:
             return _F
