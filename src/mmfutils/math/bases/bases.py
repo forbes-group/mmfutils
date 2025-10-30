@@ -1199,7 +1199,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         n = np.arange(r0.size)[:, None]
 
         # Here is the transform matrix
-        _F = (np.sqrt(r) * self._F(n, r)) / (np.sqrt(r0.T) * self._F(n, r0.T))
+        _F = (self._F(n, r) / np.sqrt(r)) / (self._F(n, r0.T) / np.sqrt(r0.T))
 
         if return_matrix:
             return _F
