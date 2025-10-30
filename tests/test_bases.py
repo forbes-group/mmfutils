@@ -848,10 +848,25 @@ class TestCylindricalBasis(LaplacianTests):
         yield self.Basis(Nxr=(64, 32), Lxr=self.Lxr)
 
     @pytest.fixture
+    def basis1(self):
+        """Slightly different basis for interpolation."""
+        yield self.Basis(Nxr=(64, 37), Lxr=self.Lxr)
+
+    @pytest.fixture
     def exact_quart(self, basis):
         x, r = basis.xyz
         return ExactGaussianQuartCyl(
             x=x, r=r, r_0=np.sqrt(2), A=self.Q / 8.0 / np.pi ** (3.0 / 2.0)
+        )
+
+    @pytest.fixture
+    def exact_r1(self, basis1):
+        x, r = basis1.xyz
+        return ExactGaussianR(
+            r=self.get_r(basis1),
+            d=3,
+            r_0=np.sqrt(2),
+            A=self.Q / 8.0 / np.pi ** (3.0 / 2.0),
         )
 
     def test_basis(self, basis):
@@ -934,6 +949,18 @@ class TestCylindricalBasis(LaplacianTests):
         r0 = exact.r_0
         n_2D_exact = exact.A**2 * (np.sqrt(np.pi) * r0 * np.exp(-(x**2 + y**2) / r0**2))
         assert np.allclose(n_2D, n_2D_exact, rtol=0.01, atol=0.01)
+
+    def test_interpolation(self, basis, basis1, exact_r, exact_r1):
+        """Test interpolation to a new basis.  Regression for issue #38."""
+        exact, exact1 = exact_r, exact_r1
+        x, r = basis.xyz
+        x1, r1 = basis1.xyz
+
+        n = abs(exact.y) ** 2
+        n1 = abs(exact1.y) ** 2
+        n1_interp = basis.Psi(np.sqrt(n), (x1, r1)) ** 2
+
+        assert np.allclose(n1, n1_interp)  # , rtol=0.01, atol=0.01)
 
 
 class TestCoverage:
