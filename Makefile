@@ -1,8 +1,8 @@
 SHELL = /bin/bash
 _SHELL = $(notdir $(SHELL))
 
-DEV_PY_VER ?= 3.12
-PY_VERS ?= 3.9 3.10 3.11 3.12 3.13
+DEV_PY_VER ?= 3.14
+PY_VERS ?= 3.9 3.10 3.11 3.12 3.13 3.14
 PANDOC_FLAGS ?= --toc --standalone
 
 USE_MICROMAMBA ?= true
@@ -21,7 +21,7 @@ GITHUB_CI_DIR ?= .github/workflows
 GITHUB_CI_FILES ?= $(patsubst %,$(GITHUB_CI_DIR)/python_%.yaml,$(PY_VERS))
 
 # Customize extras here pip install .[$(EXTRAS)]
-EXTRAS ?= test,doc
+EXTRAS ?= test,doc,notebook
 
 # Set if you want editable installs for developing
 EDITABLE ?= true

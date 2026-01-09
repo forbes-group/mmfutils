@@ -1593,6 +1593,11 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+REL: 0.7.5
+----------
+
+- Add support and testing for Python 3.14.
+
 REL: 0.7.4
 ----------
 
