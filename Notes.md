@@ -430,6 +430,7 @@ pdm lock --python="3.10.*" --append
 pdm lock --python="3.11.*" --append
 pdm lock --python="3.12.*" --append
 pdm lock --python="3.13.*" --append
+pdm lock --python="3.14.*" --append
 ```
 
 We provide a target `make pdm.lock` that does this.
@@ -2261,7 +2262,7 @@ To do this, we advocate the following procedure.
 
     ```bash
     hg com -m "REL: <version>"
-    hg bookmark 0.7.1 -r .
+    hg bookmark 0.7.5 -r .
     hg push -r .
    ```
    

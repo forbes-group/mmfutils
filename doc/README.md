@@ -7,7 +7,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.17.2
+    jupytext_version: 1.18.1
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -591,12 +591,32 @@ from IPython.display import HTML
 ```
 
 ```{code-cell} ipython3
+ROOTDIR = !hg root
+ROOTDIR = ROOTDIR[0]
 with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
     coverage = f.read()
 HTML(coverage)
 ```
 
 # Change Log
+
++++
+
+## REL: 0.7.5
+* Add support and testing for Python 3.14.
+
++++
+
+## REL: 0.7.4
+* Resolve issue #38: Interpolation functions `mmfutils.math.bases.CylindricalBasis.get_Psi` and `Psi` were incorrectly scaling the wavefunction.
+
++++
+
+## REL: 0.7.3
+
+* Removed support for `twist`, `booset_px`, and `boost_pxyz` in `mmfutils.math.bases`.
+* Added `factors` to various functions in `mmfutils.math.bases` allowing independent scaling of each dimension.  This will facilitate working with expanding bases.  (Resolves issue #37)
+* Fixed an issue with fourier derivatives: We now correctly zero the highest un-paired momentum in states with even numbers of abscissa. (Resolves issue #36)
 
 +++
 

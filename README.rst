@@ -981,6 +981,8 @@ Complete code coverage information is provided in
 
 .. code:: ipython3
 
+    ROOTDIR = !hg root
+    ROOTDIR = ROOTDIR[0]
     with open(os.path.join(ROOTDIR, "build/_coverage/index.html")) as f:
         coverage = f.read()
     HTML(coverage)
@@ -996,14 +998,14 @@ Complete code coverage information is provided in
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <title>Coverage report</title>
         <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-        <link rel="stylesheet" href="style_cb_81f8c14c.css" type="text/css">
+        <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
         <script src="coverage_html_cb_6fb7b396.js" defer></script>
     </head>
     <body class="indexfile">
     <header>
         <div class="content">
             <h1>Coverage report:
-                <span class="pc_cov">87%</span>
+                <span class="pc_cov">88%</span>
             </h1>
             <aside id="help_panel_wrapper">
                 <input id="help_panel_state" type="checkbox">
@@ -1045,8 +1047,8 @@ Complete code coverage information is provided in
                     <a class="button" href="class_index.html">Classes</a>
             </h2>
             <p class="text">
-                <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-                created at 2025-10-08 11:36 -0700
+                <a class="nav" href="https://coverage.readthedocs.io/en/7.10.7">coverage.py v7.10.7</a>,
+                created at 2025-10-09 08:43 -0700
             </p>
         </div>
     </header>
@@ -1073,28 +1075,28 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_430eb520d66b91e6_containers_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/containers.py</a></td>
                     <td>113</td>
                     <td>0</td>
-                    <td>0</td>
+                    <td>4</td>
                     <td class="right" data-ratio="113 113">100%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_430eb520d66b91e6_contexts_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/contexts.py</a></td>
                     <td>321</td>
                     <td>27</td>
-                    <td>2</td>
+                    <td>5</td>
                     <td class="right" data-ratio="294 321">92%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_430eb520d66b91e6_debugging_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/debugging.py</a></td>
                     <td>49</td>
                     <td>0</td>
-                    <td>3</td>
+                    <td>4</td>
                     <td class="right" data-ratio="49 49">100%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_430eb520d66b91e6_interface_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
-                    <td>16</td>
+                    <td>17</td>
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
                 <tr class="region">
@@ -1150,7 +1152,7 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_bf5d796325f94311___init___py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/math/integrate/__init__.py</a></td>
                     <td>215</td>
                     <td>12</td>
-                    <td>16</td>
+                    <td>17</td>
                     <td class="right" data-ratio="203 215">94%</td>
                 </tr>
                 <tr class="region">
@@ -1276,7 +1278,7 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_97c7e4624ef219ca_publish_py.html">.nox/test-3-12/lib/python3.12/site-packages/mmfutils/plot/publish.py</a></td>
                     <td>326</td>
                     <td>137</td>
-                    <td>0</td>
+                    <td>1</td>
                     <td class="right" data-ratio="189 326">58%</td>
                 </tr>
                 <tr class="region">
@@ -1318,28 +1320,28 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_5f1563ee9ba979c6_containers_py.html">src/mmfutils/containers.py</a></td>
                     <td>113</td>
                     <td>0</td>
-                    <td>0</td>
+                    <td>4</td>
                     <td class="right" data-ratio="113 113">100%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_5f1563ee9ba979c6_contexts_py.html">src/mmfutils/contexts.py</a></td>
                     <td>321</td>
                     <td>27</td>
-                    <td>2</td>
+                    <td>5</td>
                     <td class="right" data-ratio="294 321">92%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_5f1563ee9ba979c6_debugging_py.html">src/mmfutils/debugging.py</a></td>
                     <td>49</td>
                     <td>0</td>
-                    <td>3</td>
+                    <td>4</td>
                     <td class="right" data-ratio="49 49">100%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_5f1563ee9ba979c6_interface_py.html">src/mmfutils/interface.py</a></td>
                     <td>77</td>
                     <td>0</td>
-                    <td>16</td>
+                    <td>17</td>
                     <td class="right" data-ratio="77 77">100%</td>
                 </tr>
                 <tr class="region">
@@ -1358,10 +1360,10 @@ Complete code coverage information is provided in
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_eb8720e8ec2674ec_bases_py.html">src/mmfutils/math/bases/bases.py</a></td>
-                    <td>548</td>
+                    <td>560</td>
                     <td>3</td>
                     <td>0</td>
-                    <td class="right" data-ratio="545 548">99%</td>
+                    <td class="right" data-ratio="557 560">99%</td>
                 </tr>
                 <tr class="region">
                     <td class="name left"><a href="z_eb8720e8ec2674ec_interfaces_py.html">src/mmfutils/math/bases/interfaces.py</a></td>
@@ -1395,7 +1397,7 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_6c95154c693d83f3___init___py.html">src/mmfutils/math/integrate/__init__.py</a></td>
                     <td>215</td>
                     <td>12</td>
-                    <td>16</td>
+                    <td>17</td>
                     <td class="right" data-ratio="203 215">94%</td>
                 </tr>
                 <tr class="region">
@@ -1521,7 +1523,7 @@ Complete code coverage information is provided in
                     <td class="name left"><a href="z_741a542e2fc1e4b6_publish_py.html">src/mmfutils/plot/publish.py</a></td>
                     <td>326</td>
                     <td>137</td>
-                    <td>0</td>
+                    <td>1</td>
                     <td class="right" data-ratio="189 326">58%</td>
                 </tr>
                 <tr class="region">
@@ -1556,10 +1558,10 @@ Complete code coverage information is provided in
             <tfoot>
                 <tr class="total">
                     <td class="name left">Total</td>
-                    <td>6141</td>
+                    <td>6153</td>
                     <td>768</td>
-                    <td>212</td>
-                    <td class="right" data-ratio="5373 6141">87%</td>
+                    <td>234</td>
+                    <td class="right" data-ratio="5385 6153">88%</td>
                 </tr>
             </tfoot>
         </table>
@@ -1570,8 +1572,8 @@ Complete code coverage information is provided in
     <footer>
         <div class="content">
             <p>
-                <a class="nav" href="https://coverage.readthedocs.io/en/7.9.2">coverage.py v7.9.2</a>,
-                created at 2025-10-08 11:36 -0700
+                <a class="nav" href="https://coverage.readthedocs.io/en/7.10.7">coverage.py v7.10.7</a>,
+                created at 2025-10-09 08:43 -0700
             </p>
         </div>
         <aside class="hidden">
@@ -1591,7 +1593,19 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
-REL: 0.7.2
+REL: 0.7.5
+----------
+
+- Add support and testing for Python 3.14.
+
+REL: 0.7.4
+----------
+
+- Resolve issue #38: Interpolation functions
+  ``mmfutils.math.bases.CylindricalBasis.get_Psi`` and ``Psi`` were
+  incorrectly scaling the wavefunction.
+
+REL: 0.7.3
 ----------
 
 - Removed support for ``twist``, ``booset_px``, and ``boost_pxyz`` in
