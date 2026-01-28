@@ -109,6 +109,10 @@ projects.  (Other projects should refer here for this discussion.)
 Getting started should be as easy as:
 
 1. Cloning the project (or initializing with [our cookiecutter templates][]).
+
+   **Update 2026**: We still use the cookiecutter templates, but will likely migrate
+   these to [Pixi][].  See the discussion below
+   
 2. (Optional) `make tools` and adding the appropriate folder to your path. *(This is not
    implemented yet: currently you should install your tools with your OS package
    managers, [pipx][] etc.)*
@@ -236,6 +240,52 @@ I generally make sure I have the following tools installed globally.  These will
 be included on any docker images used for testing (CI) although some of them can be
 installed by the `Makefile`.  See `.gitlab-ci.yml` for what is currently needed.
 
+## [Pixi][]
+
+I generally install this globally with something like `curl -fsSL
+https://pixi.sh/install.sh | sh` as [recommended in the pixi
+documentation](https://pixi.prefix.dev/latest/installation/).  This could probably
+easily be modified to be installed locally with `make tools` for example.
+
+For example, on my Mac, I install this under my `admin` account in `/data/apps/pixi`:
+
+```bash
+ssh admin
+curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/data/apps/pixi bash
+```
+
+I then use [Lmod][] to activate this with the following module file:
+
+```{tcl}
+#%Module1.0
+# dest = ~/.modules/pixi  # Keep this as the 2nd line for mmf_init_setup
+proc ModulesHelp { } {
+    puts stderr "\tAdds pixi environment management command to the PATH."
+}
+
+module-whatis "Adds pixi environment management command to the PATH."
+
+prepend-path PATH /data/apps/pixi/bin
+```
+
+which I load in `~/.bash_aliases_site` with
+
+```{bash}
+module load pixi
+eval "$(pixi completion --shell bash)"
+```
+
+*Note: I do not set `PIXI_HOME` as a user since I want anything `pixi add` installs to go
+into the default directory.*
+
+To save disk space, I often make use of the [detached environments][] feature to store
+the environments on a data partition that is not backed up.
+
+[Lmod]: <https://lmod.readthedocs.io/en/latest/>
+[Pixi]: <https://pixi.sh>
+[detached environments]: <https://pixi.prefix.dev/latest/reference/pixi_configuration/#detached-environments>
+
+
 ## Mac OS X
 
 On my computer, I install most of these with [MacPorts][] or with [pipx][] if they are
@@ -248,6 +298,7 @@ for the same reason.  For complete details see [mac-os-x][].
 ssh admin  # My alias to login as `admin`
 port install git gmake pandoc myrepos graphviz
 port install python37 python38 python39 python310 python311
+curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/data/apps/pixi bash
 exit
 
 ssh conda  # My alias to login as `conda`
@@ -263,7 +314,6 @@ pipx inject pdm pdm-shell
 pipx inject mercurial hg-git hg-evolve
 exit
 ```
-
 
 You may not need all of these for all packages.
 
