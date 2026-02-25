@@ -46,8 +46,8 @@ from mmfutils.math import bases
 eps = np.finfo(float).eps
 hbar = m = w = 1
 a0 = np.sqrt(hbar / m / w)
-R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
-k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+R = np.sqrt(-2 * a0**2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0**2)
 N = int(np.ceil(k_max * 2 * R / np.pi))
 
 d = 3
@@ -57,7 +57,7 @@ r = basis.xyz[0]
 psi0 = np.exp(-((r / a0) ** 2) / 2)
 ax = plt.subplot(111)
 ax.plot(r, basis.laplacian(psi0))
-ax.plot(r, (r ** 2 - a0 ** 2 * d) / a0 ** 4 * psi0, "+")
+ax.plot(r, (r**2 - a0**2 * d) / a0**4 * psi0, "+")
 ax.set(xlabel="r", ylabel=r"$\psi_0(r)$")
 # -
 
@@ -241,7 +241,7 @@ def J(x, nu):
     with np.errstate(over="ignore"):
         # Ignore harmless overflow errors
         res2, err2 = quad(integrand2, 0, np.inf)
-    return res1 - res2, np.sqrt(err1 ** 2 + err2 ** 2)
+    return res1 - res2, np.sqrt(err1**2 + err2**2)
 
 
 assert np.allclose(J(x, alpha)[0], J_alpha(x))
@@ -252,7 +252,7 @@ def i2(x):
 
 
 res, err = quad(i2, 0, np.inf, epsabs=0.001)
-exact = 2 / np.pi * np.sin(np.pi / 2 * (alpha - beta)) / (alpha ** 2 - beta ** 2)
+exact = 2 / np.pi * np.sin(np.pi / 2 * (alpha - beta)) / (alpha**2 - beta**2)
 assert np.allclose(exact, res, atol=err)
 # -
 
@@ -372,9 +372,9 @@ Ny = 50
 ys = np.linspace(0, r.max(), Ny)[None, :]
 r0 = 1.2
 
-n = np.exp(-(x ** 2 + r ** 2) / r0 ** 2)
-n_1D = np.pi * r0 ** 2 * np.exp(-(x ** 2) / r0 ** 2)
-n_2D = np.sqrt(np.pi) * r0 * np.exp(-(x ** 2 + ys ** 2) / r0 ** 2)
+n = np.exp(-(x**2 + r**2) / r0**2)
+n_1D = np.pi * r0**2 * np.exp(-(x**2) / r0**2)
+n_2D = np.sqrt(np.pi) * r0 * np.exp(-(x**2 + ys**2) / r0**2)
 
 print(
     "{}% max error".format(
@@ -382,15 +382,9 @@ print(
     )
 )
 
-n = r ** 2 * np.exp(-(x ** 2 + r ** 2) / r0 ** 2)
-n_1D = np.pi * r0 ** 4 * np.exp(-(x ** 2) / r0 ** 2)
-n_2D = (
-    np.sqrt(np.pi)
-    * r0
-    / 2
-    * (r0 ** 2 + 2 * ys ** 2)
-    * np.exp(-(x ** 2 + ys ** 2) / r0 ** 2)
-)
+n = r**2 * np.exp(-(x**2 + r**2) / r0**2)
+n_1D = np.pi * r0**4 * np.exp(-(x**2) / r0**2)
+n_2D = np.sqrt(np.pi) * r0 / 2 * (r0**2 + 2 * ys**2) * np.exp(-(x**2 + ys**2) / r0**2)
 
 print(
     "{}% max error".format(
@@ -421,15 +415,15 @@ from mmfutils.math.bases import CylindricalBasis
 eps = np.finfo(float).eps
 hbar = m = w = 1
 a0 = np.sqrt(hbar / m / w)
-R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
-k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+R = np.sqrt(-2 * a0**2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0**2)
 Nr = int(np.ceil(k_max * 2 * R / np.pi))
 
 basis = CylindricalBasis(Nxr=(1, Nr), Lxr=(1.0, R))
 
 
 def get_V(r):
-    return m * w ** 2 * r ** 2 / 2
+    return m * w**2 * r**2 / 2
 
 
 Vs = []
@@ -459,7 +453,7 @@ nu = basis.nu(l=l)
 r = basis._r(Nr, l=l0)
 K = basis._get_K(l=l0)[0]  # Without factors of sqrt(r)
 
-V = get_V(r) + (nu ** 2 - nu0 ** 2) / r ** 2 * hbar ** 2 / 2 / m
+V = get_V(r) + (nu**2 - nu0**2) / r**2 * hbar**2 / 2 / m
 H = K / 2 + np.diag(V)
 assert np.allclose(H, H.T.conj())
 E = np.linalg.eigvalsh(H)
@@ -490,8 +484,8 @@ from mmfutils.math.bases import SphericalBasis
 eps = np.finfo(float).eps
 hbar = m = w = 1
 a0 = np.sqrt(hbar / m / w)
-R = np.sqrt(-2 * a0 ** 2 * np.log(eps))
-k_max = np.sqrt(-np.log(eps) / a0 ** 2)
+R = np.sqrt(-2 * a0**2 * np.log(eps))
+k_max = np.sqrt(-np.log(eps) / a0**2)
 Nr = int(np.ceil(k_max * 2 * R / np.pi))
 
 basis = SphericalBasis(N=Nr, R=R)
@@ -499,7 +493,7 @@ basis = SphericalBasis(N=Nr, R=R)
 
 # +
 def get_V(r):
-    return m * w ** 2 * r ** 2 / 2
+    return m * w**2 * r**2 / 2
 
 
 Vs = []
@@ -588,8 +582,8 @@ x = np.arange(N) * dx - L / 2 + (dx / 2 if symmetric else 0)
 k = 2 * np.pi * np.fft.fftfreq(N, dx)
 r = abs(x)
 
-G_r = np.exp(-r / r_0) / 8 / np.pi * r_0 ** 3
-G_k = 1.0 / (1 + k ** 2 / k_0 ** 2) ** 2
+G_r = np.exp(-r / r_0) / 8 / np.pi * r_0**3
+G_k = 1.0 / (1 + k**2 / k_0**2) ** 2
 
 
 def sft(n, dx=dx):
@@ -606,7 +600,7 @@ def sft(n, dx=dx):
     _ft = np.fft.fft(np.fft.fftshift(x * n))
     # assert np.allclose(_ft.real, 0)
     return np.ma.divide(-2 * np.pi * _ft.imag * dx, k).filled(
-        (2 * np.pi * x ** 2 * n * dx).sum()
+        (2 * np.pi * x**2 * n * dx).sum()
     )
 
 
@@ -620,7 +614,7 @@ def isft(n, dx=dx):
     _ift = np.fft.fftshift(np.fft.ifft(k * n))
     # assert np.allclose(_ft.real, 0)
     return np.ma.divide(_ift.imag, 2 * np.pi * dx * x).filled(
-        (2 * np.pi * k ** 2 * n / (2 * np.pi) ** 3).sum() * dk
+        (2 * np.pi * k**2 * n / (2 * np.pi) ** 3).sum() * dk
     )
 
 
@@ -645,6 +639,7 @@ def isft(n, dx=dx):
 #   \tilde{K}_{D}(0) = \frac{D^2}{2}.
 # $$
 
+
 # +
 def pad(f):
     N = len(f)
@@ -666,13 +661,11 @@ sp = scipy
 eps = np.finfo(float).eps
 a = 0.5
 D = L
-n_r = np.exp(-(r ** 2) / 2 / a ** 2)
-V_r = (
-    a ** 3 / (r + eps) * np.sqrt(np.pi / 2) * sp.special.erf((r + eps) / a / np.sqrt(2))
-)
+n_r = np.exp(-(r**2) / 2 / a**2)
+V_r = a**3 / (r + eps) * np.sqrt(np.pi / 2) * sp.special.erf((r + eps) / a / np.sqrt(2))
 
 _K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
-K_D = np.ma.divide(1.0 - np.cos(_K * D), _K ** 2).filled(D ** 2 / 2.0)
+K_D = np.ma.divide(1.0 - np.cos(_K * D), _K**2).filled(D**2 / 2.0)
 res = unpad(isft(sft(pad(n_r)) * K_D))
 assert np.allclose(res, V_r)
 
@@ -687,16 +680,14 @@ def coulomb(n_r, dx=dx):
     X = np.arange(2 * N) * dx - L
     K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
 
-    K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
+    K_D = np.ma.divide(1.0 - np.cos(K * D), K**2).filled(D**2 / 2.0)
     n = pad(n_r)
 
     _ft = np.fft.fft(np.fft.fftshift(X * n))
-    tmp = np.ma.divide(-_ft.imag, K).filled((X ** 2 * n).sum()) * K_D
+    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
     _ift = np.fft.fftshift(np.fft.ifft(K * tmp))
     dk = np.pi / L
-    res = np.ma.divide(_ift.imag, X).filled(
-        (K ** 2 * tmp / (2 * np.pi)).sum() * dk * dx
-    )
+    res = np.ma.divide(_ift.imag, X).filled((K**2 * tmp / (2 * np.pi)).sum() * dk * dx)
 
     return unpad(res)
 
@@ -715,15 +706,13 @@ def coulomb(n_r, dx=dx):
     X = np.arange(2 * N) * dx - L
     K = 2 * np.pi * np.fft.fftfreq(2 * N, dx)
 
-    K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
+    K_D = np.ma.divide(1.0 - np.cos(K * D), K**2).filled(D**2 / 2.0)
     n = pad(n_r)
 
     _ft = np.fft.fft(X * n)
-    tmp = np.ma.divide(-_ft.imag, K).filled((X ** 2 * n).sum()) * K_D
+    tmp = np.ma.divide(-_ft.imag, K).filled((X**2 * n).sum()) * K_D
     _ift = np.fft.ifft(-_ft.imag * K_D)
-    res = np.ma.divide(_ift.imag, X).filled(
-        -(K ** 2 * tmp / (2 * np.pi)).sum() * dk * dx
-    )
+    res = np.ma.divide(_ift.imag, X).filled(-(K**2 * tmp / (2 * np.pi)).sum() * dk * dx)
     # Not sure I understand the - sign needed here...
 
     return unpad(res)
@@ -831,17 +820,17 @@ k = np.pi * (0.5 + np.arange(N)) / R
 
 a = 0.5
 
-n_r = np.exp(-(r ** 2) / 2 / a ** 2)
-V_r = a ** 3 / r * np.sqrt(np.pi / 2) * sp.special.erf(r / a / np.sqrt(2))
+n_r = np.exp(-(r**2) / 2 / a**2)
+V_r = a**3 / r * np.sqrt(np.pi / 2) * sp.special.erf(r / a / np.sqrt(2))
 
 f_r = r * n_r
-f_rr = rr * np.exp(-(rr ** 2) / 2 / a ** 2)
-df_r = (1.0 - (r / a) ** 2) * np.exp(-(r ** 2) / 2 / a ** 2)
-df_rr = (1.0 - (rr / a) ** 2) * np.exp(-(rr ** 2) / 2 / a ** 2)
-ddf_r = (r ** 2 - 3 * a ** 2) / a ** 4 * f_r
-ddf_rr = (rr ** 2 - 3 * a ** 2) / a ** 4 * f_rr
+f_rr = rr * np.exp(-(rr**2) / 2 / a**2)
+df_r = (1.0 - (r / a) ** 2) * np.exp(-(r**2) / 2 / a**2)
+df_rr = (1.0 - (rr / a) ** 2) * np.exp(-(rr**2) / 2 / a**2)
+ddf_r = (r**2 - 3 * a**2) / a**4 * f_r
+ddf_rr = (rr**2 - 3 * a**2) / a**4 * f_rr
 
-assert np.allclose(idst(-(k ** 2) * dst(f_r)), ddf_r)
+assert np.allclose(idst(-(k**2) * dst(f_r)), ddf_r)
 
 F_k = dst(f_r) / (2.0 * N)
 assert np.allclose(
@@ -887,7 +876,7 @@ D = L
 rN_r = np.concatenate([r * n_r, 0 * n_r])
 K = np.pi * (0.5 + np.arange(2 * N)) / (2 * R)
 
-K_D = np.ma.divide(1.0 - np.cos(K * D), K ** 2).filled(D ** 2 / 2.0)
+K_D = np.ma.divide(1.0 - np.cos(K * D), K**2).filled(D**2 / 2.0)
 
 kN_k = dst(rN_r)
 V = idst(K_D * kN_k)[:N] / r
@@ -917,11 +906,11 @@ dx = R / N
 r = (1.0 + np.arange(N)) * dx
 k = np.pi * (0.5 + np.arange(N)) / R
 
-metric = 4 * np.pi * r ** 2 * dx
+metric = 4 * np.pi * r**2 * dx
 n = np.exp(-((r / r0) ** 2) / 2) / (r0 * np.sqrt(2 * np.pi)) ** 3
 assert np.allclose(1, (n * metric).sum())
 
-Gk = 1.0 / (1 + k ** 2 / k0 ** 2) ** 2
+Gk = 1.0 / (1 + k**2 / k0**2) ** 2
 G = idst(Gk) / r
 q = idst(Gk * dst(r * n)) / r
 
@@ -1080,8 +1069,8 @@ eps = np.finfo(float).eps
 b = bases.PeriodicBasis(Nxyz=(N, N), Lxyz=(L, L))
 x, y = b.xyz
 kx, ky = b._pxyz
-f = (x + 1j * y) * np.exp(-(x ** 2) - y ** 2)
-nabla_f = (4 * (x ** 2 + y ** 2) - 8) * f
+f = (x + 1j * y) * np.exp(-(x**2) - y**2)
+nabla_f = (4 * (x**2 + y**2) - 8) * f
 Lz_f = f
 ax = plt.subplot(211)
 plt.semilogy(x.ravel(), abs(f)[:, N // 2])
@@ -1097,7 +1086,7 @@ m = 1.1
 hbar = 2.2
 wz = 3.3
 kwz2 = m * wz / hbar
-factor = -(hbar ** 2) / 2 / m
+factor = -(hbar**2) / 2 / m
 assert np.allclose(
     factor * nabla_f - wz * hbar * Lz_f, b.laplacian(f, factor=factor, kwz2=kwz2)
 )

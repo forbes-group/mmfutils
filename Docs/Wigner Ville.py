@@ -147,7 +147,7 @@ plt.colorbar()
 # +
 m = 1
 w = 2 * np.pi * m / L
-psi = np.exp(1j * w * x ** 2 / 2)
+psi = np.exp(1j * w * x**2 / 2)
 ws, P = wigner.wigner_ville(psi, dt=dx, skip=1, pad=False)
 P_exact = np.zeros_like(P)
 P_exact[:, N // 2 + m] = 2 * L
@@ -161,7 +161,7 @@ plt.colorbar()
 # +
 m = 1
 w = 2 * np.pi * m / L
-psi = np.exp(1j * w * x ** 2 / 2)
+psi = np.exp(1j * w * x**2 / 2)
 ws, P = wigner.wigner_ville(psi, dt=dx, skip=1, pad=True)
 P_exact = np.zeros_like(P)
 P_exact[:, N // 2 + m] = 2 * L

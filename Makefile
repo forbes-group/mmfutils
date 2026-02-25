@@ -79,11 +79,11 @@ qshell: dev
 DOC_REQUIREMENTS =
 
 html: dev
-	$(_RUN) make -C doc/ html
+	$(_RUN) make -C Docs/ html
 
-README.rst: doc/README.ipynb
+README.rst: Docs/README.ipynb
 	# Not sure why we need the ../ for --output=
-	jupyter nbconvert --to=rst --output=../README.rst doc/README.ipynb
+	jupyter nbconvert --to=rst --output=../README.rst Docs/README.ipynb
 
 %.html: %.rst
 	rst2html5.py $< > $@
@@ -186,7 +186,7 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	$(RM) -r src/mmfutils.egg-info
-	$(RM) -r doc/README_files/
+	$(RM) -r Docs/README_files/
 	$(RM) *.html
 
 realclean: clean

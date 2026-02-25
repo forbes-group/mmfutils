@@ -156,8 +156,8 @@ if weave:
 #     return (sum, err)
 # -
 
-sn = 1.0 / np.arange(1, 10 ** 4, dtype=np.float32)
-sn = 1.0 / np.arange(1, 10 ** 4, dtype=np.float64)
+sn = 1.0 / np.arange(1, 10**4, dtype=np.float32)
+sn = 1.0 / np.arange(1, 10**4, dtype=np.float64)
 ssum_cython2(sn)
 
 # +
