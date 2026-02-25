@@ -1,8 +1,8 @@
 Developer Notes
 ===============
 
-[![Documentation Status][rtd_badge]][rtd]
-[![Tests][ci_badge]][ci]
+[![Documentation Status][mmfutils rtd_badge]][rtd]
+[![Tests][mmfutils ci_badge]][ci]
 [![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
 [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
 [![Code style: black][black_img]][black]
@@ -256,7 +256,7 @@ curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/data/apps/pixi bash
 
 I then use [Lmod][] to activate this with the following module file:
 
-```{tcl}
+```tcl
 #%Module1.0
 # dest = ~/.modules/pixi  # Keep this as the 2nd line for mmf_init_setup
 proc ModulesHelp { } {
@@ -270,7 +270,7 @@ prepend-path PATH /data/apps/pixi/bin
 
 which I load in `~/.bash_aliases_site` with
 
-```{bash}
+```bash
 module load pixi
 eval "$(pixi completion --shell bash)"
 ```
@@ -502,7 +502,7 @@ done
 ```
 
 
-```{bash}
+```bash
 mkdir tmp && cd tmp
 pdm init --python "3.12.*" -n
 sed -i '' "s/dependencies = \[\]/dependencies = [\n]/g" pyproject.toml
@@ -526,7 +526,7 @@ This produces:
 ```
 suggesting the following dependencies in `pyproject.toml`:
 
-```{toml}
+```toml
 ...
 dependencies = [
     'numpy >= 1.24.4; python_version == "3.8.*"',
@@ -543,7 +543,7 @@ version compatible.  Notes: this might required you to first delete your lock fi
 install the packages.  (Do this if you are running `pdm` globally, but not in your
 project.)
 
-```{bash}
+```bash
 rm -f pdm.lock
 pdm add numpy --no-sync
 ```
@@ -558,7 +558,7 @@ versions of python.  Here are some tips.
 1. Once things are working, you should be able to generate a lock file.  We do this with
    `make lock` which essentially does the following:
   
-   ```{bash}
+   ```bash
    for py in 3.10 3.11 3.12 3.13; do
        pdm lock -G all --python="==${py}.*" --append
    done
@@ -566,7 +566,7 @@ versions of python.  Here are some tips.
 
 1. Try removing all the packages **and the `pdm.lock` file**, then use
 
-   ```{bash}
+   ```bash
    rm -f pdm.lock
    pdm add numpy --no-sync  # --no-sync does not try to install it
    ```
@@ -580,7 +580,7 @@ all` in the actual production `Makefile`.)*
 If you have difficulty, I recommend starting from the lowest supported version and
 working up (possibly dropping the `-G all` at first).  I.e.:
 
-```{bash}
+```bash
 pdm lock --python="==3.10.*"
 pdm lock --python="==3.11.*"
 pdm lock --python="==3.12.*"
@@ -592,7 +592,7 @@ If you want PDM to help recommend versions, then change `requires-python =
 lockfile `pdm.lock`).  This should then tell you which versions work with python 3.10.
 Once you have this, you can add code like the following to your `dependencies` list:
 
-```{toml}
+```toml
 dependencies = [
     'numpy >= 1.24.4; python_version < "3.9"',
     'numpy >= 1.26.4; python_version >= "3.12"'
@@ -1459,9 +1459,9 @@ Some examples of packages we manage and their features:
 [zopeext PyPI badge]: 
   <https://img.shields.io/pypi/v/sphinxcontrib-zopeext?logo=python&logoColor=FBE072">
 [zopeext Coverage badge]: 
-  <https://coveralls.io/repos/github/sphinx-contrib/zopeext/badge.svg?branch=main>
+  <ERROR!> # https://coveralls.io/repos/github/sphinx-contrib/zopeext/badge.svg?branch=main>
 [zopeext Coverage link]: 
-  <https://coveralls.io/github/sphinx-contrib/zopeext?branch=main>
+  <ERROR!> # https://coveralls.io/github/sphinx-contrib/zopeext?branch=main>
 [zopeext Documentation status badge]:
   <https://readthedocs.org/projects/zopeext/badge/?version=latest> 
 [zopeext Documentation link]:  <https://zopeext.readthedocs.io/en/latest/?badge=latest>
@@ -1499,9 +1499,9 @@ Some examples of packages we manage and their features:
 [mmfutils PyPI badge]: 
   <https://img.shields.io/pypi/v/mmfutils?logo=python&logoColor=FBE072">
 [mmfutils Coverage badge]: 
-  <https://coveralls.io/repos/github/forbes-group/mmfutils/badge.svg?branch=main>
+  <ERROR!> # https://coveralls.io/repos/github/forbes-group/mmfutils/badge.svg?branch=main>
 [mmfutils Coverage link]: 
-  <https://coveralls.io/github/forbes-group/mmfutils?branch=main>
+  <ERROR!> # https://coveralls.io/github/forbes-group/mmfutils?branch=main>
 [mmfutils Documentation status badge]:
   <https://readthedocs.org/projects/mmfutils/badge/?version=latest> 
 [mmfutils Documentation link]:  <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
@@ -1712,7 +1712,7 @@ You must make sure that `make rtd` puts the generated documentation in `$READTHE
 We use [`sphinx.ext.autodoc`][] to document our source code.  This requires that you
 provide a skeleton for your API documentation.  For example, you might include:
 
-```{markdown}
+```markdown
 :::{automodule}
 ```
 

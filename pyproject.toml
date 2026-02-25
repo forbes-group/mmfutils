@@ -7,8 +7,6 @@ authors = [
   {name = "Michael McNeil Forbes", email = "michael.forbes+python@gmail.com>"},
 ]
 readme = "description.md"
-repository = "https://gitlab.com/ColdAtoms/utilities/mmfutils"
-documentation = "http://mmfutils.readthedocs.org/"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -31,6 +29,12 @@ dependencies = [
   'importlib-metadata >= 4.13.0; python_version < "3.8"',
   "uncertainties >= 3.2.2",
 ]
+
+[project.urls]
+documentation = "http://mmfutils.readthedocs.org/"
+source = "https://gitlab.com/ColdAtoms/utilities/mmfutils"
+issues = "https://gitlab.com/coldatoms/utilities/mmfutils/-/issues"
+
 
 # Optional dependencies for testing, building the docs, etc.
 [project.optional-dependencies]
@@ -181,3 +185,27 @@ exclude = '''
       | dist
     )/
 '''
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64", "osx-64"]
+
+[tool.pixi.pypi-dependencies]
+mmfutils = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { features = ["all"], solve-group = "default" }
+all = { features = ["all"], solve-group = "default" }
+doc = { features = ["doc"], solve-group = "default" }
+full = { features = ["full"], solve-group = "default" }
+notebook = { features = ["notebook"], solve-group = "default" }
+numba = { features = ["numba"], solve-group = "default" }
+parallel = { features = ["parallel"], solve-group = "default" }
+perf = { features = ["perf"], solve-group = "default" }
+pyfftw = { features = ["pyfftw"], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+mystmd = ">=1.8.1,<2"

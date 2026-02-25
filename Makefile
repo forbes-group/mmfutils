@@ -50,6 +50,7 @@ endif
 DEV_ENV ?= $(ENVS)/py$(DEV_PY_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
 _RUN = $(_MICROMAMBA) run -p $(DEV_ENV)
+_RUN = pixi run
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
 # ------- Top-level targets  -------
@@ -60,9 +61,12 @@ help:
 usage:
 	@echo "$$HELP_MESSAGE"
 
-shell: dev
+shell_: dev
 	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 	$(_RUN) bash --init-file .init-file.bash
+
+shell:
+	pixi run bash --init-file .init-file.bash
 
 PYTESTARGS ?= -n 10
 test: dev
@@ -133,8 +137,11 @@ ifeq ($(EDITABLE), true)
   PIP_INSTALL_ARGS += -e
 endif
 
-dev: $(DEV_ENV)
+dev_: $(DEV_ENV)
 	$(CONDA_ACTIVATE_DEV) && python3 -m pip install $(PIP_INSTALL_ARGS) .[$(strip  $(EXTRAS))]
+
+dev: $(DEV_ENV)
+	pixi install
 
 $(ENVS): $(ALL_ENVS)
 
@@ -165,6 +172,12 @@ endif
 pdm.lock: environment.yaml pyproject.toml
 	$(CONDA_ACTIVATE_DEV) && for py in $(PY_VERS); do $(PDM) lock --python="$${py}.*" --append; done
 
+######################################################################
+# Documentation
+doc-server:
+	pixi run myst start #--execute
+
+.PHONY: doc-server
 clean:
 	-coverage erase
 	$(RM) -r fil-result

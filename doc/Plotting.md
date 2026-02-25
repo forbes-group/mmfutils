@@ -8,17 +8,16 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.13.8
 kernelspec:
-  display_name: Python [conda env:.conda-_mmfutils]
+  display_name: Python 3
   language: python
-  name: conda-env-.conda-_mmfutils-py
+  name: python3
 ---
 
 Here we discuss some tools for making publication quality plots with Matplotib.
 
-```{code-cell} ipython3
-:init_cell: true
-
-%pylab inline --no-import-all
+```{code-cell}
+%matplotlib inline
+import numpy as np, matplotlib.pyplot as plt
 inline_rc = plt.rcParams.copy()   # Store a copy for later
 deprecated_keys = ['examples.directory', 'text.latex.unicode', 
                    'savefig.frameon', 'verbose.fileo', 'verbose.level']
