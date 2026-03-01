@@ -222,12 +222,12 @@ default = { features = ["all"], solve-group = "default" }
 doc = { features = ["doc"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 
-py39 = { features = ["py39"], solve-group = "py39" }
-py310 = ["py310"]
-py311 = ["py311"]
-py312 = ["py312"]
-py313 = ["py313"]
-py314 = ["py314"]
+py39 = ["py39", "all"]
+py310 = ["py310", "all"]
+py311 = ["py311", "all"]
+py312 = ["py312", "all"]
+py313 = ["py313", "all"]
+py314 = ["py314", "all"]
 
 test39 = ["test", "py39"]
 test310 = ["test", "py310"]

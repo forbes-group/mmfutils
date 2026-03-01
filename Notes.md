@@ -135,7 +135,7 @@ To support this, our project structure uses the following files:
   this. Currently we recommend [PDM][] (was previously [Poetry][], but they do not
   [support this standard][poetry#3332].)  We follow [Scikit-HEP's
   recommendation](https://scikit-hep.org/developer/packaging#extras-lowmedium-priority)
-  that the extras `test`, `docs`, and `dev` be defined here, though the latter may be
+  that the extras `test`, `doc`, and `dev` be defined here, though the latter may be
   managed by a tool like [PDM][].
 * `environment.yaml`: Many of our projects require something for which installing
   with [conda][] is easiest.  ([PyFFTW][] and [CuPy][] are obvious examples, but even
@@ -342,14 +342,14 @@ We currently manage this file with [PDM][], e.g.:
 make shell
 pdm add uncertainties
 pdm add -G test pytest-cov
-pdm add -G docs sphinx
+pdm add -G doc sphinx
 pdm add --dev ipython
 make lock
 ...
 ```
 
 In addition to the development dependencies specified in `[tool.pdm.dev-dependencies]`,
-one should generally include the `test` and `docs` extras.  For our work, we also often
+one should generally include the `test` and `doc` extras.  For our work, we also often
 use the following:
 
 * `perf`: Tools for high-performance computing that might be difficult to install, so we
@@ -361,7 +361,7 @@ use the following:
   
   Now that I know about [recursive optional dependencies in Python][], I am considering
   splitting these into `gpu`, `pyfftw`, `numba`, etc.
-* `full`: All functional dependencies.  I.e. everything except `docs` and `test`.  Note:
+* `full`: All functional dependencies.  I.e. everything except `doc` and `test`.  Note:
   if you include packages here or in `perf`, you should be sure to make sure that these
   do not break imports.  For example (see `src/mmfutils/performance/fft.py` for example):
   
@@ -375,15 +375,15 @@ use the following:
   
   An exception is if there is a particular sub-module that obviously depends on this
   feature, then it is probably okay for that to just fail on import.
-* `all`: Everything including `docs` and `test`.  Perhaps this should always be spelled
+* `all`: Everything including `doc` and `test`.  Perhaps this should always be spelled
 
     ```toml
     all = [
-        "mmfutils[full,test,docs]"
+        "mmfutils[full,test,doc]"
     ]
     ```
     
-    with `mmfutils` replaced by the package name?  (I don't think `".[full,test.docs]"`
+    with `mmfutils` replaced by the package name?  (I don't think `".[full,test.doc]"`
     is supported.)
 
 After you have finished editing [`pyproject.toml`][], you should check the dependencies
@@ -1142,7 +1142,7 @@ We also define convenient aliases and functions.
                   "install",
                   "--upgrade",
                   "--use-feature=in-tree-build",
-                  "../..[docs]",
+                  "../..[doc]",
               ]
           )
           subprocess.check_call(
@@ -2258,11 +2258,11 @@ To do this, we advocate the following procedure.
 
     ```bash
     make shell
-    cd doc
+    cd Docs
     sphinx-apidoc -eTE ../src/mmfutils -o source
     ```
    
-    * Include any changes at the bottom of this file (`doc/README.ipynb`).
+    * Include any changes at the bottom of this file (`Docs/README.ipynb`).
     * You may need to copy new figures to `README_files/` if the figure numbers have
       changed, and then `hg add` these while `hg rm` the old ones.
    
@@ -2280,9 +2280,9 @@ To do this, we advocate the following procedure.
     need to add a title to a new file.  For example, when I added the
     `mmf.math.optimize` module, I needed to update the following:
   
-[comment]: # (The rst generate is mucked up by this indented code block...)
+[comment]: # (The rst generated is mucked up by this indented code block...)
 ```rst
-   .. doc/source/mmfutils.rst
+   .. Docs/source/mmfutils.rst
    mmfutils
    ========
    
@@ -2292,7 +2292,7 @@ To do this, we advocate the following procedure.
        ...
 ```   
 ```rst
-   .. doc/source/mmfutils.optimize.rst
+   .. Docs/source/mmfutils.optimize.rst
    mmfutils.optimize
    =================
        
@@ -3011,7 +3011,7 @@ build-docs:
     # - source ~/.bashrc  # This does not work in CI for some reason.  Not a login shell?
     - export PATH=/root/.local/bin/:${PATH}
     - EXTRAS=doc make html
-    - mv doc/build/html public
+    - mv Docs/build/html public
   pages: true  # specifies that this is a Pages job
   artifacts:
     paths:

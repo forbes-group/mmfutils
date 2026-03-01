@@ -13,10 +13,12 @@ USE_ROSETTA ?= false
 
 CHANNEL ?= conda-forge
 
-ENVS ?= envs
+ENVS_ ?= envs
 BIN ?= build/bin
 PDM ?= pdm
 PIXI ?= pixi
+ENV ?= $(subst .,,py$(DEV_PY_VER))
+ENV_TEST ?= $(subst .,,test$(DEV_PY_VER))
 
 # Generate github workflows.  Although nox will run all the tests for us, we make
 # separate workflows for github so that we can have indepdent badges for each
@@ -51,11 +53,12 @@ ifeq ($(USE_ROSETTA), true)
   endif
 endif
 
-DEV_ENV ?= $(ENVS)/py$(DEV_PY_VER)
-CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
-RUN_ = $(_MICROMAMBA) run -p $(DEV_ENV)
-RUN = pixi run
-ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
+DEV_ENV_ ?= $(ENVS_)/py$(DEV_PY_VER)
+CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV_)
+RUN_ = $(_MICROMAMBA) run -p $(DEV_ENV_)
+RUN = $(PIXI) run -e $(ENV)
+ALL_ENVS_ = $(foreach py,$(PY_VERS),$(ENVS_)/py$(py))
+ALL_PIXI_ENVS ?= $(foreach py,$(PY_VERS),$(subst .,,py$(py) test$(py)))
 
 # ------- Top-level targets  -------
 # Default prints a help message
@@ -83,7 +86,7 @@ qshell: dev_
 PYTESTARGS ?= -n 10
 test:
 	#$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
-	$(RUN) pytest $(PYTESTARGS)
+	$(PIXI) run -e $(ENV_TEST) pytest $(PYTESTARGS)
 
 
 ######################################################################
@@ -153,15 +156,15 @@ ifeq ($(EDITABLE), true)
   PIP_INSTALL_ARGS += -e
 endif
 
-dev_: $(DEV_ENV)
+dev_: $(DEV_ENV_)
 	$(CONDA_ACTIVATE_DEV) && python3 -m pip install $(PIP_INSTALL_ARGS) .[$(strip  $(EXTRAS))]
 
 dev:
 	pixi install
 
-$(ENVS): $(ALL_ENVS)
+$(ENVS_): $(ALL_ENVS_)
 
-$(ENVS)/py3.11: environment.yaml pyproject.toml
+$(ENVS_)/py3.11: environment.yaml pyproject.toml
 	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "conda-forge::python=3.11"
 ifneq ($(USE_MICROMAMBA), true)
   ifeq ($(shell uname -p),arm)
@@ -175,7 +178,7 @@ endif
 	$(CONDA_ACTIVATE_DEV) && pip install --upgrade pip pdm setuptools
 	$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 
-$(ENVS)/py%: environment.yaml pyproject.toml
+$(ENVS_)/py%: environment.yaml pyproject.toml
 	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "python=$*"
 ifneq ($(USE_MICROMAMBA), true)
   ifeq ($(shell uname -p),arm)
@@ -188,12 +191,19 @@ endif
 pdm.lock: environment.yaml pyproject.toml
 	$(CONDA_ACTIVATE_DEV) && for py in $(PY_VERS); do $(PDM) lock --python="$${py}.*" --append; done
 
+####################
+# Pixi versions
+
+.PHONE: all_pixi_envs
+all_pixi_envs:
+	$(PIXI) install $(foreach env,$(ALL_PIXI_ENVS),-e $(env))
+
 ######################################################################
 # Documentation
 .PHONY: doc-server
 
 doc-server:
-	pixi run myst start #--execute
+	$(RUN) myst start #--execute
 
 ######################################################################
 # Cleaning
@@ -232,11 +242,23 @@ Variables:
    DEV_PY_VER: (= "$(DEV_PY_VER)")
                      Version of python for development.
    PY_VERS: (= "$(PY_VERS)")
-                     Versions of python to install in ENVS_DIR
-   ENVS: (= "$(ENVS)")
-                     Location of environments.
-   DEV_ENV: (= "$(DEV_ENV)")
-                     Python development environment.
+                     Versions of python to use for testing, and to completely install
+                     environments for.
+   ENV: (= "$(ENV)")
+                     Pixi environment to use for running commands.  This allows you to
+                     specify specific interpreters.  Options included
+                     `default`, `py39`, ..., `py314`, `test39`, ..., `test214` etc.
+                     Run `pixi info` for details.  By default this is set from `DEV_PY_VER`.
+   ENV_TEST: (= "$(ENV_TEST)")
+                     Pixi environment to use for running tests. Default set from `DEV_PY_VER`.
+   ENVS_: (= "$(ENVS_)")
+                     Location ofenvironments created by `micromamba`.  Pixi environments
+                     are stored in `.pixi/envs` or the location specified by the
+                     `detached-environments` configuration.  I do not see a way to
+                     customize this locally. See
+       https://pixi.prefix.dev/latest/reference/pixi_configuration/#detached-environments
+   DEV_ENV_: (= "$(DEV_ENV_)")
+                     Python development environment for micromamba.
    PANDOC_FLAGS: (= "$(PANDOC_FLAGS)")
                      Flags to pass to pandoc for generating HTML files from markdown files.
    CONDA_PRE: (= "$(CONDA_PRE)")
@@ -268,16 +290,20 @@ Variables:
 Computed variables (cannot be overwritten on command line)
 	 CONDA_ACTIVATE_DEV:(= "$(CONDA_ACTIVATE_DEV)")
                      Command to activate the development environment.
-	 ALL_ENVS: (= "$(ALL_ENVS)")
-                     All environments that will be made.
+	 ALL_ENVS_: (= "$(ALL_ENVS_)")
+                     All environments that will be made for micromamba.
+	 ALL_PIXI_ENVS: (= "$(ALL_PIXI_ENVS)")
+                     All environments that will be made for pixi.
 
 Initialization:
    make shell        Spawn a shell after building and checking the dev environment.
    make qshell       Quickly spawn a shell.  Environment not checked (created if needed).
    make dev          Initialize the development environment and setup poetry.
-   make $(ENVS)
-                     Initialize all environments.
-
+   make $(ENVS_)
+                     Initialize all environments (micromamba).
+   make all_pixi_envs
+                     Initialize all environments in `ALL_PIXI_ENVS` (pixi).
+   
 Testing:
    make test         Runs the general tests in the dev environment.
 
