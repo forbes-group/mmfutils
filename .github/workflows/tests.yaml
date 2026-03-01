@@ -72,7 +72,7 @@ jobs:
           curl -fsSL https://pixi.sh/install.sh | sh
           echo "/home/runner/.pixi/bin" >> $GITHUB_PATH
       - name: Run Tests
-        run: PY_DEV_VER=${{ inputs.python_version }} make test
+        run: PY=${{ inputs.python_version }} make test
       #- name: Upload coverage data
       #  uses: actions/upload-artifact@v4
       #  with:

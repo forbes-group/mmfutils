@@ -10854,7 +10854,7 @@ packages:
 - pypi: ./
   name: mmfutils
   version: 0.7.6.0.dev0
-  sha256: d9b09f8d6981523158bd3568c79da39cc45484f8117829a1f4b32594932744c3
+  sha256: e1236a1c23ac54d0b62898ce95f5c137ef6a0ea444543ea4c7d9b20f5f64bf39
   requires_dist:
   - zope-interface>=5.5.2
   - husl>=4.0.3

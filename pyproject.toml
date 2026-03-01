@@ -152,6 +152,7 @@ addopts = [
     "--cov-fail-under=80",
     "--no-cov-on-fail",
     "--cov-append",
+    #"--reruns 3",
     #"-x",
     #"--pdb",
     #"--flake8",  # Disable until https://github.com/tholo/pytest-flake8/issues/8

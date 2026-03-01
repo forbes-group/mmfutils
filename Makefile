@@ -4,7 +4,8 @@
 SHELL = /bin/bash
 _SHELL = $(notdir $(SHELL))
 
-DEV_PY_VER ?= 3.14
+PY ?= 3.14
+DEV_PY_VER ?= $(PY)
 PY_VERS ?= 3.9 3.10 3.11 3.12 3.13 3.14
 PANDOC_FLAGS ?= --toc --standalone
 
@@ -240,7 +241,8 @@ for example.
 
 Variables:
    DEV_PY_VER: (= "$(DEV_PY_VER)")
-                     Version of python for development.
+                     Version of python for development.  For convenience one can use `PY`, e.g.
+                     `PY=3.9 make test`
    PY_VERS: (= "$(PY_VERS)")
                      Versions of python to use for testing, and to completely install
                      environments for.
