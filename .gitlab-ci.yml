@@ -16,3 +16,6 @@ build-docs:
   artifacts:
     paths:
       - public
+  rules:
+    # Only run the CI if the commit message has "DOC" in it.
+    - if: $CI_COMMIT_MESSAGE =~ "/DOC/"

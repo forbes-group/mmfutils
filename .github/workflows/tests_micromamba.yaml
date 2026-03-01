@@ -1,0 +1,64 @@
+# .github/workflows/tests.yaml
+# Based on
+# https://github.com/orgs/community/discussions/52616
+# https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-python#using-multiple-python-versions
+
+name: Run Tests
+
+on:
+  # workflow_call is a required field of the "on" property,
+  # when intending to use the workflow as a reusable workflow
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Linux Tools
+        run: |        
+          # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
+          sudo apt-get --option="APT::Acquire::Retries=3" update 
+          sudo apt-get --option="APT::Acquire::Retries=3" install libfftw3-dev
+          sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg
+      - name: Install TeXLive
+        run: |        
+          # https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf
+          sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
+          # sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
+          #  awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
+          #  tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
+      - name: Setup Micromamba
+        # https://github.com/mamba-org/setup-micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          # micromamba-version: '1.4.8-0'
+          environment-file: environment.yaml
+          create-args: >-
+            python=${{ inputs.python_version }}
+          init-shell: bash
+          cache-environment: true
+          post-cleanup: 'all'
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+          # architecture: x64
+      - name: Install Nox
+        run: pipx install nox
+        shell: micromamba-shell {0}
+      - name: Run Tests
+        run: nox -p ${{ inputs.python_version }}
+        shell: micromamba-shell {0}
+      #- name: Upload coverage data
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: coverage-data-${{ inputs.python_version }}
+      #    path: .coverage.*
+      #    include-hidden-files: true
+      #    if-no-files-found: ignore

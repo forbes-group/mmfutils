@@ -20,12 +20,46 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install Linux Tools
+
+      # Store your packages in .github/apt-packages.txt
+      - name: Load package list
+        id: package_list
+        run: echo "PACKAGES=$(tr '\n' ' ' < .github/apt-packages.txt)" >> $GITHUB_ENV
+
+      - name: Prepare APT cache dir and symlink
+        run: |
+          mkdir -p .apt-cache/archives/partial
+          sudo rm -rf /var/cache/apt/archives
+          sudo ln -s "$PWD/.apt-cache/archives" /var/cache/apt/archives
+          
+      - name: Cache APT archive
+        id: cache-apt-archive
+        uses: actions/cache@v5
+        with:
+          path: .apt-cache/archives
+          key: |
+            ${{ runner.os }}-apt-cache-${{ hashFiles('.github/apt-packages.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+            
+      - name: Download APT files
+        if: steps.cache-apt-archive.outputs.cache-hit != 'true'
         run: |        
           # https://github.com/actions/runner-images/issues/6894#issuecomment-1378055030
-          sudo apt-get --option="APT::Acquire::Retries=3" update 
-          sudo apt-get --option="APT::Acquire::Retries=3" install libfftw3-dev
-          sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg
+          sudo apt-get --option="APT::Acquire::Retries=3" update
+          sudo apt-get --option="APT::Acquire::Retries=3" install -y -d $PACKAGES
+
+      - name: Install from APT Cache
+        run: sudo apt-get install -y $PACKAGES
+
+      - name: Clean APT Cache locks & fix permissions
+        if: always()
+        run: |
+          sudo rm -f /var/cache/apt/archives/lock
+          #sudo rm -f /var/lib/dpkg/lock-frontend || true
+          #sudo rm -f /var/lib/apt/lists/lock || true
+          sudo chown -R $USER:$USER .apt-cache/archives
+        
       #- name: Install TeXLive
       #  run: |        
       #    # https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf
