@@ -26,15 +26,17 @@ jobs:
           sudo apt-get --option="APT::Acquire::Retries=3" update 
           sudo apt-get --option="APT::Acquire::Retries=3" install libfftw3-dev
           sudo apt-get --option="APT::Acquire::Retries=3" install ffmpeg
-      - name: Install TeXLive
-        run: |        
-          # https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf
-          sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
-          # sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
-          #  awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
-          #  tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
-      - name: Setup Pixi
-        run: curl -fsSL https://pixi.sh/install.sh | sh
+      #- name: Install TeXLive
+      #  run: |        
+      #    # https://gist.github.com/wkrea/b91e3d14f35d741cf6b05e57dfad8faf
+      #    sudo apt-get --option="APT::Acquire::Retries=3" install texlive-full
+      #    # sudo apt-get --option="APT::Acquire::Retries=3" install `sudo apt --assume-no install texlive-full | \
+      #    #  awk '/The following additional packages will be installed/{f=1;next} /Suggested packages/{f=0} f' | \
+      #    #  tr ' ' '\n' | grep -vP 'doc$' | grep -vP 'texlive-lang' | grep -vP 'latex-cjk' | tr '\n' ' '`
+      - name: Install Pixi
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | sh
+          export PATH=/home/runner/.pixi/bin:${PATH}
       - name: Run Tests
         run: PY_DEV_VER=${{ inputs.python_version }} make test
       #- name: Upload coverage data
