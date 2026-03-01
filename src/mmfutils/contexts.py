@@ -1,5 +1,4 @@
-"""Various useful contexts.
-"""
+"""Various useful contexts."""
 
 import collections
 from contextlib import contextmanager
@@ -824,6 +823,10 @@ class FPS:
 
     Examples
     --------
+    >>> import os
+    >>> if os.environ.get('CI', False):
+    ...     import pytest; pytest.skip('Running in CI: not running sensitive doctests')
+
     >>> import numpy as np
     >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
     >>> for t in fps:
