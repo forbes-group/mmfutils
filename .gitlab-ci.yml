@@ -5,11 +5,13 @@ build-docs:
     - apt-get update && apt-get install -y build-essential make curl wget git libfftw3-dev pandoc
                                            #ffmpeg texlive-full
     # - EXTRAS=doc make tools
-    - bash <(curl -L micro.mamba.pm/install.sh)
+    - bash <(curl -L https://pixi.sh/install.sh)
+    - export PATH=/root/.pixi/bin/:${PATH}
+    #- bash <(curl -L micro.mamba.pm/install.sh)
     # - source ~/.bashrc  # This does not work in CI for some reason.  Not a login shell?
-    - export PATH=/root/.local/bin/:${PATH}
+    #- export PATH=/root/.local/bin/:${PATH}
     - EXTRAS=doc make html
-    - mv doc/build/html public
+    - mv Docs/build/html public
   pages: true  # specifies that this is a Pages job
   artifacts:
     paths:
