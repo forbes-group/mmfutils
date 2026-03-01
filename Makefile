@@ -1,3 +1,6 @@
+# Some parts of this Makefile serve as a conversion from micromamba to pixi.
+# Targets with a trailing underscore represent the micromamba version.
+
 SHELL = /bin/bash
 _SHELL = $(notdir $(SHELL))
 
@@ -13,6 +16,7 @@ CHANNEL ?= conda-forge
 ENVS ?= envs
 BIN ?= build/bin
 PDM ?= pdm
+PIXI ?= pixi
 
 # Generate github workflows.  Although nox will run all the tests for us, we make
 # separate workflows for github so that we can have indepdent badges for each
@@ -49,37 +53,50 @@ endif
 
 DEV_ENV ?= $(ENVS)/py$(DEV_PY_VER)
 CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
-_RUN = $(_MICROMAMBA) run -p $(DEV_ENV)
-_RUN = pixi run
+RUN_ = $(_MICROMAMBA) run -p $(DEV_ENV)
+RUN = pixi run
 ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
 
 # ------- Top-level targets  -------
 # Default prints a help message
+.PHONY: help usage shell_ shell
 help:
 	@make usage
 
 usage:
 	@echo "$$HELP_MESSAGE"
 
-shell_: dev
+shell_: dev_
 	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
-	$(_RUN) bash --init-file .init-file.bash
+	$(RUN_) bash --init-file .init-file.micromamba.bash
 
 shell:
-	pixi run bash --init-file .init-file.bash
+	$(RUN) bash --init-file .init-file.pixi.bash
+
+qshell: dev_
+	$(RUN_) bash --init-file .init-file.bash
+
+######################################################################
+# Tests
+.PHONY: test
 
 PYTESTARGS ?= -n 10
-test: dev
-	$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
+test:
+	#$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
+	$(RUN) pytest $(PYTESTARGS)
 
-qshell: dev
-	$(_RUN) bash --init-file .init-file.bash
 
-# ------- Documentation  -----
+######################################################################
+# Documentation
+.PHONY: html
+
 DOC_REQUIREMENTS =
 
-html: dev
-	$(_RUN) make -C Docs/ html
+html:
+	$(RUN) make -C Docs/ html
+
+html_: dev_
+	$(RUN_) make -C Docs/ html
 
 README.rst: Docs/README.ipynb
 	# Not sure why we need the ../ for --output=
@@ -105,10 +122,9 @@ FSWATCH ?= fswatch -e ".*" -i "$<" -o .
 	$(PANDOC) && $(OPEN_BROWSER)
 	$(FSWATCH) | while read num; do $(PANDOC) && $(REFRESH_BROWSER); done
 
-.PHONY: html
-
 ######################################################################
 # GitHub Workflows
+.PHONY: workflows
 
 define _workflow_test_file
 # DO NOT EDIT!
@@ -129,10 +145,10 @@ $(GITHUB_CI_DIR)/python_%.yaml: Makefile
 
 workflows: $(GITHUB_CI_FILES)
 
-.PHONY: workflows
-
 ######################################################################
 # Development Environments etc.
+.PHONY: dev_ dev
+
 ifeq ($(EDITABLE), true)
   PIP_INSTALL_ARGS += -e
 endif
@@ -140,7 +156,7 @@ endif
 dev_: $(DEV_ENV)
 	$(CONDA_ACTIVATE_DEV) && python3 -m pip install $(PIP_INSTALL_ARGS) .[$(strip  $(EXTRAS))]
 
-dev: $(DEV_ENV)
+dev:
 	pixi install
 
 $(ENVS): $(ALL_ENVS)
@@ -174,10 +190,15 @@ pdm.lock: environment.yaml pyproject.toml
 
 ######################################################################
 # Documentation
+.PHONY: doc-server
+
 doc-server:
 	pixi run myst start #--execute
 
-.PHONY: doc-server
+######################################################################
+# Cleaning
+.PHONY: clean realclean
+
 clean:
 	-coverage erase
 	$(RM) -r fil-result
@@ -190,14 +211,14 @@ clean:
 	$(RM) *.html
 
 realclean: clean
+	$(PIXI) clean
 	$(RM) -r .nox .conda $(ENVS) $(BIN)
 	$(RM) -r build
 
-.PHONY: help usage shell dev test clean realclean
 
+######################################################################
+# Usage
 
-
-# ----- Usage -----
 define HELP_MESSAGE
 
 This Makefile provides several tools for creating a development environment for testing, etc.
