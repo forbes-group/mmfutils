@@ -1,3 +1,6 @@
 libfftw3-dev
 ffmpeg
 texlive
+dvipng
+texlive-latex-extra
+texlive-fonts-recommended
