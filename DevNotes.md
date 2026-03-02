@@ -1,6 +1,10 @@
 # 2 March 2026
 * Trying to get CI working with a minimal LaTeX install:
   * https://github.com/matplotlib/matplotlib/issues/16911
+* `cm-super` (type1ec.sty)
+* `texlive-science` (siunitx.sty)
+* `texlive-fonts-extra` (eulervm.sty)
+* Remaining issues were timing - probably because we were running 10 tests at a time!
 
 
 # 28 Feb 2026
