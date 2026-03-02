@@ -27,6 +27,10 @@ ENV_TEST ?= $(subst .,,test$(DEV_PY_VER))
 GITHUB_CI_DIR ?= .github/workflows
 GITHUB_CI_FILES ?= $(patsubst %,$(GITHUB_CI_DIR)/python_%.yaml,$(PY_VERS))
 
+# If defined, then assume we are running on a CI. For example, don't run tests in parallel
+# threads.
+CI ?= 
+
 # Customize extras here pip install .[$(EXTRAS)]
 EXTRAS ?= test,doc,notebook
 
@@ -84,7 +88,10 @@ qshell: dev_
 # Tests
 .PHONY: test
 
+ifndef CI
 PYTESTARGS ?= -n 10
+endif
+
 test:
 	#$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
 	$(PIXI) run -e $(ENV_TEST) pytest $(PYTESTARGS)
