@@ -5,3 +5,4 @@ dvipng
 texlive-latex-extra
 texlive-fonts-recommended
 cm-super
+texlive-science
