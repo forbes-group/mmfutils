@@ -1,3 +1,8 @@
+# 2 March 2026
+* Trying to get CI working with a minimal LaTeX install:
+  * https://github.com/matplotlib/matplotlib/issues/16911
+
+
 # 28 Feb 2026
 Continue converting to pixi.  We will try writing tests and CI to use pixi environments.
 * Not sure what to do with nox.  It does not yet support pixi (see [nox#992][]).  We can
