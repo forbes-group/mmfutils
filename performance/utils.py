@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 import os
 import pickle
+import time
+import timeit
 
 import numpy as np
 import pyfftw.builders
@@ -92,3 +94,24 @@ def get_fftw_wisdom(wisdom_file=_WISDOM_FILE):
         with open(wisdom_file, "rb") as f1:
             wisdom1 = pickle.load(f1)
             assert wisdom == wisdom1
+
+
+@contextmanager
+def tester(np_fftn, X, T=3, repeat=5):
+    tic = time.time()
+    X_t = np_fftn(X)
+    t = time.time() - tic
+    number = max(1, int(T / t / repeat))
+
+    def get_ts(fftn, label="", quiet=False):
+        ts = timeit.repeat(
+            "fftn(X)",
+            globals=dict(X=X, fftn=fftn),
+            repeat=repeat,
+            number=number,
+        )
+        if not quiet:
+            print(f"{label:6}: {min(ts):.4f}s (median {np.median(ts):.4f}s) / {number}")
+        return ts
+
+    yield get_ts, X_t

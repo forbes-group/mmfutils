@@ -13,7 +13,8 @@ Options:
 
 import sys
 
-import time, timeit, numpy as np, pyfftw.builders
+import numpy as np
+import pyfftw.builders
 
 from docopt import docopt
 from utils import allclose, get_fftn, get_fftw_wisdom
@@ -40,24 +41,9 @@ def run_test(
     if np.iscomplexobj(psi):
         psi += (rng.normal(size=Nxyz) * 1j).astype(dtype)
 
-    tic = time.time()
-    psi_t = np.fft.fftn(psi)
-    t = time.time() - tic
-    T, repeat = 3, 5  # Desired time for tests in s and number of repeats
-    number = max(1, int(T / t / repeat))
-
-    def test(fftn, label=""):
-        ts = timeit.repeat(
-            "fftn(psi)",
-            globals=dict(psi=psi, fftn=fftn),
-            repeat=repeat,
-            number=number,
-        )
-        print(f"{label:6}: {min(ts):.4f}s (median {np.median(ts):.4f}s) / {number}")
-        return ts
-
-    if check:
-        test(np.fft.fft, "np")
+    with tester(np_fftn=np.fft.fftn, X=psi, T=3, repeat=5) as (get_ts, psi_t):
+        if check:
+            get_ts(np.fft.fftn, label="np")
 
     flags = []
     if wisdom_only:
@@ -79,7 +65,7 @@ def run_test(
     if check:
         assert allclose(fftn(psi), psi_t)
 
-    ts = test(fftn, "pyfftw")
+    ts = get_ts(fftn, label="pyfftw")
     print()
     return ts
 
