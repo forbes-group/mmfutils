@@ -830,7 +830,7 @@ class FPS:
     >>> import numpy as np
     >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
     >>> for t in fps:
-    ...     print(f"t={t:.1f}: fps={fps:.0f}")
+    ...     print(f"{t=:.1f}: {fps=:.0f}")
     ...     sleep(0.1)
     t=0.0: fps=nan
     t=0.1: fps=10...
