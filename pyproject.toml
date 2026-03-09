@@ -110,6 +110,7 @@ full = [
     'matplotlib >= 3.5.3', #; python_version < "3.11"',
     'docutils >= 0.19',
     'mmfutils[perf]',
+    'docopt-ng>=0.9.0',
 ]
 
 all = [
