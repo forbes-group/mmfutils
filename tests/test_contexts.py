@@ -315,6 +315,41 @@ def max_fps(request):
     yield request.param
 
 
+class MyFPS(contexts.FPS):
+    """Test modifying FPS.  See issue #40.
+
+    We would like to be able to add functionality to the iterations.
+
+    >>> for x in MyFPS(range(2)):
+    ...     print(f"{x=}")
+    MyFPS frame=0
+    x=0
+    MyFPS frame=1
+    x=1
+
+    >>> fps = MyFPS(range(2))
+    >>> for x in fps:
+    ...     print(f"{x=}")
+    MyFPS frame=0
+    x=0
+    MyFPS frame=1
+    x=1
+
+    >>> with MyFPS(range(2)) as fps:
+    ...     for x in fps:
+    ...         print(f"{x=}")
+    MyFPS frame=0
+    x=0
+    MyFPS frame=1
+    x=1
+    """
+
+    def __iter__(self):
+        for frame in super().__iter__():
+            print(f"MyFPS {frame=}")
+            yield frame
+
+
 class TestFPS:
     def test_timeout(self):
         timeout = 0.1
