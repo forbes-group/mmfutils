@@ -1599,15 +1599,15 @@ Rel: 0.7.6
 - Fix issue #40: Improved FPS so subclasses can augment its behavior
   consistently.
 
-- Fix issue #39: Add ``mmfutils.performance.get_fftw_wisdom`` context
-  for loading and saving wisdom. This will use a default effort of
+- Fix issue #39: Add ``mmfutils.performance.fftw_wisdom`` context for
+  loading and saving wisdom. This will use a default effort of
   ``FFTW_PATIENT`` which may be slow the first time, but will be fast
   later and optimally use threads.
 
   .. code:: python
 
-     from mmfutils.performance.fft import get_fftw_wisdom
-     with get_fftw_wisdom():
+     from mmfutils.performance.fft import fftw_wisdom
+     with fftw_wisdom():
          ... # Do your fft's
 
 - Start using `Pixi <https://pixi.prefix.dev/latest/>`__ for building

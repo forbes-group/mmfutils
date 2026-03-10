@@ -17,7 +17,7 @@ import numpy as np
 import pyfftw.builders
 
 from docopt import docopt
-from utils import allclose, get_fftn, get_fftw_wisdom
+from utils import allclose, get_fftn, fftw_wisdom
 
 rng = np.random.default_rng(seed=2)
 
@@ -77,7 +77,7 @@ def run(
     effort="FFTW_MEASURE",
     wisdom_file=_WISDOM_FILE,
 ):
-    with get_fftw_wisdom(wisdom_file=wisdom_file):
+    with fftw_wisdom(wisdom_file=wisdom_file):
         for Nxyz in [
             (2**12,),
             (2, 64),

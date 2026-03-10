@@ -71,7 +71,7 @@ def get_fftn(
 
 
 @contextmanager
-def get_fftw_wisdom(wisdom_file=_WISDOM_FILE):
+def fftw_wisdom(wisdom_file=_WISDOM_FILE):
     """Context in which to load and save wisdom."""
     wisdom = None
     if os.path.exists(wisdom_file):
