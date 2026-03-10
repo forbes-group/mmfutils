@@ -67,7 +67,7 @@ ALL_PIXI_ENVS ?= $(foreach py,$(PY_VERS),$(subst .,,py$(py) test$(py)))
 
 # ------- Top-level targets  -------
 # Default prints a help message
-.PHONY: help usage shell_ shell
+.PHONY: help usage shell_ shell notebook
 help:
 	@make usage
 
@@ -83,6 +83,9 @@ shell:
 
 qshell: dev_
 	$(RUN_) bash --init-file .init-file.bash
+
+notebook:
+	$(RUN) jupyter notebook
 
 ######################################################################
 # Tests
