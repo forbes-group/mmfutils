@@ -21,7 +21,18 @@ Indices should first be normalized by ``inds % len(shape)``.
 For best performance, you should call the appropriate `get_*fft*()`.  By default, this
 uses `_PLANNER_EFFORT = "FFTW_MEASURE"` with `_THREADS`.  For optimal performance, you
 need to adjust `_THREADS` or use `_PLANNER_EFFORT = "FFTW_PATIENT"`, but this can be
-extremely slow.
+extremely slow on first use.  To mitigate this, wrap your code in the `fftw_wisdom()`
+context::
+
+    from mmfutils.performance import fftw
+    with fftw_wisdom(threads=8, effort="FFTW_PATIENT"):
+        ...  # Do your calculations, or at least call the builders to do planning
+
+On exit, the wisdom will be stored and subsequent calls should be fast.  Note: you
+should use the same number of threads -- even though `FFTW_PATIENT` will check lower
+numbers of threads, it does not save this in the wisdom file.
+
+Note that wisdom files should NOT be shared across platforms, etc.
 
 The methods `fft`, `ifft`, fftn`, and `ifftn` are provided for convenience.  They call
 an appropriate builder upon first invocation, check that the returned function is faster
@@ -31,9 +42,11 @@ copy is made.  If the fft function will not be called before the array is copied
 might gain some performance improvement by setting this to `False`.
 """
 
+import contextlib
 import functools
 import itertools
 import os
+import pickle
 import warnings
 
 import numpy.fft
@@ -55,6 +68,7 @@ __all__ = [
     "get_ifftn",
     "fftfreq",
     "resample",
+    "fftw_wisdom",
 ]
 
 
@@ -82,6 +96,7 @@ fftshift = np.fft.fftshift
 _THREADS = os.cpu_count()
 _PLANNER_EFFORT = "FFTW_MEASURE"
 _COPY_OUTPUT = True
+_WISDOM_FILE = ".fftw_wisdom"
 
 
 def set_num_threads(nthreads):
@@ -510,6 +525,38 @@ def resample(f, N):
         fk1[_s] = fk[_s]
 
     return ifftn(fk1, axes=axes) * np.prod(newshape.astype(float) / f.shape)
+
+
+@contextlib.contextmanager
+def fftw_wisdom(wisdom_file=_WISDOM_FILE, threads=None, effort="FFTW_PATIENT"):
+    """Context in which to load and save wisdom."""
+    if threads:
+        set_num_threads(threads)
+    global _PLANNER_EFFORT
+    old_effort, _PLANNER_EFFORT = _PLANNER_EFFORT, effort
+
+    wisdom = None
+    if os.path.exists(wisdom_file):
+        print("Loading wisdom")
+        with open(wisdom_file, "rb") as f:
+            try:
+                wisdom = pickle.load(f)
+                pyfftw.import_wisdom(wisdom)
+            except pickle.UnpicklingError:
+                print("Invalid wisdom pickle... ignoring")
+                wisdom = None
+    try:
+        yield wisdom
+    finally:
+        print("Saving wisdom")
+        with open(wisdom_file, "wb") as f:
+            wisdom = pyfftw.export_wisdom()
+            pickle.dump(wisdom, f)
+
+        with open(wisdom_file, "rb") as f1:
+            wisdom1 = pickle.load(f1)
+            assert wisdom == wisdom1
+        _PLANNER_EFFORT = old_effort
 
 
 def check_performance():

@@ -1,8 +1,8 @@
 Developer Notes
 ===============
 
-[![Documentation Status][rtd_badge]][rtd]
-[![Tests][ci_badge]][ci]
+[![Documentation Status][mmfutils rtd_badge]][rtd]
+[![Tests][mmfutils ci_badge]][ci]
 [![Language grade: Python][lgtm_mmfutils_badge]][lgtm_mmfutils]
 [![Language grade: Python][lgtm_mmfutils_fork_badge]][lgtm_mmfutils_fork]
 [![Code style: black][black_img]][black]
@@ -109,6 +109,10 @@ projects.  (Other projects should refer here for this discussion.)
 Getting started should be as easy as:
 
 1. Cloning the project (or initializing with [our cookiecutter templates][]).
+
+   **Update 2026**: We still use the cookiecutter templates, but will likely migrate
+   these to [Pixi][].  See the discussion below
+   
 2. (Optional) `make tools` and adding the appropriate folder to your path. *(This is not
    implemented yet: currently you should install your tools with your OS package
    managers, [pipx][] etc.)*
@@ -131,7 +135,7 @@ To support this, our project structure uses the following files:
   this. Currently we recommend [PDM][] (was previously [Poetry][], but they do not
   [support this standard][poetry#3332].)  We follow [Scikit-HEP's
   recommendation](https://scikit-hep.org/developer/packaging#extras-lowmedium-priority)
-  that the extras `test`, `docs`, and `dev` be defined here, though the latter may be
+  that the extras `test`, `doc`, and `dev` be defined here, though the latter may be
   managed by a tool like [PDM][].
 * `environment.yaml`: Many of our projects require something for which installing
   with [conda][] is easiest.  ([PyFFTW][] and [CuPy][] are obvious examples, but even
@@ -236,6 +240,52 @@ I generally make sure I have the following tools installed globally.  These will
 be included on any docker images used for testing (CI) although some of them can be
 installed by the `Makefile`.  See `.gitlab-ci.yml` for what is currently needed.
 
+## [Pixi][]
+
+I generally install this globally with something like `curl -fsSL
+https://pixi.sh/install.sh | sh` as [recommended in the pixi
+documentation](https://pixi.prefix.dev/latest/installation/).  This could probably
+easily be modified to be installed locally with `make tools` for example.
+
+For example, on my Mac, I install this under my `admin` account in `/data/apps/pixi`:
+
+```bash
+ssh admin
+curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/data/apps/pixi bash
+```
+
+I then use [Lmod][] to activate this with the following module file:
+
+```tcl
+#%Module1.0
+# dest = ~/.modules/pixi  # Keep this as the 2nd line for mmf_init_setup
+proc ModulesHelp { } {
+    puts stderr "\tAdds pixi environment management command to the PATH."
+}
+
+module-whatis "Adds pixi environment management command to the PATH."
+
+prepend-path PATH /data/apps/pixi/bin
+```
+
+which I load in `~/.bash_aliases_site` with
+
+```bash
+module load pixi
+eval "$(pixi completion --shell bash)"
+```
+
+*Note: I do not set `PIXI_HOME` as a user since I want anything `pixi add` installs to go
+into the default directory.*
+
+To save disk space, I often make use of the [detached environments][] feature to store
+the environments on a data partition that is not backed up.
+
+[Lmod]: <https://lmod.readthedocs.io/en/latest/>
+[Pixi]: <https://pixi.sh>
+[detached environments]: <https://pixi.prefix.dev/latest/reference/pixi_configuration/#detached-environments>
+
+
 ## Mac OS X
 
 On my computer, I install most of these with [MacPorts][] or with [pipx][] if they are
@@ -248,6 +298,7 @@ for the same reason.  For complete details see [mac-os-x][].
 ssh admin  # My alias to login as `admin`
 port install git gmake pandoc myrepos graphviz
 port install python37 python38 python39 python310 python311
+curl -fsSL https://pixi.sh/install.sh | PIXI_HOME=/data/apps/pixi bash
 exit
 
 ssh conda  # My alias to login as `conda`
@@ -263,7 +314,6 @@ pipx inject pdm pdm-shell
 pipx inject mercurial hg-git hg-evolve
 exit
 ```
-
 
 You may not need all of these for all packages.
 
@@ -292,14 +342,14 @@ We currently manage this file with [PDM][], e.g.:
 make shell
 pdm add uncertainties
 pdm add -G test pytest-cov
-pdm add -G docs sphinx
+pdm add -G doc sphinx
 pdm add --dev ipython
 make lock
 ...
 ```
 
 In addition to the development dependencies specified in `[tool.pdm.dev-dependencies]`,
-one should generally include the `test` and `docs` extras.  For our work, we also often
+one should generally include the `test` and `doc` extras.  For our work, we also often
 use the following:
 
 * `perf`: Tools for high-performance computing that might be difficult to install, so we
@@ -311,7 +361,7 @@ use the following:
   
   Now that I know about [recursive optional dependencies in Python][], I am considering
   splitting these into `gpu`, `pyfftw`, `numba`, etc.
-* `full`: All functional dependencies.  I.e. everything except `docs` and `test`.  Note:
+* `full`: All functional dependencies.  I.e. everything except `doc` and `test`.  Note:
   if you include packages here or in `perf`, you should be sure to make sure that these
   do not break imports.  For example (see `src/mmfutils/performance/fft.py` for example):
   
@@ -325,15 +375,15 @@ use the following:
   
   An exception is if there is a particular sub-module that obviously depends on this
   feature, then it is probably okay for that to just fail on import.
-* `all`: Everything including `docs` and `test`.  Perhaps this should always be spelled
+* `all`: Everything including `doc` and `test`.  Perhaps this should always be spelled
 
     ```toml
     all = [
-        "mmfutils[full,test,docs]"
+        "mmfutils[full,test,doc]"
     ]
     ```
     
-    with `mmfutils` replaced by the package name?  (I don't think `".[full,test.docs]"`
+    with `mmfutils` replaced by the package name?  (I don't think `".[full,test.doc]"`
     is supported.)
 
 After you have finished editing [`pyproject.toml`][], you should check the dependencies
@@ -452,7 +502,7 @@ done
 ```
 
 
-```{bash}
+```bash
 mkdir tmp && cd tmp
 pdm init --python "3.12.*" -n
 sed -i '' "s/dependencies = \[\]/dependencies = [\n]/g" pyproject.toml
@@ -476,7 +526,7 @@ This produces:
 ```
 suggesting the following dependencies in `pyproject.toml`:
 
-```{toml}
+```toml
 ...
 dependencies = [
     'numpy >= 1.24.4; python_version == "3.8.*"',
@@ -493,7 +543,7 @@ version compatible.  Notes: this might required you to first delete your lock fi
 install the packages.  (Do this if you are running `pdm` globally, but not in your
 project.)
 
-```{bash}
+```bash
 rm -f pdm.lock
 pdm add numpy --no-sync
 ```
@@ -508,7 +558,7 @@ versions of python.  Here are some tips.
 1. Once things are working, you should be able to generate a lock file.  We do this with
    `make lock` which essentially does the following:
   
-   ```{bash}
+   ```bash
    for py in 3.10 3.11 3.12 3.13; do
        pdm lock -G all --python="==${py}.*" --append
    done
@@ -516,7 +566,7 @@ versions of python.  Here are some tips.
 
 1. Try removing all the packages **and the `pdm.lock` file**, then use
 
-   ```{bash}
+   ```bash
    rm -f pdm.lock
    pdm add numpy --no-sync  # --no-sync does not try to install it
    ```
@@ -530,7 +580,7 @@ all` in the actual production `Makefile`.)*
 If you have difficulty, I recommend starting from the lowest supported version and
 working up (possibly dropping the `-G all` at first).  I.e.:
 
-```{bash}
+```bash
 pdm lock --python="==3.10.*"
 pdm lock --python="==3.11.*"
 pdm lock --python="==3.12.*"
@@ -542,7 +592,7 @@ If you want PDM to help recommend versions, then change `requires-python =
 lockfile `pdm.lock`).  This should then tell you which versions work with python 3.10.
 Once you have this, you can add code like the following to your `dependencies` list:
 
-```{toml}
+```toml
 dependencies = [
     'numpy >= 1.24.4; python_version < "3.9"',
     'numpy >= 1.26.4; python_version >= "3.12"'
@@ -1092,7 +1142,7 @@ We also define convenient aliases and functions.
                   "install",
                   "--upgrade",
                   "--use-feature=in-tree-build",
-                  "../..[docs]",
+                  "../..[doc]",
               ]
           )
           subprocess.check_call(
@@ -1409,9 +1459,9 @@ Some examples of packages we manage and their features:
 [zopeext PyPI badge]: 
   <https://img.shields.io/pypi/v/sphinxcontrib-zopeext?logo=python&logoColor=FBE072">
 [zopeext Coverage badge]: 
-  <https://coveralls.io/repos/github/sphinx-contrib/zopeext/badge.svg?branch=main>
+  <ERROR!> # https://coveralls.io/repos/github/sphinx-contrib/zopeext/badge.svg?branch=main>
 [zopeext Coverage link]: 
-  <https://coveralls.io/github/sphinx-contrib/zopeext?branch=main>
+  <ERROR!> # https://coveralls.io/github/sphinx-contrib/zopeext?branch=main>
 [zopeext Documentation status badge]:
   <https://readthedocs.org/projects/zopeext/badge/?version=latest> 
 [zopeext Documentation link]:  <https://zopeext.readthedocs.io/en/latest/?badge=latest>
@@ -1449,9 +1499,9 @@ Some examples of packages we manage and their features:
 [mmfutils PyPI badge]: 
   <https://img.shields.io/pypi/v/mmfutils?logo=python&logoColor=FBE072">
 [mmfutils Coverage badge]: 
-  <https://coveralls.io/repos/github/forbes-group/mmfutils/badge.svg?branch=main>
+  <ERROR!> # https://coveralls.io/repos/github/forbes-group/mmfutils/badge.svg?branch=main>
 [mmfutils Coverage link]: 
-  <https://coveralls.io/github/forbes-group/mmfutils?branch=main>
+  <ERROR!> # https://coveralls.io/github/forbes-group/mmfutils?branch=main>
 [mmfutils Documentation status badge]:
   <https://readthedocs.org/projects/mmfutils/badge/?version=latest> 
 [mmfutils Documentation link]:  <https://mmfutils.readthedocs.io/en/latest/?badge=latest>
@@ -1662,7 +1712,7 @@ You must make sure that `make rtd` puts the generated documentation in `$READTHE
 We use [`sphinx.ext.autodoc`][] to document our source code.  This requires that you
 provide a skeleton for your API documentation.  For example, you might include:
 
-```{markdown}
+```markdown
 :::{automodule}
 ```
 
@@ -2208,11 +2258,11 @@ To do this, we advocate the following procedure.
 
     ```bash
     make shell
-    cd doc
+    cd Docs
     sphinx-apidoc -eTE ../src/mmfutils -o source
     ```
    
-    * Include any changes at the bottom of this file (`doc/README.ipynb`).
+    * Include any changes at the bottom of this file (`Docs/README.ipynb`).
     * You may need to copy new figures to `README_files/` if the figure numbers have
       changed, and then `hg add` these while `hg rm` the old ones.
    
@@ -2230,9 +2280,9 @@ To do this, we advocate the following procedure.
     need to add a title to a new file.  For example, when I added the
     `mmf.math.optimize` module, I needed to update the following:
   
-[comment]: # (The rst generate is mucked up by this indented code block...)
+[comment]: # (The rst generated is mucked up by this indented code block...)
 ```rst
-   .. doc/source/mmfutils.rst
+   .. Docs/source/mmfutils.rst
    mmfutils
    ========
    
@@ -2242,7 +2292,7 @@ To do this, we advocate the following procedure.
        ...
 ```   
 ```rst
-   .. doc/source/mmfutils.optimize.rst
+   .. Docs/source/mmfutils.optimize.rst
    mmfutils.optimize
    =================
        
@@ -2961,7 +3011,7 @@ build-docs:
     # - source ~/.bashrc  # This does not work in CI for some reason.  Not a login shell?
     - export PATH=/root/.local/bin/:${PATH}
     - EXTRAS=doc make html
-    - mv doc/build/html public
+    - mv Docs/build/html public
   pages: true  # specifies that this is a Pages job
   artifacts:
     paths:

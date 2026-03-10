@@ -1,20 +1,25 @@
+```{code-cell}
 from __future__ import division, print_function
 import numpy as np
+```
 
-
+```{code-cell}
 np.random.seed(1)
 N = 3
+```
 
-
+```{code-cell}
 def crand(shape):
     """Return a random complex matrix."""
     return 2 * (np.random.random(shape) + 1j * np.random.random(shape) - 0.5 - 0.5j)
+```
 
-
+```{code-cell}
 def braket(a, b):
     return a.conj().T.dot(b)
+```
 
-
+```{code-cell}
 class QuadraticProblem(object):
     def __init__(self, N=3, x0=None, H=None):
         if x0 is None:
@@ -38,3 +43,4 @@ class QuadraticProblem(object):
 
     def ddf(self, x):
         return self.H
+```

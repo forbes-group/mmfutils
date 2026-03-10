@@ -52,6 +52,12 @@ def test(session):
     session.run("pytest")
 
 
+@nox.session(venv_backend="none", **args)
+# @nox.parametrize("sphinx", get_versions("sphinx", "minor"))
+def test_pixi(session):
+    session.run("make test")
+
+
 @nox.session(venv_backend="conda", **args)
 def test_conda(session):
     # session.conda_env_update("environment.yml")

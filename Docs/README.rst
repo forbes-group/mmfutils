@@ -1593,6 +1593,27 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+Rel: 0.7.6
+----------
+
+- Fix issue #40: Improved FPS so subclasses can augment its behavior
+  consistently.
+
+- Fix issue #39: Add ``mmfutils.performance.fftw_wisdom`` context for
+  loading and saving wisdom. This will use a default effort of
+  ``FFTW_PATIENT`` which may be slow the first time, but will be fast
+  later and optimally use threads.
+
+  .. code:: python
+
+     from mmfutils.performance.fft import fftw_wisdom
+     with fftw_wisdom():
+         ... # Do your fft's
+
+- Start using `Pixi <https://pixi.prefix.dev/latest/>`__ for building
+  the development environments, testing, etc. This needs more work, but
+  seems to be a good path.
+
 REL: 0.7.5
 ----------
 

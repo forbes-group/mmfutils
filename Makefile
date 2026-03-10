@@ -1,7 +1,11 @@
+# Some parts of this Makefile serve as a conversion from micromamba to pixi.
+# Targets with a trailing underscore represent the micromamba version.
+
 SHELL = /bin/bash
 _SHELL = $(notdir $(SHELL))
 
-DEV_PY_VER ?= 3.14
+PY ?= 3.14
+DEV_PY_VER ?= $(PY)
 PY_VERS ?= 3.9 3.10 3.11 3.12 3.13 3.14
 PANDOC_FLAGS ?= --toc --standalone
 
@@ -10,15 +14,22 @@ USE_ROSETTA ?= false
 
 CHANNEL ?= conda-forge
 
-ENVS ?= envs
+ENVS_ ?= envs
 BIN ?= build/bin
 PDM ?= pdm
+PIXI ?= pixi
+ENV ?= $(subst .,,py$(DEV_PY_VER))
+ENV_TEST ?= $(subst .,,test$(DEV_PY_VER))
 
 # Generate github workflows.  Although nox will run all the tests for us, we make
 # separate workflows for github so that we can have indepdent badges for each
 # set of tests.
 GITHUB_CI_DIR ?= .github/workflows
 GITHUB_CI_FILES ?= $(patsubst %,$(GITHUB_CI_DIR)/python_%.yaml,$(PY_VERS))
+
+# If defined, then assume we are running on a CI. For example, don't run tests in parallel
+# threads.
+CI ?= 
 
 # Customize extras here pip install .[$(EXTRAS)]
 EXTRAS ?= test,doc,notebook
@@ -47,39 +58,63 @@ ifeq ($(USE_ROSETTA), true)
   endif
 endif
 
-DEV_ENV ?= $(ENVS)/py$(DEV_PY_VER)
-CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV)
-_RUN = $(_MICROMAMBA) run -p $(DEV_ENV)
-ALL_ENVS = $(foreach py,$(PY_VERS),$(ENVS)/py$(py))
+DEV_ENV_ ?= $(ENVS_)/py$(DEV_PY_VER)
+CONDA_ACTIVATE_DEV = $(CONDA_ACTIVATE) $(DEV_ENV_)
+RUN_ = $(_MICROMAMBA) run -p $(DEV_ENV_)
+RUN = $(PIXI) run -e $(ENV)
+ALL_ENVS_ = $(foreach py,$(PY_VERS),$(ENVS_)/py$(py))
+ALL_PIXI_ENVS ?= $(foreach py,$(PY_VERS),$(subst .,,py$(py) test$(py)))
 
 # ------- Top-level targets  -------
 # Default prints a help message
+.PHONY: help usage shell_ shell notebook
 help:
 	@make usage
 
 usage:
 	@echo "$$HELP_MESSAGE"
 
-shell: dev
+shell_: dev_
 	#$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
-	$(_RUN) bash --init-file .init-file.bash
+	$(RUN_) bash --init-file .init-file.micromamba.bash
 
+shell:
+	$(RUN) bash --init-file .init-file.pixi.bash
+
+qshell: dev_
+	$(RUN_) bash --init-file .init-file.bash
+
+notebook:
+	$(RUN) jupyter notebook
+
+######################################################################
+# Tests
+.PHONY: test
+
+ifndef CI
 PYTESTARGS ?= -n 10
-test: dev
-	$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
+endif
 
-qshell: dev
-	$(_RUN) bash --init-file .init-file.bash
+test:
+	#$(CONDA_ACTIVATE_DEV) && pytest $(PYTESTARGS)
+	$(PIXI) run -e $(ENV_TEST) pytest $(PYTESTARGS)
 
-# ------- Documentation  -----
+
+######################################################################
+# Documentation
+.PHONY: html
+
 DOC_REQUIREMENTS =
 
-html: dev
-	$(_RUN) make -C doc/ html
+html:
+	$(RUN) make -C Docs/ html
 
-README.rst: doc/README.ipynb
+html_: dev_
+	$(RUN_) make -C Docs/ html
+
+README.rst: Docs/README.ipynb
 	# Not sure why we need the ../ for --output=
-	jupyter nbconvert --to=rst --output=../README.rst doc/README.ipynb
+	jupyter nbconvert --to=rst --output=../README.rst Docs/README.ipynb
 
 %.html: %.rst
 	rst2html5.py $< > $@
@@ -101,10 +136,9 @@ FSWATCH ?= fswatch -e ".*" -i "$<" -o .
 	$(PANDOC) && $(OPEN_BROWSER)
 	$(FSWATCH) | while read num; do $(PANDOC) && $(REFRESH_BROWSER); done
 
-.PHONY: html
-
 ######################################################################
 # GitHub Workflows
+.PHONY: workflows
 
 define _workflow_test_file
 # DO NOT EDIT!
@@ -125,20 +159,23 @@ $(GITHUB_CI_DIR)/python_%.yaml: Makefile
 
 workflows: $(GITHUB_CI_FILES)
 
-.PHONY: workflows
-
 ######################################################################
 # Development Environments etc.
+.PHONY: dev_ dev
+
 ifeq ($(EDITABLE), true)
   PIP_INSTALL_ARGS += -e
 endif
 
-dev: $(DEV_ENV)
+dev_: $(DEV_ENV_)
 	$(CONDA_ACTIVATE_DEV) && python3 -m pip install $(PIP_INSTALL_ARGS) .[$(strip  $(EXTRAS))]
 
-$(ENVS): $(ALL_ENVS)
+dev:
+	pixi install
 
-$(ENVS)/py3.11: environment.yaml pyproject.toml
+$(ENVS_): $(ALL_ENVS_)
+
+$(ENVS_)/py3.11: environment.yaml pyproject.toml
 	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "conda-forge::python=3.11"
 ifneq ($(USE_MICROMAMBA), true)
   ifeq ($(shell uname -p),arm)
@@ -152,7 +189,7 @@ endif
 	$(CONDA_ACTIVATE_DEV) && pip install --upgrade pip pdm setuptools
 	$(CONDA_ACTIVATE_DEV) && $(PDM) install $(PDM_EXTRAS)
 
-$(ENVS)/py%: environment.yaml pyproject.toml
+$(ENVS_)/py%: environment.yaml pyproject.toml
 	$(CONDA_ENV) create -y -c $(CHANNEL) -p $@ -f $< $(GPU_PACKAGES) "python=$*"
 ifneq ($(USE_MICROMAMBA), true)
   ifeq ($(shell uname -p),arm)
@@ -165,6 +202,24 @@ endif
 pdm.lock: environment.yaml pyproject.toml
 	$(CONDA_ACTIVATE_DEV) && for py in $(PY_VERS); do $(PDM) lock --python="$${py}.*" --append; done
 
+####################
+# Pixi versions
+
+.PHONE: all_pixi_envs
+all_pixi_envs:
+	$(PIXI) install $(foreach env,$(ALL_PIXI_ENVS),-e $(env))
+
+######################################################################
+# Documentation
+.PHONY: doc-server
+
+doc-server:
+	$(RUN) myst start #--execute
+
+######################################################################
+# Cleaning
+.PHONY: clean realclean
+
 clean:
 	-coverage erase
 	$(RM) -r fil-result
@@ -173,18 +228,18 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	$(RM) -r src/mmfutils.egg-info
-	$(RM) -r doc/README_files/
+	$(RM) -r Docs/README_files/
 	$(RM) *.html
 
 realclean: clean
+	$(PIXI) clean
 	$(RM) -r .nox .conda $(ENVS) $(BIN)
 	$(RM) -r build
 
-.PHONY: help usage shell dev test clean realclean
 
+######################################################################
+# Usage
 
-
-# ----- Usage -----
 define HELP_MESSAGE
 
 This Makefile provides several tools for creating a development environment for testing, etc.
@@ -196,13 +251,26 @@ for example.
 
 Variables:
    DEV_PY_VER: (= "$(DEV_PY_VER)")
-                     Version of python for development.
+                     Version of python for development.  For convenience one can use `PY`, e.g.
+                     `PY=3.9 make test`
    PY_VERS: (= "$(PY_VERS)")
-                     Versions of python to install in ENVS_DIR
-   ENVS: (= "$(ENVS)")
-                     Location of environments.
-   DEV_ENV: (= "$(DEV_ENV)")
-                     Python development environment.
+                     Versions of python to use for testing, and to completely install
+                     environments for.
+   ENV: (= "$(ENV)")
+                     Pixi environment to use for running commands.  This allows you to
+                     specify specific interpreters.  Options included
+                     `default`, `py39`, ..., `py314`, `test39`, ..., `test214` etc.
+                     Run `pixi info` for details.  By default this is set from `DEV_PY_VER`.
+   ENV_TEST: (= "$(ENV_TEST)")
+                     Pixi environment to use for running tests. Default set from `DEV_PY_VER`.
+   ENVS_: (= "$(ENVS_)")
+                     Location ofenvironments created by `micromamba`.  Pixi environments
+                     are stored in `.pixi/envs` or the location specified by the
+                     `detached-environments` configuration.  I do not see a way to
+                     customize this locally. See
+       https://pixi.prefix.dev/latest/reference/pixi_configuration/#detached-environments
+   DEV_ENV_: (= "$(DEV_ENV_)")
+                     Python development environment for micromamba.
    PANDOC_FLAGS: (= "$(PANDOC_FLAGS)")
                      Flags to pass to pandoc for generating HTML files from markdown files.
    CONDA_PRE: (= "$(CONDA_PRE)")
@@ -234,16 +302,20 @@ Variables:
 Computed variables (cannot be overwritten on command line)
 	 CONDA_ACTIVATE_DEV:(= "$(CONDA_ACTIVATE_DEV)")
                      Command to activate the development environment.
-	 ALL_ENVS: (= "$(ALL_ENVS)")
-                     All environments that will be made.
+	 ALL_ENVS_: (= "$(ALL_ENVS_)")
+                     All environments that will be made for micromamba.
+	 ALL_PIXI_ENVS: (= "$(ALL_PIXI_ENVS)")
+                     All environments that will be made for pixi.
 
 Initialization:
    make shell        Spawn a shell after building and checking the dev environment.
    make qshell       Quickly spawn a shell.  Environment not checked (created if needed).
    make dev          Initialize the development environment and setup poetry.
-   make $(ENVS)
-                     Initialize all environments.
-
+   make $(ENVS_)
+                     Initialize all environments (micromamba).
+   make all_pixi_envs
+                     Initialize all environments in `ALL_PIXI_ENVS` (pixi).
+   
 Testing:
    make test         Runs the general tests in the dev environment.
 

@@ -25,4 +25,9 @@ envs/
 *.sage-jupyter2
 *.term
 *.orig
-*.egg-info/
+*.egg-info/# pixi environments
+
+.fftw_wisdom
+
+.pixi/*
+!.pixi/config.toml

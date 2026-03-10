@@ -7,7 +7,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.1
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -599,6 +599,18 @@ HTML(coverage)
 ```
 
 # Change Log
+
++++
+
+## Rel: 0.7.6
+* Fix issue #40: Improved FPS so subclasses can augment its behavior consistently.
+* Fix issue #39: Add `mmfutils.performance.fftw_wisdom` context for loading and saving wisdom.  This will use a default effort of `FFTW_PATIENT` which may be slow the first time, but will be fast later and optimally use threads.
+  ```python
+  from mmfutils.performance.fft import fftw_wisdom
+  with fftw_wisdom():
+      ... # Do your fft's
+  ```
+* Start using [Pixi](https://pixi.prefix.dev/latest/) for building the development environments, testing, etc.  This needs more work, but seems to be a good path.
 
 +++
 
