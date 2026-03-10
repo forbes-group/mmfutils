@@ -183,7 +183,7 @@ class Test_FFT_pyfftw(Test_FFT):
         """Check that fftw is faster than numpy."""
         threads = min(os.cpu_count(), 2)
         shapes = [(16,), (32, 32)]
-        with mmfutils.performance.fft.get_fftw_wisdom(
+        with mmfutils.performance.fft.fftw_wisdom(
             wisdom_file, threads=threads, effort="FFTW_PATIENT"
         ):
             for shape in shapes:
@@ -198,14 +198,14 @@ class Test_FFT_pyfftw(Test_FFT):
         threads = min(os.cpu_count(), 2)
         shape = (64,)
         x = self.rand(shape, writeable=False)
-        with mmfutils.performance.fft.get_fftw_wisdom(
+        with mmfutils.performance.fft.fftw_wisdom(
             wisdom_file, threads=threads, effort="FFTW_PATIENT"
         ):
             tic = time.time()
             mmfutils.performance.fft.fftn(x)
             time1 = time.time() - tic
 
-        with mmfutils.performance.fft.get_fftw_wisdom(
+        with mmfutils.performance.fft.fftw_wisdom(
             wisdom_file, threads=threads, effort="FFTW_PATIENT"
         ):
             tic = time.time()
@@ -215,7 +215,7 @@ class Test_FFT_pyfftw(Test_FFT):
         # This will not be in the wisdom, so should take similar time.
         shape = (63,)
         x = self.rand(shape, writeable=False)
-        with mmfutils.performance.fft.get_fftw_wisdom(
+        with mmfutils.performance.fft.fftw_wisdom(
             wisdom_file, threads=threads, effort="FFTW_PATIENT"
         ):
             tic = time.time()

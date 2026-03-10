@@ -21,11 +21,11 @@ Indices should first be normalized by ``inds % len(shape)``.
 For best performance, you should call the appropriate `get_*fft*()`.  By default, this
 uses `_PLANNER_EFFORT = "FFTW_MEASURE"` with `_THREADS`.  For optimal performance, you
 need to adjust `_THREADS` or use `_PLANNER_EFFORT = "FFTW_PATIENT"`, but this can be
-extremely slow on first use.  To mitigate this, wrap your code in the `get_fftw_wisdom()`
+extremely slow on first use.  To mitigate this, wrap your code in the `fftw_wisdom()`
 context::
 
     from mmfutils.performance import fftw
-    with get_fftw_wisdom(threads=8, effort="FFTW_PATIENT"):
+    with fftw_wisdom(threads=8, effort="FFTW_PATIENT"):
         ...  # Do your calculations, or at least call the builders to do planning
 
 On exit, the wisdom will be stored and subsequent calls should be fast.  Note: you
@@ -68,6 +68,7 @@ __all__ = [
     "get_ifftn",
     "fftfreq",
     "resample",
+    "fftw_wisdom",
 ]
 
 
@@ -527,7 +528,7 @@ def resample(f, N):
 
 
 @contextlib.contextmanager
-def get_fftw_wisdom(wisdom_file=_WISDOM_FILE, threads=None, effort="FFTW_PATIENT"):
+def fftw_wisdom(wisdom_file=_WISDOM_FILE, threads=None, effort="FFTW_PATIENT"):
     """Context in which to load and save wisdom."""
     if threads:
         set_num_threads(threads)

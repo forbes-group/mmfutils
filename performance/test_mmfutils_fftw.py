@@ -30,7 +30,7 @@ from utils import allclose, tester
 
 def run(Nxyz, dtype=np.float64, seed=2):
     rng = np.random.default_rng(seed=seed)
-    with fft.get_fftw_wisdom(threads=os.cpu_count()):
+    with fft.fftw_wisdom(threads=os.cpu_count()):
         X = rng.normal(size=Nxyz).astype(dtype)
 
         with tester(np_fftn=np.fft.fftn, X=X) as (get_ts, X_t):
