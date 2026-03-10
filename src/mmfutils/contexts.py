@@ -1,7 +1,7 @@
 """Various useful contexts."""
 
 import collections
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import functools
 import math
 import os
@@ -794,8 +794,13 @@ class FPS_Frames:
     def __float__(self):
         return self.fps
 
+    def __len__(self):
+        if self.frames is None:
+            raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+        return self.frames
 
-class FPS:
+
+class FPS(FPS_Frames):
     """Context manager to measure framerate and provide interrupt control.
 
     This can be used in two ways:
@@ -830,7 +835,7 @@ class FPS:
     >>> import numpy as np
     >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
     >>> for t in fps:
-    ...     print(f"t={t:.1f}: fps={fps:.0f}")
+    ...     print(f"{t=:.1f}: {fps=:.0f}")
     ...     sleep(0.1)
     t=0.0: fps=nan
     t=0.1: fps=10...
@@ -876,9 +881,7 @@ class FPS:
 
     >>> fps = FPS(frames=0.1*np.arange(10), timeout=10)
     >>> print(fps)
-    Traceback (most recent call last):
-       ...
-    ValueError: Unintialized FPS object: please use in a context or after a loop.
+    nan
 
     If you don't need to report the actual performance, you can just use the FPS class
     as an iterator.  This will break only at the start of the loop if interrupted, or if
@@ -901,63 +904,40 @@ class FPS:
     """
 
     _default_timeout = 10
+    _is_in_context = False
 
     def __init__(
         self, frames=200, timeout=None, max_fps=None, unregister=True, max_tics=20
     ):
-        self.frames = frames
         self.timeout = timeout
-        self.max_tics = max_tics
-        self.max_fps = max_fps
         self.unregister = unregister
+        super().__init__(
+            interrupted=None,
+            the_frames_or_frames=frames,
+            max_fps=max_fps,
+            max_tics=max_tics,
+        )
 
     def __enter__(self):
-        fps = FPS_Frames(
-            interrupted=None,
-            the_frames_or_frames=self.frames,
-            max_tics=self.max_tics,
-            max_fps=self.max_fps,
-        )
-        if fps.frames is None and self.timeout is None:
+        if self._is_in_context:
+            raise ValueError("Nested FPS context")
+        self._is_in_context = True
+        if self.frames is None and self.timeout is None:
             self.timeout = self._default_timeout
         self._interrupted = NoInterrupt(
             timeout=self.timeout, unregister=self.unregister
         )
-        fps.interrupted = self._interrupted.__enter__()
-        return fps
+        self.interrupted = self._interrupted.__enter__()
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self._is_in_context = False
         return self._interrupted.__exit__(exc_type, exc_value, traceback)
 
     def __iter__(self):
-        with self as self._frames_obj:
-            for frame in self._frames_obj:
+        context = self
+        if self._is_in_context:
+            context = nullcontext()
+        with context:
+            for frame in super().__iter__():
                 yield frame
-
-    def __str__(self):
-        """Delegate to self._frames if it exists."""
-        return str(self._frames_obj)
-
-    def __format__(self, format_spec):
-        return self._frames_obj.__format__(format_spec)
-
-    @property
-    def tics(self):
-        return getattr(self._frames_obj, "tics")
-
-    def __getattr__(self, key):
-        if key == "_frames_obj":
-            raise ValueError(
-                f"Unintialized {self.__class__.__name__} object:"
-                + " please use in a context or after a loop."
-            )
-        elif hasattr(self, "_frames_obj"):
-            return getattr(self._frames_obj, key)
-        else:
-            return super().__getattr__(key)
-
-    def __len__(self):
-        frames, the_frames = FPS_Frames.get_frames_and_the_frames(self.frames)
-        if frames is None:
-            raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
-        return frames
