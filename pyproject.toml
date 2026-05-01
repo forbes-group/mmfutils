@@ -28,6 +28,7 @@ dependencies = [
   'husl >= 4.0.3',
   'importlib-metadata >= 4.13.0; python_version < "3.8"',
   "uncertainties >= 3.2.2",
+  "mmf-contexts>=0.1.2",
 ]
 
 [project.urls]
