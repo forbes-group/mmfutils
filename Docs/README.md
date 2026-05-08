@@ -600,7 +600,14 @@ HTML(coverage)
 
 # Change Log
 
-+++
+## Rel: 0.7.7
+* Fix issue #41: `@debug` works with generators.
+* Added `%runmd` magic for executing code in markdown files.
+  ```
+  %load_ext mmfutils.runmd
+  %runmd file.md
+  ```
+* Removed `FPS` context - this is now provided in [`mmf-contexts`](https://gitlab.com/coldatoms/utilities/mmf-contexts).
 
 ## Rel: 0.7.6
 * Fix issue #40: Improved FPS so subclasses can augment its behavior consistently.

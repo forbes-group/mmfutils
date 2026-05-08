@@ -1593,6 +1593,21 @@ Complete code coverage information is provided in
 Change Log
 ==========
 
+Rel: 0.7.7
+----------
+
+- Fix issue #41: ``@debug`` works with generators.
+
+- Added ``%runmd`` magic for executing code in markdown files.
+
+  ::
+
+     %load_ext mmfutils.runmd
+     %runmd file.md
+
+- Removed ``FPS`` context - this is now provided in
+  ```mmf-contexts`` <https://gitlab.com/coldatoms/utilities/mmf-contexts>`__.
+
 Rel: 0.7.6
 ----------
 
