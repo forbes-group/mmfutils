@@ -2,6 +2,9 @@
 
 Most of these are implemented as decorators.
 """
+
+import functools
+import inspect
 import sys
 
 from six import reraise as raise_
@@ -12,7 +15,7 @@ __all__ = ["persistent_locals", "debug"]
 _LOCALS = {}
 
 
-class persistent_locals(object):
+def persistent_locals(func, env=None):
     """Decorator that stores the function's local variables.
 
     Examples
@@ -24,38 +27,80 @@ class persistent_locals(object):
     ...     return z
     >>> f(1)
     2
-    >>> sorted(f.locals.items())
-    [('x', 1), ('y', 1), ('z', 2)]
+    >>> assert f.locals == dict(x=1, y=1, z=2)
+    >>> f.clear_locals()
+    >>> f.locals
+    {}
+
+    >>> @persistent_locals
+    ... def f(x):
+    ...     for p in [1, 2, 3]:
+    ...         y = x**p
+    ...         yield y
+    >>> gen = f(2)
+    >>> next(gen)
+    2
+    >>> assert f.locals == dict(x=2, y=2, p=1)
+    >>> next(gen)
+    4
+    >>> assert f.locals == dict(x=2, y=4, p=2)
+    >>> next(gen)
+    8
+    >>> assert f.locals == dict(x=2, y=8, p=3)
     >>> f.clear_locals()
     >>> f.locals
     {}
     """
 
-    def __init__(self, func):
-        self._locals = {}
-        self.func = func
+    locals_ = {}
 
-    def __call__(self, *args, **kwargs):
-        def tracer(frame, event, arg):  # pragma: nocover
+    def trace(frame, event, arg):
+        if frame.f_code is func.__code__:
+            if event == "call":
+                return trace  # Only trace into the function call
             if event == "return":
-                self._locals = frame.f_locals.copy()
+                locals_.update(frame.f_locals)
+                if env is not None:
+                    env.update(frame.f_locals)
 
-        # tracer is activated on next call, return or exception
-        sys.setprofile(tracer)
-        try:
-            # trace the function call
-            res = self.func(*args, **kwargs)
-        finally:
-            # disable tracer and replace with old one
-            sys.setprofile(None)
-        return res
+    if inspect.isgeneratorfunction(func):
 
-    def clear_locals(self):
-        self._locals = {}
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            gen = func(*args, **kwargs)
 
-    @property
-    def locals(self):
-        return self._locals
+            def traced_gen():
+                old_trace = sys.gettrace()
+                sys.settrace(trace)
+                try:
+                    yield from gen
+                except Exception as e:
+                    # Remove one level of the traceback so we don't see the decorator
+                    # junk.
+                    raise_(e.__class__, e, sys.exc_info()[2].tb_next)
+                finally:
+                    sys.settrace(old_trace)
+
+            return traced_gen()
+
+    else:
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            old_trace = sys.gettrace()
+            sys.settrace(trace)
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                # Remove one level of the traceback so we don't see the decorator junk.
+                raise_(e.__class__, e, sys.exc_info()[2].tb_next)
+            finally:
+                sys.settrace(old_trace)
+
+    wrapper.locals = locals_
+    wrapper.env = env
+    wrapper.clear_locals = wrapper.locals.clear
+    return wrapper
 
 
 def debug(*v, **kw):
@@ -130,29 +175,10 @@ def debug(*v, **kw):
     else:
         raise ValueError("Must pass in either function or locals or both")
 
-    class Decorator(object):
-        def __init__(self, f):
-            self.func = persistent_locals(f)
-            self.env = env
-
-        def __call__(self, *v, **kw):
-            try:
-                res = self.func(*v, **kw)
-            except Exception as e:
-                # Remove two levels of the traceback so we don't see the
-                # decorator junk.
-                raise_(e.__class__, e, sys.exc_info()[2].tb_next.tb_next)
-            finally:
-                self.env.update(self.func.locals)
-                self.func.clear_locals()
-
-            return res
-
-        @property
-        def locals(self):
-            return self.env
+    def decorator(func):
+        return persistent_locals(func, env=env)
 
     if func is None:
-        return Decorator
+        return decorator
     else:
-        return Decorator(func)
+        return decorator(func)
