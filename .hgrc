@@ -35,7 +35,8 @@ topic =
 [experimental]
 # Force the user to specify the topic when committing.
 # Use `topic-mode = random` to generate a random topic name
-topic-mode = enforce
+# topic-mode = enforce
 # Force Mercurial to use Changeset Evolution for all commands even when evolve
 # is not found
 evolution = all
+hg-git-mode = branches
