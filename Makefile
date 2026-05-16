@@ -199,8 +199,8 @@ endif
 	mkdir -p $(BIN)
 	ln -fs $(abspath $</bin/python$*) $@
 
-pdm.lock: environment.yaml pyproject.toml
-	$(CONDA_ACTIVATE_DEV) && for py in $(PY_VERS); do $(PDM) lock --python="$${py}.*" --append; done
+pdm.lock: pyproject.toml
+	for py in $(PY_VERS); do $(RUN) $(PDM) lock --python="$${py}.*" --append; done
 
 ####################
 # Pixi versions
