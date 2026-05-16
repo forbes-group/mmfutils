@@ -10960,8 +10960,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: mmfutils
-  version: 0.7.7.dev0
-  sha256: 066b4252c3320df5d90d7ee5191d7dc9894303dec084bfe3f5573378dfd60602
+  version: 0.7.8.dev0
+  sha256: 5ab11f5229a3fbc67be849e308424da69ee5b8d02794c6215e146ae8f5888ac2
   requires_dist:
   - zope-interface>=5.5.2
   - husl>=4.0.3

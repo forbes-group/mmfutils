@@ -7,6 +7,8 @@ import shlex
 
 from IPython.core.magic import register_line_magic
 
+JUPYTEXT_COMMAND = "jupytext --opt comment_magics=false"
+
 
 def load_ipython_extension(ip):
     """Define %runmd to convert `*.md` files to `_*.py` files using jupytext."""
@@ -22,12 +24,23 @@ def load_ipython_extension(ip):
             idx = inds[0]
             md_file = tokens[idx]
             py_file = md_file[:-3] + "_.py"
+            ipy_file = md_file[:-3] + "_.ipy"
 
-            ip.run_cell(
-                f"!jupytext --to py {shlex.quote(md_file)} --output {shlex.quote(py_file)}"
+            cmd = " ".join(
+                [
+                    f"!{JUPYTEXT_COMMAND}",
+                    f"--to py {shlex.quote(md_file)}",
+                    f"--output {shlex.quote(py_file)}",
+                ]
             )
+            print(f"Running {cmd}")
+            ip.run_cell(cmd)
 
-            tokens[idx] = py_file
+            cmd = f"!mv {shlex.quote(py_file)} {shlex.quote(ipy_file)}"
+            print(f"Running {cmd}")
+            ip.run_cell(cmd)
+
+            tokens[idx] = ipy_file
             new_line = " ".join(shlex.quote(t) for t in tokens)
         else:
             new_line = line
