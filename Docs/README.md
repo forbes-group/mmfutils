@@ -600,6 +600,10 @@ HTML(coverage)
 
 # Change Log
 
+## Rel: 0.7.8
+
+* Fix issue #41: `%runmd` now works with magics like `%time`.
+  
 ## Rel: 0.7.7
 * Fix issue #41: `@debug` works with generators.
 * Added `%runmd` magic for executing code in markdown files.
