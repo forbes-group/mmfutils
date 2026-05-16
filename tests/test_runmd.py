@@ -7,6 +7,11 @@ import pytest
 
 from IPython.testing.globalipapp import get_ipython
 
+if not hasattr(contextlib, "chdir"):
+    import contextlib_chdir
+
+    contextlib.chdir = contextlib_chdir.chdir
+
 
 @pytest.fixture(scope="session")
 def ip():

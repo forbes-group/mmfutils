@@ -50,6 +50,7 @@ test = [
     'pytest-rerunfailures >= 11.1.2',
     'mmfutils[full,doc]',
     'jupytext >= 1.16.1',
+    'contextlib-chdir >= 1.0.2; python_version < "3.11"',
 ]
 
 doc = [
