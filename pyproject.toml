@@ -49,6 +49,7 @@ test = [
     'psutil >= 5.9.4',
     'pytest-rerunfailures >= 11.1.2',
     'mmfutils[full,doc]',
+    'jupytext >= 1.16.1',
 ]
 
 doc = [

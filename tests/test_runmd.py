@@ -30,7 +30,7 @@ z = 3*y
 
 
 class TestRunMD:
-    def test_ipy_file_created(self, ip, tmp_path):
+    def test_runmd(self, ip, tmp_path):
         tst1_md = tmp_path / "tst1.md"
         tst1_md.write_text(TST1_MD)
 
