@@ -815,7 +815,10 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         The default is the last two axes (best for performance).
     """
 
-    xp = np  # For later customization using e.g. GPUs.
+    # For later customization using e.g. GPUs.
+    xp = np
+    _fft = staticmethod(fft)
+    _ifft = staticmethod(ifft)
     asnumpy = staticmethod(np.asarray)
 
     _d = 2  # Dimension of spherical part (see nu())
@@ -1067,12 +1070,12 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         """Perform the fft along the x axes"""
         # Makes sure that
         axis = (self.axes % len(x.shape))[0]
-        return fft(x, axis=axis)
+        return self._fft(x, axis=axis)
 
     def ifft(self, x):
         """Perform the fft along the x axes"""
         axis = (self.axes % len(x.shape))[0]
-        return ifft(x, axis=axis)
+        return self._ifft(x, axis=axis)
 
     def _get_K(self, l=0):
         r"""Return `(K, r1, r2, w)`: the DVR kinetic term for the radial function
