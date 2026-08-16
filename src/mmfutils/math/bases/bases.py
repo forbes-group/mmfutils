@@ -816,6 +816,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
     """
 
     xp = np  # For later customization using e.g. GPUs.
+    asnumpy = staticmethod(np.asarray)
 
     _d = 2  # Dimension of spherical part (see nu())
 
@@ -838,6 +839,8 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         Lx, R = self.Lxr
         x = get_xyz(Nxyz=self.Nxr, Lxyz=self.Lxr, symmetric_lattice=self.symmetric_x)[0]
         kx0 = get_kxyz(Nxyz=self.Nxr, Lxyz=self.Lxr)[0]
+        x = self.xp.asarray(x)
+        kx0 = self.xp.asarray(kx0)
 
         # Required for IBasisKx
 
@@ -863,17 +866,19 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
         # This is just the maximum momentum for diagnostics,
         # determining cutoffs etc.
-        self.k_max = np.array([abs(self.kx).max(), self._kmax])
+        self.k_max = np.array([abs(self.asnumpy(self.kx.max())), self._kmax])
 
-        nr = np.arange(Nr)[None, :]
+        nr = self.xp.arange(Nr)[None, :]
         r = self._r(Nr)[None, :]  # Do this after setting _kmax
         self.xyz = [x, r]
 
-        _lambda = np.asarray(
+        _lambda = self.xp.asarray(
             [1.0 / (self._F(_nr, _r)) ** 2 for _nr, _r in zip(nr.ravel(), r.ravel())]
         )[None, :]
         self.metric = 2 * np.pi * r * _lambda * (Lx / Nx)
-        self.metric.setflags(write=False)
+        if self.xp is np:
+            # CuPy arrays do not provide this method
+            self.metric.setflags(write=False)
         # Get the DVR kinetic piece for radial component
         K, r1, r2, w = self._get_K()
 
@@ -886,9 +891,10 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         K *= r1
         K *= r2
 
-        self.weights = w
-        self._Kr = K
-        self._Kr_diag = (r1, r2, V, d)  # For use when exponentiating
+        self.weights = self.xp.asarray(w)
+        self._Kr = self.xp.asarray(K)
+        _Kr_diag = (r1, r2, V, d)  # For use when exponentiating
+        self._Kr_diag = tuple(map(self.xp.asarray, _Kr_diag))
 
         # And factor for x.
         self._Kx = self._kx2
@@ -1074,6 +1080,8 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
         This term effects the $-d^2/dr^2 - (\nu^2 - 1/4)/r^2$ term.
 
+        Note that this always returns numpy arrays, regardless of `xp`.
+
         Returns
         -------
         K : array
@@ -1089,6 +1097,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
             r = self.xyz[1].ravel()
         else:
             r = self._r(self.Nxr[1], l=l)
+        r = self.asnumpy(r)
         z = self._kmax * r
         n = np.arange(len(z))
         i1 = (slice(None), None)
@@ -1131,21 +1140,26 @@ class CylindricalBasis(ObjectBase, BasisMixin):
     def _r(self, N, l=0):
         r"""Return the abscissa."""
         # l=0 cylindrical: nu = l + d/2 - 1
-        return bessel.j_root(nu=self.nu(l=l), N=N) / self._kmax
+        return self.xp.asarray(bessel.j_root(nu=self.nu(l=l), N=N) / self._kmax)
 
     def _F(self, n, r, d=0):
-        r"""Return the dth derivative of the n'th basis function."""
+        r"""Return the dth derivative of the n'th basis function.
+
+        Note that this necessarily moves to the CPU.
+        """
+        n = self.asnumpy(n)
+        r = self.asnumpy(r)
         nu = 0.0  # l=0 cylindrical: nu = l + d/2 - 1
-        rn = self.xyz[1].ravel()[n]
+        rn = self.asnumpy(self.xyz[1].ravel())[n]
         zn = self._kmax * rn
         z = self._kmax * r
         H = bessel.J_sqrt_pole(nu=nu, zn=zn, d=0)
         coeff = math.sqrt(2.0 * self._kmax) * (-1.0) ** (n + 1) / (1.0 + r / rn)
         if 0 == d:
-            return coeff * H(z)
+            return self.xp.asarray(coeff * H(z))
         elif 1 == d:
             dH = bessel.J_sqrt_pole(nu=nu, zn=zn, d=1)
-            return coeff * (dH(z) - H(z) / (z + zn)) * self._kmax
+            return self.xp.asarray(coeff * (dH(z) - H(z) / (z + zn)) * self._kmax)
         else:
             raise NotImplementedError
 
@@ -1153,13 +1167,13 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         """Return a function that can extrapolate a radial
         wavefunction to a new set of abscissa (x, r)."""
         x, r0 = self.xyz
-        n = np.arange(r0.size)[:, None]
+        n = self.xp.arange(r0.size)[:, None]
 
         # Here is the transform matrix
         _F = self._F(n, r) / self._F(n, r0.T)
 
         def F(u):
-            return np.dot(u, _F)
+            return self.xp.dot(u, _F)
 
         return F
 
@@ -1168,7 +1182,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         change for now)"""
         x0, r0 = self.xyz
         x, r = xr
-        assert np.allclose(x, x0)
+        assert self.xp.allclose(x, x0)
 
         return self.get_F(r)(u)
 
@@ -1196,16 +1210,16 @@ class CylindricalBasis(ObjectBase, BasisMixin):
            the spectral basis -- whereas `Psi` will be in the position representation.
         """
         x, r0 = self.xyz
-        n = np.arange(r0.size)[:, None]
+        n = self.xp.arange(r0.size)[:, None]
 
         # Here is the transform matrix
-        _F = (self._F(n, r) / np.sqrt(r)) / (self._F(n, r0.T) / np.sqrt(r0.T))
+        _F = (self._F(n, r) / self.xp.sqrt(r)) / (self._F(n, r0.T) / self.xp.sqrt(r0.T))
 
         if return_matrix:
             return _F
 
         def Psi(psi):
-            return np.dot(psi, _F)
+            return self.xp.dot(psi, _F)
 
         return Psi
 
@@ -1214,19 +1228,19 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         change for now)"""
         x0, r0 = self.xyz
         x, r = xr
-        assert np.allclose(x, x0)
+        assert self.xp.allclose(x, x0)
 
         return self.get_Psi(r)(psi)
 
     def integrate1(self, n):
         """Return the integral of n over y and z."""
-        n = np.asarray(n)
+        n = self.xp.asarray(n)
         x, r = self.xyz
         x_axis, r_axis = self.axes
         bcast = [None] * len(n.shape)
         bcast[x_axis] = slice(None)
         bcast[r_axis] = slice(None)
-        return ((2 * np.pi * r * self.weights)[tuple(bcast)] * n).sum(axis=r_axis)
+        return ((2 * self.xp.pi * r * self.weights)[tuple(bcast)] * n).sum(axis=r_axis)
 
     def integrate2(self, n, y=None, Nz=100):
         """Return the integral of n over z (line-of-sight integral) at y.
@@ -1248,7 +1262,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         Nz : int
            Number of points to use in z integral.
         """
-        n = np.asarray(n)
+        n = self.xp.asarray(n)
         x, r = self.xyz
         if y is None:
             y = r
@@ -1266,11 +1280,13 @@ class CylindricalBasis(ObjectBase, BasisMixin):
 
         bcast_y, bcast_z = tuple(bcast_y), tuple(bcast_z)
 
-        z = np.linspace(0, r.max(), Nz)
+        z = self.xp.linspace(0, r.max(), Nz)
         shape_xyz = n.shape[:-1] + (Ny, Nz)
-        rs = np.sqrt(y.ravel()[bcast_y] ** 2 + z[bcast_z] ** 2)
-        n_xyz = (abs(self.Psi(np.sqrt(n), (x, rs.ravel()))) ** 2).reshape(shape_xyz)
-        n_2D = 2 * np.trapezoid(n_xyz, z, axis=-1)
+        rs = self.xp.sqrt(y.ravel()[bcast_y] ** 2 + z[bcast_z] ** 2)
+        n_xyz = (abs(self.Psi(self.xp.sqrt(n), (x, rs.ravel()))) ** 2).reshape(
+            shape_xyz
+        )
+        n_2D = 2 * self.xp.trapezoid(n_xyz, z, axis=-1)
         return n_2D
 
 
