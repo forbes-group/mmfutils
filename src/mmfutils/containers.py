@@ -61,6 +61,10 @@ class ObjectBase(object):
       setting attributes) can be computed efficiently.  If the user
       sets attributes, `init()` should be called again.
 
+    * During the `__init__()` method, this class sets `self._initializing =
+      True`, and after back to `False`.  This is useful for checking that slow
+      computation is only done during `init()`, for example.
+
     .. note:: Do not use any of the following variables:
 
           * `picklable_attributes`:
@@ -104,6 +108,7 @@ class ObjectBase(object):
     """
 
     initialized = False  # Assure that this is always defined.
+    _initializing = False
     picklable_attributes = ()  # Tuple so it is immutable
 
     def __init__(self, **kw):
