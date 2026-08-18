@@ -18,6 +18,7 @@ from .interfaces import (
     BasisMixin,
 )
 
+from mmfutils.performance import perf_warn_on_GPU
 from mmfutils.performance.fft import fft, ifft, fftn, ifftn, resample
 from .utils import prod, dst, idst, get_xyz, get_kxyz
 from mmfutils.math import bessel
@@ -1077,6 +1078,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         axis = (self.axes % len(x.shape))[0]
         return self._ifft(x, axis=axis)
 
+    @perf_warn_on_GPU
     def _get_K(self, l=0):
         r"""Return `(K, r1, r2, w)`: the DVR kinetic term for the radial function
         and the appropriate factors for converting to the radial coordinates.
@@ -1145,6 +1147,7 @@ class CylindricalBasis(ObjectBase, BasisMixin):
         # l=0 cylindrical: nu = l + d/2 - 1
         return self.xp.asarray(bessel.j_root(nu=self.nu(l=l), N=N) / self._kmax)
 
+    @perf_warn_on_GPU
     def _F(self, n, r, d=0):
         r"""Return the dth derivative of the n'th basis function.
 

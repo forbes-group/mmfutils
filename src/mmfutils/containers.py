@@ -107,11 +107,13 @@ class ObjectBase(object):
     picklable_attributes = ()  # Tuple so it is immutable
 
     def __init__(self, **kw):
+        self._initializing = True
         for _k in kw:
             setattr(self, _k, kw[_k])
         if "picklable_attributes" not in self.__dict__:
             self.picklable_attributes = sorted(_k for _k in self.__dict__)
         self.init()
+        self._initializing = False
 
     def init(self):
         """Initialize Object."""
