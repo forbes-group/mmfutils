@@ -1,6 +1,12 @@
 import pickle
 
-from mmfutils.containers import Object, Container, ContainerList, ContainerDict
+from mmfutils.containers import (
+    ObjectBase,
+    Object,
+    Container,
+    ContainerList,
+    ContainerDict,
+)
 
 import pytest
 
@@ -243,3 +249,16 @@ class Issue4(ContainerDict):
         if b is None:
             res["b"] = a / 2
         return res[key]
+
+
+class TestObjectBase:
+    def test_init_sets__initializing(self):
+        """`_initializing` is set to True during `init` and False after."""
+
+        class ToTest(ObjectBase):
+            def init(self):
+                super().init()
+                assert self._initializing
+
+        t = ToTest()
+        assert not t._initializing

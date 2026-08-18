@@ -4,10 +4,45 @@ This module may rely on many other packages that are not easy to install such
 as pyfftw and the corresponding fftw implementation.
 """
 
+import functools
 import timeit
 import numpy as np
+import warnings
 
-__all__ = ["auto_timeit"]
+__all__ = [
+    "auto_timeit",
+    "PerformanceWarning",
+    "GPUPerformanceWarning",
+    "perf_warn_on_GPU",
+]
+
+
+class PerformanceWarning(Warning):
+    """Warning for potential performance issues."""
+
+
+class GPUPerformanceWarning(PerformanceWarning):
+    """Warning for potential performance issues having to do with the GPU."""
+
+
+def perf_warn_on_GPU(func):
+    """Decorator for methods that should warn if called with data on the GPU.
+
+    Raises a GPUPerformanceWarning if `self.xp` is not `numpy` and the method is
+    called while `self._initializing` is not `True`.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if getattr(self, "xp") is not np and not getattr(self, "_initializing", None):
+            warnings.warn(
+                "CPU function called while `self.xp` is not numpy and not `self._initializing`",
+                category=GPUPerformanceWarning,
+            )
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def auto_timeit(
